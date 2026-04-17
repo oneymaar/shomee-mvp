@@ -3,7 +3,7 @@
 :root {
   --background: #000000;
   --foreground: #ffffff;
-  --nav-h: calc(60px + env(safe-area-inset-bottom, 0px));
+  --nav-h: calc(60px + max(env(safe-area-inset-bottom, 0px), 20px));
 }
 
 @theme inline {
