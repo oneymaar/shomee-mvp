@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, Bell, Send, Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Check } from 'lucide-react'
 
 const SUGGESTIONS = [
   { id: 'paris11', label: 'Élargir à Paris 11e' },
@@ -12,21 +13,19 @@ const SUGGESTIONS = [
 export default function EndOfFeedCard() {
   const [selected, setSelected] = useState<string[]>([])
   const [text, setText] = useState('')
-  const [sent, setSent] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
 
   const toggle = (id: string) =>
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
 
-  const handleSend = () => {
-    if (!text.trim() && selected.length === 0) return
-    setSent(true)
-    setTimeout(() => {
-      setSent(false)
-      setText('')
-      setSelected([])
-    }, 2000)
+  const canSubmit = selected.length > 0 || text.trim() !== ''
+  const textActive = text.trim() !== ''
+
+  const handleSubmit = () => {
+    if (!canSubmit) return
+    setConfirmed(true)
   }
 
   return (
@@ -36,93 +35,125 @@ export default function EndOfFeedCard() {
 
       <div className="relative z-10 h-full overflow-y-auto scrollbar-hide px-5 flex flex-col justify-center py-10">
 
-        {/* Hero */}
+        {/* ── Hero (always visible) ── */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-white/8 border border-white/12 flex items-center justify-center mb-4">
-            <Sparkles size={28} className="text-white" />
-          </div>
-          <h2 className="text-white font-bold text-2xl leading-snug mb-2">
-            Vous avez fait le tour&nbsp;!
-          </h2>
-          <p className="text-white/50 text-sm leading-relaxed max-w-[280px]">
-            Il n'y a pas d'autres biens correspondant à vos critères pour l'instant.
-          </p>
-        </div>
-
-        {/* Alert badge */}
-        <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 mb-8">
-          <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
-            <Bell size={16} className="text-emerald-400" />
-          </div>
-          <div>
-            <p className="text-white text-sm font-semibold">Alertes activées</p>
-            <p className="text-white/40 text-xs mt-0.5 leading-snug">
-              Vous serez notifié dès qu'un nouveau bien correspond à vos critères.
-            </p>
-          </div>
-        </div>
-
-        {/* Suggestions */}
-        <div className="mb-7">
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
-            Élargir ma recherche
-          </p>
-          <div className="flex flex-col gap-2">
-            {SUGGESTIONS.map(({ id, label }) => {
-              const active = selected.includes(id)
-              return (
-                <button
-                  key={id}
-                  onClick={() => toggle(id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
-                    active
-                      ? 'bg-white text-black border-white'
-                      : 'bg-white/5 text-white/70 border-white/10'
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                      active ? 'bg-black border-black' : 'border-white/30'
-                    }`}
-                  >
-                    {active && <Check size={11} strokeWidth={3} />}
-                  </div>
-                  <span className="text-sm font-medium">{label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-white/8 mb-7" />
-
-        {/* Free text */}
-        <div>
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
-            Une précision pour BAIA&nbsp;?
-          </p>
-          <div className="relative">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Ex : je cherche idéalement un appartement calme, avec une belle hauteur sous plafond…"
-              rows={3}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white text-sm placeholder-white/25 resize-none focus:outline-none focus:border-white/25 pr-14 leading-relaxed"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!text.trim() && selected.length === 0}
-              className={`absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                text.trim() || selected.length > 0
-                  ? 'bg-white text-black'
-                  : 'bg-white/8 text-white/20 cursor-not-allowed'
-              }`}
+          {/* Animated green check */}
+          <motion.div
+            className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mb-4"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', damping: 14, stiffness: 180 }}
+          >
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.25, type: 'spring', damping: 18 }}
             >
-              {sent ? <Check size={14} strokeWidth={2.5} /> : <Send size={13} />}
-            </button>
-          </div>
+              <Check size={28} className="text-emerald-400" strokeWidth={2.5} />
+            </motion.div>
+          </motion.div>
+
+          <h2 className="text-white font-bold text-2xl leading-snug mb-2">
+            Vous avez fait le tour…
+          </h2>
+          <p className="text-white/50 text-sm leading-relaxed max-w-[290px]">
+            … pour l'instant&nbsp;! Mais vous serez alerté(e) dès qu'un nouveau bien sort dans vos critères.
+          </p>
         </div>
+
+        {/* ── Form / Confirmation (animated swap) ── */}
+        <AnimatePresence mode="wait">
+          {!confirmed ? (
+            <motion.div
+              key="form"
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+                Élargir ma recherche
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {/* Toggle suggestions */}
+                {SUGGESTIONS.map(({ id, label }) => {
+                  const active = selected.includes(id)
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggle(id)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
+                        active
+                          ? 'bg-white text-black border-white'
+                          : 'bg-white/5 text-white/70 border-white/10'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                        active ? 'bg-black border-black' : 'border-white/30'
+                      }`}>
+                        {active && <Check size={11} strokeWidth={3} />}
+                      </div>
+                      <span className="text-sm font-medium">{label}</span>
+                    </button>
+                  )
+                })}
+
+                {/* Free text — 4th item, same visual style */}
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
+                  textActive
+                    ? 'bg-white border-white'
+                    : 'bg-white/5 border-white/10'
+                }`}>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                    textActive ? 'bg-black border-black' : 'border-white/30'
+                  }`}>
+                    {textActive && <Check size={11} strokeWidth={3} />}
+                  </div>
+                  <input
+                    type="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Dites-nous comment avec vos mots"
+                    className={`flex-1 bg-transparent text-sm focus:outline-none ${
+                      textActive ? 'text-black placeholder-black/30' : 'text-white placeholder-white/25'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Submit button */}
+              <button
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                className={`w-full py-4 rounded-2xl text-sm font-bold transition-all mt-5 ${
+                  canSubmit
+                    ? 'bg-white text-black'
+                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                }`}
+              >
+                Modifier mes critères
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="confirmation"
+              className="flex flex-col items-center text-center gap-3 py-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                <Check size={20} className="text-emerald-400" strokeWidth={2.5} />
+              </div>
+              <p className="text-white font-semibold text-base">
+                Modifications prises en compte&nbsp;!
+              </p>
+              <p className="text-white/40 text-sm leading-relaxed max-w-[260px]">
+                Vos critères sont modifiables à tout moment dans l'onglet{' '}
+                <span className="text-white/70 font-medium">Profil</span>.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>
