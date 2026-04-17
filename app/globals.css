@@ -4,6 +4,7 @@
   --background: #000000;
   --foreground: #ffffff;
   --nav-h: calc(60px + max(env(safe-area-inset-bottom, 0px), 20px));
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 @theme inline {
