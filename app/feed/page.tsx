@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Volume2, VolumeX } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
@@ -8,11 +8,15 @@ import BottomNav from '@/components/BottomNav'
 import VideoCard from '@/components/VideoCard'
 import PropertyOverlay from '@/components/PropertyOverlay'
 import ActionRail from '@/components/ActionRail'
-import SkipFeedbackModal from '@/components/SkipFeedbackModal'
+import SkipFeedbackCard from '@/components/SkipFeedbackCard'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
 import { useShomeeStore } from '@/lib/store'
 import { properties } from '@/lib/mockData'
+
+type FeedItem =
+  | { type: 'property'; property: (typeof properties)[0] }
+  | { type: 'interstitial'; property: (typeof properties)[0] }
 
 export default function FeedPage() {
   const [muted, setMuted] = useState(true)
@@ -22,42 +26,23 @@ export default function FeedPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
-  const {
-    currentIndex,
-    favorites,
-    showSkipModal,
-    skippedProperty,
-    setCurrentIndex,
-    toggleFavorite,
-    closeSkipFeedback,
-    dismissAndStay,
-  } = useShomeeStore()
+  const { currentIndex, favorites, setCurrentIndex, toggleFavorite } = useShomeeStore()
 
-  const handleScrollBack = useCallback(() => {
-    if (!skippedProperty) return
-    cardRefs.current.get(skippedProperty.id)?.scrollIntoView({ behavior: 'smooth' })
-    dismissAndStay()
-  }, [skippedProperty, dismissAndStay])
+  // Build flat feed: promising properties get an interstitial card right after them.
+  const feedItems = useMemo<FeedItem[]>(
+    () =>
+      properties.flatMap((p) =>
+        p.promising
+          ? [
+              { type: 'property', property: p },
+              { type: 'interstitial', property: p },
+            ]
+          : [{ type: 'property', property: p }],
+      ),
+    [],
+  )
 
-  // When the skip modal opens, snap back to the skipped card so the overlay covers it.
-  useEffect(() => {
-    if (showSkipModal && skippedProperty) {
-      cardRefs.current.get(skippedProperty.id)?.scrollIntoView({ behavior: 'instant' })
-    }
-  }, [showSkipModal, skippedProperty])
-
-  // On modal close (submit or X), advance to the card that was already queued as currentIndex.
-  const handleCloseSkipFeedback = useCallback(() => {
-    const nextId = properties[currentIndex]?.id
-    closeSkipFeedback()
-    if (nextId) {
-      setTimeout(() => {
-        cardRefs.current.get(nextId)?.scrollIntoView({ behavior: 'smooth' })
-      }, 50)
-    }
-  }, [closeSkipFeedback, currentIndex])
-
-  // IntersectionObserver — update active card when ≥ 60% visible
+  // IntersectionObserver — update active property when a property card is ≥ 60% visible.
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -87,8 +72,22 @@ export default function FeedPage() {
         className="absolute inset-0 overflow-y-scroll scrollbar-hide"
         style={{ scrollSnapType: 'y mandatory', bottom: '60px' }}
       >
-        {properties.map((property, index) => {
-          const isActive = index === currentIndex
+        {feedItems.map((item) => {
+          if (item.type === 'interstitial') {
+            return (
+              <div
+                key={`skip-${item.property.id}`}
+                className="relative"
+                style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+              >
+                <SkipFeedbackCard property={item.property} />
+              </div>
+            )
+          }
+
+          const { property } = item
+          const propIndex = properties.findIndex((p) => p.id === property.id)
+          const isActive = propIndex === currentIndex
           const isFavorite = favorites.includes(property.id)
 
           return (
@@ -131,7 +130,7 @@ export default function FeedPage() {
           : <Volume2 size={15} className="text-white" />}
       </motion.button>
 
-      {/* Property detail sheet (replaces router navigation) */}
+      {/* Property detail sheet */}
       <PropertyDetailSheet
         property={detailProperty}
         open={Boolean(detailProperty)}
@@ -142,13 +141,6 @@ export default function FeedPage() {
 
       {/* BAIA modal */}
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
-
-      {/* Skip feedback questionnaire */}
-      <SkipFeedbackModal
-        property={skippedProperty}
-        open={showSkipModal}
-        onClose={handleCloseSkipFeedback}
-      />
 
       <BottomNav />
     </MobileFrame>
