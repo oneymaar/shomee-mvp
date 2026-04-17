@@ -72,15 +72,24 @@ export default function FeedPage() {
         className="absolute inset-0 overflow-y-scroll scrollbar-hide"
         style={{ scrollSnapType: 'y mandatory', bottom: '60px' }}
       >
-        {feedItems.map((item) => {
+        {feedItems.map((item, feedIndex) => {
           if (item.type === 'interstitial') {
+            const nextItem = feedItems[feedIndex + 1]
+            const handleAfterSubmit =
+              nextItem?.type === 'property'
+                ? () =>
+                    cardRefs.current
+                      .get(nextItem.property.id)
+                      ?.scrollIntoView({ behavior: 'smooth' })
+                : undefined
+
             return (
               <div
                 key={`skip-${item.property.id}`}
                 className="relative"
                 style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
               >
-                <SkipFeedbackCard property={item.property} />
+                <SkipFeedbackCard property={item.property} onAfterSubmit={handleAfterSubmit} />
               </div>
             )
           }

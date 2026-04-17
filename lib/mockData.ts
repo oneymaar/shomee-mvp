@@ -41,7 +41,7 @@ export const properties: Property[] = [
     ],
     likeCount: 312,
     shareCount: 94,
-    promising: true,
+    promising: false,
   },
   {
     id: '2',
@@ -77,7 +77,7 @@ export const properties: Property[] = [
     ],
     likeCount: 187,
     shareCount: 52,
-    promising: false,
+    promising: true,
   },
   {
     id: '3',

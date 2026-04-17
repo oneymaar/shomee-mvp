@@ -15,7 +15,12 @@ const REASONS = [
   { id: 'other',    emoji: '💬', label: 'Autre raison' },
 ]
 
-export default function SkipFeedbackCard({ property }: { property: Property }) {
+interface SkipFeedbackCardProps {
+  property: Property
+  onAfterSubmit?: () => void
+}
+
+export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedbackCardProps) {
   const [selected, setSelected] = useState<string[]>([])
   const [submitted, setSubmitted] = useState(false)
 
@@ -30,6 +35,7 @@ export default function SkipFeedbackCard({ property }: { property: Property }) {
     setTimeout(() => {
       setSubmitted(false)
       setSelected([])
+      onAfterSubmit?.()
     }, 1600)
   }
 
@@ -51,7 +57,8 @@ export default function SkipFeedbackCard({ property }: { property: Property }) {
         />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full px-5 pt-14 pb-6">
+      {/* Centered content */}
+      <div className="relative z-10 flex flex-col h-full px-5 justify-center py-8">
         {/* Header */}
         <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-2">
           BAIA · Comprendre vos critères
@@ -86,7 +93,6 @@ export default function SkipFeedbackCard({ property }: { property: Property }) {
           {!submitted ? (
             <motion.div
               key="form"
-              className="flex-1 flex flex-col"
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.15 }}
             >
@@ -122,20 +128,20 @@ export default function SkipFeedbackCard({ property }: { property: Property }) {
                 Envoyer mon retour
               </button>
 
-              {/* Scroll hint */}
-              <motion.p
-                className="flex items-center justify-center gap-1.5 text-white/25 text-xs mt-5"
-                animate={{ y: [0, 4, 0] }}
+              {/* Skip hint — larger, more visible */}
+              <motion.div
+                className="flex flex-col items-center gap-1 mt-6"
+                animate={{ y: [0, 5, 0] }}
                 transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
               >
-                <ChevronDown size={13} />
-                Continuer sans répondre
-              </motion.p>
+                <ChevronDown size={28} className="text-white/40" />
+                <span className="text-white/30 text-sm">Continuer sans répondre</span>
+              </motion.div>
             </motion.div>
           ) : (
             <motion.div
               key="thanks"
-              className="flex-1 flex flex-col items-center justify-center gap-4"
+              className="flex flex-col items-center gap-4 py-8"
               initial={{ opacity: 0, scale: 0.88 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
