@@ -7,13 +7,22 @@ import BottomNav from '@/components/BottomNav'
 export default function MessagesPage() {
   return (
     <MobileFrame>
-      <div className="h-full flex flex-col pb-16">
-        <div className="px-5 py-4 border-b border-white/10">
-          <h1 className="text-white font-bold text-xl">Messages</h1>
-          <p className="text-white/40 text-sm mt-0.5">Vos échanges avec les agents</p>
+      <div className="h-full overflow-y-auto scrollbar-hide">
+
+        {/* Header */}
+        <div
+          className="sticky top-0 z-10 bg-black border-b border-white/8 px-5 pb-4"
+          style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+        >
+          <h1 className="text-white font-bold text-xl tracking-tight">Messages</h1>
+          <p className="text-white/40 text-xs mt-0.5">Vos échanges avec les agents</p>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center">
+        {/* Empty state */}
+        <div
+          className="flex flex-col items-center justify-center gap-4 px-8 text-center"
+          style={{ minHeight: 'calc(100dvh - 180px)' }}
+        >
           <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
             <MessageCircle size={28} className="text-white/30" />
           </div>
@@ -24,8 +33,8 @@ export default function MessagesPage() {
             </p>
           </div>
         </div>
-      </div>
 
+      </div>
       <BottomNav />
     </MobileFrame>
   )

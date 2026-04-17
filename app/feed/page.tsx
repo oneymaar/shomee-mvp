@@ -9,59 +9,85 @@ import VideoCard from '@/components/VideoCard'
 import PropertyOverlay from '@/components/PropertyOverlay'
 import ActionRail from '@/components/ActionRail'
 import SkipFeedbackCard from '@/components/SkipFeedbackCard'
+import EndOfFeedCard from '@/components/EndOfFeedCard'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
 import { useShomeeStore } from '@/lib/store'
 import { properties } from '@/lib/mockData'
 
 type FeedItem =
-  | { type: 'property'; property: (typeof properties)[0] }
+  | { type: 'property';     property: (typeof properties)[0] }
   | { type: 'interstitial'; property: (typeof properties)[0] }
+  | { type: 'end-of-feed' }
 
 export default function FeedPage() {
   const [muted, setMuted] = useState(true)
   const [baiaOpen, setBaiaOpen] = useState(false)
   const [detailProperty, setDetailProperty] = useState<typeof properties[0] | null>(null)
+  const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const containerRef    = useRef<HTMLDivElement>(null)
+  const cardRefs        = useRef<Map<string, HTMLDivElement>>(new Map())
+  const specialCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const { currentIndex, favorites, setCurrentIndex, toggleFavorite } = useShomeeStore()
 
-  // Build flat feed: promising properties get an interstitial card right after them.
+  // Build flat feed: promising properties get an interstitial; always append end-of-feed.
   const feedItems = useMemo<FeedItem[]>(
-    () =>
-      properties.flatMap((p) =>
+    () => [
+      ...properties.flatMap((p) =>
         p.promising
           ? [
-              { type: 'property', property: p },
-              { type: 'interstitial', property: p },
+              { type: 'property'     as const, property: p },
+              { type: 'interstitial' as const, property: p },
             ]
-          : [{ type: 'property', property: p }],
+          : [{ type: 'property' as const, property: p }],
       ),
+      { type: 'end-of-feed' as const },
+    ],
     [],
   )
 
-  // IntersectionObserver — update active property when a property card is ≥ 60% visible.
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const observer = new IntersectionObserver(
+    // Property cards → update currentIndex and mark as not special
+    const propObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
             const id = (entry.target as HTMLDivElement).dataset.propertyId
             const idx = properties.findIndex((p) => p.id === id)
-            if (idx !== -1) useShomeeStore.getState().setCurrentIndex(idx)
+            if (idx !== -1) {
+              useShomeeStore.getState().setCurrentIndex(idx)
+              setIsOnSpecialCard(false)
+            }
           }
         })
       },
       { threshold: 0.6, root: container },
     )
 
-    cardRefs.current.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
+    // Interstitials + end-of-feed → hide sound button
+    const specialObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            setIsOnSpecialCard(true)
+          }
+        })
+      },
+      { threshold: 0.6, root: container },
+    )
+
+    cardRefs.current.forEach((el)        => propObserver.observe(el))
+    specialCardRefs.current.forEach((el) => specialObserver.observe(el))
+
+    return () => {
+      propObserver.disconnect()
+      specialObserver.disconnect()
+    }
   }, [])
 
   return (
@@ -73,6 +99,24 @@ export default function FeedPage() {
         style={{ scrollSnapType: 'y mandatory', bottom: '60px' }}
       >
         {feedItems.map((item, feedIndex) => {
+          /* ── End of feed ── */
+          if (item.type === 'end-of-feed') {
+            return (
+              <div
+                key="end-of-feed"
+                ref={(el) => {
+                  if (el) specialCardRefs.current.set('end-of-feed', el)
+                  else    specialCardRefs.current.delete('end-of-feed')
+                }}
+                className="relative"
+                style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+              >
+                <EndOfFeedCard />
+              </div>
+            )
+          }
+
+          /* ── Interstitial ── */
           if (item.type === 'interstitial') {
             const nextItem = feedItems[feedIndex + 1]
             const handleAfterSubmit =
@@ -86,6 +130,10 @@ export default function FeedPage() {
             return (
               <div
                 key={`skip-${item.property.id}`}
+                ref={(el) => {
+                  if (el) specialCardRefs.current.set(`skip-${item.property.id}`, el)
+                  else    specialCardRefs.current.delete(`skip-${item.property.id}`)
+                }}
                 className="relative"
                 style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
               >
@@ -94,9 +142,10 @@ export default function FeedPage() {
             )
           }
 
+          /* ── Property card ── */
           const { property } = item
           const propIndex = properties.findIndex((p) => p.id === property.id)
-          const isActive = propIndex === currentIndex
+          const isActive  = propIndex === currentIndex
           const isFavorite = favorites.includes(property.id)
 
           return (
@@ -105,7 +154,7 @@ export default function FeedPage() {
               data-property-id={property.id}
               ref={(el) => {
                 if (el) cardRefs.current.set(property.id, el)
-                else cardRefs.current.delete(property.id)
+                else    cardRefs.current.delete(property.id)
               }}
               className="relative"
               style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
@@ -127,17 +176,22 @@ export default function FeedPage() {
         })}
       </div>
 
-      {/* Sound toggle — top right */}
-      <motion.button
-        className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
-        style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
-        onClick={() => setMuted((m) => !m)}
-        whileTap={{ scale: 0.88 }}
-      >
-        {muted
-          ? <VolumeX size={15} className="text-white" />
-          : <Volume2 size={15} className="text-white" />}
-      </motion.button>
+      {/* Sound toggle — hidden on special cards */}
+      {!isOnSpecialCard && (
+        <motion.button
+          className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
+          style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
+          onClick={() => setMuted((m) => !m)}
+          whileTap={{ scale: 0.88 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {muted
+            ? <VolumeX size={15} className="text-white" />
+            : <Volume2 size={15} className="text-white" />}
+        </motion.button>
+      )}
 
       {/* Property detail sheet */}
       <PropertyDetailSheet

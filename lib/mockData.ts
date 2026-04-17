@@ -116,6 +116,6 @@ export const properties: Property[] = [
     ],
     likeCount: 326,
     shareCount: 164,
-    promising: true,
+    promising: false,
   },
 ]
