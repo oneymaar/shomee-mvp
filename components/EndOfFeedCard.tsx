@@ -4,16 +4,23 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from 'lucide-react'
 
+type CardState = 'idle' | 'loading' | 'confirmed'
+
 const SUGGESTIONS = [
   { id: 'paris11', label: 'Élargir à Paris 11e' },
   { id: 'budget',  label: 'Budget jusqu\'à 850 000 €' },
   { id: 'noasc',   label: 'Biens sans ascenseur' },
 ]
 
-export default function EndOfFeedCard() {
+interface EndOfFeedCardProps {
+  hasNewResults?: boolean
+  onNewResults?: () => void
+}
+
+export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: EndOfFeedCardProps) {
   const [selected, setSelected] = useState<string[]>([])
   const [text, setText] = useState('')
-  const [confirmed, setConfirmed] = useState(false)
+  const [cardState, setCardState] = useState<CardState>('idle')
 
   const toggle = (id: string) =>
     setSelected((prev) =>
@@ -25,17 +32,22 @@ export default function EndOfFeedCard() {
 
   const handleSubmit = () => {
     if (!canSubmit) return
-    setConfirmed(true)
+    setCardState('loading')
+    setTimeout(() => {
+      if (hasNewResults) {
+        onNewResults?.()
+      } else {
+        setCardState('confirmed')
+      }
+    }, 2200)
   }
 
   return (
     <div className="relative w-full h-full bg-neutral-900 flex flex-col overflow-hidden">
-
       <div className="relative z-10 h-full overflow-y-auto scrollbar-hide px-5 flex flex-col justify-center py-10">
 
-        {/* ── Hero (always visible) ── */}
+        {/* ── Hero — always visible ── */}
         <div className="flex flex-col items-center text-center mb-8">
-          {/* Animated green check */}
           <motion.div
             className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mb-4"
             initial={{ scale: 0 }}
@@ -59,21 +71,21 @@ export default function EndOfFeedCard() {
           </p>
         </div>
 
-        {/* ── Section label — always visible ── */}
-        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
-          Élargir ma recherche
-        </p>
-
-        {/* ── Form / Confirmation (animated swap) ── */}
+        {/* ── Body — animated between idle / loading / confirmed ── */}
         <AnimatePresence mode="wait">
-          {!confirmed ? (
+
+          {/* Idle: suggestions + button */}
+          {cardState === 'idle' && (
             <motion.div
               key="form"
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+                Élargir ma recherche
+              </p>
+
               <div className="flex flex-col gap-2">
-                {/* Toggle suggestions */}
                 {SUGGESTIONS.map(({ id, label }) => {
                   const active = selected.includes(id)
                   return (
@@ -89,23 +101,21 @@ export default function EndOfFeedCard() {
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                         active ? 'bg-black border-black' : 'border-white/30'
                       }`}>
-                        {active && <Check size={11} strokeWidth={3} />}
+                        {active && <Check size={11} strokeWidth={3} className="text-white" />}
                       </div>
                       <span className="text-sm font-medium">{label}</span>
                     </button>
                   )
                 })}
 
-                {/* Free text — 4th item, same visual style */}
+                {/* Free text — 4th item */}
                 <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
-                  textActive
-                    ? 'bg-white border-white'
-                    : 'bg-white/5 border-white/10'
+                  textActive ? 'bg-white border-white' : 'bg-white/5 border-white/10'
                 }`}>
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                     textActive ? 'bg-black border-black' : 'border-white/30'
                   }`}>
-                    {textActive && <Check size={11} strokeWidth={3} />}
+                    {textActive && <Check size={11} strokeWidth={3} className="text-white" />}
                   </div>
                   <input
                     type="text"
@@ -119,7 +129,6 @@ export default function EndOfFeedCard() {
                 </div>
               </div>
 
-              {/* Submit button */}
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit}
@@ -132,25 +141,56 @@ export default function EndOfFeedCard() {
                 Modifier mes critères
               </button>
             </motion.div>
-          ) : (
+          )}
+
+          {/* Loading: BAIA searching animation */}
+          {cardState === 'loading' && (
             <motion.div
-              key="confirmation"
-              className="flex flex-col gap-2 py-1"
+              key="loading"
+              className="flex flex-col items-center gap-5 py-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.div
+                className="w-12 h-12 rounded-full border-2 border-white/15 border-t-white/80"
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+              />
+              <div className="text-center">
+                <p className="text-white font-semibold text-base">
+                  BAIA relance la recherche…
+                </p>
+                <p className="text-white/40 text-sm mt-1.5">
+                  Analyse des biens correspondant à vos nouveaux critères.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Confirmed: no results, left-aligned under section label */}
+          {cardState === 'confirmed' && (
+            <motion.div
+              key="confirmed"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+                Élargir ma recherche
+              </p>
               <p className="text-white font-semibold text-base">
                 Modifications prises en compte&nbsp;!
               </p>
-              <p className="text-white/50 text-sm leading-relaxed">
+              <p className="text-white/50 text-sm leading-relaxed mt-2">
                 Vos critères sont modifiables à tout moment dans l'onglet{' '}
                 <span className="text-white/70 font-medium">Profil</span>.
               </p>
             </motion.div>
           )}
-        </AnimatePresence>
 
+        </AnimatePresence>
       </div>
     </div>
   )

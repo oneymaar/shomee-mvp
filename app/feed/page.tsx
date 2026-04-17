@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Volume2, VolumeX } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
@@ -18,7 +18,7 @@ import { properties } from '@/lib/mockData'
 type FeedItem =
   | { type: 'property';     property: (typeof properties)[0] }
   | { type: 'interstitial'; property: (typeof properties)[0] }
-  | { type: 'end-of-feed' }
+  | { type: 'end-of-feed';  id: string; hasNewResults: boolean }
 
 export default function FeedPage() {
   const [muted, setMuted] = useState(true)
@@ -32,27 +32,40 @@ export default function FeedPage() {
 
   const { currentIndex, favorites, setCurrentIndex, toggleFavorite } = useShomeeStore()
 
-  // Build flat feed: promising properties get an interstitial; always append end-of-feed.
-  const feedItems = useMemo<FeedItem[]>(
-    () => [
-      ...properties.flatMap((p) =>
-        p.promising
-          ? [
-              { type: 'property'     as const, property: p },
-              { type: 'interstitial' as const, property: p },
-            ]
-          : [{ type: 'property' as const, property: p }],
-      ),
-      { type: 'end-of-feed' as const },
-    ],
-    [],
-  )
+  // Feed structure (explicit for this demo):
+  //   bien1 → bien2 → interstitiel(2) → bien3
+  //   → fin-de-feed-1 (hasNewResults) → bien4
+  //   → fin-de-feed-2 (no results)
+  const feedItems = useMemo<FeedItem[]>(() => {
+    const items: FeedItem[] = []
+
+    // Properties 1–3 with interstitials for "promising" ones
+    for (const p of properties.slice(0, 3)) {
+      items.push({ type: 'property', property: p })
+      if (p.promising) items.push({ type: 'interstitial', property: p })
+    }
+
+    // First end-of-feed: BAIA finds property 4
+    items.push({ type: 'end-of-feed', id: 'eof-1', hasNewResults: true })
+
+    // Property 4 (newly found result)
+    if (properties[3]) items.push({ type: 'property', property: properties[3] })
+
+    // Second end-of-feed: no more results
+    items.push({ type: 'end-of-feed', id: 'eof-2', hasNewResults: false })
+
+    return items
+  }, [])
+
+  // Scroll to property 4 when BAIA finds it from eof-1
+  const handleNewResults = useCallback(() => {
+    cardRefs.current.get(properties[3]?.id)?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    // Property cards → update currentIndex and mark as not special
     const propObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -69,7 +82,6 @@ export default function FeedPage() {
       { threshold: 0.6, root: container },
     )
 
-    // Interstitials + end-of-feed → hide sound button
     const specialObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -92,26 +104,29 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
-      {/* Vertical scroll feed with CSS snap */}
       <div
         ref={containerRef}
         className="absolute inset-0 overflow-y-scroll scrollbar-hide"
         style={{ scrollSnapType: 'y mandatory', bottom: '60px' }}
       >
         {feedItems.map((item, feedIndex) => {
+
           /* ── End of feed ── */
           if (item.type === 'end-of-feed') {
             return (
               <div
-                key="end-of-feed"
+                key={item.id}
                 ref={(el) => {
-                  if (el) specialCardRefs.current.set('end-of-feed', el)
-                  else    specialCardRefs.current.delete('end-of-feed')
+                  if (el) specialCardRefs.current.set(item.id, el)
+                  else    specialCardRefs.current.delete(item.id)
                 }}
                 className="relative"
                 style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
               >
-                <EndOfFeedCard />
+                <EndOfFeedCard
+                  hasNewResults={item.hasNewResults}
+                  onNewResults={item.hasNewResults ? handleNewResults : undefined}
+                />
               </div>
             )
           }
@@ -144,8 +159,8 @@ export default function FeedPage() {
 
           /* ── Property card ── */
           const { property } = item
-          const propIndex = properties.findIndex((p) => p.id === property.id)
-          const isActive  = propIndex === currentIndex
+          const propIndex  = properties.findIndex((p) => p.id === property.id)
+          const isActive   = propIndex === currentIndex
           const isFavorite = favorites.includes(property.id)
 
           return (
@@ -193,7 +208,6 @@ export default function FeedPage() {
         </motion.button>
       )}
 
-      {/* Property detail sheet */}
       <PropertyDetailSheet
         property={detailProperty}
         open={Boolean(detailProperty)}
@@ -202,7 +216,6 @@ export default function FeedPage() {
         onToggleFavorite={() => detailProperty && toggleFavorite(detailProperty.id)}
       />
 
-      {/* BAIA modal */}
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
 
       <BottomNav />
