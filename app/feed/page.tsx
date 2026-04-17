@@ -20,48 +20,72 @@ type FeedItem =
   | { type: 'interstitial'; property: (typeof properties)[0] }
   | { type: 'end-of-feed';  id: string; hasNewResults: boolean }
 
+// Three stages driving the feed structure:
+//   blocked    → [b1 b2 inter(2) b3 eof-1]             (b4 not yet accessible)
+//   pre-reveal → [b1 b2 inter(2) b3 eof-1 b4 eof-2]    (b4 added below eof-1)
+//   revealed   → [b1 b2 inter(2) b3 b4 eof-2]           (eof-1 removed)
+type ResultsStage = 'blocked' | 'pre-reveal' | 'revealed'
+
 export default function FeedPage() {
   const [muted, setMuted] = useState(true)
   const [baiaOpen, setBaiaOpen] = useState(false)
   const [detailProperty, setDetailProperty] = useState<typeof properties[0] | null>(null)
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
+  const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
 
   const containerRef    = useRef<HTMLDivElement>(null)
   const cardRefs        = useRef<Map<string, HTMLDivElement>>(new Map())
   const specialCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
-  const { currentIndex, favorites, setCurrentIndex, toggleFavorite } = useShomeeStore()
+  const { currentIndex, favorites, toggleFavorite } = useShomeeStore()
 
-  // Feed structure (explicit for this demo):
-  //   bien1 → bien2 → interstitiel(2) → bien3
-  //   → fin-de-feed-1 (hasNewResults) → bien4
-  //   → fin-de-feed-2 (no results)
   const feedItems = useMemo<FeedItem[]>(() => {
     const items: FeedItem[] = []
 
-    // Properties 1–3 with interstitials for "promising" ones
     for (const p of properties.slice(0, 3)) {
       items.push({ type: 'property', property: p })
       if (p.promising) items.push({ type: 'interstitial', property: p })
     }
 
-    // First end-of-feed: BAIA finds property 4
-    items.push({ type: 'end-of-feed', id: 'eof-1', hasNewResults: true })
-
-    // Property 4 (newly found result)
-    if (properties[3]) items.push({ type: 'property', property: properties[3] })
-
-    // Second end-of-feed: no more results
-    items.push({ type: 'end-of-feed', id: 'eof-2', hasNewResults: false })
+    if (resultsStage === 'blocked') {
+      items.push({ type: 'end-of-feed', id: 'eof-1', hasNewResults: true })
+    } else if (resultsStage === 'pre-reveal') {
+      items.push({ type: 'end-of-feed', id: 'eof-1', hasNewResults: true })
+      if (properties[3]) items.push({ type: 'property', property: properties[3] })
+      items.push({ type: 'end-of-feed', id: 'eof-2', hasNewResults: false })
+    } else {
+      // revealed: eof-1 gone, b4 takes its scroll position
+      if (properties[3]) items.push({ type: 'property', property: properties[3] })
+      items.push({ type: 'end-of-feed', id: 'eof-2', hasNewResults: false })
+    }
 
     return items
+  }, [resultsStage])
+
+  // Step 1: BAIA found results → add b4 to DOM below eof-1 so the scroll has a destination
+  const handleFoundResults = useCallback(() => {
+    setResultsStage('pre-reveal')
   }, [])
 
-  // Scroll to property 4 when BAIA finds it from eof-1
-  const handleNewResults = useCallback(() => {
-    cardRefs.current.get(properties[3]?.id)?.scrollIntoView({ behavior: 'smooth' })
+  // Step 2: scroll to b4, then remove eof-1 with an instant position correction
+  const handleScrollToNew = useCallback(() => {
+    const b4el = cardRefs.current.get(properties[3]?.id)
+    if (!b4el) return
+
+    b4el.scrollIntoView({ behavior: 'smooth' })
+
+    // After smooth scroll completes: switch to revealed and correct scroll position
+    setTimeout(() => {
+      setResultsStage('revealed')
+      requestAnimationFrame(() => {
+        const el = cardRefs.current.get(properties[3]?.id)
+        const container = containerRef.current
+        if (el && container) container.scrollTop = el.offsetTop
+      })
+    }, 1200)
   }, [])
 
+  // Re-setup observers whenever the feed structure changes
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -100,7 +124,7 @@ export default function FeedPage() {
       propObserver.disconnect()
       specialObserver.disconnect()
     }
-  }, [])
+  }, [resultsStage])
 
   return (
     <MobileFrame>
@@ -125,7 +149,9 @@ export default function FeedPage() {
               >
                 <EndOfFeedCard
                   hasNewResults={item.hasNewResults}
-                  onNewResults={item.hasNewResults ? handleNewResults : undefined}
+                  newResultsCount={1}
+                  onFoundResults={item.id === 'eof-1' ? handleFoundResults : undefined}
+                  onScrollToNew={item.id === 'eof-1' ? handleScrollToNew : undefined}
                 />
               </div>
             )
@@ -136,10 +162,7 @@ export default function FeedPage() {
             const nextItem = feedItems[feedIndex + 1]
             const handleAfterSubmit =
               nextItem?.type === 'property'
-                ? () =>
-                    cardRefs.current
-                      .get(nextItem.property.id)
-                      ?.scrollIntoView({ behavior: 'smooth' })
+                ? () => cardRefs.current.get(nextItem.property.id)?.scrollIntoView({ behavior: 'smooth' })
                 : undefined
 
             return (
@@ -191,7 +214,6 @@ export default function FeedPage() {
         })}
       </div>
 
-      {/* Sound toggle — hidden on special cards */}
       {!isOnSpecialCard && (
         <motion.button
           className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
@@ -202,9 +224,7 @@ export default function FeedPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {muted
-            ? <VolumeX size={15} className="text-white" />
-            : <Volume2 size={15} className="text-white" />}
+          {muted ? <VolumeX size={15} className="text-white" /> : <Volume2 size={15} className="text-white" />}
         </motion.button>
       )}
 
@@ -217,7 +237,6 @@ export default function FeedPage() {
       />
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
-
       <BottomNav />
     </MobileFrame>
   )

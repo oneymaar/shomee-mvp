@@ -4,20 +4,27 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from 'lucide-react'
 
-type CardState = 'idle' | 'loading' | 'confirmed'
+type CardState = 'idle' | 'loading' | 'found' | 'confirmed'
 
 const SUGGESTIONS = [
   { id: 'paris11', label: 'Élargir à Paris 11e' },
-  { id: 'budget',  label: 'Budget jusqu\'à 850 000 €' },
+  { id: 'budget',  label: "Budget jusqu'à 850 000 €" },
   { id: 'noasc',   label: 'Biens sans ascenseur' },
 ]
 
 interface EndOfFeedCardProps {
   hasNewResults?: boolean
-  onNewResults?: () => void
+  newResultsCount?: number
+  onFoundResults?: () => void  // called when 'found' state starts (5 s after submit)
+  onScrollToNew?: () => void   // called 2 s after 'found' state starts
 }
 
-export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: EndOfFeedCardProps) {
+export default function EndOfFeedCard({
+  hasNewResults = false,
+  newResultsCount = 1,
+  onFoundResults,
+  onScrollToNew,
+}: EndOfFeedCardProps) {
   const [selected, setSelected] = useState<string[]>([])
   const [text, setText] = useState('')
   const [cardState, setCardState] = useState<CardState>('idle')
@@ -33,14 +40,22 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
   const handleSubmit = () => {
     if (!canSubmit) return
     setCardState('loading')
+
     setTimeout(() => {
       if (hasNewResults) {
-        onNewResults?.()
+        setCardState('found')
+        onFoundResults?.()
+        setTimeout(() => onScrollToNew?.(), 2000)
       } else {
         setCardState('confirmed')
       }
-    }, 2200)
+    }, 5000)
   }
+
+  const resultLabel =
+    newResultsCount === 1
+      ? '1 nouveau bien trouvé\u00A0!'
+      : `${newResultsCount} nouveaux biens trouvés\u00A0!`
 
   return (
     <div className="relative w-full h-full bg-neutral-900 flex flex-col overflow-hidden">
@@ -62,7 +77,6 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
               <Check size={28} className="text-emerald-400" strokeWidth={2.5} />
             </motion.div>
           </motion.div>
-
           <h2 className="text-white font-bold text-2xl leading-snug mb-2">
             Vous avez fait le tour…
           </h2>
@@ -71,16 +85,12 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
           </p>
         </div>
 
-        {/* ── Body — animated between idle / loading / confirmed ── */}
+        {/* ── Body ── */}
         <AnimatePresence mode="wait">
 
-          {/* Idle: suggestions + button */}
+          {/* idle: suggestions form */}
           {cardState === 'idle' && (
-            <motion.div
-              key="form"
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
+            <motion.div key="form" exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
               <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
                 Élargir ma recherche
               </p>
@@ -93,9 +103,7 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
                       key={id}
                       onClick={() => toggle(id)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
-                        active
-                          ? 'bg-white text-black border-white'
-                          : 'bg-white/5 text-white/70 border-white/10'
+                        active ? 'bg-white text-black border-white' : 'bg-white/5 text-white/70 border-white/10'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
@@ -108,7 +116,7 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
                   )
                 })}
 
-                {/* Free text — 4th item */}
+                {/* 4th item: free text */}
                 <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
                   textActive ? 'bg-white border-white' : 'bg-white/5 border-white/10'
                 }`}>
@@ -133,9 +141,7 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
                 onClick={handleSubmit}
                 disabled={!canSubmit}
                 className={`w-full py-4 rounded-2xl text-sm font-bold transition-all mt-5 ${
-                  canSubmit
-                    ? 'bg-white text-black'
-                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                  canSubmit ? 'bg-white text-black' : 'bg-white/10 text-white/30 cursor-not-allowed'
                 }`}
               >
                 Modifier mes critères
@@ -143,7 +149,7 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
             </motion.div>
           )}
 
-          {/* Loading: BAIA searching animation */}
+          {/* loading: spinner */}
           {cardState === 'loading' && (
             <motion.div
               key="loading"
@@ -159,9 +165,7 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
                 transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               />
               <div className="text-center">
-                <p className="text-white font-semibold text-base">
-                  BAIA relance la recherche…
-                </p>
+                <p className="text-white font-semibold text-base">BAIA relance la recherche…</p>
                 <p className="text-white/40 text-sm mt-1.5">
                   Analyse des biens correspondant à vos nouveaux critères.
                 </p>
@@ -169,7 +173,30 @@ export default function EndOfFeedCard({ hasNewResults = false, onNewResults }: E
             </motion.div>
           )}
 
-          {/* Confirmed: no results, left-aligned under section label */}
+          {/* found: result count before scroll */}
+          {cardState === 'found' && (
+            <motion.div
+              key="found"
+              className="flex flex-col items-center gap-4 py-6"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center"
+                animate={{ scale: [1, 1.12, 1] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+              >
+                <Check size={24} className="text-emerald-400" strokeWidth={2.5} />
+              </motion.div>
+              <div className="text-center">
+                <p className="text-white font-bold text-xl">{resultLabel}</p>
+                <p className="text-white/40 text-sm mt-1.5">Chargement en cours…</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* confirmed: no new results */}
           {cardState === 'confirmed' && (
             <motion.div
               key="confirmed"
