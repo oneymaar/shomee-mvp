@@ -66,8 +66,8 @@ export default function FeedPage() {
       {/* Vertical scroll feed with CSS snap */}
       <div
         ref={containerRef}
-        className="absolute inset-0 bottom-[60px] overflow-y-scroll scrollbar-hide"
-        style={{ scrollSnapType: 'y mandatory' }}
+        className="absolute inset-0 overflow-y-scroll scrollbar-hide"
+        style={{ scrollSnapType: 'y mandatory', bottom: 'var(--nav-h)' }}
       >
         {properties.map((property, index) => {
           const isActive = index === currentIndex
