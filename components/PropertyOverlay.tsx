@@ -16,18 +16,6 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
 
   return (
     <>
-      {/* Top info: arrondissement + subtitle */}
-      <div className="absolute top-0 left-0 right-0 z-20 pt-10 pb-16 bg-gradient-to-b from-black/70 via-black/20 to-transparent pointer-events-none">
-        <div className="flex flex-col items-center gap-1 px-4">
-          <h2 className="text-white font-black text-xl tracking-[0.08em] drop-shadow-lg">
-            {property.arrondissement}
-          </h2>
-          <p className="text-white/90 text-sm italic font-light drop-shadow">
-            {property.subtitle}
-          </p>
-        </div>
-      </div>
-
       {/* Bottom info: agent + price + BAIA */}
       <div className="absolute bottom-6 left-0 right-0 z-20 px-3">
         <div className="flex items-end justify-between gap-2">

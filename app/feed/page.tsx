@@ -67,7 +67,7 @@ export default function FeedPage() {
       <div
         ref={containerRef}
         className="absolute inset-0 overflow-y-scroll scrollbar-hide"
-        style={{ scrollSnapType: 'y mandatory', bottom: 'calc(60px + max(env(safe-area-inset-bottom, 0px), 20px))' }}
+        style={{ scrollSnapType: 'y mandatory', bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
       >
         {properties.map((property, index) => {
           const isActive = index === currentIndex
@@ -103,7 +103,8 @@ export default function FeedPage() {
 
       {/* Sound toggle — top right */}
       <motion.button
-        className="absolute top-4 right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
+        className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
+        style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
         onClick={() => setMuted((m) => !m)}
         whileTap={{ scale: 0.88 }}
       >
