@@ -51,7 +51,7 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
       {open && (
         <motion.div
           key="baia-modal"
-          className="absolute inset-0 z-50 bg-black flex flex-col"
+          className="absolute inset-0 z-50 bg-neutral-900 flex flex-col"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}

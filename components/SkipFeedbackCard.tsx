@@ -44,7 +44,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
   )
 
   return (
-    <div className="relative w-full h-full bg-neutral-950 flex flex-col overflow-hidden">
+    <div className="relative w-full h-full bg-neutral-900 flex flex-col overflow-hidden">
       {/* Blurred property thumbnail as background */}
       <div className="absolute inset-0 opacity-15 pointer-events-none">
         <Image

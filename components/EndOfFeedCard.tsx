@@ -29,9 +29,7 @@ export default function EndOfFeedCard() {
   }
 
   return (
-    <div className="relative w-full h-full bg-neutral-950 flex flex-col overflow-hidden">
-      {/* Soft radial glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-white/4 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative w-full h-full bg-neutral-900 flex flex-col overflow-hidden">
 
       <div className="relative z-10 h-full overflow-y-auto scrollbar-hide px-5 flex flex-col justify-center py-10">
 
@@ -61,6 +59,11 @@ export default function EndOfFeedCard() {
           </p>
         </div>
 
+        {/* ── Section label — always visible ── */}
+        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+          Élargir ma recherche
+        </p>
+
         {/* ── Form / Confirmation (animated swap) ── */}
         <AnimatePresence mode="wait">
           {!confirmed ? (
@@ -69,10 +72,6 @@ export default function EndOfFeedCard() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
-                Élargir ma recherche
-              </p>
-
               <div className="flex flex-col gap-2">
                 {/* Toggle suggestions */}
                 {SUGGESTIONS.map(({ id, label }) => {
@@ -136,18 +135,15 @@ export default function EndOfFeedCard() {
           ) : (
             <motion.div
               key="confirmation"
-              className="flex flex-col items-center text-center gap-3 py-4"
-              initial={{ opacity: 0, y: 16 }}
+              className="flex flex-col gap-2 py-1"
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
-              <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                <Check size={20} className="text-emerald-400" strokeWidth={2.5} />
-              </div>
               <p className="text-white font-semibold text-base">
                 Modifications prises en compte&nbsp;!
               </p>
-              <p className="text-white/40 text-sm leading-relaxed max-w-[260px]">
+              <p className="text-white/50 text-sm leading-relaxed">
                 Vos critères sont modifiables à tout moment dans l'onglet{' '}
                 <span className="text-white/70 font-medium">Profil</span>.
               </p>
