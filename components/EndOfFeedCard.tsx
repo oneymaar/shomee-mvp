@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from 'lucide-react'
 
-type CardState = 'idle' | 'loading' | 'found' | 'confirmed'
+type CardState = 'idle' | 'loading' | 'found' | 'confirmed' | 'done'
 
 const SUGGESTIONS = [
   { id: 'paris11', label: 'Élargir à Paris 11e' },
@@ -48,6 +48,7 @@ export default function EndOfFeedCard({
         setTimeout(() => onScrollToNew?.(), 2000)
       } else {
         setCardState('confirmed')
+        setTimeout(() => setCardState('done'), 4000)
       }
     }, 5000)
   }
@@ -196,25 +197,29 @@ export default function EndOfFeedCard({
             </motion.div>
           )}
 
-          {/* confirmed: no new results */}
+          {/* confirmed: no new results — centered, auto-dismiss after 4s */}
           {cardState === 'confirmed' && (
             <motion.div
               key="confirmed"
+              className="flex flex-col items-center text-center gap-2 py-2"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
-                Élargir ma recherche
-              </p>
               <p className="text-white font-semibold text-base">
                 Modifications prises en compte&nbsp;!
               </p>
-              <p className="text-white/50 text-sm leading-relaxed mt-2">
+              <p className="text-white/50 text-sm leading-relaxed max-w-[270px]">
                 Vos critères sont modifiables à tout moment dans l'onglet{' '}
                 <span className="text-white/70 font-medium">Profil</span>.
               </p>
             </motion.div>
+          )}
+
+          {/* done: body gone, only hero remains */}
+          {cardState === 'done' && (
+            <motion.div key="done" initial={{ opacity: 0 }} animate={{ opacity: 0 }} />
           )}
 
         </AnimatePresence>
