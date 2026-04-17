@@ -18,7 +18,6 @@ export default function BottomNav() {
   return (
     <nav
       className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="flex items-center justify-around px-2 h-[60px]">
         {tabs.map(({ label, href, icon: Icon }) => {
