@@ -39,6 +39,24 @@ export default function FeedPage() {
     dismissAndStay()
   }, [skippedProperty, dismissAndStay])
 
+  // When the skip modal opens, snap back to the skipped card so the overlay covers it.
+  useEffect(() => {
+    if (showSkipModal && skippedProperty) {
+      cardRefs.current.get(skippedProperty.id)?.scrollIntoView({ behavior: 'instant' })
+    }
+  }, [showSkipModal, skippedProperty])
+
+  // On modal close (submit or X), advance to the card that was already queued as currentIndex.
+  const handleCloseSkipFeedback = useCallback(() => {
+    const nextId = properties[currentIndex]?.id
+    closeSkipFeedback()
+    if (nextId) {
+      setTimeout(() => {
+        cardRefs.current.get(nextId)?.scrollIntoView({ behavior: 'smooth' })
+      }, 50)
+    }
+  }, [closeSkipFeedback, currentIndex])
+
   // IntersectionObserver — update active card when ≥ 60% visible
   useEffect(() => {
     const container = containerRef.current
@@ -129,7 +147,7 @@ export default function FeedPage() {
       <SkipFeedbackModal
         property={skippedProperty}
         open={showSkipModal}
-        onClose={closeSkipFeedback}
+        onClose={handleCloseSkipFeedback}
       />
 
       <BottomNav />

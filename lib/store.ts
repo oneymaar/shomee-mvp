@@ -23,8 +23,9 @@ export const useShomeeStore = create<ShomeeState>((set, get) => ({
   // Called by IntersectionObserver when a card becomes active.
   // If the user scrolled forward past a "promising" property, show the skip modal.
   setCurrentIndex: (index: number) => {
-    const { currentIndex } = get()
+    const { currentIndex, showSkipModal } = get()
     if (index === currentIndex) return
+    if (showSkipModal) return
 
     const prevProperty = properties[currentIndex]
     const scrolledForward = index > currentIndex
