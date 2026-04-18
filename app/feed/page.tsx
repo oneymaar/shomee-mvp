@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
-import { motion } from 'framer-motion'
-import { Volume2, VolumeX } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Volume2, VolumeX, Heart } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import VideoCard from '@/components/VideoCard'
@@ -33,11 +33,33 @@ export default function FeedPage() {
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
   const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
 
+  interface FlyHeart { id: number; from: { x: number; y: number }; to: { x: number; y: number } }
+  const [flyHearts, setFlyHearts] = useState<FlyHeart[]>([])
+
   const containerRef    = useRef<HTMLDivElement>(null)
   const cardRefs        = useRef<Map<string, HTMLDivElement>>(new Map())
   const specialCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const { currentIndex, favorites, toggleFavorite } = useShomeeStore()
+
+  const handleToggleFavorite = useCallback((propertyId: string, heartRect: DOMRect) => {
+    const frame = containerRef.current?.parentElement
+    const frameRect = frame?.getBoundingClientRect()
+    if (!frameRect) { toggleFavorite(propertyId); return }
+
+    // Favorites tab is 2nd of 4 tabs with justify-around → center at 37.5% of frame width
+    const toX = frameRect.left + frameRect.width * (1.5 / 4)
+    const toY = frameRect.top + frameRect.height - 30
+
+    const fromX = heartRect.left + heartRect.width / 2
+    const fromY = heartRect.top + heartRect.height / 2
+
+    const id = Date.now()
+    setFlyHearts((prev) => [...prev, { id, from: { x: fromX, y: fromY }, to: { x: toX, y: toY } }])
+
+    setTimeout(() => toggleFavorite(propertyId), 400)
+    setTimeout(() => setFlyHearts((prev) => prev.filter((h) => h.id !== id)), 900)
+  }, [toggleFavorite])
 
   const feedItems = useMemo<FeedItem[]>(() => {
     const items: FeedItem[] = []
@@ -206,7 +228,7 @@ export default function FeedPage() {
               <ActionRail
                 property={property}
                 isFavorite={isFavorite}
-                onToggleFavorite={() => toggleFavorite(property.id)}
+                onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect)}
                 onContact={() => setBaiaOpen(true)}
               />
             </div>
@@ -238,6 +260,34 @@ export default function FeedPage() {
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
       <BottomNav />
+
+      {/* Flying heart animation overlay */}
+      <AnimatePresence>
+        {flyHearts.map((fh) => (
+          <motion.div
+            key={fh.id}
+            style={{
+              position: 'fixed',
+              left: fh.from.x,
+              top: fh.from.y,
+              translateX: '-50%',
+              translateY: '-50%',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+            initial={{ x: 0, y: 0, scale: 1.6, opacity: 1 }}
+            animate={{
+              x: [0, (fh.to.x - fh.from.x) * 0.15, fh.to.x - fh.from.x],
+              y: [0, -110, fh.to.y - fh.from.y],
+              scale: [1.6, 1.8, 0.5],
+              opacity: [1, 1, 0],
+            }}
+            transition={{ duration: 0.75, ease: 'easeInOut', times: [0, 0.38, 1] }}
+          >
+            <Heart size={26} className="fill-red-500 text-red-500 drop-shadow-lg" />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </MobileFrame>
   )
 }
