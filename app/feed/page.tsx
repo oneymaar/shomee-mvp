@@ -35,6 +35,7 @@ export default function FeedPage() {
 
   interface FlyHeart { id: number; from: { x: number; y: number }; to: { x: number; y: number } }
   const [flyHearts, setFlyHearts] = useState<FlyHeart[]>([])
+  const [favBursts, setFavBursts] = useState<{ id: number; x: number; y: number }[]>([])
 
   const containerRef    = useRef<HTMLDivElement>(null)
   const cardRefs        = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -63,7 +64,11 @@ export default function FeedPage() {
     setFlyHearts((prev) => [...prev, { id, from: { x: fromX, y: fromY }, to: { x: toX, y: toY } }])
 
     setTimeout(() => toggleFavorite(propertyId), 400)
-    setTimeout(() => setFlyHearts((prev) => prev.filter((h) => h.id !== id)), 900)
+    setTimeout(() => {
+      setFlyHearts((prev) => prev.filter((h) => h.id !== id))
+      setFavBursts((prev) => [...prev, { id, x: toX, y: toY }])
+      setTimeout(() => setFavBursts((prev) => prev.filter((b) => b.id !== id)), 500)
+    }, 850)
   }, [toggleFavorite])
 
   const feedItems = useMemo<FeedItem[]>(() => {
@@ -265,6 +270,21 @@ export default function FeedPage() {
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
       <BottomNav />
+
+      {/* Burst on favorites tab */}
+      <AnimatePresence>
+        {favBursts.map((b) => (
+          <motion.div
+            key={b.id}
+            style={{ position: 'fixed', left: b.x, top: b.y, translateX: '-50%', translateY: '-50%', pointerEvents: 'none', zIndex: 9999 }}
+            initial={{ scale: 0.4, opacity: 1 }}
+            animate={{ scale: 2.2, opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+          >
+            <Heart size={22} className="fill-red-500 text-red-500" />
+          </motion.div>
+        ))}
+      </AnimatePresence>
 
       {/* Flying heart animation overlay */}
       <AnimatePresence>
