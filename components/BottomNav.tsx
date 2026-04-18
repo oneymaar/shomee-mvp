@@ -17,7 +17,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10"
+      className="absolute bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 pb-0"
     >
       <div className="flex items-center justify-around px-2 h-[60px]">
         {tabs.map(({ label, href, icon: Icon }) => {
@@ -32,7 +32,7 @@ export default function BottomNav() {
               )}
             >
               <Icon size={23} strokeWidth={active ? 2.5 : 1.8} />
-              <span className="text-[10px] font-medium tracking-wide">{label}</span>
+              <span className="text-[12px] font-medium tracking-wide">{label}</span>
             </Link>
           )
         })}

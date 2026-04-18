@@ -30,21 +30,21 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
 
             {/* Text */}
             <div className="min-w-0">
-              <p className="text-white font-bold text-sm leading-tight drop-shadow">
+              <p className="text-white font-bold text-[15px] leading-tight drop-shadow mb-px">
                 {property.agentName}
               </p>
-              <p className="text-white/80 text-[13px] leading-tight drop-shadow">
+              <p className="text-white text-[15px] leading-tight drop-shadow mt-0 mb-[-3px] border-0 border-white">
                 {property.location} · {property.district}
               </p>
               <button
                 onClick={onMore}
-                className="flex items-center gap-1 mt-0.5"
+                className="flex items-center gap-0 mt-0.5"
               >
-                <span className="text-white text-[13px] leading-tight drop-shadow font-medium">
+                <span className="text-white text-[15px] leading-tight drop-shadow font-normal mt-0">
                   {property.surface}m² · {formatted} €
                 </span>
-                <span className="text-white font-medium text-[13px] ml-1">Plus</span>
-                <ChevronDown size={13} className="text-white mt-px" />
+                <span className="text-white/75 font-medium text-[14px] ml-2.5 border-0 border-white/67">Plus</span>
+                <ChevronDown size={18} className="text-white/75 mt-px" />
               </button>
             </div>
           </div>

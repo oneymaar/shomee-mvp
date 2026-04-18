@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { X, Check } from 'lucide-react'
 import type { Property } from '@/lib/types'
 
+// Force rebuild - v2024-04-19-008
+
 const REASONS = [
   { id: 'price', emoji: '💰', label: 'Prix trop élevé' },
   { id: 'surface', emoji: '📐', label: 'Surface insuffisante' },
@@ -121,21 +123,21 @@ export default function SkipFeedbackModal({ property, open, onClose }: SkipFeedb
                     transition={{ duration: 0.15 }}
                   >
                     {/* Reason grid */}
-                    <div className="grid grid-cols-2 gap-2 mb-5">
+                    <div className="grid grid-cols-2 gap-3 mb-5">
                       {REASONS.map(({ id, emoji, label }) => {
                         const active = selected.includes(id)
                         return (
                           <button
                             key={id}
                             onClick={() => toggle(id)}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl border text-left transition-all ${
+                            className={`flex flex-col items-center justify-center gap-3 px-2 py-8 rounded-2xl border text-center transition-all ${
                               active
                                 ? 'bg-white text-black border-white'
                                 : 'bg-white/5 text-white/70 border-white/12 hover:border-white/30'
                             }`}
                           >
-                            <span className="text-base shrink-0">{emoji}</span>
-                            <span className="text-xs font-medium leading-tight">{label}</span>
+                            <span className="text-6xl">{emoji}</span>
+                            <span className="text-sm font-medium leading-tight">{label}</span>
                           </button>
                         )
                       })}
