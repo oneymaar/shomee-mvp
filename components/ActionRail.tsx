@@ -1,6 +1,6 @@
 'use client'
 
-import { MessageSquare, Phone, CalendarPlus, Heart, Send } from 'lucide-react'
+import { MessageCircle, Phone, CalendarPlus, Heart, Send } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
 
@@ -35,9 +35,9 @@ function RailButton({ icon, label, onClick }: RailButtonProps) {
 
 export default function ActionRail({ property, isFavorite, onToggleFavorite, onContact }: ActionRailProps) {
   return (
-    <div className="absolute right-3 bottom-28 z-20 flex flex-col items-center gap-4">
+    <div className="absolute right-3 bottom-28 z-20 flex flex-col items-center gap-6">
       <RailButton
-        icon={<MessageSquare size={24} strokeWidth={1.5} className="text-white" />}
+        icon={<MessageCircle size={24} strokeWidth={1.5} className="text-white" />}
         onClick={onContact}
       />
       <RailButton
