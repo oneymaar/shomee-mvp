@@ -37,19 +37,19 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onC
   return (
     <div className="absolute right-3 bottom-28 z-20 flex flex-col items-center gap-6">
       <RailButton
-        icon={<MessageCircle size={24} strokeWidth={1.5} className="text-white" />}
+        icon={<MessageCircle size={36} strokeWidth={1.5} className="text-white" />}
         onClick={onContact}
       />
       <RailButton
-        icon={<Phone size={22} strokeWidth={1.5} className="text-white" />}
+        icon={<Phone size={33} strokeWidth={1.5} className="text-white" />}
       />
       <RailButton
-        icon={<CalendarPlus size={22} strokeWidth={1.5} className="text-white" />}
+        icon={<CalendarPlus size={33} strokeWidth={1.5} className="text-white" />}
       />
       <RailButton
         icon={
           <Heart
-            size={24}
+            size={36}
             strokeWidth={1.5}
             className={clsx('transition-all', isFavorite ? 'fill-red-500 text-red-500' : 'text-white')}
           />
@@ -58,7 +58,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onC
         onClick={onToggleFavorite}
       />
       <RailButton
-        icon={<Send size={22} strokeWidth={1.5} className="text-white" />}
+        icon={<Send size={33} strokeWidth={1.5} className="text-white" />}
         label={property.shareCount}
       />
     </div>
