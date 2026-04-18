@@ -42,7 +42,12 @@ export default function FeedPage() {
 
   const { currentIndex, favorites, toggleFavorite } = useShomeeStore()
 
-  const handleToggleFavorite = useCallback((propertyId: string, heartRect: DOMRect) => {
+  const handleToggleFavorite = useCallback((propertyId: string, heartRect: DOMRect, currentlyFavorite: boolean) => {
+    if (currentlyFavorite) {
+      toggleFavorite(propertyId)
+      return
+    }
+
     const frame = containerRef.current?.parentElement
     const frameRect = frame?.getBoundingClientRect()
     if (!frameRect) { toggleFavorite(propertyId); return }
@@ -228,7 +233,7 @@ export default function FeedPage() {
               <ActionRail
                 property={property}
                 isFavorite={isFavorite}
-                onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect)}
+                onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect, isFavorite)}
                 onContact={() => setBaiaOpen(true)}
               />
             </div>
@@ -279,10 +284,15 @@ export default function FeedPage() {
             animate={{
               x: [0, (fh.to.x - fh.from.x) * 0.15, fh.to.x - fh.from.x],
               y: [0, -110, fh.to.y - fh.from.y],
-              scale: [1.6, 1.8, 0.5],
+              scale: [1.6, 1.8, 0.7],
               opacity: [1, 1, 0],
             }}
-            transition={{ duration: 0.75, ease: 'easeInOut', times: [0, 0.38, 1] }}
+            transition={{
+              duration: 0.85,
+              ease: 'easeInOut',
+              times: [0, 0.38, 1],
+              opacity: { duration: 0.85, ease: 'easeInOut', times: [0, 0.8, 1] },
+            }}
           >
             <Heart size={26} className="fill-red-500 text-red-500 drop-shadow-lg" />
           </motion.div>
