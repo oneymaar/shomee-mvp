@@ -291,7 +291,7 @@ export default function FeedPage() {
               duration: 0.85,
               ease: 'easeInOut',
               times: [0, 0.38, 1],
-              opacity: { duration: 0.85, ease: 'easeInOut', times: [0, 0.8, 1] },
+              opacity: { duration: 0.85, ease: 'easeInOut', times: [0, 0.92, 1] },
             }}
           >
             <Heart size={26} className="fill-red-500 text-red-500 drop-shadow-lg" />
