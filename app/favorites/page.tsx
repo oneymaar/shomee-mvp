@@ -10,7 +10,9 @@ import { properties } from '@/lib/mockData'
 
 export default function FavoritesPage() {
   const { favorites } = useShomeeStore()
-  const favProperties = properties.filter((p) => favorites.includes(p.id))
+  const favProperties = favorites
+    .map((fid) => properties.find((p) => p.id === fid))
+    .filter(Boolean) as typeof properties
 
   return (
     <MobileFrame>
@@ -53,7 +55,7 @@ export default function FavoritesPage() {
               }).format(property.price)
 
               return (
-                <Link key={property.id} href={`/feed/${property.id}`}>
+                <Link key={property.id} href={`/favorites/${property.id}`}>
                   <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden active:scale-[0.97] transition-transform">
                     <div className="relative h-36">
                       <Image
