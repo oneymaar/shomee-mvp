@@ -3,8 +3,8 @@ export interface Property {
   // Feed display
   arrondissement: string   // e.g. "PARIS 4e"
   subtitle: string         // e.g. "Appartement haussmannien"
-  agentName: string        // e.g. "Sophie & Marc Dubois"
-  agentAvatar?: string     // URL
+  agentName: string
+  agentAvatar?: string
   // Core data
   title: string
   price: number
@@ -13,21 +13,44 @@ export interface Property {
   rooms: number
   bedrooms?: number
   location: string
-  district: string         // e.g. "Le Marais"
+  district: string
   description: string
   tags: string[]
-  features?: string[]      // e.g. ["Ascenseur", "Gardien", "Cave"]
+  features?: string[]
   dpe: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
   ges?: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
+  // Detail — physical
+  floor?: number
+  totalFloors?: number
+  orientation?: string
+  exteriorType?: string        // e.g. "Terrasse", "Balcon", "Jardin"
+  heatingType?: string
+  hotWaterType?: string
+  yearBuilt?: number
+  lotCount?: number
+  proceduresEnCours?: boolean
+  monthlyCharges?: number
+  propertyTax?: number
+  // Detail — composition
+  composition?: Array<{ label: string; surface: number }>
+  // Detail — localisation IRIS
+  irisZone?: string            // micro-quartier IRIS sans adresse exacte
+  irisDescription?: string
+  mapLat?: number
+  mapLng?: number
+  transports?: string[]
+  nearbyPlaces?: string[]
+  neighborhoodVibe?: string
+  // Detail — marché
+  marketAvgPricePerSqm?: number
+  marketEvolution10y?: string  // e.g. "+27%"
+  marketHighPrice?: number
+  marketLowPrice?: number
   // Media
   videoUrl?: string
   imageUrlFallback: string
   gallery: string[]
-  // Video chapters for progress bar
-  chapters?: Array<{
-    label: string
-    fraction: number  // 0–1 : position de début dans la vidéo
-  }>
+  chapters?: Array<{ label: string; fraction: number }>
   // Social
   likeCount?: number
   shareCount?: number
