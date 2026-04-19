@@ -53,9 +53,11 @@ export default function FeedPage() {
     const frameRect = frame?.getBoundingClientRect()
     if (!frameRect) { toggleFavorite(propertyId); return }
 
-    // Favorites tab is 2nd of 4 tabs with justify-around → center at 37.5% of frame width
-    const toX = frameRect.left + frameRect.width * (1.5 / 4)
-    const toY = frameRect.top + frameRect.height - 30
+    // Use actual DOM position of the favorites tab icon
+    const favEl = document.querySelector('[data-tab="favoris"] svg')
+    const favRect = favEl?.getBoundingClientRect()
+    const toX = favRect ? favRect.left + favRect.width / 2 : frameRect.left + frameRect.width * (1.5 / 4)
+    const toY = favRect ? favRect.top + favRect.height / 2 : frameRect.top + frameRect.height - 30
 
     const fromX = heartRect.left + heartRect.width / 2
     const fromY = heartRect.top + heartRect.height / 2
@@ -271,18 +273,28 @@ export default function FeedPage() {
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
       <BottomNav />
 
-      {/* Burst on favorites tab */}
+      {/* Burst ring on favorites tab */}
       <AnimatePresence>
         {favBursts.map((b) => (
           <motion.div
             key={b.id}
-            style={{ position: 'fixed', left: b.x, top: b.y, translateX: '-50%', translateY: '-50%', pointerEvents: 'none', zIndex: 9999 }}
-            initial={{ scale: 0.4, opacity: 1 }}
-            animate={{ scale: 2.2, opacity: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-          >
-            <Heart size={22} className="fill-red-500 text-red-500" />
-          </motion.div>
+            style={{
+              position: 'fixed',
+              left: b.x,
+              top: b.y,
+              translateX: '-50%',
+              translateY: '-50%',
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              border: '2.5px solid #ef4444',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+            initial={{ scale: 0.5, opacity: 1 }}
+            animate={{ scale: 2.4, opacity: 0 }}
+            transition={{ duration: 0.38, ease: 'easeOut' }}
+          />
         ))}
       </AnimatePresence>
 
