@@ -273,28 +273,18 @@ export default function FeedPage() {
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
       <BottomNav />
 
-      {/* Burst ring on favorites tab */}
+      {/* Burst heart on favorites tab */}
       <AnimatePresence>
         {favBursts.map((b) => (
           <motion.div
             key={b.id}
-            style={{
-              position: 'fixed',
-              left: b.x,
-              top: b.y,
-              translateX: '-50%',
-              translateY: '-50%',
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              border: '2.5px solid #ef4444',
-              pointerEvents: 'none',
-              zIndex: 9999,
-            }}
-            initial={{ scale: 0.5, opacity: 1 }}
-            animate={{ scale: 2.4, opacity: 0 }}
-            transition={{ duration: 0.38, ease: 'easeOut' }}
-          />
+            style={{ position: 'fixed', left: b.x, top: b.y, translateX: '-50%', translateY: '-50%', pointerEvents: 'none', zIndex: 9999 }}
+            initial={{ scale: 1, opacity: 0.9 }}
+            animate={{ scale: 2.6, opacity: 0 }}
+            transition={{ duration: 0.42, ease: 'easeOut' }}
+          >
+            <Heart size={23} strokeWidth={1.8} className="fill-red-500 text-red-500" />
+          </motion.div>
         ))}
       </AnimatePresence>
 
