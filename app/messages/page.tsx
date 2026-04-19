@@ -7,7 +7,7 @@ import BottomNav from '@/components/BottomNav'
 export default function MessagesPage() {
   return (
     <MobileFrame>
-      <div className="h-full overflow-y-auto scrollbar-hide">
+      <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: '60px' }}>
 
         {/* Header */}
         <div
