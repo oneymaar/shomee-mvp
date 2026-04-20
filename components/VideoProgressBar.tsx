@@ -13,16 +13,15 @@ interface Props {
 }
 
 export default function VideoProgressBar({ videoRef, chapters }: Props) {
-  const trackRef   = useRef<HTMLDivElement>(null)
-  const tooltipRef = useRef<HTMLDivElement>(null)
-  const labelRef   = useRef<HTMLSpanElement>(null)
-  const fillRefs   = useRef<(HTMLDivElement | null)[]>([])
-  const rafId      = useRef<number>(0)
-  const scrubbing  = useRef(false)
+  const trackRef  = useRef<HTMLDivElement>(null)
+  const labelRef  = useRef<HTMLSpanElement>(null)
+  const fillRefs  = useRef<(HTMLDivElement | null)[]>([])
+  const rafId     = useRef<number>(0)
+  const scrubbing = useRef(false)
 
   const segs = chapters && chapters.length >= 2 ? chapters : null
 
-  /* ─── Paint fills from 0-1 fraction (pure DOM, no re-renders) ─────────── */
+  /* ─── Paint fills ─────────────────────────────────────────────────────── */
   const paint = useCallback((f: number) => {
     if (segs) {
       segs.forEach((ch, i) => {
@@ -30,7 +29,7 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
         if (!el) return
         const end = segs[i + 1]?.fraction ?? 1
         let w = 0
-        if      (f >= end)        w = 100
+        if      (f >= end)         w = 100
         else if (f >  ch.fraction) w = ((f - ch.fraction) / (end - ch.fraction)) * 100
         el.style.width = `${w}%`
       })
@@ -40,7 +39,7 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
     }
   }, [segs])
 
-  /* ─── rAF loop — runs continuously while component is mounted ─────────── */
+  /* ─── rAF loop ────────────────────────────────────────────────────────── */
   useEffect(() => {
     const loop = () => {
       if (!scrubbing.current) {
@@ -67,54 +66,54 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
     return cur
   }, [segs])
 
-  const moveTooltip = useCallback((f: number) => {
+  const showLabel = useCallback((f: number) => {
     const ch = chapterAt(f)
-    const el = tooltipRef.current
     const lb = labelRef.current
-    if (!el || !lb || !ch) return
-    el.style.left    = `${Math.max(5, Math.min(90, f * 100))}%`
-    el.style.opacity = '1'
-    lb.textContent   = ch.label
+    if (!lb || !ch) return
+    lb.textContent = ch.label
+    lb.style.opacity = '1'
   }, [chapterAt])
 
-  const hideTooltip = () => { if (tooltipRef.current) tooltipRef.current.style.opacity = '0' }
+  const hideLabel = () => {
+    if (labelRef.current) labelRef.current.style.opacity = '0'
+  }
 
   /* Touch */
   const onTouchStart = (e: React.TouchEvent) => {
     scrubbing.current = true
     const f = fractionFromX(e.touches[0].clientX)
-    paint(f); moveTooltip(f)
+    paint(f); showLabel(f)
   }
   const onTouchMove = (e: React.TouchEvent) => {
     if (!scrubbing.current) return
     const f = fractionFromX(e.touches[0].clientX)
-    paint(f); moveTooltip(f)
+    paint(f); showLabel(f)
   }
   const onTouchEnd = (e: React.TouchEvent) => {
     if (!scrubbing.current) return
     scrubbing.current = false
-    hideTooltip()
+    hideLabel()
     const f = fractionFromX(e.changedTouches[0].clientX)
     paint(f)
     const v = videoRef.current
     if (v && v.duration > 0) v.currentTime = f * v.duration
   }
 
-  /* Mouse (desktop preview) */
+  /* Mouse */
   const onMouseDown = (e: React.MouseEvent) => {
     scrubbing.current = true
     const f = fractionFromX(e.clientX)
-    paint(f); moveTooltip(f)
+    paint(f); showLabel(f)
   }
   const onMouseMove = (e: React.MouseEvent) => {
     if (!scrubbing.current) return
     const f = fractionFromX(e.clientX)
-    paint(f); moveTooltip(f)
+    paint(f); showLabel(f)
   }
   const onMouseUp = (e: React.MouseEvent) => {
     if (!scrubbing.current) return
     scrubbing.current = false
-    hideTooltip()
+    hideLabel()
     const f = fractionFromX(e.clientX)
     paint(f)
     const v = videoRef.current
@@ -123,14 +122,9 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
 
   /* ─── Render ──────────────────────────────────────────────────────────── */
   return (
-    /*
-      Outer wrapper: 28px tall touch target anchored at bottom-10 (40px above
-      the card's bottom edge so it clears the BottomNav border and is easy to tap).
-      The 4px visual bar sits at the very bottom of this wrapper.
-    */
     <div
-      className="absolute left-0 right-0 z-40 flex flex-col justify-end cursor-pointer select-none"
-      style={{ bottom: 8, height: 28, touchAction: 'none' }}
+      className="absolute left-3 right-3 z-40 cursor-pointer select-none"
+      style={{ top: 0, touchAction: 'none' }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -139,17 +133,20 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
     >
-      {/* Chapter-name tooltip */}
-      <div
-        ref={tooltipRef}
-        className="absolute -translate-x-1/2 bg-black/85 backdrop-blur-sm text-white text-[11px] font-semibold px-3 py-1 rounded-full whitespace-nowrap border border-white/20 pointer-events-none"
-        style={{ opacity: 0, bottom: 10, transition: 'opacity 0.12s' }}
-      >
-        <span ref={labelRef} />
+      {/* Safe-area spacer so bar sits just below the notch */}
+      <div style={{ height: 'env(safe-area-inset-top, 8px)' }} />
+
+      {/* Chapter name — appears above bar on scrub */}
+      <div style={{ height: 16, display: 'flex', alignItems: 'center', marginBottom: 3 }}>
+        <span
+          ref={labelRef}
+          className="text-white text-[11px] font-semibold"
+          style={{ opacity: 0, transition: 'opacity 0.12s', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+        />
       </div>
 
-      {/* Track: segmented if chapters, simple otherwise */}
-      <div ref={trackRef} className="flex gap-[3px]" style={{ height: 4 }}>
+      {/* Track — segmented or simple */}
+      <div ref={trackRef} className="flex gap-[3px]" style={{ height: 3 }}>
         {segs ? (
           segs.map((ch, i) => {
             const end = segs[i + 1]?.fraction ?? 1
@@ -180,6 +177,9 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
           </div>
         )}
       </div>
+
+      {/* Extra invisible touch zone below bar */}
+      <div style={{ height: 14 }} />
     </div>
   )
 }

@@ -251,7 +251,7 @@ export default function FeedPage() {
       {!isOnSpecialCard && (
         <motion.button
           className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
-          style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
+          style={{ top: 'calc(env(safe-area-inset-top, 8px) + 40px)' }}
           onClick={() => setMuted((m) => !m)}
           whileTap={{ scale: 0.88 }}
           initial={{ opacity: 0 }}
