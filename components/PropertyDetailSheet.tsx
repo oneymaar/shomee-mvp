@@ -298,7 +298,7 @@ export default function PropertyDetailSheet({
               transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             >
               {/* ── STICKY HEADER ─────────────────────────────────────── */}
-              <div className="shrink-0 bg-neutral-950" style={{ paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)' }}>
+              <div className="shrink-0 bg-neutral-950" style={{ paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
                 <div className="px-4 py-3">
                   {/* Agency + Close */}
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -627,7 +627,7 @@ export default function PropertyDetailSheet({
                 {/* ── FLOATING PILLS ──────────────────────────────────── */}
                 <div
                   className="absolute left-0 right-0 px-3 flex gap-2 items-center z-20"
-                  style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)' }}
+                  style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
                 >
                   {/* Left pill — 3 CTAs */}
                   <div className="flex-1 bg-white rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
