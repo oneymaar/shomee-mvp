@@ -152,7 +152,7 @@ export default function FavoritesFeedPage({ params }: Props) {
       <motion.button
         onClick={() => router.push('/favorites')}
         className="absolute left-4 z-30 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center border border-white/20"
-        style={{ top: 'calc(env(safe-area-inset-top, 8px) + 40px)' }}
+        style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
         whileTap={{ scale: 0.88 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -163,7 +163,7 @@ export default function FavoritesFeedPage({ params }: Props) {
       {/* Mute toggle */}
       <motion.button
         className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
-        style={{ top: 'calc(env(safe-area-inset-top, 8px) + 40px)' }}
+        style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
         onClick={() => setMuted((m) => !m)}
         whileTap={{ scale: 0.88 }}
         initial={{ opacity: 0 }}

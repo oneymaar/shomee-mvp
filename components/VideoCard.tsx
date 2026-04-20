@@ -12,8 +12,9 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ property, isActive, muted }: VideoCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const hasVideo = Boolean(property.videoUrl)
+  const videoRef    = useRef<HTMLVideoElement>(null)
+  const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null)
+  const hasVideo    = Boolean(property.videoUrl)
 
   /* ── Play / pause on active state ── */
   useEffect(() => {
@@ -27,14 +28,70 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     }
   }, [isActive])
 
-  /* ── Muted state (React prop unreliable on <video>, must be imperative) ── */
+  /* ── Muted state ── */
   useEffect(() => {
     if (videoRef.current) videoRef.current.muted = muted
   }, [muted])
 
+  /* ── Chapter tap navigation ── */
+  const onTapStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]
+    tapStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() }
+  }
+
+  const onTapEnd = (e: React.TouchEvent) => {
+    const start = tapStartRef.current
+    tapStartRef.current = null
+    if (!start) return
+
+    const touch = e.changedTouches[0]
+    const dx = Math.abs(touch.clientX - start.x)
+    const dy = Math.abs(touch.clientY - start.y)
+    const dt = Date.now() - start.t
+
+    // Ignore swipes (scroll, drag) — only process short taps
+    if (dx > 12 || dy > 20 || dt > 280) return
+
+    const video = videoRef.current
+    if (!video || !video.duration) return
+
+    const rect   = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+    const isRight = touch.clientX > rect.left + rect.width / 2
+    const chapters = property.chapters
+    const f = video.currentTime / video.duration
+
+    if (chapters && chapters.length >= 2) {
+      // Find current chapter index
+      let idx = 0
+      for (let i = 0; i < chapters.length; i++) {
+        if (f >= chapters[i].fraction) idx = i
+      }
+
+      if (isRight) {
+        // Next chapter
+        const next = chapters[idx + 1]
+        if (next) video.currentTime = next.fraction * video.duration
+      } else {
+        // If >2s into current chapter → restart it; otherwise go to previous
+        const chapterStart = chapters[idx].fraction * video.duration
+        if (video.currentTime - chapterStart > 2) {
+          video.currentTime = chapterStart
+        } else {
+          const prev = chapters[idx - 1]
+          video.currentTime = prev ? prev.fraction * video.duration : 0
+        }
+      }
+    } else {
+      // No chapters: skip ±10 s
+      video.currentTime = isRight
+        ? Math.min(video.duration, video.currentTime + 10)
+        : Math.max(0, video.currentTime - 10)
+    }
+  }
+
   return (
     <div className="absolute inset-0">
-      {/* Gradient overlay: dark top → transparent → dark bottom */}
+      {/* Gradient overlay */}
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
@@ -43,24 +100,31 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         }}
       />
 
-      {/* Video element */}
+      {/* Tap zones — below UI overlays (z-[15]), above gradient (z-10) */}
+      <div
+        className="absolute inset-0 z-[15]"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={onTapStart}
+        onTouchEnd={onTapEnd}
+      />
+
+      {/* Video */}
       {hasVideo && (
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
           src={property.videoUrl}
           loop
-          muted            // initial muted attr — then controlled imperatively
+          muted
           playsInline
           preload="metadata"
           onError={(e) => {
-            // Hide broken video, image fallback shows through
             ;(e.currentTarget as HTMLVideoElement).style.visibility = 'hidden'
           }}
         />
       )}
 
-      {/* Fallback image — always rendered below the video */}
+      {/* Fallback image */}
       <Image
         src={property.imageUrlFallback}
         alt={property.title}
@@ -71,7 +135,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         sizes="430px"
       />
 
-      {/* Progress bar with chapter segments */}
+      {/* Progress bar */}
       <VideoProgressBar videoRef={videoRef} chapters={property.chapters} />
     </div>
   )
