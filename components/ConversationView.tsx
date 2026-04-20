@@ -92,6 +92,8 @@ export default function ConversationView({ property }: { property: Property }) {
     (found, msg, i) => found !== -1 ? found : (msg.from === 'user' && msg.read ? i : -1),
     -1,
   )
+  // "Lu" only if agent hasn't replied yet after the last read user message
+  const lastMsgIsFromAgent = messages[messages.length - 1]?.from === 'agent'
 
   const hasMessages = messages.length > 0
 
@@ -158,8 +160,6 @@ export default function ConversationView({ property }: { property: Property }) {
         {/* Bubbles */}
         {messages.map((msg, i) => {
           const isUser = msg.from === 'user'
-          const showRead = isUser && i === lastReadIdx
-
           return (
             <motion.div
               key={msg.id}
@@ -182,8 +182,8 @@ export default function ConversationView({ property }: { property: Property }) {
                 </p>
               </div>
 
-              {/* "Lu" below the last read user message */}
-              {showRead && (
+              {/* "Lu" only when message read but no agent reply yet */}
+              {isUser && i === lastReadIdx && !lastMsgIsFromAgent && (
                 <span className="text-white/50 text-[11px] px-1">Lu</span>
               )}
             </motion.div>

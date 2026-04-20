@@ -53,13 +53,13 @@ function ConversationRow({ conv }: { conv: Conversation }) {
             {property.agentName}
           </p>
           {lastMsg && (
-            <span className={`text-[11px] shrink-0 ${unread ? 'text-red-400 font-semibold' : 'text-white/40'}`}>
+            <span className={`text-[11px] shrink-0 ${unread ? 'text-white font-bold' : 'text-white/40'}`}>
               {formatTime(lastMsg.timestamp)}
             </span>
           )}
         </div>
         {/* Property description: white, includes surface + price */}
-        <p className="text-white text-[12px] mt-0.5 truncate">
+        <p className="text-white text-[12px] truncate">
           {property.arrondissement} · {property.district} · {property.surface}m² · {formattedPrice} €
         </p>
         {/* Last message preview */}
