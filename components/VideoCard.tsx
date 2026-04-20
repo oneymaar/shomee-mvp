@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react'
 import Image from 'next/image'
 import type { Property } from '@/lib/types'
-import VideoProgressBar from './VideoProgressBar'
+import VideoProgressBar, { type VideoProgressBarHandle } from './VideoProgressBar'
 
 interface VideoCardProps {
   property: Property
@@ -12,22 +12,10 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ property, isActive, muted }: VideoCardProps) {
-  const videoRef      = useRef<HTMLVideoElement>(null)
-  const tapStartRef   = useRef<{ x: number; y: number; t: number } | null>(null)
-  const flashLabelRef = useRef<HTMLDivElement>(null)
-  const flashTimer    = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hasVideo      = Boolean(property.videoUrl)
-
-  const flashChapter = (label: string) => {
-    const el = flashLabelRef.current
-    if (!el) return
-    el.textContent = label
-    el.style.opacity = '1'
-    if (flashTimer.current) clearTimeout(flashTimer.current)
-    flashTimer.current = setTimeout(() => {
-      if (flashLabelRef.current) flashLabelRef.current.style.opacity = '0'
-    }, 1000)
-  }
+  const videoRef    = useRef<HTMLVideoElement>(null)
+  const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null)
+  const progressRef = useRef<VideoProgressBarHandle>(null)
+  const hasVideo    = Boolean(property.videoUrl)
 
   /* ── Play / pause on active state ── */
   useEffect(() => {
@@ -62,13 +50,12 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     const dy = Math.abs(touch.clientY - start.y)
     const dt = Date.now() - start.t
 
-    // Ignore swipes (scroll, drag) — only process short taps
     if (dx > 12 || dy > 20 || dt > 280) return
 
     const video = videoRef.current
     if (!video || !video.duration) return
 
-    const rect   = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
+    const rect    = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
     const isRight = touch.clientX > rect.left + rect.width / 2
     const chapters = property.chapters
     const f = video.currentTime / video.duration
@@ -83,17 +70,18 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         const next = chapters[idx + 1]
         if (next) {
           video.currentTime = next.fraction * video.duration
-          flashChapter(next.label)
+          progressRef.current?.flashLabel(next.label, next.fraction)
         }
       } else {
         const chapterStart = chapters[idx].fraction * video.duration
         if (video.currentTime - chapterStart > 2) {
           video.currentTime = chapterStart
-          flashChapter(chapters[idx].label)
+          progressRef.current?.flashLabel(chapters[idx].label, chapters[idx].fraction)
         } else {
           const prev = chapters[idx - 1]
-          video.currentTime = prev ? prev.fraction * video.duration : 0
-          flashChapter(prev ? prev.label : chapters[0].label)
+          const target = prev ?? chapters[0]
+          video.currentTime = target.fraction * video.duration
+          progressRef.current?.flashLabel(target.label, target.fraction)
         }
       }
     } else {
@@ -114,7 +102,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         }}
       />
 
-      {/* Tap zones — below UI overlays (z-[15]), above gradient (z-10) */}
+      {/* Tap zones */}
       <div
         className="absolute inset-0 z-[15]"
         style={{ touchAction: 'pan-y' }}
@@ -149,15 +137,8 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         sizes="430px"
       />
 
-      {/* Chapter flash label — appears on tap, fades out */}
-      <div
-        ref={flashLabelRef}
-        className="absolute left-1/2 -translate-x-1/2 z-40 bg-black/85 backdrop-blur-sm text-white text-[11px] font-semibold px-3 py-1 rounded-full whitespace-nowrap border border-white/20 pointer-events-none"
-        style={{ opacity: 0, bottom: 44, transition: 'opacity 0.2s' }}
-      />
-
       {/* Progress bar */}
-      <VideoProgressBar videoRef={videoRef} chapters={property.chapters} />
+      <VideoProgressBar ref={progressRef} videoRef={videoRef} chapters={property.chapters} />
     </div>
   )
 }

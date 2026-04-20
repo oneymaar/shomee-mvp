@@ -1,10 +1,14 @@
 'use client'
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 
 export interface Chapter {
   label: string
   fraction: number
+}
+
+export interface VideoProgressBarHandle {
+  flashLabel: (label: string, fraction: number) => void
 }
 
 interface Props {
@@ -12,15 +16,31 @@ interface Props {
   chapters?: Chapter[]
 }
 
-export default function VideoProgressBar({ videoRef, chapters }: Props) {
+const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters }, ref) {
   const trackRef   = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const labelRef   = useRef<HTMLSpanElement>(null)
   const fillRefs   = useRef<(HTMLDivElement | null)[]>([])
   const rafId      = useRef<number>(0)
   const scrubbing  = useRef(false)
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const segs = chapters && chapters.length >= 2 ? chapters : null
+
+  useImperativeHandle(ref, () => ({
+    flashLabel: (label: string, fraction: number) => {
+      const el = tooltipRef.current
+      const lb = labelRef.current
+      if (!el || !lb) return
+      el.style.left    = `${Math.max(5, Math.min(90, fraction * 100))}%`
+      el.style.opacity = '1'
+      lb.textContent   = label
+      if (flashTimer.current) clearTimeout(flashTimer.current)
+      flashTimer.current = setTimeout(() => {
+        if (tooltipRef.current) tooltipRef.current.style.opacity = '0'
+      }, 1000)
+    },
+  }))
 
   /* ─── Paint fills from 0-1 fraction (pure DOM, no re-renders) ─────────── */
   const paint = useCallback((f: number) => {
@@ -182,4 +202,6 @@ export default function VideoProgressBar({ videoRef, chapters }: Props) {
       </div>
     </div>
   )
-}
+})
+
+export default VideoProgressBar
