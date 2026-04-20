@@ -270,6 +270,7 @@ export default function FeedPage() {
         onClose={() => setDetailProperty(null)}
         isFavorite={detailProperty ? favorites.includes(detailProperty.id) : false}
         onToggleFavorite={() => detailProperty && toggleFavorite(detailProperty.id)}
+        onMessage={() => { setDetailProperty(null); router.push(`/messages?bien=${detailProperty?.id}`) }}
       />
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />

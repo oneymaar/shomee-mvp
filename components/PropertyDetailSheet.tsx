@@ -171,6 +171,7 @@ interface PropertyDetailSheetProps {
   onClose: () => void
   isFavorite: boolean
   onToggleFavorite: () => void
+  onMessage?: () => void
 }
 
 export default function PropertyDetailSheet({
@@ -179,6 +180,7 @@ export default function PropertyDetailSheet({
   onClose,
   isFavorite,
   onToggleFavorite,
+  onMessage,
 }: PropertyDetailSheetProps) {
   const [mediaTab, setMediaTab] = useState<MediaTab>('photos')
   const [photoState, setPhotoState] = useState({ index: 0, dir: 0 })
@@ -632,12 +634,12 @@ export default function PropertyDetailSheet({
                   {/* Left pill — 3 CTAs */}
                   <div className="flex-1 bg-white rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
                     {[
-                      { icon: MessageCircle, label: 'Message' },
-                      { icon: Phone, label: 'Appeler' },
-                      { icon: CalendarPlus, label: 'Visiter' },
-                    ].map(({ icon: Icon, label }, i, arr) => (
+                      { icon: MessageCircle, label: 'Message', onClick: onMessage },
+                      { icon: Phone, label: 'Appeler', onClick: undefined },
+                      { icon: CalendarPlus, label: 'Visiter', onClick: undefined },
+                    ].map(({ icon: Icon, label, onClick }, i, arr) => (
                       <div key={label} className="flex-1 flex items-center justify-center">
-                        <button className="flex flex-col items-center gap-0.5 flex-1 py-2.5 rounded-full active:bg-black/5 transition-colors">
+                        <button onClick={onClick} className="flex flex-col items-center gap-0.5 flex-1 py-2.5 rounded-full active:bg-black/5 transition-colors">
                           <Icon size={18} strokeWidth={1.8} className="text-black" />
                           <span className="text-black text-[10px] font-semibold">{label}</span>
                         </button>

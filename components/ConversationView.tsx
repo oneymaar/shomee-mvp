@@ -1,45 +1,56 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Send } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Property } from '@/lib/types'
-
-interface ChatMessage {
-  id: string
-  text: string
-  from: 'user' | 'agent'
-  timestamp: Date
-  read: boolean
-}
+import { useShomeeStore } from '@/lib/store'
+import type { Property, ChatMessage } from '@/lib/types'
 
 const AGENT_REPLIES = [
   (name: string) => `Bonjour ! Je suis ${name}. Comment puis-je vous aider concernant ce bien ?`,
   () => 'Avec plaisir ! Quand souhaitez-vous organiser une visite ?',
   () => 'Bien sûr, je peux vous donner plus de détails. Avez-vous des questions spécifiques ?',
   () => 'Je reviens vers vous très rapidement avec toutes les informations.',
-  () => 'N\'hésitez pas si vous avez d\'autres questions !',
+  () => "N'hésitez pas si vous avez d'autres questions !",
 ]
 
-function formatTime(d: Date) {
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+function formatTime(ts: number) {
+  return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function ConversationView({ property }: { property: Property }) {
   const router = useRouter()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const { conversations, addMessage, markUserMessagesRead } = useShomeeStore()
+  const conv = conversations.find(c => c.propertyId === property.id)
+  const messages: ChatMessage[] = conv?.messages ?? []
+
   const [text, setText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const replyIdxRef = useRef(0)
+  const replyIdxRef = useRef(messages.length > 0 ? AGENT_REPLIES.length - 1 : 0)
 
   const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
+
+  /* Auto-resize textarea */
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value)
+    const el = e.target
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }
+
+  /* Reset height when text cleared */
+  useEffect(() => {
+    if (!text && textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
+  }, [text])
 
   const sendMessage = useCallback(() => {
     const trimmed = text.trim()
@@ -49,10 +60,10 @@ export default function ConversationView({ property }: { property: Property }) {
       id: `u-${Date.now()}`,
       text: trimmed,
       from: 'user',
-      timestamp: new Date(),
+      timestamp: Date.now(),
       read: false,
     }
-    setMessages(prev => [...prev, userMsg])
+    addMessage(property.id, userMsg)
     setText('')
 
     const delay = 900 + Math.random() * 600
@@ -62,20 +73,18 @@ export default function ConversationView({ property }: { property: Property }) {
     setTimeout(() => {
       setIsTyping(false)
       const idx = Math.min(replyIdxRef.current, AGENT_REPLIES.length - 1)
-      replyIdxRef.current += 1
+      replyIdxRef.current = Math.min(replyIdxRef.current + 1, AGENT_REPLIES.length - 1)
 
-      setMessages(prev => [
-        ...prev.map(m => m.from === 'user' ? { ...m, read: true } : m),
-        {
-          id: `a-${Date.now()}`,
-          text: AGENT_REPLIES[idx](property.agentName),
-          from: 'agent',
-          timestamp: new Date(),
-          read: false,
-        },
-      ])
+      addMessage(property.id, {
+        id: `a-${Date.now()}`,
+        text: AGENT_REPLIES[idx](property.agentName),
+        from: 'agent',
+        timestamp: Date.now(),
+        read: false,
+      })
+      markUserMessagesRead(property.id)
     }, delay + 2000)
-  }, [text, property.agentName])
+  }, [text, property.id, property.agentName, addMessage, markUserMessagesRead])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
@@ -142,37 +151,36 @@ export default function ConversationView({ property }: { property: Property }) {
               </div>
               <ChevronRight size={15} className="text-white/25 shrink-0" />
             </button>
-            <p className="text-white/35 text-[13px] text-center leading-relaxed">
+            <p className="text-white/40 text-[13px] text-center leading-relaxed">
               Envoyez un message pour démarrer<br />votre échange avec {property.agentName}.
             </p>
           </div>
         )}
 
-        {/* Message bubbles */}
+        {/* Bubbles */}
         {messages.map((msg, i) => {
           const isUser = msg.from === 'user'
           const showRead = isUser && i === lastReadIdx
-
           return (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18 }}
-              className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}
+              className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}
             >
               <div
-                className={`max-w-[78%] px-3.5 py-2.5 text-[14px] leading-snug ${
+                className={`max-w-[78%] px-4 py-3 text-[14px] leading-snug ${
                   isUser
-                    ? 'bg-white text-black rounded-[18px] rounded-br-[4px]'
-                    : 'bg-neutral-800 text-white rounded-[18px] rounded-bl-[4px]'
+                    ? 'bg-white text-black rounded-[20px] rounded-br-[5px]'
+                    : 'bg-neutral-800 text-white rounded-[20px] rounded-bl-[5px]'
                 }`}
               >
                 {msg.text}
               </div>
               <div className={`flex items-center gap-1.5 px-1 ${isUser ? 'flex-row-reverse' : ''}`}>
-                <span className="text-white/25 text-[10px]">{formatTime(msg.timestamp)}</span>
-                {showRead && <span className="text-white/30 text-[10px]">Lu</span>}
+                <span className="text-white/50 text-[10px]">{formatTime(msg.timestamp)}</span>
+                {showRead && <span className="text-white/50 text-[10px]">Lu</span>}
               </div>
             </motion.div>
           )
@@ -186,9 +194,8 @@ export default function ConversationView({ property }: { property: Property }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.15 }}
-              className="flex items-start"
             >
-              <div className="bg-neutral-800 rounded-[18px] rounded-bl-[4px] px-4 py-3 flex gap-1.5 items-center">
+              <div className="bg-neutral-800 rounded-[20px] rounded-bl-[5px] px-4 py-3.5 flex gap-1.5 items-center w-fit">
                 {[0, 0.22, 0.44].map((delay, i) => (
                   <motion.div
                     key={i}
@@ -206,20 +213,22 @@ export default function ConversationView({ property }: { property: Property }) {
       </div>
 
       {/* ── Input bar ── */}
-      <div className="shrink-0 flex items-center gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950">
-        <div className="flex-1 flex items-center bg-white/8 rounded-full px-4 py-2.5">
-          <input
-            ref={inputRef}
+      <div className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950">
+        <div className="flex-1 bg-white/8 rounded-[20px] px-4 py-2.5">
+          <textarea
+            ref={textareaRef}
             value={text}
-            onChange={e => setText(e.target.value)}
+            onChange={handleTextChange}
             onKeyDown={handleKeyDown}
+            rows={1}
             placeholder="Message..."
-            className="flex-1 bg-transparent text-white text-[14px] placeholder:text-white/30 outline-none"
+            style={{ resize: 'none', overflowY: 'auto', maxHeight: '120px' }}
+            className="w-full bg-transparent text-white text-[14px] placeholder:text-white/30 outline-none leading-snug block"
           />
         </div>
         <button
           onClick={sendMessage}
-          className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
+          className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
             text.trim() ? 'bg-white' : 'bg-white/10'
           }`}
         >

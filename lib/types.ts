@@ -1,3 +1,16 @@
+export interface ChatMessage {
+  id: string
+  text: string
+  from: 'user' | 'agent'
+  timestamp: number  // Date.now()
+  read: boolean
+}
+
+export interface Conversation {
+  propertyId: string
+  messages: ChatMessage[]
+}
+
 export interface Property {
   id: string
   // Feed display
