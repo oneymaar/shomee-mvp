@@ -48,11 +48,11 @@ export const properties: Property[] = [
     mapLat: 48.884228,
     mapLng: 2.332998,
     irisPolygon: [[48.883749,2.332742],[48.883868,2.332303],[48.884559,2.329638],[48.885437,2.330798],[48.886485,2.332436],[48.886632,2.332602],[48.885833,2.334771],[48.885393,2.334311],[48.883952,2.332843],[48.883749,2.332742]],
-    transports: ['M12 Abbesses', 'M2 Pigalle', 'Bus 80'],
+    transports: ['M2 Blanche', 'M12 Abbesses', 'Bus 80'],
     nearbyPlaces: ['Place des Abbesses', 'Sacré-Cœur', 'Rue Lepic'],
     mapTransports: [
+      { name: 'Blanche', line: 'M2', lat: 48.883527, lng: 2.333585 },
       { name: 'Abbesses', line: 'M12', lat: 48.884804, lng: 2.338642 },
-      { name: 'Pigalle', line: 'M2', lat: 48.882298, lng: 2.338090 },
     ],
     mapPois: [
       { name: 'Place des Abbesses', lat: 48.884400, lng: 2.338389 },
@@ -205,10 +205,10 @@ export const properties: Property[] = [
     mapLat: 48.850923,
     mapLng: 2.338595,
     irisPolygon: [[48.850348,2.342632],[48.847337,2.340849],[48.846972,2.340634],[48.847037,2.340508],[48.84727,2.340448],[48.848803,2.339119],[48.849061,2.338716],[48.849187,2.33841],[48.849283,2.337783],[48.849298,2.337328],[48.851471,2.337057],[48.85154,2.33826],[48.851823,2.338477],[48.851818,2.338681],[48.852268,2.338721],[48.852466,2.338792],[48.85233,2.339352],[48.852168,2.339382],[48.851986,2.339659],[48.851471,2.340223],[48.851149,2.340699],[48.850879,2.3412],[48.850879,2.341307],[48.850437,2.342485],[48.850348,2.342632]],
-    transports: ['M4 Saint-Germain-des-Prés', 'M10 Mabillon', 'Bus 39'],
+    transports: ['M4 Odéon', 'M10 Mabillon', 'Bus 39'],
     nearbyPlaces: ['Jardin du Luxembourg', 'Église Saint-Germain', 'Rue de Buci'],
     mapTransports: [
-      { name: 'Saint-Germain-des-Prés', line: 'M4', lat: 48.852813, lng: 2.337522 },
+      { name: 'Odéon', line: 'M4', lat: 48.852304, lng: 2.339371 },
       { name: 'Mabillon', line: 'M10', lat: 48.852886, lng: 2.334939 },
     ],
     mapPois: [
