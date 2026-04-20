@@ -22,10 +22,12 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
           {/* Agent info */}
           <div className="flex items-end gap-2.5 min-w-0">
             {/* Avatar */}
-            <div className="w-9 h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0 mb-0.5 overflow-hidden">
-              <span className="text-white text-xs font-bold">
-                {property.agentName.charAt(0)}
-              </span>
+            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 mb-0.5 bg-neutral-900 border border-white/25 flex items-center justify-center">
+              {property.agentAvatar ? (
+                <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-white text-xs font-bold">{property.agentName.charAt(0)}</span>
+              )}
             </div>
 
             {/* Text */}

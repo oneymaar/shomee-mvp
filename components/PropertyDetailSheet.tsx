@@ -303,8 +303,12 @@ export default function PropertyDetailSheet({
                   {/* Agency + Close */}
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
-                        <span className="text-white text-[11px] font-bold">{property.agentName.charAt(0)}</span>
+                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/15 flex items-center justify-center">
+                        {property.agentAvatar ? (
+                          <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+                        ) : (
+                          <span className="text-white text-[11px] font-bold">{property.agentName.charAt(0)}</span>
+                        )}
                       </div>
                       <span className="text-white/70 text-sm font-medium truncate">{property.agentName}</span>
                     </div>
