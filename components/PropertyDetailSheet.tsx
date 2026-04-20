@@ -298,7 +298,7 @@ export default function PropertyDetailSheet({
               transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             >
               {/* ── STICKY HEADER ─────────────────────────────────────── */}
-              <div className="shrink-0 bg-neutral-950" style={{ paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 4px 24px rgba(0,0,0,0.6)' }}>
+              <div className="shrink-0 bg-neutral-950" style={{ paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 4px 24px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.07)' }}>
                 <div className="px-4 py-3">
                   {/* Agency + Close */}
                   <div className="flex items-center justify-between gap-2 mb-2">
