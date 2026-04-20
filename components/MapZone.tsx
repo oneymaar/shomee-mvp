@@ -28,10 +28,6 @@ export default function MapZone({ lat, lng, polygon = [] }: MapZoneProps) {
       style={{ width: '100%', height: '100%' }}
       zoomControl={false}
       attributionControl={false}
-      scrollWheelZoom={false}
-      dragging={false}
-      touchZoom={false}
-      doubleClickZoom={false}
     >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
