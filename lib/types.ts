@@ -36,6 +36,7 @@ export interface Property {
   // Detail — localisation IRIS
   irisZone?: string            // micro-quartier IRIS sans adresse exacte
   irisDescription?: string
+  irisPolygon?: [number, number][]
   mapLat?: number
   mapLng?: number
   transports?: string[]
@@ -48,6 +49,7 @@ export interface Property {
   marketLowPrice?: number
   // Media
   videoUrl?: string
+  matterportUrl?: string
   imageUrlFallback: string
   gallery: string[]
   chapters?: Array<{ label: string; fraction: number }>

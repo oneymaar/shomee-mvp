@@ -181,7 +181,7 @@ export default function FavoritesFeedPage({ params }: Props) {
       />
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
-      <BottomNav />
+      {!detailProperty && <BottomNav />}
 
       {/* Burst heart on favorites tab */}
       <AnimatePresence>
