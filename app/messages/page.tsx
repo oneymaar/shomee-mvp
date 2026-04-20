@@ -2,11 +2,11 @@
 
 import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { MessageCircle, ChevronRight } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import ConversationView from '@/components/ConversationView'
-import { useShomeeStore } from '@/lib/store'
+import { useShomeeStore, hasUnread } from '@/lib/store'
 import { properties } from '@/lib/mockData'
 import type { Conversation } from '@/lib/types'
 
@@ -20,9 +20,12 @@ function ConversationRow({ conv }: { conv: Conversation }) {
   if (!property) return null
 
   const lastMsg = conv.messages[conv.messages.length - 1]
+  const unread = hasUnread(conv)
   const preview = lastMsg
     ? (lastMsg.from === 'user' ? `Vous : ${lastMsg.text}` : lastMsg.text)
     : ''
+
+  const formattedPrice = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
 
   return (
     <button
@@ -30,29 +33,42 @@ function ConversationRow({ conv }: { conv: Conversation }) {
       className="w-full flex items-center gap-3 px-5 py-3.5 active:bg-white/4 transition-colors"
     >
       {/* Avatar */}
-      <div className="w-11 h-11 rounded-full bg-white border border-white/15 overflow-hidden flex items-center justify-center shrink-0">
-        {property.agentAvatar ? (
-          <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-1.5" />
-        ) : (
-          <span className="text-black font-bold text-sm">{property.agentName.charAt(0)}</span>
+      <div className="relative shrink-0">
+        <div className="w-12 h-12 rounded-full bg-white border border-white/15 overflow-hidden flex items-center justify-center">
+          {property.agentAvatar ? (
+            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-2" />
+          ) : (
+            <span className="text-black font-bold text-sm">{property.agentName.charAt(0)}</span>
+          )}
+        </div>
+        {unread && (
+          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-black" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-white font-semibold text-[14px] truncate">{property.agentName}</p>
-          {lastMsg && <span className="text-white/35 text-[11px] shrink-0">{formatTime(lastMsg.timestamp)}</span>}
+          <p className={`text-[14px] truncate ${unread ? 'text-white font-bold' : 'text-white font-semibold'}`}>
+            {property.agentName}
+          </p>
+          {lastMsg && (
+            <span className={`text-[11px] shrink-0 ${unread ? 'text-red-400 font-semibold' : 'text-white/40'}`}>
+              {formatTime(lastMsg.timestamp)}
+            </span>
+          )}
         </div>
-        <p className="text-white/50 text-[12px] mt-0.5 truncate">
-          {property.arrondissement} · {property.district}
+        {/* Property description: white, includes surface + price */}
+        <p className="text-white text-[12px] mt-0.5 truncate">
+          {property.arrondissement} · {property.district} · {property.surface}m² · {formattedPrice} €
         </p>
+        {/* Last message preview */}
         {preview && (
-          <p className="text-white/30 text-[12px] truncate mt-0.5">{preview}</p>
+          <p className={`text-[13px] truncate mt-0.5 ${unread ? 'text-white font-semibold' : 'text-white/50 font-normal'}`}>
+            {preview}
+          </p>
         )}
       </div>
-
-      <ChevronRight size={15} className="text-white/20 shrink-0" />
     </button>
   )
 }
@@ -102,9 +118,12 @@ function MessagesList() {
         <h1 className="text-white font-bold text-xl tracking-tight">Messages</h1>
         <p className="text-white/40 text-xs mt-0.5">Vos échanges avec les agents</p>
       </div>
-      <div className="divide-y divide-white/6">
-        {sorted.map(conv => (
-          <ConversationRow key={conv.propertyId} conv={conv} />
+      <div>
+        {sorted.map((conv, i) => (
+          <div key={conv.propertyId}>
+            <ConversationRow conv={conv} />
+            {i < sorted.length - 1 && <div className="mx-5 h-px bg-white/6" />}
+          </div>
         ))}
       </div>
     </div>

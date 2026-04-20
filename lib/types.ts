@@ -9,6 +9,7 @@ export interface ChatMessage {
 export interface Conversation {
   propertyId: string
   messages: ChatMessage[]
+  lastSeenAt: number  // timestamp of last user view; agent msgs after this are "unread"
 }
 
 export interface Property {

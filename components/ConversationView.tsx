@@ -21,7 +21,7 @@ function formatTime(ts: number) {
 
 export default function ConversationView({ property }: { property: Property }) {
   const router = useRouter()
-  const { conversations, addMessage, markUserMessagesRead } = useShomeeStore()
+  const { conversations, addMessage, markUserMessagesRead, markConversationSeen } = useShomeeStore()
   const conv = conversations.find(c => c.propertyId === property.id)
   const messages: ChatMessage[] = conv?.messages ?? []
 
@@ -33,6 +33,12 @@ export default function ConversationView({ property }: { property: Property }) {
 
   const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
 
+  /* Mark conversation as seen whenever user is viewing it (on mount + on new messages) */
+  useEffect(() => {
+    markConversationSeen(property.id)
+  }, [property.id, messages.length, markConversationSeen])
+
+  /* Auto-scroll to bottom */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
@@ -45,11 +51,8 @@ export default function ConversationView({ property }: { property: Property }) {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }
 
-  /* Reset height when text cleared */
   useEffect(() => {
-    if (!text && textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-    }
+    if (!text && textareaRef.current) textareaRef.current.style.height = 'auto'
   }, [text])
 
   const sendMessage = useCallback(() => {
@@ -67,7 +70,6 @@ export default function ConversationView({ property }: { property: Property }) {
     setText('')
 
     const delay = 900 + Math.random() * 600
-
     setTimeout(() => setIsTyping(true), delay)
 
     setTimeout(() => {
@@ -85,10 +87,6 @@ export default function ConversationView({ property }: { property: Property }) {
       markUserMessagesRead(property.id)
     }, delay + 2000)
   }, [text, property.id, property.agentName, addMessage, markUserMessagesRead])
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
-  }
 
   const lastReadIdx = messages.reduceRight(
     (found, msg, i) => found !== -1 ? found : (msg.from === 'user' && msg.read ? i : -1),
@@ -161,6 +159,7 @@ export default function ConversationView({ property }: { property: Property }) {
         {messages.map((msg, i) => {
           const isUser = msg.from === 'user'
           const showRead = isUser && i === lastReadIdx
+
           return (
             <motion.div
               key={msg.id}
@@ -169,6 +168,7 @@ export default function ConversationView({ property }: { property: Property }) {
               transition={{ duration: 0.18 }}
               className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}
             >
+              {/* Bubble — timestamp is INSIDE, bottom-right */}
               <div
                 className={`max-w-[78%] px-4 py-3 text-[14px] leading-snug ${
                   isUser
@@ -176,12 +176,16 @@ export default function ConversationView({ property }: { property: Property }) {
                     : 'bg-neutral-800 text-white rounded-[20px] rounded-bl-[5px]'
                 }`}
               >
-                {msg.text}
+                <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-black/40' : 'text-white/50'}`}>
+                  {formatTime(msg.timestamp)}
+                </p>
               </div>
-              <div className={`flex items-center gap-1.5 px-1 ${isUser ? 'flex-row-reverse' : ''}`}>
-                <span className="text-white/50 text-[10px]">{formatTime(msg.timestamp)}</span>
-                {showRead && <span className="text-white/50 text-[10px]">Lu</span>}
-              </div>
+
+              {/* "Lu" below the last read user message */}
+              {showRead && (
+                <span className="text-white/50 text-[11px] px-1">Lu</span>
+              )}
             </motion.div>
           )
         })}
@@ -212,14 +216,13 @@ export default function ConversationView({ property }: { property: Property }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Input bar ── */}
+      {/* ── Input bar — Enter creates newline, only Send button sends ── */}
       <div className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950">
         <div className="flex-1 bg-white/8 rounded-[20px] px-4 py-2.5">
           <textarea
             ref={textareaRef}
             value={text}
             onChange={handleTextChange}
-            onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Message..."
             style={{ resize: 'none', overflowY: 'auto', maxHeight: '120px' }}

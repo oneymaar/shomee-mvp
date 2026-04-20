@@ -10,6 +10,7 @@ interface ShomeeState {
   toggleFavorite: (id: string) => void
   addMessage: (propertyId: string, msg: ChatMessage) => void
   markUserMessagesRead: (propertyId: string) => void
+  markConversationSeen: (propertyId: string) => void
 }
 
 export const useShomeeStore = create<ShomeeState>((set, get) => ({
@@ -42,7 +43,7 @@ export const useShomeeStore = create<ShomeeState>((set, get) => ({
           ),
         }
       }
-      return { conversations: [...state.conversations, { propertyId, messages: [msg] }] }
+      return { conversations: [...state.conversations, { propertyId, messages: [msg], lastSeenAt: 0 }] }
     })
   },
 
@@ -55,4 +56,17 @@ export const useShomeeStore = create<ShomeeState>((set, get) => ({
       ),
     }))
   },
+
+  markConversationSeen: (propertyId) => {
+    set(state => ({
+      conversations: state.conversations.map(c =>
+        c.propertyId === propertyId ? { ...c, lastSeenAt: Date.now() } : c,
+      ),
+    }))
+  },
 }))
+
+/** True if the conversation has agent messages the user hasn't seen yet */
+export function hasUnread(conv: Conversation): boolean {
+  return conv.messages.some(m => m.from === 'agent' && m.timestamp > conv.lastSeenAt)
+}
