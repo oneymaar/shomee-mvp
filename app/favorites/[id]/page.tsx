@@ -141,7 +141,7 @@ export default function FavoritesFeedPage({ params }: Props) {
                 property={property}
                 isFavorite={isFavorite}
                 onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect, isFavorite)}
-                onContact={() => setBaiaOpen(true)}
+                onMessage={() => router.push(`/messages?bien=${property.id}`)}
               />
             </div>
           )

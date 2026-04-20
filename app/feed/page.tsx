@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Volume2, VolumeX, Heart } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
@@ -41,6 +42,7 @@ export default function FeedPage() {
   const cardRefs        = useRef<Map<string, HTMLDivElement>>(new Map())
   const specialCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
+  const router = useRouter()
   const { currentIndex, favorites, toggleFavorite } = useShomeeStore()
 
   const handleToggleFavorite = useCallback((propertyId: string, heartRect: DOMRect, currentlyFavorite: boolean) => {
@@ -241,7 +243,7 @@ export default function FeedPage() {
                 property={property}
                 isFavorite={isFavorite}
                 onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect, isFavorite)}
-                onContact={() => setBaiaOpen(true)}
+                onMessage={() => router.push(`/messages?bien=${property.id}`)}
               />
             </div>
           )

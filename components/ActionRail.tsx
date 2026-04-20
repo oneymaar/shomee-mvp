@@ -10,7 +10,7 @@ interface ActionRailProps {
   property: Property
   isFavorite: boolean
   onToggleFavorite: (rect: DOMRect) => void
-  onContact: () => void
+  onMessage: () => void
 }
 
 interface RailButtonProps {
@@ -30,7 +30,7 @@ function RailButton({ icon, label, onClick }: RailButtonProps) {
   )
 }
 
-export default function ActionRail({ property, isFavorite, onToggleFavorite, onContact }: ActionRailProps) {
+export default function ActionRail({ property, isFavorite, onToggleFavorite, onMessage }: ActionRailProps) {
   const heartRef = useRef<HTMLButtonElement>(null)
 
   const handleHeartClick = () => {
@@ -42,7 +42,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onC
     <div className="absolute right-3 bottom-28 z-20 flex flex-col items-center gap-6">
       <RailButton
         icon={<MessageCircle size={28} strokeWidth={1.5} className="text-white" />}
-        onClick={onContact}
+        onClick={onMessage}
       />
       <RailButton icon={<Phone size={25} strokeWidth={1.5} className="text-white" />} />
       <RailButton icon={<CalendarPlus size={25} strokeWidth={1.5} className="text-white" />} />
