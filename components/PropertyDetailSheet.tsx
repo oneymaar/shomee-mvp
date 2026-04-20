@@ -623,11 +623,6 @@ export default function PropertyDetailSheet({
                   </div>
                 </div>
 
-                {/* Gradient behind pills */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none z-10"
-                  style={{ background: 'linear-gradient(to top, #0a0a0a 50%, transparent)' }}
-                />
 
                 {/* ── FLOATING PILLS ──────────────────────────────────── */}
                 <div
