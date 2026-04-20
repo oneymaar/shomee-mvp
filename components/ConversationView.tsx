@@ -177,7 +177,7 @@ export default function ConversationView({ property }: { property: Property }) {
                 }`}
               >
                 <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-black/40' : 'text-white/50'}`}>
+                <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-black/60' : 'text-white/50'}`}>
                   {formatTime(msg.timestamp)}
                 </p>
               </div>
