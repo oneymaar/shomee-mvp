@@ -1,37 +1,109 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Send } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { Property } from '@/lib/types'
 
-interface Props {
-  property: Property
+interface ChatMessage {
+  id: string
+  text: string
+  from: 'user' | 'agent'
+  timestamp: Date
+  read: boolean
 }
 
-export default function ConversationView({ property }: Props) {
+const AGENT_REPLIES = [
+  (name: string) => `Bonjour ! Je suis ${name}. Comment puis-je vous aider concernant ce bien ?`,
+  () => 'Avec plaisir ! Quand souhaitez-vous organiser une visite ?',
+  () => 'Bien sûr, je peux vous donner plus de détails. Avez-vous des questions spécifiques ?',
+  () => 'Je reviens vers vous très rapidement avec toutes les informations.',
+  () => 'N\'hésitez pas si vous avez d\'autres questions !',
+]
+
+function formatTime(d: Date) {
+  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+}
+
+export default function ConversationView({ property }: { property: Property }) {
   const router = useRouter()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const replyIdxRef = useRef(0)
 
   const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isTyping])
+
+  const sendMessage = useCallback(() => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+
+    const userMsg: ChatMessage = {
+      id: `u-${Date.now()}`,
+      text: trimmed,
+      from: 'user',
+      timestamp: new Date(),
+      read: false,
+    }
+    setMessages(prev => [...prev, userMsg])
+    setText('')
+
+    const delay = 900 + Math.random() * 600
+
+    setTimeout(() => setIsTyping(true), delay)
+
+    setTimeout(() => {
+      setIsTyping(false)
+      const idx = Math.min(replyIdxRef.current, AGENT_REPLIES.length - 1)
+      replyIdxRef.current += 1
+
+      setMessages(prev => [
+        ...prev.map(m => m.from === 'user' ? { ...m, read: true } : m),
+        {
+          id: `a-${Date.now()}`,
+          text: AGENT_REPLIES[idx](property.agentName),
+          from: 'agent',
+          timestamp: new Date(),
+          read: false,
+        },
+      ])
+    }, delay + 2000)
+  }, [text, property.agentName])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+  }
+
+  const lastReadIdx = messages.reduceRight(
+    (found, msg, i) => found !== -1 ? found : (msg.from === 'user' && msg.read ? i : -1),
+    -1,
+  )
+
+  const hasMessages = messages.length > 0
 
   return (
     <div className="absolute inset-0 flex flex-col bg-black" style={{ bottom: '60px' }}>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div
         className="shrink-0 flex items-center gap-3 px-4 border-b border-white/8 bg-neutral-950"
-        style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))', paddingBottom: '12px' }}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
       >
         <button onClick={() => router.push('/messages')} className="text-white/60 -ml-1 p-1">
           <ChevronLeft size={22} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-neutral-800 border border-white/15 overflow-hidden flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-full bg-white border border-white/20 overflow-hidden flex items-center justify-center shrink-0">
           {property.agentAvatar ? (
-            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-0.5" />
+            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-1" />
           ) : (
-            <span className="text-white text-xs font-bold">{property.agentName.charAt(0)}</span>
+            <span className="text-black text-xs font-bold">{property.agentName.charAt(0)}</span>
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -40,70 +112,118 @@ export default function ConversationView({ property }: Props) {
         </div>
       </div>
 
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center gap-6 px-6 py-8">
+      {/* ── Messages ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3 scrollbar-hide">
 
-        {/* Large avatar */}
-        <div className="w-[76px] h-[76px] rounded-full bg-neutral-900 border border-white/12 overflow-hidden flex items-center justify-center">
-          {property.agentAvatar ? (
-            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-2" />
-          ) : (
-            <span className="text-white text-2xl font-bold">{property.agentName.charAt(0)}</span>
+        {/* Empty state */}
+        {!hasMessages && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-5 pt-4 pb-2">
+            <div className="w-[80px] h-[80px] rounded-full bg-white border border-white/20 overflow-hidden flex items-center justify-center">
+              {property.agentAvatar ? (
+                <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-2.5" />
+              ) : (
+                <span className="text-black text-2xl font-bold">{property.agentName.charAt(0)}</span>
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-white font-bold text-[17px]">{property.agentName}</p>
+              <p className="text-white/35 text-[13px] mt-1">Agence immobilière · Paris</p>
+            </div>
+            <button
+              onClick={() => router.back()}
+              className="w-full flex items-center gap-3 bg-white/5 border border-white/8 rounded-2xl px-3.5 py-3 active:opacity-70 transition-opacity"
+            >
+              <div className="w-[46px] h-[46px] rounded-xl overflow-hidden shrink-0">
+                <img src={property.imageUrlFallback} alt={property.title} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-white text-[13px] font-semibold leading-tight truncate">{property.title}</p>
+                <p className="text-white/40 text-[12px] mt-0.5">{property.surface} m² · {formatted} €</p>
+              </div>
+              <ChevronRight size={15} className="text-white/25 shrink-0" />
+            </button>
+            <p className="text-white/35 text-[13px] text-center leading-relaxed">
+              Envoyez un message pour démarrer<br />votre échange avec {property.agentName}.
+            </p>
+          </div>
+        )}
+
+        {/* Message bubbles */}
+        {messages.map((msg, i) => {
+          const isUser = msg.from === 'user'
+          const showRead = isUser && i === lastReadIdx
+
+          return (
+            <motion.div
+              key={msg.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18 }}
+              className={`flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}
+            >
+              <div
+                className={`max-w-[78%] px-3.5 py-2.5 text-[14px] leading-snug ${
+                  isUser
+                    ? 'bg-white text-black rounded-[18px] rounded-br-[4px]'
+                    : 'bg-neutral-800 text-white rounded-[18px] rounded-bl-[4px]'
+                }`}
+              >
+                {msg.text}
+              </div>
+              <div className={`flex items-center gap-1.5 px-1 ${isUser ? 'flex-row-reverse' : ''}`}>
+                <span className="text-white/25 text-[10px]">{formatTime(msg.timestamp)}</span>
+                {showRead && <span className="text-white/30 text-[10px]">Lu</span>}
+              </div>
+            </motion.div>
+          )
+        })}
+
+        {/* Typing indicator */}
+        <AnimatePresence>
+          {isTyping && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-start"
+            >
+              <div className="bg-neutral-800 rounded-[18px] rounded-bl-[4px] px-4 py-3 flex gap-1.5 items-center">
+                {[0, 0.22, 0.44].map((delay, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-[6px] h-[6px] rounded-full bg-white/50"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
+                  />
+                ))}
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
 
-        <div className="text-center -mt-1">
-          <p className="text-white font-bold text-[17px]">{property.agentName}</p>
-          <p className="text-white/35 text-[12px] mt-1">Agence immobilière · Paris</p>
-        </div>
-
-        {/* Property mini-card */}
-        <button
-          onClick={() => router.back()}
-          className="w-full flex items-center gap-3 bg-white/5 border border-white/8 rounded-2xl px-3.5 py-3 active:opacity-70 transition-opacity"
-        >
-          <div className="w-[46px] h-[46px] rounded-xl overflow-hidden shrink-0">
-            <img
-              src={property.imageUrlFallback}
-              alt={property.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="text-white text-[13px] font-semibold leading-tight truncate">{property.title}</p>
-            <p className="text-white/40 text-[12px] mt-0.5">{property.surface} m² · {formatted} €</p>
-          </div>
-          <ChevronRight size={15} className="text-white/25 shrink-0" />
-        </button>
-
-        {/* Hint */}
-        <p className="text-white/25 text-[12px] text-center leading-relaxed">
-          Envoyez un message pour démarrer<br />votre échange avec {property.agentName}.
-        </p>
+        <div ref={bottomRef} />
       </div>
 
-      {/* Input bar */}
+      {/* ── Input bar ── */}
       <div className="shrink-0 flex items-center gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950">
         <div className="flex-1 flex items-center bg-white/8 rounded-full px-4 py-2.5">
           <input
             ref={inputRef}
             value={text}
             onChange={e => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Message..."
             className="flex-1 bg-transparent text-white text-[14px] placeholder:text-white/30 outline-none"
           />
         </div>
         <button
-          onClick={() => setText('')}
+          onClick={sendMessage}
           className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 ${
             text.trim() ? 'bg-white' : 'bg-white/10'
           }`}
         >
-          <Send
-            size={14}
-            strokeWidth={2.2}
-            className={text.trim() ? 'text-black' : 'text-white/30'}
-          />
+          <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-black' : 'text-white/30'} />
         </button>
       </div>
     </div>
