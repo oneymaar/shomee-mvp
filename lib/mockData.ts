@@ -49,6 +49,15 @@ export const properties: Property[] = [
     irisPolygon: [[48.883749,2.332742],[48.883868,2.332303],[48.884559,2.329638],[48.885437,2.330798],[48.886485,2.332436],[48.886632,2.332602],[48.885833,2.334771],[48.885393,2.334311],[48.883952,2.332843],[48.883749,2.332742]],
     transports: ['M12 Abbesses', 'M2 Pigalle', 'Bus 80'],
     nearbyPlaces: ['Place des Abbesses', 'Sacré-Cœur', 'Rue Lepic'],
+    mapTransports: [
+      { name: 'Abbesses', line: 'M12', lat: 48.884804, lng: 2.338642 },
+      { name: 'Pigalle', line: 'M2', lat: 48.882298, lng: 2.338090 },
+    ],
+    mapPois: [
+      { name: 'Place des Abbesses', lat: 48.884400, lng: 2.338389 },
+      { name: 'Sacré-Cœur', lat: 48.886806, lng: 2.343015 },
+      { name: 'Rue Lepic', lat: 48.886323, lng: 2.334029 },
+    ],
     neighborhoodVibe: 'Artistique & villageois',
     marketAvgPricePerSqm: 11800,
     marketEvolution10y: '+31%',
@@ -120,6 +129,14 @@ export const properties: Property[] = [
     irisPolygon: [[48.848556,2.361058],[48.849697,2.358614],[48.850986,2.354597],[48.851615,2.351598],[48.852491,2.352173],[48.852658,2.352197],[48.853494,2.352042],[48.854,2.351766],[48.854524,2.351236],[48.855069,2.350282],[48.855347,2.349533],[48.85619,2.346476],[48.85671,2.346789],[48.855952,2.349352],[48.855326,2.350941],[48.854572,2.35239],[48.852141,2.359286],[48.851757,2.360133],[48.851504,2.360393],[48.851185,2.360519],[48.85056,2.360536],[48.850077,2.360626],[48.849617,2.360751],[48.849194,2.360964],[48.848556,2.361058]],
     transports: ['M7 Pont Marie', 'M1 Saint-Paul', 'Bus 67'],
     nearbyPlaces: ['Notre-Dame de Paris', 'Marché Saint-Germain', 'Pont de la Tournelle'],
+    mapTransports: [
+      { name: 'Pont Marie', line: 'M7', lat: 48.853787, lng: 2.356590 },
+      { name: 'Saint-Paul', line: 'M1', lat: 48.854942, lng: 2.359776 },
+    ],
+    mapPois: [
+      { name: 'Notre-Dame de Paris', lat: 48.852937, lng: 2.350050 },
+      { name: 'Pont de la Tournelle', lat: 48.850614, lng: 2.355444 },
+    ],
     neighborhoodVibe: 'Exclusif & historique',
     marketAvgPricePerSqm: 14800,
     marketEvolution10y: '+22%',
@@ -187,6 +204,15 @@ export const properties: Property[] = [
     irisPolygon: [[48.850348,2.342632],[48.847337,2.340849],[48.846972,2.340634],[48.847037,2.340508],[48.84727,2.340448],[48.848803,2.339119],[48.849061,2.338716],[48.849187,2.33841],[48.849283,2.337783],[48.849298,2.337328],[48.851471,2.337057],[48.85154,2.33826],[48.851823,2.338477],[48.851818,2.338681],[48.852268,2.338721],[48.852466,2.338792],[48.85233,2.339352],[48.852168,2.339382],[48.851986,2.339659],[48.851471,2.340223],[48.851149,2.340699],[48.850879,2.3412],[48.850879,2.341307],[48.850437,2.342485],[48.850348,2.342632]],
     transports: ['M4 Saint-Germain-des-Prés', 'M10 Mabillon', 'Bus 39'],
     nearbyPlaces: ['Jardin du Luxembourg', 'Église Saint-Germain', 'Rue de Buci'],
+    mapTransports: [
+      { name: 'Saint-Germain-des-Prés', line: 'M4', lat: 48.852813, lng: 2.337522 },
+      { name: 'Mabillon', line: 'M10', lat: 48.852886, lng: 2.334939 },
+    ],
+    mapPois: [
+      { name: 'Jardin du Luxembourg', lat: 48.846723, lng: 2.336415 },
+      { name: 'Église Saint-Germain-des-Prés', lat: 48.853968, lng: 2.334518 },
+      { name: 'Rue de Buci', lat: 48.853589, lng: 2.336371 },
+    ],
     neighborhoodVibe: 'Intellectuel & gastronomique',
     marketAvgPricePerSqm: 23500,
     marketEvolution10y: '+18%',
@@ -256,6 +282,15 @@ export const properties: Property[] = [
     irisPolygon: [[48.85089,2.377805],[48.850704,2.378555],[48.850555,2.379387],[48.849173,2.378288],[48.849022,2.37867],[48.848897,2.378787],[48.848724,2.378767],[48.848588,2.378596],[48.846492,2.379354],[48.846445,2.37895],[48.847312,2.377724],[48.848354,2.376005],[48.848529,2.376049],[48.84856,2.376166],[48.85089,2.377805]],
     transports: ['M8 Ledru-Rollin', 'M1 Gare de Lyon', 'Bus 46'],
     nearbyPlaces: ['Marché d\'Aligre', 'Place de la Bastille', 'Port de Plaisance'],
+    mapTransports: [
+      { name: 'Ledru-Rollin', line: 'M8', lat: 48.851295, lng: 2.376027 },
+      { name: 'Gare de Lyon', line: 'M1', lat: 48.844382, lng: 2.374800 },
+    ],
+    mapPois: [
+      { name: "Marché d'Aligre", lat: 48.848875, lng: 2.378046 },
+      { name: 'Place de la Bastille', lat: 48.852620, lng: 2.368776 },
+      { name: 'Port de Plaisance', lat: 48.849940, lng: 2.367462 },
+    ],
     neighborhoodVibe: 'Vivant & mixte',
     marketAvgPricePerSqm: 9800,
     marketEvolution10y: '+35%',

@@ -470,7 +470,13 @@ export default function PropertyDetailSheet({
                         )}
 
                         <GreyBox className="overflow-hidden mb-3" style={{ height: 200, isolation: 'isolate' }}>
-                          <MapZone lat={property.mapLat} lng={property.mapLng} polygon={property.irisPolygon} />
+                          <MapZone
+                            lat={property.mapLat}
+                            lng={property.mapLng}
+                            polygon={property.irisPolygon}
+                            transports={property.mapTransports}
+                            pois={property.mapPois}
+                          />
                         </GreyBox>
 
                         {/* Transports groupés par type */}
