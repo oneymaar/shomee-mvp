@@ -5,8 +5,8 @@ import type { Property } from '@/lib/types'
 
 interface PropertyOverlayProps {
   property: Property
-  onMore: () => void
-  onBaia: () => void
+  onMore?: () => void
+  onBaia?: () => void
 }
 
 export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOverlayProps) {
