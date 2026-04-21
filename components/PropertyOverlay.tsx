@@ -75,7 +75,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
 
             {/* Features — single line with check icons, truncated (Cave excluded like in detail sheet) */}
             {property.features && property.features.filter(f => f !== 'Cave').length > 0 && (
-              <div className="flex items-center gap-x-3 overflow-hidden mb-0.5" style={{ maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 75%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 75%, transparent 100%)' }}>
+              <div className="flex items-center gap-x-3 overflow-hidden mb-0.5" style={{ maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 90%, transparent 100%)' }}>
                 {property.features.filter(f => f !== 'Cave').map(f => (
                   <div key={f} className="flex items-center gap-1 shrink-0">
                     <Check size={10} className="text-emerald-400 shrink-0" />
