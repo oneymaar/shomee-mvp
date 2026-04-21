@@ -44,7 +44,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     holdTimerRef.current = setTimeout(() => {
       isHeldRef.current = true
       videoRef.current?.pause()
-    }, 180)
+    }, 300)
   }
 
   const releaseHold = () => {
@@ -88,28 +88,35 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         if (f >= chapters[i].fraction) idx = i
       }
 
+      const seek = (t: number) => {
+        if ('fastSeek' in video) video.fastSeek(t)
+        else video.currentTime = t
+      }
+
       if (isRight) {
         const next = chapters[idx + 1]
         if (next) {
-          video.currentTime = next.fraction * video.duration
+          seek(next.fraction * video.duration)
           progressRef.current?.flashLabel(next.label, next.fraction)
         }
       } else {
         const chapterStart = chapters[idx].fraction * video.duration
         if (video.currentTime - chapterStart > 2) {
-          video.currentTime = chapterStart
+          seek(chapterStart)
           progressRef.current?.flashLabel(chapters[idx].label, chapters[idx].fraction)
         } else {
           const prev = chapters[idx - 1]
           const target = prev ?? chapters[0]
-          video.currentTime = target.fraction * video.duration
+          seek(target.fraction * video.duration)
           progressRef.current?.flashLabel(target.label, target.fraction)
         }
       }
     } else {
-      video.currentTime = isRight
+      const t = isRight
         ? Math.min(video.duration, video.currentTime + 10)
         : Math.max(0, video.currentTime - 10)
+      if ('fastSeek' in video) video.fastSeek(t)
+      else video.currentTime = t
     }
   }
 
