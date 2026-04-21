@@ -60,6 +60,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
           onClose={() => setDetailOpen(false)}
           isFavorite={false}
           onToggleFavorite={() => {}}
+          hideBottomBar
         />
 
         {/* Download popup */}

@@ -172,6 +172,7 @@ interface PropertyDetailSheetProps {
   isFavorite: boolean
   onToggleFavorite: () => void
   onMessage?: () => void
+  hideBottomBar?: boolean
 }
 
 export default function PropertyDetailSheet({
@@ -181,6 +182,7 @@ export default function PropertyDetailSheet({
   isFavorite,
   onToggleFavorite,
   onMessage,
+  hideBottomBar,
 }: PropertyDetailSheetProps) {
   const [mediaTab, setMediaTab] = useState<MediaTab>('photos')
   const [photoState, setPhotoState] = useState({ index: 0, dir: 0 })
@@ -627,7 +629,7 @@ export default function PropertyDetailSheet({
 
 
                 {/* ── FLOATING PILLS ──────────────────────────────────── */}
-                <div
+                {!hideBottomBar && <div
                   className="absolute left-0 right-0 px-3 flex gap-2 items-center z-20"
                   style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
                 >
@@ -674,7 +676,7 @@ export default function PropertyDetailSheet({
                       <span className="text-black text-[10px] font-semibold">{property.shareCount ?? 0}</span>
                     </button>
                   </div>
-                </div>
+                </div>}
 
               </div>
             </motion.div>
