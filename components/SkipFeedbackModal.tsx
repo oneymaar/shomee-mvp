@@ -83,14 +83,14 @@ export default function SkipFeedbackModal({ property, open, onClose }: SkipFeedb
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">
+                  <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-1">
                     BAIA · Comprendre vos critères
                   </p>
                   <h3 className="text-white font-bold text-lg leading-snug">
                     Pourquoi ce bien n'a pas retenu votre attention ?
                   </h3>
                 </div>
-                <button onClick={handleClose} className="text-white/30 hover:text-white/60 transition-colors ml-3 mt-0.5">
+                <button onClick={handleClose} className="text-white/55 hover:text-white/60 transition-colors ml-3 mt-0.5">
                   <X size={18} />
                 </button>
               </div>
@@ -150,7 +150,7 @@ export default function SkipFeedbackModal({ property, open, onClose }: SkipFeedb
                       className={`w-full py-3.5 rounded-2xl text-sm font-bold transition-all ${
                         selected.length > 0
                           ? 'bg-white text-black hover:bg-white/90'
-                          : 'bg-white/10 text-white/30 cursor-not-allowed'
+                          : 'bg-white/10 text-white/55 cursor-not-allowed'
                       }`}
                     >
                       Envoyer mon retour
@@ -168,7 +168,7 @@ export default function SkipFeedbackModal({ property, open, onClose }: SkipFeedb
                       <Check size={22} className="text-black" strokeWidth={2.5} />
                     </div>
                     <p className="text-white font-semibold text-base">Merci pour votre retour !</p>
-                    <p className="text-white/40 text-sm text-center">
+                    <p className="text-white/65 text-sm text-center">
                       BAIA affine votre profil pour mieux vous sélectionner des biens.
                     </p>
                   </motion.div>

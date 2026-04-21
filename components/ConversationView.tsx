@@ -117,7 +117,7 @@ export default function ConversationView({ property }: { property: Property }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-[14px] leading-tight">{property.agentName}</p>
-          <p className="text-white/35 text-[11px] truncate">{property.title}</p>
+          <p className="text-white/60 text-[11px] truncate">{property.title}</p>
         </div>
       </div>
 
@@ -136,7 +136,7 @@ export default function ConversationView({ property }: { property: Property }) {
             </div>
             <div className="text-center">
               <p className="text-white font-bold text-[17px]">{property.agentName}</p>
-              <p className="text-white/35 text-[13px] mt-1">Agence immobilière · Paris</p>
+              <p className="text-white/60 text-[13px] mt-1">Agence immobilière · Paris</p>
             </div>
             <button
               onClick={() => router.back()}
@@ -147,11 +147,11 @@ export default function ConversationView({ property }: { property: Property }) {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-white text-[13px] font-semibold leading-tight truncate">{property.title}</p>
-                <p className="text-white/40 text-[12px] mt-0.5">{property.surface} m² · {formatted} €</p>
+                <p className="text-white/65 text-[12px] mt-0.5">{property.surface} m² · {formatted} €</p>
               </div>
-              <ChevronRight size={15} className="text-white/25 shrink-0" />
+              <ChevronRight size={15} className="text-white/65 shrink-0" />
             </button>
-            <p className="text-white/40 text-[13px] text-center leading-relaxed">
+            <p className="text-white/65 text-[13px] text-center leading-relaxed">
               Envoyez un message pour démarrer<br />votre échange avec {property.agentName}.
             </p>
           </div>
@@ -235,7 +235,7 @@ export default function ConversationView({ property }: { property: Property }) {
             text.trim() ? 'bg-white' : 'bg-white/10'
           }`}
         >
-          <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-black' : 'text-white/30'} />
+          <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-black' : 'text-white/55'} />
         </button>
       </div>
     </div>

@@ -53,7 +53,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
             {property.agentName}
           </p>
           {lastMsg && (
-            <span className={`text-[11px] shrink-0 ${unread ? 'text-white font-bold' : 'text-white/40'}`}>
+            <span className={`text-[11px] shrink-0 ${unread ? 'text-white font-bold' : 'text-white/65'}`}>
               {formatTime(lastMsg.timestamp)}
             </span>
           )}
@@ -81,18 +81,18 @@ function MessagesEmpty() {
         style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
       >
         <h1 className="text-white font-bold text-xl tracking-tight">Messages</h1>
-        <p className="text-white/40 text-xs mt-0.5">Vos échanges avec les agents</p>
+        <p className="text-white/65 text-xs mt-0.5">Vos échanges avec les agents</p>
       </div>
       <div
         className="flex flex-col items-center justify-center gap-4 px-8 text-center"
         style={{ minHeight: 'calc(100dvh - 180px)' }}
       >
         <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-          <MessageCircle size={28} className="text-white/30" />
+          <MessageCircle size={28} className="text-white/55" />
         </div>
         <div>
           <p className="text-white/60 text-sm font-medium">Aucun message</p>
-          <p className="text-white/30 text-xs mt-1 leading-relaxed">
+          <p className="text-white/55 text-xs mt-1 leading-relaxed">
             Vos échanges avec les agents<br />apparaîtront ici.
           </p>
         </div>
@@ -116,7 +116,7 @@ function MessagesList() {
         style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
       >
         <h1 className="text-white font-bold text-xl tracking-tight">Messages</h1>
-        <p className="text-white/40 text-xs mt-0.5">Vos échanges avec les agents</p>
+        <p className="text-white/65 text-xs mt-0.5">Vos échanges avec les agents</p>
       </div>
       <div>
         {sorted.map((conv, i) => (

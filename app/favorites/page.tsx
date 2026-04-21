@@ -24,7 +24,7 @@ export default function FavoritesPage() {
           style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
         >
           <h1 className="text-white font-bold text-xl tracking-tight">Favoris</h1>
-          <p className="text-white/40 text-xs mt-0.5">
+          <p className="text-white/65 text-xs mt-0.5">
             {favProperties.length} bien{favProperties.length !== 1 ? 's' : ''} sauvegardé{favProperties.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -33,7 +33,7 @@ export default function FavoritesPage() {
         {favProperties.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 px-8 text-center" style={{ minHeight: 'calc(100dvh - 180px)' }}>
             <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <Heart size={28} className="text-white/30" />
+              <Heart size={28} className="text-white/55" />
             </div>
             <p className="text-white/50 text-sm leading-relaxed">
               Sauvegardez des biens depuis le feed pour les retrouver ici.
@@ -72,7 +72,7 @@ export default function FavoritesPage() {
                         {property.title}
                       </p>
                       <p className="text-white font-bold text-sm mt-1">{formatted}</p>
-                      <p className="text-white/40 text-xs mt-0.5">{property.surface} m²</p>
+                      <p className="text-white/65 text-xs mt-0.5">{property.surface} m²</p>
                     </div>
                   </div>
                 </Link>

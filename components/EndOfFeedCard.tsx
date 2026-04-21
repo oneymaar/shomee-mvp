@@ -92,7 +92,7 @@ export default function EndOfFeedCard({
           {/* idle: suggestions form */}
           {cardState === 'idle' && (
             <motion.div key="form" exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+              <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-3">
                 Élargir ma recherche
               </p>
 
@@ -142,7 +142,7 @@ export default function EndOfFeedCard({
                 onClick={handleSubmit}
                 disabled={!canSubmit}
                 className={`w-full py-4 rounded-2xl text-sm font-bold transition-all mt-5 ${
-                  canSubmit ? 'bg-white text-black' : 'bg-white/10 text-white/30 cursor-not-allowed'
+                  canSubmit ? 'bg-white text-black' : 'bg-white/10 text-white/55 cursor-not-allowed'
                 }`}
               >
                 Modifier mes critères
@@ -167,7 +167,7 @@ export default function EndOfFeedCard({
               />
               <div className="text-center">
                 <p className="text-white font-semibold text-base">BAIA relance la recherche…</p>
-                <p className="text-white/40 text-sm mt-1.5">
+                <p className="text-white/65 text-sm mt-1.5">
                   Analyse des biens correspondant à vos nouveaux critères.
                 </p>
               </div>
@@ -192,7 +192,7 @@ export default function EndOfFeedCard({
               </motion.div>
               <div className="text-center">
                 <p className="text-white font-bold text-xl">{resultLabel}</p>
-                <p className="text-white/40 text-sm mt-1.5">Chargement en cours…</p>
+                <p className="text-white/65 text-sm mt-1.5">Chargement en cours…</p>
               </div>
             </motion.div>
           )}

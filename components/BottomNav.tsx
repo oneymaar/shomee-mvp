@@ -32,7 +32,7 @@ export default function BottomNav() {
               data-tab={label.toLowerCase()}
               className={clsx(
                 'flex flex-col items-center gap-0.5 px-5 py-1.5 transition-all duration-200',
-                active ? 'text-white' : 'text-white/35',
+                active ? 'text-white' : 'text-white/60',
               )}
             >
               <div className="relative">

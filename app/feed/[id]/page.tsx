@@ -96,7 +96,7 @@ export default function PropertyDetailPage({ params }: Props) {
                 'flex-1 py-2.5 text-xs font-medium transition-all',
                 activeTab === tab
                   ? 'text-white border-b-2 border-white -mb-px'
-                  : 'text-white/40',
+                  : 'text-white/65',
               )}
             >
               {tab}
@@ -118,13 +118,13 @@ export default function PropertyDetailPage({ params }: Props) {
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-white font-black text-3xl">{formattedPrice} €</span>
             {formattedPpm && (
-              <span className="text-white/40 text-sm">soit {formattedPpm} € / m²</span>
+              <span className="text-white/65 text-sm">soit {formattedPpm} € / m²</span>
             )}
           </div>
 
           {/* Location */}
           <div className="flex items-center gap-1.5 mt-1.5">
-            <MapPin size={12} className="text-white/40 shrink-0" />
+            <MapPin size={12} className="text-white/65 shrink-0" />
             <span className="text-white/50 text-sm">{property.location} · {property.district}</span>
           </div>
 
@@ -182,7 +182,7 @@ export default function PropertyDetailPage({ params }: Props) {
           <div className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
             <div className="text-white font-black text-2xl">{formattedPrice} €</div>
             {formattedPpm && (
-              <div className="text-white/40 text-xs mt-0.5">{formattedPpm} € / m²</div>
+              <div className="text-white/65 text-xs mt-0.5">{formattedPpm} € / m²</div>
             )}
             <div className="h-px bg-white/10 my-3" />
             <div className="flex flex-col gap-1.5">

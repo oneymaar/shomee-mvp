@@ -60,7 +60,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
       {/* Centered content */}
       <div className="relative z-10 flex flex-col h-full px-5 justify-center py-8">
         {/* Header */}
-        <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-2">
+        <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-2">
           BAIA · Comprendre vos critères
         </p>
         <h2 className="text-white font-bold text-2xl leading-snug mb-6">
@@ -122,7 +122,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                 className={`w-full py-4 rounded-2xl text-sm font-bold transition-all ${
                   selected.length > 0
                     ? 'bg-white text-black active:bg-white/90'
-                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                    : 'bg-white/10 text-white/55 cursor-not-allowed'
                 }`}
               >
                 Envoyer mon retour
@@ -134,8 +134,8 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                 animate={{ y: [0, 5, 0] }}
                 transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
               >
-                <ChevronDown size={28} className="text-white/40" />
-                <span className="text-white/30 text-sm">Continuer sans répondre</span>
+                <ChevronDown size={28} className="text-white/65" />
+                <span className="text-white/55 text-sm">Continuer sans répondre</span>
               </motion.div>
             </motion.div>
           ) : (
@@ -150,7 +150,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                 <Check size={24} className="text-black" strokeWidth={2.5} />
               </div>
               <p className="text-white font-semibold text-xl">Merci pour votre retour&nbsp;!</p>
-              <p className="text-white/40 text-sm text-center max-w-xs">
+              <p className="text-white/65 text-sm text-center max-w-xs">
                 BAIA affine votre profil pour mieux vous sélectionner des biens.
               </p>
             </motion.div>

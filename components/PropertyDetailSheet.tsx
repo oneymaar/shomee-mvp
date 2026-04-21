@@ -31,7 +31,7 @@ const BADGE_LETTER_STYLE: React.CSSProperties = {
 function DpeBadge({ grade, label }: { grade: string; label: string }) {
   return (
     <div className="flex-1">
-      <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
+      <p className="text-white/65 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
       <div
         style={{
           backgroundColor: DPE_COLORS[grade],
@@ -60,7 +60,7 @@ const GES_COLORS: Record<string, string> = {
 function GesBadge({ grade, label }: { grade: string; label: string }) {
   return (
     <div className="flex-1">
-      <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
+      <p className="text-white/65 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
       <div
         style={{
           backgroundColor: GES_COLORS[grade],
@@ -134,7 +134,7 @@ function TransportItem({ line }: { line: string }) {
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">{children}</h3>
+  return <h3 className="text-white/65 text-[10px] font-bold uppercase tracking-widest mb-3">{children}</h3>
 }
 
 function GreyBox({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
@@ -325,7 +325,7 @@ export default function PropertyDetailSheet({
                   {/* Price */}
                   <div className="flex items-baseline gap-2 flex-wrap">
                     <span className="text-white font-black text-[22px] leading-none">{fmtPrice} €</span>
-                    {fmtPpm && <span className="text-white/40 text-xs">soit {fmtPpm} €/m²</span>}
+                    {fmtPpm && <span className="text-white/65 text-xs">soit {fmtPpm} €/m²</span>}
                   </div>
 
                   {/* Location — prominent */}
@@ -376,7 +376,7 @@ export default function PropertyDetailSheet({
                           onClick={() => setMediaTab(key)}
                           className={clsx(
                             'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all',
-                            mediaTab === key ? 'bg-white text-black' : 'text-white/45 border border-white/15',
+                            mediaTab === key ? 'bg-white text-black' : 'text-white/65 border border-white/15',
                           )}
                         >
                           <Icon size={15} />
@@ -442,7 +442,7 @@ export default function PropertyDetailSheet({
                       {mediaTab === 'plan' && (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                           <Map size={36} className="text-white/15" />
-                          <p className="text-white/35 text-xs">Plan disponible sur demande</p>
+                          <p className="text-white/60 text-xs">Plan disponible sur demande</p>
                         </div>
                       )}
                       {mediaTab === 'matterport' && property.matterportUrl && (
@@ -493,7 +493,7 @@ export default function PropertyDetailSheet({
                               if (!lines.length) return null
                               return (
                                 <div key={type}>
-                                  <p className="text-white/30 text-[9px] font-bold uppercase tracking-wider pt-2 pb-0.5">
+                                  <p className="text-white/55 text-[9px] font-bold uppercase tracking-wider pt-2 pb-0.5">
                                     {TRANSPORT_LABELS[type]}
                                   </p>
                                   {lines.map(t => <TransportItem key={t} line={t} />)}
@@ -582,7 +582,7 @@ export default function PropertyDetailSheet({
                         <GreyBox className="px-4 py-3">
                           <div className="flex items-baseline gap-2 mb-1">
                             <span className="text-white font-black text-xl">{fmtPrice} €</span>
-                            {fmtPpm && <span className="text-white/40 text-xs">{fmtPpm} €/m²</span>}
+                            {fmtPpm && <span className="text-white/65 text-xs">{fmtPpm} €/m²</span>}
                           </div>
                           <div className="h-px bg-white/10 my-3" />
                           <div className="flex flex-col gap-2.5">

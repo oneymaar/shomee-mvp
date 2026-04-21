@@ -58,7 +58,7 @@ export default function AssistantPage() {
 
           {/* Coming soon */}
           <div className="mt-auto pt-8 text-center">
-            <p className="text-white/20 text-xs">Chat complet — bientôt disponible</p>
+            <p className="text-white/65 text-xs">Chat complet — bientôt disponible</p>
           </div>
         </div>
 

@@ -25,7 +25,7 @@ export default function ProfilePage() {
           style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
         >
           <h1 className="text-white font-bold text-xl tracking-tight">Mon profil</h1>
-          <p className="text-white/40 text-xs mt-0.5">Utilisateur SHOMEE</p>
+          <p className="text-white/65 text-xs mt-0.5">Utilisateur SHOMEE</p>
         </div>
 
         {/* Avatar + stats */}
@@ -47,7 +47,7 @@ export default function ProfilePage() {
                 className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-3 py-3.5 text-center"
               >
                 <p className="text-white font-bold text-2xl">{value}</p>
-                <p className="text-white/40 text-xs mt-0.5">{label}</p>
+                <p className="text-white/65 text-xs mt-0.5">{label}</p>
               </div>
             ))}
           </div>
@@ -58,7 +58,7 @@ export default function ProfilePage() {
 
         {/* Search preferences */}
         <div className="px-5 pt-6 mb-6">
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+          <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-3">
             Recherche
           </p>
           <div className="bg-white/5 border border-white/10 rounded-2xl divide-y divide-white/8">
@@ -70,8 +70,8 @@ export default function ProfilePage() {
               <div key={label} className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-white text-sm">{label}</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-white/40 text-sm">{value}</span>
-                  <ChevronRight size={14} className="text-white/20" />
+                  <span className="text-white/65 text-sm">{value}</span>
+                  <ChevronRight size={14} className="text-white/65" />
                 </div>
               </div>
             ))}
@@ -80,7 +80,7 @@ export default function ProfilePage() {
 
         {/* Account */}
         <div className="px-5 mb-6">
-          <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">
+          <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-3">
             Compte
           </p>
           <div className="bg-white/5 border border-white/10 rounded-2xl divide-y divide-white/8">
@@ -94,16 +94,16 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white text-sm font-medium">{label}</p>
-                  <p className="text-white/40 text-xs">{description}</p>
+                  <p className="text-white/65 text-xs">{description}</p>
                 </div>
-                <ChevronRight size={14} className="text-white/20" />
+                <ChevronRight size={14} className="text-white/65" />
               </button>
             ))}
           </div>
         </div>
 
         {/* Version */}
-        <p className="text-white/20 text-xs text-center pb-[76px]">SHOMEE · Sprint 1 · v0.1.0</p>
+        <p className="text-white/65 text-xs text-center pb-[76px]">SHOMEE · Sprint 1 · v0.1.0</p>
 
       </div>
       <BottomNav />
