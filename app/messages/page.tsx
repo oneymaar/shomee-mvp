@@ -9,6 +9,7 @@ import ConversationView from '@/components/ConversationView'
 import { useShomeeStore, hasUnread } from '@/lib/store'
 import { properties } from '@/lib/mockData'
 import type { Conversation } from '@/lib/types'
+import { formatLocation } from '@/lib/format'
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -60,7 +61,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
         </div>
         {/* Property description: white, includes surface + price */}
         <p className="text-white text-[12px] truncate">
-          {property.arrondissement} · {property.district} · {property.surface}m² · {formattedPrice} €
+          {formatLocation(property.arrondissement, property.district)} · {property.surface}m² · {formattedPrice} €
         </p>
         {/* Last message preview */}
         {preview && (

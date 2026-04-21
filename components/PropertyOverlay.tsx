@@ -2,6 +2,7 @@
 
 import { ChevronDown, MapPin, Check, Home } from 'lucide-react'
 import type { Property } from '@/lib/types'
+import { formatLocation } from '@/lib/format'
 
 interface PropertyOverlayProps {
   property: Property
@@ -69,7 +70,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
             <div className="flex items-center gap-1.5 mb-1">
               <MapPin size={13} className="text-white shrink-0" />
               <p className="text-white font-bold text-[15px] leading-tight drop-shadow">
-                {property.district} · {property.arrondissement}
+                {formatLocation(property.arrondissement, property.district)}
               </p>
             </div>
 

@@ -12,6 +12,7 @@ import {
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
 import { shareProperty } from '@/lib/share'
+import { formatLocation } from '@/lib/format'
 
 const MapZone = dynamic(() => import('./MapZone'), { ssr: false })
 
@@ -334,7 +335,7 @@ export default function PropertyDetailSheet({
                   {/* Location — prominent */}
                   <div className="flex items-center gap-1.5 mt-1">
                     <MapPin size={12} className="text-white/50 shrink-0" />
-                    <span className="text-white text-sm font-medium">{property.location} · {property.district}</span>
+                    <span className="text-white text-sm font-medium">{formatLocation(property.arrondissement, property.district)}</span>
                   </div>
 
                   {/* Stats chips */}

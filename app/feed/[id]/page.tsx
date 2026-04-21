@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import MobileFrame from '@/components/MobileFrame'
 import { properties } from '@/lib/mockData'
 import { useShomeeStore } from '@/lib/store'
+import { formatLocation } from '@/lib/format'
 import clsx from 'clsx'
 
 const DPE_LABELS: Record<string, string> = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E', F: 'F', G: 'G' }
@@ -125,7 +126,7 @@ export default function PropertyDetailPage({ params }: Props) {
           {/* Location */}
           <div className="flex items-center gap-1.5 mt-1.5">
             <MapPin size={12} className="text-white/65 shrink-0" />
-            <span className="text-white/50 text-sm">{property.location} · {property.district}</span>
+            <span className="text-white/50 text-sm">{formatLocation(property.arrondissement, property.district)}</span>
           </div>
 
           {/* Feature chips */}
