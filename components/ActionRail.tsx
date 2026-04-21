@@ -44,7 +44,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
         icon={<MessageCircle size={28} strokeWidth={1.5} className="text-white" />}
         onClick={onMessage}
       />
-      <RailButton icon={<Phone size={25} strokeWidth={1.5} className="text-white" />} />
+      <RailButton icon={<Phone size={25} strokeWidth={1.5} className="text-white" />} onClick={() => { window.location.href = 'tel:+33670744935' }} />
       <RailButton icon={<CalendarPlus size={25} strokeWidth={1.5} className="text-white" />} />
 
       <button ref={heartRef} onClick={handleHeartClick} className="flex flex-col items-center gap-1">

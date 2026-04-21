@@ -635,7 +635,7 @@ export default function PropertyDetailSheet({
                   <div className="flex-1 bg-white rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
                     {[
                       { icon: MessageCircle, label: 'Message', onClick: onMessage },
-                      { icon: Phone, label: 'Appeler', onClick: undefined },
+                      { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = 'tel:+33670744935' } },
                       { icon: CalendarPlus, label: 'Visiter', onClick: undefined },
                     ].map(({ icon: Icon, label, onClick }, i, arr) => (
                       <div key={label} className="flex-1 flex items-center justify-center">
