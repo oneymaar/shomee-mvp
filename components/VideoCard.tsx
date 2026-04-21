@@ -126,8 +126,8 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
 
       {/* Tap zones */}
       <div
-        className="absolute inset-0 z-[15]"
-        style={{ touchAction: 'pan-y' }}
+        className="absolute inset-0 z-[15] select-none"
+        style={{ touchAction: 'pan-y', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
         onTouchStart={onTapStart}
         onTouchEnd={onTapEnd}
         onTouchCancel={releaseHold}
