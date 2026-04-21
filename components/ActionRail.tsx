@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { MessageCircle, Phone, CalendarPlus, Heart, Send } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
+import { shareProperty } from '@/lib/share'
 
 interface ActionRailProps {
   property: Property
@@ -66,15 +67,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
       <RailButton
         icon={<Send size={25} strokeWidth={1.5} className="text-white" />}
         label={property.shareCount}
-        onClick={() => {
-          const url = `${window.location.origin}/share/${property.id}`
-          const text = `🏠 ${property.title}\n${property.surface} m² · ${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €\n${property.district}, ${property.location}\n\nDécouvert sur SHOMEE, l'app immobilière en vidéo 🎬`
-          if (navigator.share) {
-            navigator.share({ title: property.title, text, url }).catch(() => {})
-          } else {
-            navigator.clipboard?.writeText(`${text}\n→ ${url}`).catch(() => {})
-          }
-        }}
+        onClick={() => shareProperty(property)}
       />
     </div>
   )

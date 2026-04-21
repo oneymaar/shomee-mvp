@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
+import { shareProperty } from '@/lib/share'
 
 const MapZone = dynamic(() => import('./MapZone'), { ssr: false })
 
@@ -661,15 +662,7 @@ export default function PropertyDetailSheet({
                     </button>
                     <div className="w-px h-6 bg-black/10" />
                     <button
-                      onClick={() => {
-                        const url = `${window.location.origin}/share/${property.id}`
-                        const text = `🏠 ${property.title}\n${property.surface} m² · ${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €\n${property.district}, ${property.location}\n\nDécouvert sur SHOMEE, l'app immobilière en vidéo 🎬`
-                        if (navigator.share) {
-                          navigator.share({ title: property.title, text, url }).catch(() => {})
-                        } else {
-                          navigator.clipboard?.writeText(`${text}\n→ ${url}`).catch(() => {})
-                        }
-                      }}
+                      onClick={() => shareProperty(property)}
                       className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-black/5 transition-colors"
                     >
                       <Share2 size={18} strokeWidth={1.8} className="text-black" />
