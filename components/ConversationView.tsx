@@ -127,9 +127,9 @@ export default function ConversationView({ property }: { property: Property }) {
         {/* Empty state */}
         {!hasMessages && (
           <div className="flex-1 flex flex-col items-center justify-center gap-5 pt-4 pb-2">
-            <div className="w-[80px] h-[80px] rounded-full bg-white border border-white/20 overflow-hidden flex items-center justify-center">
+            <div className="w-[80px] h-[80px] rounded-full bg-neutral-900 border border-white/15 overflow-hidden flex items-center justify-center">
               {property.agentAvatar ? (
-                <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-2.5" />
+                <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
               ) : (
                 <span className="text-black text-2xl font-bold">{property.agentName.charAt(0)}</span>
               )}
