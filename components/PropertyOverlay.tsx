@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, MapPin, Check } from 'lucide-react'
+import { ChevronDown, MapPin, Check, Home } from 'lucide-react'
 import type { Property } from '@/lib/types'
 
 interface PropertyOverlayProps {
@@ -50,7 +50,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
 
             {/* Badges */}
             {property.badges && property.badges.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2.5">
+              <div className="flex flex-wrap gap-2 mb-1.5">
                 {property.badges.map(badge => {
                   const { label, className } = BADGE_STYLES[badge]
                   return (
@@ -66,7 +66,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
             )}
 
             {/* District + arrondissement */}
-            <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="flex items-center gap-1.5 mb-1">
               <MapPin size={13} className="text-white shrink-0" />
               <p className="text-white font-bold text-[15px] leading-tight drop-shadow">
                 {property.district} · {property.arrondissement}
@@ -75,7 +75,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
 
             {/* Features — single line with check icons, truncated */}
             {property.features && property.features.length > 0 && (
-              <div className="flex items-center gap-x-3 overflow-hidden mb-1" style={{ maxHeight: '1.4em' }}>
+              <div className="flex items-center gap-x-3 overflow-hidden mb-0.5" style={{ maxHeight: '1.4em' }}>
                 {property.features.map(f => (
                   <div key={f} className="flex items-center gap-1 shrink-0">
                     <Check size={10} className="text-emerald-400 shrink-0" />
@@ -87,13 +87,14 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
 
             {/* Typologie · surface · prix + Plus */}
             <div className="flex items-center gap-2">
-              <p className="text-white text-[13px] drop-shadow">
+              <Home size={13} strokeWidth={1.8} className="text-white shrink-0" />
+              <p className="text-white text-[15px] drop-shadow">
                 T{property.rooms} · {property.surface} m² · {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €
               </p>
               {onMore && (
                 <button onClick={onMore} className="flex items-center gap-0 shrink-0">
-                  <span className="text-white/65 text-[13px] font-bold">Plus</span>
-                  <ChevronDown size={14} className="text-white/65 mt-px" />
+                  <span className="text-white/65 text-[15px] font-bold">Plus</span>
+                  <ChevronDown size={16} className="text-white/65 mt-px" />
                 </button>
               )}
             </div>
