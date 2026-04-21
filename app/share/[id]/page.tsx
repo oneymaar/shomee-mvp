@@ -2,7 +2,7 @@
 
 import { useState, use } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, Volume2, VolumeX } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
 import VideoCard from '@/components/VideoCard'
 import PropertyOverlay from '@/components/PropertyOverlay'
@@ -14,6 +14,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
   const property = properties.find(p => p.id === id)
   const [popupDismissed, setPopupDismissed] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [muted, setMuted] = useState(true)
 
   if (!property) {
     return (
@@ -29,10 +30,21 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
     <MobileFrame>
       <div className="relative w-full" style={{ height: '100dvh' }}>
         {/* Video */}
-        <VideoCard property={property} isActive muted />
+        <VideoCard property={property} isActive muted={muted} />
 
         {/* Simplified overlay — no BAIA */}
         <PropertyOverlay property={property} onMore={() => setDetailOpen(true)} />
+
+        {/* Mute toggle — bottom right, where BAIA would be */}
+        <button
+          onClick={() => setMuted(m => !m)}
+          className="absolute z-20 bottom-6 right-3 w-14 h-14 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center active:scale-95 transition-transform"
+        >
+          {muted
+            ? <VolumeX size={22} strokeWidth={1.5} className="text-white" />
+            : <Volume2 size={22} strokeWidth={1.5} className="text-white" />
+          }
+        </button>
 
         {/* Top bar — download CTA */}
         <div
