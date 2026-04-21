@@ -14,10 +14,14 @@ export default function SplashPage() {
       (window.navigator as any).standalone === true ||
       window.matchMedia('(display-mode: standalone)').matches
 
-    if (!isStandalone) setShowHint(true)
-
-    const timer = setTimeout(() => router.replace('/feed'), 2000)
-    return () => clearTimeout(timer)
+    if (isStandalone) {
+      // Lancé depuis l'icône → splash puis feed
+      const timer = setTimeout(() => router.replace('/feed'), 2000)
+      return () => clearTimeout(timer)
+    } else {
+      // Safari navigateur → URL reste "/" pour permettre la création du signet
+      setShowHint(true)
+    }
   }, [router])
 
   return (
@@ -41,17 +45,25 @@ export default function SplashPage() {
       </motion.div>
 
       {showHint && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.8 }}
-          className="absolute bottom-12 text-white/35 text-[12px] text-center leading-relaxed px-8"
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.7 }}
+          className="absolute bottom-12 flex flex-col items-center gap-4 px-8"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
-          Pour ajouter SHOMEE sur votre écran d'accueil,{'\n'}
-          appuyez sur <span className="text-white/55">Partager</span> puis{' '}
-          <span className="text-white/55">Sur l'écran d'accueil</span>
-        </motion.p>
+          <button
+            onClick={() => router.push('/feed')}
+            className="bg-white text-black font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
+          >
+            Découvrir les biens
+          </button>
+          <p className="text-white/35 text-[12px] text-center leading-relaxed">
+            Pour ajouter SHOMEE sur votre écran d'accueil,{'\n'}
+            appuyez sur <span className="text-white/55">Partager</span> puis{' '}
+            <span className="text-white/55">Sur l'écran d'accueil</span>
+          </p>
+        </motion.div>
       )}
     </div>
   )
