@@ -52,9 +52,8 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
           <div className="flex items-center justify-between px-4 h-[52px] gap-3">
-            <p className="text-white/75 text-[13px] leading-tight">
-              Découvrez SHOMEE,{' '}
-              <span className="text-white font-semibold">l'immobilier en vidéo</span>
+            <p className="text-white/90 text-[13px] leading-tight">
+              Avec SHOMEE, dénichez les pépites en avant-première et en vidéo !
             </p>
             <a
               href="https://apps.apple.com"
@@ -110,10 +109,10 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
                   </div>
 
                   <h2 className="text-white font-bold text-[20px] text-center leading-tight mb-2">
-                    Téléchargez SHOMEE
+                    Voici SHOMEE
                   </h2>
                   <p className="text-white/65 text-[14px] text-center leading-relaxed mb-6">
-                    L'immobilier en vidéo. Découvrez les biens autrement, directement sur votre smartphone.
+                    Renseignez vos critères pour dénicher les plus beaux biens du marché en avant-première et en vidéo ✨
                   </p>
 
                   <a
