@@ -108,16 +108,16 @@ export default function ConversationView({ property }: { property: Property }) {
         <button onClick={() => router.push('/messages')} className="text-white/60 -ml-1 p-1">
           <ChevronLeft size={22} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-white border border-white/20 overflow-hidden flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-full bg-neutral-900 border border-white/15 overflow-hidden flex items-center justify-center shrink-0">
           {property.agentAvatar ? (
-            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-1" />
+            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
           ) : (
             <span className="text-black text-xs font-bold">{property.agentName.charAt(0)}</span>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-[14px] leading-tight">{property.agentName}</p>
-          <p className="text-white/35 text-[11px]">Agence immobilière</p>
+          <p className="text-white/35 text-[11px] truncate">{property.title}</p>
         </div>
       </div>
 

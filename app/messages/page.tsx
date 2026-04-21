@@ -34,9 +34,9 @@ function ConversationRow({ conv }: { conv: Conversation }) {
     >
       {/* Avatar */}
       <div className="relative shrink-0">
-        <div className="w-12 h-12 rounded-full bg-white border border-white/15 overflow-hidden flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full bg-neutral-900 border border-white/15 overflow-hidden flex items-center justify-center">
           {property.agentAvatar ? (
-            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain p-2" />
+            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
           ) : (
             <span className="text-black font-bold text-sm">{property.agentName.charAt(0)}</span>
           )}
