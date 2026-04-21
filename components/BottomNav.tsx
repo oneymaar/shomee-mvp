@@ -36,7 +36,7 @@ export default function BottomNav() {
               )}
             >
               <div className="relative">
-                <Icon size={23} strokeWidth={active ? 2.5 : 1.8} />
+                <Icon size={23} strokeWidth={active ? 1.5 : 1.8} className={active ? 'fill-current' : ''} />
                 {isMessages && unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-red-500 rounded-full" />
                 )}
