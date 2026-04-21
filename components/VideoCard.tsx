@@ -15,6 +15,8 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const videoRef    = useRef<HTMLVideoElement>(null)
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null)
   const progressRef = useRef<VideoProgressBarHandle>(null)
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isHeldRef   = useRef(false)
   const hasVideo    = Boolean(property.videoUrl)
 
   /* ── Play / pause on active state ── */
@@ -34,13 +36,33 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     if (videoRef.current) videoRef.current.muted = muted
   }, [muted])
 
-  /* ── Chapter tap navigation ── */
+  /* ── Hold to pause + chapter tap navigation ── */
   const onTapStart = (e: React.TouchEvent) => {
     const t = e.touches[0]
     tapStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() }
+
+    holdTimerRef.current = setTimeout(() => {
+      isHeldRef.current = true
+      videoRef.current?.pause()
+    }, 180)
+  }
+
+  const releaseHold = () => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current)
+      holdTimerRef.current = null
+    }
+    if (isHeldRef.current) {
+      isHeldRef.current = false
+      if (isActive) videoRef.current?.play().catch(() => {})
+      return true
+    }
+    return false
   }
 
   const onTapEnd = (e: React.TouchEvent) => {
+    if (releaseHold()) return
+
     const start = tapStartRef.current
     tapStartRef.current = null
     if (!start) return
@@ -108,6 +130,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         style={{ touchAction: 'pan-y' }}
         onTouchStart={onTapStart}
         onTouchEnd={onTapEnd}
+        onTouchCancel={releaseHold}
       />
 
       {/* Video */}
