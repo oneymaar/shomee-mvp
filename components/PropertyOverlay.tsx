@@ -72,21 +72,19 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
               </p>
             </div>
 
-            {/* Features with check icons + Plus */}
+            {/* Features with check icons + Plus inline */}
             {property.features && property.features.length > 0 && (
-              <div className="flex items-end gap-2">
-                <div className="flex flex-wrap gap-x-3 gap-y-1 flex-1 overflow-hidden" style={{ maxHeight: '2.8em' }}>
-                  {property.features.map(f => (
-                    <div key={f} className="flex items-center gap-1">
-                      <Check size={10} className="text-emerald-400 shrink-0" />
-                      <span className="text-white/80 text-[13px] drop-shadow">{f}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 overflow-hidden" style={{ maxHeight: '2.8em' }}>
+                {property.features.map(f => (
+                  <div key={f} className="flex items-center gap-1">
+                    <Check size={10} className="text-emerald-400 shrink-0" />
+                    <span className="text-white text-[13px] drop-shadow">{f}</span>
+                  </div>
+                ))}
                 {onMore && (
-                  <button onClick={onMore} className="flex items-center shrink-0 pb-px">
-                    <span className="text-white/75 font-medium text-[14px]">Plus</span>
-                    <ChevronDown size={17} className="text-white/75 mt-px" />
+                  <button onClick={onMore} className="flex items-center gap-0">
+                    <span className="text-white/65 text-[13px]">Plus</span>
+                    <ChevronDown size={14} className="text-white/65 mt-px" />
                   </button>
                 )}
               </div>
