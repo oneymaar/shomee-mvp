@@ -74,7 +74,7 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
 
             {/* Features with check icons + Plus inline */}
             {property.features && property.features.length > 0 && (
-              <div className="flex flex-wrap gap-x-3 gap-y-1 overflow-hidden" style={{ maxHeight: '2.8em' }}>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 overflow-hidden" style={{ maxHeight: '2.8em' }}>
                 {property.features.map(f => (
                   <div key={f} className="flex items-center gap-1">
                     <Check size={10} className="text-emerald-400 shrink-0" />
