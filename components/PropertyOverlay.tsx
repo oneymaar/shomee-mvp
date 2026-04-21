@@ -83,7 +83,7 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
                 ))}
                 {onMore && (
                   <button onClick={onMore} className="flex items-center gap-0">
-                    <span className="text-white/65 text-[13px]">Plus</span>
+                    <span className="text-white/65 text-[13px] font-bold">Plus</span>
                     <ChevronDown size={14} className="text-white/65 mt-px" />
                   </button>
                 )}
