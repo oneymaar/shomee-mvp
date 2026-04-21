@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, MapPin, Check } from 'lucide-react'
 import type { Property } from '@/lib/types'
 
 interface PropertyOverlayProps {
@@ -64,17 +64,25 @@ export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOv
               </div>
             )}
 
-            {/* District */}
-            <p className="text-white font-bold text-[16px] leading-tight drop-shadow mb-1">
-              {property.district}
-            </p>
+            {/* District + arrondissement */}
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <MapPin size={13} className="text-white shrink-0" />
+              <p className="text-white font-bold text-[15px] leading-tight drop-shadow">
+                {property.district} · {property.arrondissement}
+              </p>
+            </div>
 
-            {/* Features + Plus */}
+            {/* Features with check icons + Plus */}
             {property.features && property.features.length > 0 && (
               <div className="flex items-end gap-2">
-                <p className="text-white/80 text-[14px] leading-snug line-clamp-2 flex-1 drop-shadow">
-                  {property.features.join(' · ')}
-                </p>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 flex-1 overflow-hidden" style={{ maxHeight: '2.8em' }}>
+                  {property.features.map(f => (
+                    <div key={f} className="flex items-center gap-1">
+                      <Check size={10} className="text-emerald-400 shrink-0" />
+                      <span className="text-white/80 text-[13px] drop-shadow">{f}</span>
+                    </div>
+                  ))}
+                </div>
                 {onMore && (
                   <button onClick={onMore} className="flex items-center shrink-0 pb-px">
                     <span className="text-white/75 font-medium text-[14px]">Plus</span>
