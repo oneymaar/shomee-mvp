@@ -34,11 +34,11 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
         {/* Simplified overlay — no BAIA, no "Plus" */}
         <PropertyOverlay property={property} />
 
-        {/* Bottom bar — download CTA instead of BottomNav */}
-        <div className="absolute bottom-0 left-0 right-0 z-30 bg-black border-t border-white/10">
-          <div className="flex items-center justify-between px-4 h-[60px] gap-3">
+        {/* Top bar — download CTA */}
+        <div className="absolute top-0 left-0 right-0 z-30 bg-black/80 backdrop-blur-sm border-b border-white/10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+          <div className="flex items-center justify-between px-4 h-[52px] gap-3">
             <p className="text-white/75 text-[13px] leading-tight">
-              Découvrez SHOMEE,<br />
+              Découvrez SHOMEE,{' '}
               <span className="text-white font-semibold">l'immobilier en vidéo</span>
             </p>
             <a
