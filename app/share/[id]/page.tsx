@@ -53,7 +53,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
         >
           <div className="flex items-center justify-between px-4 h-[52px] gap-3">
             <p className="text-white/90 text-[13px] leading-tight">
-              Avec SHOMEE, dénichez les pépites en avant-première et en vidéo !
+              Avec SHOMEE, dénichez les pépites en <strong>avant-première</strong> et en <strong>vidéo</strong> !
             </p>
             <a
               href="https://apps.apple.com"
@@ -112,7 +112,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
                     Voici SHOMEE
                   </h2>
                   <p className="text-white/65 text-[14px] text-center leading-relaxed mb-6">
-                    Renseignez vos critères pour dénicher les plus beaux biens du marché en avant-première et en vidéo ✨
+                    Renseignez vos critères pour dénicher les plus beaux biens du marché en <strong className="text-white">avant-première</strong> et en <strong className="text-white">vidéo</strong> ✨
                   </p>
 
                   <a
