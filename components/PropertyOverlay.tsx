@@ -73,23 +73,30 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
               </p>
             </div>
 
-            {/* Features with check icons + Plus inline */}
+            {/* Features — single line with check icons, truncated */}
             {property.features && property.features.length > 0 && (
-              <div className="flex flex-wrap gap-x-3 gap-y-0.5 overflow-hidden" style={{ maxHeight: '2.8em' }}>
+              <div className="flex items-center gap-x-3 overflow-hidden mb-1" style={{ maxHeight: '1.4em' }}>
                 {property.features.map(f => (
-                  <div key={f} className="flex items-center gap-1">
+                  <div key={f} className="flex items-center gap-1 shrink-0">
                     <Check size={10} className="text-emerald-400 shrink-0" />
                     <span className="text-white text-[13px] drop-shadow">{f}</span>
                   </div>
                 ))}
-                {onMore && (
-                  <button onClick={onMore} className="flex items-center gap-0">
-                    <span className="text-white/65 text-[13px] font-bold">Plus</span>
-                    <ChevronDown size={14} className="text-white/65 mt-px" />
-                  </button>
-                )}
               </div>
             )}
+
+            {/* Typologie · surface · prix + Plus */}
+            <div className="flex items-center gap-2">
+              <p className="text-white text-[13px] drop-shadow">
+                T{property.rooms} · {property.surface} m² · {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €
+              </p>
+              {onMore && (
+                <button onClick={onMore} className="flex items-center gap-0 shrink-0">
+                  <span className="text-white/65 text-[13px] font-bold">Plus</span>
+                  <ChevronDown size={14} className="text-white/65 mt-px" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Right — BAIA */}
