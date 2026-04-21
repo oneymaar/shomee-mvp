@@ -86,6 +86,7 @@ export const properties: Property[] = [
     likeCount: 312,
     shareCount: 94,
     promising: false,
+    badges: ['avant-premiere', 'exclusivite'],
   },
   {
     id: '2',
@@ -160,6 +161,7 @@ export const properties: Property[] = [
     likeCount: 187,
     shareCount: 52,
     promising: true,
+    badges: ['exclusivite'],
   },
   {
     id: '3',
@@ -240,6 +242,7 @@ export const properties: Property[] = [
     likeCount: 326,
     shareCount: 164,
     promising: false,
+    badges: ['avant-premiere'],
   },
   {
     id: '4',
@@ -316,5 +319,6 @@ export const properties: Property[] = [
     likeCount: 0,
     shareCount: 0,
     promising: false,
+    badges: ['avant-premiere', 'exclusivite'],
   },
 ]

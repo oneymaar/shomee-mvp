@@ -73,4 +73,5 @@ export interface Property {
   likeCount?: number
   shareCount?: number
   promising?: boolean
+  badges?: Array<'avant-premiere' | 'exclusivite'>
 }

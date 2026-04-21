@@ -9,49 +9,83 @@ interface PropertyOverlayProps {
   onBaia?: () => void
 }
 
-export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOverlayProps) {
-  const formatted = new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: 0,
-  }).format(property.price)
+const BADGE_STYLES = {
+  'avant-premiere': {
+    label: 'Avant-première',
+    className: 'bg-amber-400/15 border border-amber-300/35 text-amber-200',
+  },
+  'exclusivite': {
+    label: 'Exclusivité',
+    className: 'bg-violet-400/15 border border-violet-300/35 text-violet-200',
+  },
+} as const
 
+export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOverlayProps) {
   return (
     <>
-      {/* Bottom info: agent + price + BAIA */}
-      <div className="absolute bottom-6 left-0 right-0 z-20 px-3">
-        <div className="flex items-end justify-between gap-2">
-          {/* Agent info */}
-          <div className="flex items-end gap-2.5 min-w-0">
-            {/* Avatar */}
-            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 mb-0.5 bg-neutral-900 border border-white/25 flex items-center justify-center">
-              {property.agentAvatar ? (
-                <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
-              ) : (
-                <span className="text-white text-xs font-bold">{property.agentName.charAt(0)}</span>
-              )}
-            </div>
+      {/* ── Top — agency ── */}
+      <div
+        className="absolute top-0 left-0 right-0 z-20 px-3"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/25 flex items-center justify-center">
+            {property.agentAvatar ? (
+              <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-white text-xs font-bold">{property.agentName.charAt(0)}</span>
+            )}
+          </div>
+          <p className="text-white font-semibold text-[15px] drop-shadow">{property.agentName}</p>
+        </div>
+      </div>
 
-            {/* Text */}
-            <div className="min-w-0">
-              <p className="text-white font-bold text-[15px] leading-tight drop-shadow mb-px">
-                {property.agentName}
-              </p>
-              <p className="text-white text-[15px] leading-tight drop-shadow mt-0 mb-[-3px] border-0 border-white">
-                {property.location} · {property.district}
-              </p>
-              <button
-                onClick={onMore}
-                className="flex items-center gap-0 mt-0.5"
-              >
-                <span className="text-white text-[15px] leading-tight drop-shadow font-normal mt-0">
-                  {property.surface}m² · {formatted} €
-                </span>
-                <span className="text-white/75 font-medium text-[14px] ml-2.5 border-0 border-white/67">Plus</span>
-                <ChevronDown size={18} className="text-white/75 mt-px" />
-              </button>
-            </div>
+      {/* ── Bottom — badges + district + features (+ BAIA on right) ── */}
+      <div className="absolute bottom-6 left-0 right-0 z-20 px-3">
+        <div className="flex items-end gap-3">
+
+          {/* Left column — text content */}
+          <div className="flex-1 min-w-0">
+
+            {/* Badges */}
+            {property.badges && property.badges.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2.5">
+                {property.badges.map(badge => {
+                  const { label, className } = BADGE_STYLES[badge]
+                  return (
+                    <span
+                      key={badge}
+                      className={`backdrop-blur-sm text-[11px] font-semibold px-2.5 py-1 rounded-full tracking-wide ${className}`}
+                    >
+                      {label}
+                    </span>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* District */}
+            <p className="text-white font-bold text-[16px] leading-tight drop-shadow mb-1">
+              {property.district}
+            </p>
+
+            {/* Features + Plus */}
+            {property.features && property.features.length > 0 && (
+              <div className="flex items-end gap-2">
+                <p className="text-white/80 text-[14px] leading-snug line-clamp-2 flex-1 drop-shadow">
+                  {property.features.join(' · ')}
+                </p>
+                {onMore && (
+                  <button onClick={onMore} className="flex items-center shrink-0 pb-px">
+                    <span className="text-white/75 font-medium text-[14px]">Plus</span>
+                    <ChevronDown size={17} className="text-white/75 mt-px" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* BAIA button */}
+          {/* Right — BAIA */}
           {onBaia && (
             <button
               onClick={onBaia}
