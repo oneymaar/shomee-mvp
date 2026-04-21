@@ -7,6 +7,7 @@ interface PropertyOverlayProps {
   property: Property
   onMore?: () => void
   onBaia?: () => void
+  agencyTopOffset?: number
 }
 
 const BADGE_STYLES = {
@@ -20,13 +21,13 @@ const BADGE_STYLES = {
   },
 } as const
 
-export default function PropertyOverlay({ property, onMore, onBaia }: PropertyOverlayProps) {
+export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOffset = 0 }: PropertyOverlayProps) {
   return (
     <>
       {/* ── Top — agency ── */}
       <div
         className="absolute top-0 left-0 right-0 z-20 px-3"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        style={{ paddingTop: `calc(env(safe-area-inset-top, 0px) + ${12 + agencyTopOffset}px)` }}
       >
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/25 flex items-center justify-center">

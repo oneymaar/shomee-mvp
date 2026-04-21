@@ -33,7 +33,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
         <VideoCard property={property} isActive muted={muted} />
 
         {/* Simplified overlay — no BAIA */}
-        <PropertyOverlay property={property} onMore={() => setDetailOpen(true)} />
+        <PropertyOverlay property={property} onMore={() => setDetailOpen(true)} agencyTopOffset={52} />
 
         {/* Mute toggle — bottom right, where BAIA would be */}
         <button
