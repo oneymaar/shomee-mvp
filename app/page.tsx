@@ -3,30 +3,26 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import ShomeeLogo from '@/components/ShomeeLogo'
+import Image from 'next/image'
 
 export default function SplashPage() {
   const router = useRouter()
-  const [isStandalone, setIsStandalone] = useState(false)
+  const [showHint, setShowHint] = useState(false)
 
   useEffect(() => {
-    const standalone =
+    const isStandalone =
       (window.navigator as any).standalone === true ||
       window.matchMedia('(display-mode: standalone)').matches
 
-    setIsStandalone(standalone)
+    if (!isStandalone) setShowHint(true)
 
-    if (standalone) {
-      // Launched from home screen → go to feed immediately
-      router.replace('/feed')
-    }
-    // In Safari browser → stay on this page so user can share the URL
+    const timer = setTimeout(() => router.replace('/feed'), 2000)
+    return () => clearTimeout(timer)
   }, [router])
 
-  if (isStandalone) return null
-
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-16"
+    <div
+      className="min-h-screen bg-black flex flex-col items-center justify-center"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <motion.div
@@ -34,26 +30,29 @@ export default function SplashPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        <ShomeeLogo size={130} />
+        <Image
+          src="/logo-shomee.png"
+          alt="SHOMEE"
+          width={160}
+          height={180}
+          priority
+          className="object-contain"
+        />
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center gap-4 px-8 text-center"
-      >
-        <button
-          onClick={() => router.push('/feed')}
-          className="bg-white text-black font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
+      {showHint && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.8 }}
+          className="absolute bottom-12 text-white/35 text-[12px] text-center leading-relaxed px-8"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
-          Découvrir les biens
-        </button>
-        <p className="text-white/35 text-[12px] leading-relaxed">
           Pour ajouter SHOMEE sur votre écran d'accueil,{'\n'}
-          appuyez sur <span className="text-white/55">Partager</span> puis <span className="text-white/55">Sur l'écran d'accueil</span>
-        </p>
-      </motion.div>
+          appuyez sur <span className="text-white/55">Partager</span> puis{' '}
+          <span className="text-white/55">Sur l'écran d'accueil</span>
+        </motion.p>
+      )}
     </div>
   )
 }

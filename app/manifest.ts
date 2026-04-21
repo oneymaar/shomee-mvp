@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'SHOMEE',
     short_name: 'SHOMEE',
     description: 'Découvrez votre prochain appartement, en vidéo.',
-    start_url: '/feed',
+    start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#000000',
