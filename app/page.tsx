@@ -31,7 +31,7 @@ export default function SplashPage() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
         <Image
-          src="/logo-shomee.png"
+          src="/Logo-shomee.png"
           alt="SHOMEE"
           width={160}
           height={180}
