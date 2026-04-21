@@ -5,6 +5,9 @@ import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 export const metadata: Metadata = {
   title: 'SHOMEE',
   description: 'Découvrez votre prochain appartement, en vidéo.',
+  icons: {
+    apple: '/Logo-shomee.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
