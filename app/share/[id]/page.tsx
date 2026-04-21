@@ -35,14 +35,15 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
         {/* Simplified overlay — no BAIA */}
         <PropertyOverlay property={property} onMore={() => setDetailOpen(true)} agencyTopOffset={52} />
 
-        {/* Mute toggle — bottom right, where BAIA would be */}
+        {/* Mute toggle — top right, aligned with agency avatar */}
         <button
           onClick={() => setMuted(m => !m)}
-          className="absolute z-20 bottom-6 right-3 w-14 h-14 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center active:scale-95 transition-transform"
+          className="absolute z-30 right-3 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center active:scale-95 transition-transform"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 64px)' }}
         >
           {muted
-            ? <VolumeX size={22} strokeWidth={1.5} className="text-white" />
-            : <Volume2 size={22} strokeWidth={1.5} className="text-white" />
+            ? <VolumeX size={16} strokeWidth={1.5} className="text-white" />
+            : <Volume2 size={16} strokeWidth={1.5} className="text-white" />
           }
         </button>
 
