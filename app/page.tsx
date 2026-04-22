@@ -10,10 +10,7 @@ export default function SplashPage() {
   const [showHint, setShowHint] = useState(false)
   const [exiting, setExiting] = useState(false)
 
-  const navigateToFeed = () => {
-    setExiting(true)
-    setTimeout(() => router.replace('/feed'), 500)
-  }
+  const navigateToFeed = () => setExiting(true)
 
   useEffect(() => {
     const isStandalone =
@@ -34,7 +31,7 @@ export default function SplashPage() {
       animate={{ opacity: exiting ? 0 : 1 }}
       initial={{ opacity: 0 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
-      onAnimationComplete={() => { /* handled by setTimeout */ }}
+      onAnimationComplete={() => { if (exiting) router.replace('/feed') }}
     >
       <motion.div
         initial={{ scale: 0.85, opacity: 0 }}
