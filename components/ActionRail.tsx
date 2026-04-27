@@ -40,7 +40,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
   }
 
   return (
-    <div className="absolute right-3 bottom-28 z-20 flex flex-col items-center gap-6">
+    <div className="absolute right-3 z-20 flex flex-col items-center gap-6" style={{ bottom: 'calc(var(--nav-h) + 112px)' }}>
       <RailButton
         icon={<MessageCircle size={28} strokeWidth={1.5} className="text-white" />}
         onClick={onMessage}

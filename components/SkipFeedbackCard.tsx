@@ -58,7 +58,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
       </div>
 
       {/* Centered content */}
-      <div className="relative z-10 flex flex-col h-full px-5 justify-center py-8">
+      <div className="relative z-10 flex flex-col h-full px-5 justify-center" style={{ paddingTop: '32px', paddingBottom: 'calc(var(--nav-h) + 32px)' }}>
         {/* Header */}
         <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-2">
           BAIA · Comprendre vos critères

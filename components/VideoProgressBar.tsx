@@ -150,7 +150,7 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
     */
     <div
       className="absolute left-0 right-0 z-40 flex flex-col justify-end cursor-pointer select-none"
-      style={{ bottom: 8, height: 28, touchAction: 'none' }}
+      style={{ bottom: 'calc(var(--nav-h) + 8px)', height: 28, touchAction: 'none' }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

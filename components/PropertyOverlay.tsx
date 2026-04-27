@@ -43,7 +43,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
       </div>
 
       {/* ── Bottom — badges + district + features (+ BAIA on right) ── */}
-      <div className="absolute bottom-6 left-0 right-0 z-20 px-3">
+      <div className="absolute left-0 right-0 z-20 px-3" style={{ bottom: 'calc(var(--nav-h) + 24px)' }}>
         <div className="flex items-end gap-3">
 
           {/* Left column — text content */}

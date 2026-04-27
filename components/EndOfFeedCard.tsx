@@ -60,7 +60,7 @@ export default function EndOfFeedCard({
 
   return (
     <div className="relative w-full h-full bg-neutral-900 flex flex-col overflow-hidden">
-      <div className="relative z-10 h-full overflow-y-auto scrollbar-hide px-5 flex flex-col justify-center py-10">
+      <div className="relative z-10 h-full overflow-y-auto scrollbar-hide px-5 flex flex-col justify-center" style={{ paddingTop: '40px', paddingBottom: 'calc(var(--nav-h) + 40px)' }}>
 
         {/* ── Hero — always visible ── */}
         <div className="flex flex-col items-center text-center mb-8">
