@@ -121,6 +121,13 @@ export default function FeedPage() {
     }, 1200)
   }, [])
 
+  // Force scroll to 0 on mount — iOS PWA sets a non-zero contentOffset on full-screen scroll containers
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    requestAnimationFrame(() => { el.scrollTop = 0 })
+  }, [])
+
   // Re-setup observers whenever the feed structure changes
   useEffect(() => {
     const container = containerRef.current

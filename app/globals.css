@@ -20,7 +20,6 @@
 html,
 body {
   height: 100%;
-  overflow: hidden;
   overscroll-behavior: none;
   background: #000;
   color: #fff;
