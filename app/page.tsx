@@ -29,14 +29,14 @@ export default function SplashPage() {
     <motion.div
       className="fixed inset-0 bg-black flex flex-col items-center justify-center"
       animate={{ opacity: exiting ? 0 : 1 }}
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
       onAnimationComplete={() => { if (exiting) router.replace('/feed') }}
     >
       <motion.div
-        initial={{ scale: 0.85, opacity: 0 }}
+        initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <Image
           src="/Logo-shomee.png"
