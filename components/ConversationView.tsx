@@ -98,7 +98,7 @@ export default function ConversationView({ property }: { property: Property }) {
   const hasMessages = messages.length > 0
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-black" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+    <div className="absolute inset-0 flex flex-col bg-black" style={{ bottom: '60px' }}>
 
       {/* ── Header ── */}
       <div

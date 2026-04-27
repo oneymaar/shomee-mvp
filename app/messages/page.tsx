@@ -76,7 +76,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
 
 function MessagesEmpty() {
   return (
-    <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+    <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: '60px' }}>
       <div
         className="sticky top-0 z-10 bg-black border-b border-white/8 px-5 pb-4"
         style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
@@ -111,7 +111,7 @@ function MessagesList() {
   })
 
   return (
-    <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+    <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: '60px' }}>
       <div
         className="sticky top-0 z-10 bg-black border-b border-white/8 px-5 pb-4"
         style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
