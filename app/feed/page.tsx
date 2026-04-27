@@ -166,8 +166,8 @@ export default function FeedPage() {
     <MobileFrame>
       <div
         ref={containerRef}
-        className="absolute inset-0 overflow-y-scroll scrollbar-hide"
-        style={{ scrollSnapType: 'y mandatory' }}
+        className="absolute inset-x-0 top-0 overflow-y-scroll scrollbar-hide"
+        style={{ scrollSnapType: 'y mandatory', height: '100dvh' }}
       >
         {feedItems.map((item, feedIndex) => {
 
