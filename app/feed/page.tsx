@@ -167,7 +167,7 @@ export default function FeedPage() {
       <div
         ref={containerRef}
         className="absolute inset-0 overflow-y-scroll scrollbar-hide"
-        style={{ scrollSnapType: 'y mandatory', bottom: '60px' }}
+        style={{ scrollSnapType: 'y mandatory', bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
       >
         {feedItems.map((item, feedIndex) => {
 

@@ -73,7 +73,7 @@ export default function AssistantPage() {
 
   return (
     <MobileFrame>
-      <div className="absolute inset-0 flex flex-col bg-neutral-900" style={{ bottom: '60px' }}>
+      <div className="absolute inset-0 flex flex-col bg-neutral-900" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
 
         {/* ── Header ── */}
         <div
