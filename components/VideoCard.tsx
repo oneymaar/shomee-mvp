@@ -82,15 +82,16 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     const chapters = property.chapters
     const f = video.currentTime / video.duration
 
+    const seek = (t: number) => {
+      const v = video as HTMLVideoElement & { fastSeek?: (time: number) => void }
+      if (v.fastSeek) v.fastSeek(t)
+      else v.currentTime = t
+    }
+
     if (chapters && chapters.length >= 2) {
       let idx = 0
       for (let i = 0; i < chapters.length; i++) {
         if (f >= chapters[i].fraction) idx = i
-      }
-
-      const seek = (t: number) => {
-        if ('fastSeek' in video) video.fastSeek(t)
-        else video.currentTime = t
       }
 
       if (isRight) {
@@ -115,8 +116,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       const t = isRight
         ? Math.min(video.duration, video.currentTime + 10)
         : Math.max(0, video.currentTime - 10)
-      if ('fastSeek' in video) video.fastSeek(t)
-      else video.currentTime = t
+      seek(t)
     }
   }
 
