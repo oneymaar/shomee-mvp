@@ -1,50 +1,87 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ArrowRight } from 'lucide-react'
+import { X, Send } from 'lucide-react'
 
 interface BAIAModalProps {
   open: boolean
   onClose: () => void
 }
 
-function BAIALogo({ size = 80 }: { size?: number }) {
-  return (
-    <div className="flex flex-col items-center" style={{ width: size }}>
-      {/* Circle with BAIA text */}
-      <div
-        className="rounded-full border-2 border-white flex items-center justify-center"
-        style={{ width: size, height: size }}
-      >
-        <span
-          className="text-white font-black tracking-wider"
-          style={{ fontSize: size * 0.25 }}
-        >
-          BAIA
-        </span>
-      </div>
-      {/* Speech bubble tail */}
-      <div className="self-start ml-4 -mt-px w-0 h-0"
-        style={{
-          borderLeft: '10px solid transparent',
-          borderRight: '4px solid transparent',
-          borderTop: '10px solid white',
-        }}
-      />
-    </div>
-  )
+interface Message {
+  id: string
+  text: string
+  from: 'user' | 'baia'
 }
 
-export default function BAIAModal({ open, onClose }: BAIAModalProps) {
-  const [query, setQuery] = useState('')
-  const [sent, setSent] = useState(false)
+const BAIA_REPLIES = [
+  "D'après vos critères, je trouve plusieurs biens intéressants dans ce secteur. Souhaitez-vous que je vous en présente quelques-uns ?",
+  'Je prends note ! Avez-vous une préférence pour l\'orientation ou l\'étage ?',
+  'Très bien. Avec ce budget, vous pouvez viser un T3 lumineux dans le 11e ou le 18e. Je peux affiner la recherche si vous le souhaitez.',
+  'Bonne question. Je vais analyser les biens disponibles et vous proposer une sélection adaptée.',
+  "Je vous prépare une sélection personnalisée. N'hésitez pas à préciser d'autres critères importants pour vous.",
+]
 
-  const handleSend = () => {
-    if (!query.trim()) return
-    setSent(true)
-    setTimeout(() => { setSent(false); setQuery('') }, 2000)
+const SUGGESTIONS = [
+  '🏠 Appartement 3 pièces',
+  '💰 Budget < 500 k€',
+  '📍 Paris intra-muros',
+  '☀️ Bien lumineux',
+]
+
+export default function BAIAModal({ open, onClose }: BAIAModalProps) {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [text, setText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const replyIdxRef = useRef(0)
+
+  useEffect(() => {
+    if (!open) {
+      setMessages([])
+      setText('')
+      setIsTyping(false)
+      replyIdxRef.current = 0
+    }
+  }, [open])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isTyping])
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value)
+    const el = e.target
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }
+
+  useEffect(() => {
+    if (!text && textareaRef.current) textareaRef.current.style.height = 'auto'
+  }, [text])
+
+  const send = useCallback((input: string) => {
+    const trimmed = input.trim()
+    if (!trimmed) return
+
+    setMessages(prev => [...prev, { id: `u-${Date.now()}`, text: trimmed, from: 'user' }])
+    setText('')
+
+    const delay = 800 + Math.random() * 700
+    setTimeout(() => setIsTyping(true), delay * 0.4)
+
+    setTimeout(() => {
+      setIsTyping(false)
+      const idx = replyIdxRef.current % BAIA_REPLIES.length
+      replyIdxRef.current += 1
+      setMessages(prev => [...prev, { id: `b-${Date.now()}`, text: BAIA_REPLIES[idx], from: 'baia' }])
+    }, delay + 1800)
+  }, [])
+
+  const sendText = useCallback(() => send(text), [send, text])
+  const hasMessages = messages.length > 0
 
   return (
     <AnimatePresence>
@@ -57,53 +94,137 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
           exit={{ opacity: 0, y: 40 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-5 left-5 w-9 h-9 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          {/* ── Header ── */}
+          <div
+            className="shrink-0 flex flex-col items-center gap-1 px-5 pb-4 border-b border-white/8 relative"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}
           >
-            <X size={22} />
-          </button>
+            <button
+              onClick={onClose}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-white/60"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 24px)' }}
+            >
+              <X size={22} />
+            </button>
+            <img src="/Baia couleur 2.png" alt="BAIA" className="w-14 h-14 object-contain" />
+            <p className="text-white/45 text-[11px] italic -mt-0.5">Buyer's AI Agent</p>
+          </div>
 
-          {/* Content — centered, input inline below questions */}
-          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6">
-            <BAIALogo size={90} />
+          {/* ── Messages ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3 scrollbar-hide">
 
-            <div className="flex flex-col gap-3">
-              <h2 className="text-white font-light text-2xl leading-snug">
-                Bonjour Olivier,<br />
-                <span className="font-normal">En quoi puis-je vous être utile ?</span>
-              </h2>
-              <p className="text-white/50 text-sm leading-relaxed">
-                Des questions sur un bien en particulier ?<br />
-                Des questions techniques, juridiques ?<br />
-                Modifier vos critères de recherche ?
-              </p>
-            </div>
+            {/* Greeting + suggestions */}
+            {!hasMessages && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22 }}
+                  className="flex items-start gap-2.5"
+                >
+                  <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mt-0.5" />
+                  <div className="bg-neutral-800 rounded-[20px] rounded-bl-[5px] px-4 py-3 max-w-[82%]">
+                    <p className="text-white text-[14px] leading-snug">
+                      Bonjour Olivier, en quoi puis-je vous être utile ?
+                    </p>
+                  </div>
+                </motion.div>
 
-            {/* Input */}
-            <div className="w-full mt-2">
-              {sent ? (
-                <p className="text-white/60 text-sm text-center py-3">Message envoyé ✓</p>
-              ) : (
-                <div className="flex items-center bg-transparent border border-white/30 rounded-full pl-5 pr-1.5 py-1.5 gap-3">
-                  <input
-                    className="flex-1 bg-transparent text-white text-sm placeholder:text-white/40 outline-none"
-                    placeholder="Demandez-moi ce que vous voulez !"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSend() }}
-                  />
-                  <button
-                    onClick={handleSend}
-                    className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 hover:bg-white/90 transition-colors active:scale-95 disabled:opacity-40"
-                    disabled={!query.trim()}
-                  >
-                    <ArrowRight size={18} className="text-black" />
-                  </button>
+                <div className="flex flex-wrap gap-2 pl-[34px]">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => send(s)}
+                      className="text-[12px] font-medium bg-white/6 border border-white/12 text-white/75 px-3 py-1.5 rounded-full active:opacity-60 transition-opacity"
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
+              </>
+            )}
+
+            {/* Bubbles */}
+            {messages.map((msg) => {
+              const isUser = msg.from === 'user'
+              return (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className={`flex items-end gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                >
+                  {!isUser && (
+                    <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mb-0.5" />
+                  )}
+                  <div
+                    className={`max-w-[78%] px-4 py-3 text-[14px] leading-snug ${
+                      isUser
+                        ? 'bg-white text-black rounded-[20px] rounded-br-[5px]'
+                        : 'bg-neutral-800 text-white rounded-[20px] rounded-bl-[5px]'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                  </div>
+                </motion.div>
+              )
+            })}
+
+            {/* Typing indicator */}
+            <AnimatePresence>
+              {isTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex items-end gap-2.5"
+                >
+                  <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mb-0.5" />
+                  <div className="bg-neutral-800 rounded-[20px] rounded-bl-[5px] px-4 py-3.5 flex gap-1.5 items-center">
+                    {[0, 0.22, 0.44].map((delay, i) => (
+                      <motion.div
+                        key={i}
+                        className="w-[6px] h-[6px] rounded-full bg-white/50"
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
               )}
+            </AnimatePresence>
+
+            <div ref={bottomRef} />
+          </div>
+
+          {/* ── Input bar ── */}
+          <div className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+          >
+            <div className="flex-1 bg-white/8 rounded-[20px] px-4 py-2.5">
+              <textarea
+                ref={textareaRef}
+                value={text}
+                onChange={handleTextChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText() }
+                }}
+                rows={1}
+                placeholder="Posez votre question..."
+                style={{ resize: 'none', overflowY: 'auto', maxHeight: '120px' }}
+                className="w-full bg-transparent text-white text-[14px] placeholder:text-white/30 outline-none leading-snug block"
+              />
             </div>
+            <button
+              onClick={sendText}
+              className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
+                text.trim() ? 'bg-white' : 'bg-white/10'
+              }`}
+            >
+              <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-black' : 'text-white/55'} />
+            </button>
           </div>
         </motion.div>
       )}
