@@ -274,7 +274,7 @@ export default function FeedPage() {
       />
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
-      {!detailProperty && <BottomNav />}
+      {!detailProperty && !baiaOpen && <BottomNav />}
 
       {/* Burst heart on favorites tab */}
       <AnimatePresence>
