@@ -105,9 +105,9 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
           {onBaia && (
             <button
               onClick={onBaia}
-              className="shrink-0 w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-lg hover:bg-white/90 transition-colors active:scale-95 overflow-hidden"
+              className="shrink-0 active:scale-95 transition-transform"
             >
-              <img src="/Baia.png" alt="Baia" className="w-10 h-10 object-contain" />
+              <img src="/Baia.png" alt="Baia" className="w-16 h-16 object-contain" />
             </button>
           )}
         </div>
