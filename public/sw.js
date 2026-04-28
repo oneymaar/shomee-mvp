@@ -1,4 +1,4 @@
-const CACHE = 'shomee-v4'
+const CACHE = 'shomee-v5'
 const PRECACHE = ['/', '/feed']
 
 self.addEventListener('install', e => {

@@ -8,7 +8,7 @@ interface MobileFrameProps {
 
 export default function MobileFrame({ children, className }: MobileFrameProps) {
   return (
-    <div className="bg-neutral-900 flex items-start justify-center overflow-hidden" style={{ height: '100dvh' }}>
+    <div className="bg-neutral-900 flex items-start justify-center" style={{ height: '100dvh' }}>
       <div
         className={clsx(
           'relative w-full max-w-[430px] bg-black overflow-hidden',
