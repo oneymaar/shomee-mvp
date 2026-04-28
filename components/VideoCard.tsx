@@ -15,8 +15,9 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const videoRef    = useRef<HTMLVideoElement>(null)
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null)
   const progressRef = useRef<VideoProgressBarHandle>(null)
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const isHeldRef   = useRef(false)
+  const holdTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isHeldRef    = useRef(false)
+  const lastSeekRef  = useRef<number>(0)
   const hasVideo    = Boolean(property.videoUrl)
 
   /* ── Play / pause on active state ── */
@@ -74,6 +75,10 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
 
     if (dx > 12 || dy > 20 || dt > 280) return
 
+    const now = Date.now()
+    if (now - lastSeekRef.current < 400) return
+    lastSeekRef.current = now
+
     const video = videoRef.current
     if (!video || !video.duration) return
 
@@ -83,9 +88,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     const f = video.currentTime / video.duration
 
     const seek = (t: number) => {
-      const v = video as HTMLVideoElement & { fastSeek?: (time: number) => void }
-      if (v.fastSeek) v.fastSeek(t)
-      else v.currentTime = t
+      video.currentTime = t
     }
 
     if (chapters && chapters.length >= 2) {
