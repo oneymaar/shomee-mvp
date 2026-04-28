@@ -17,7 +17,7 @@ export default function ProfilePage() {
 
   return (
     <MobileFrame>
-      <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: '60px' }}>
+      <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'var(--nav-h)' }}>
 
         {/* Header */}
         <div
