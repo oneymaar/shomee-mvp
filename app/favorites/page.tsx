@@ -16,7 +16,7 @@ export default function FavoritesPage() {
 
   return (
     <MobileFrame>
-      <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'var(--nav-h)' }}>
+      <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: '60px' }}>
 
         {/* Header */}
         <div

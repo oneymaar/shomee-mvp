@@ -114,7 +114,7 @@ export default function FavoritesFeedPage({ params }: Props) {
       <div
         ref={containerRef}
         className="absolute inset-0 overflow-y-scroll scrollbar-hide"
-        style={{ scrollSnapType: 'y mandatory', bottom: 'var(--nav-h)' }}
+        style={{ scrollSnapType: 'y mandatory', bottom: '60px' }}
       >
         {favProperties.map((property, index) => {
           const isActive = index === currentIndex
