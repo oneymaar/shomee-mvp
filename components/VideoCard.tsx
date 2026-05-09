@@ -103,7 +103,11 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     const f = video.currentTime / video.duration
 
     const seek = (t: number) => {
-      video.currentTime = t
+      if (typeof (video as HTMLVideoElement & { fastSeek?: (time: number) => void }).fastSeek === 'function') {
+        (video as HTMLVideoElement & { fastSeek: (time: number) => void }).fastSeek(t)
+      } else {
+        video.currentTime = t
+      }
     }
 
     if (chapters && chapters.length >= 2) {
