@@ -14,8 +14,7 @@ export default function MobileFrame({ children, className }: MobileFrameProps) {
           'relative w-full max-w-[430px] overflow-hidden',
           className,
         )}
-        style={{ backgroundColor: '#f5f0e8' }}
-        style={{ height: '100dvh' }}
+        style={{ backgroundColor: '#f5f0e8', height: '100dvh' }}
       >
         {children}
       </div>
