@@ -19,7 +19,10 @@ export default function BottomNav() {
   const unreadCount = conversations.filter(hasUnread).length
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50"
+      style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.92) 55%, transparent 100%)' }}
+    >
       <div className="flex items-center justify-around px-2 h-[60px]">
         {tabs.map(({ label, href, icon: Icon }) => {
           const active = pathname.startsWith(href)
