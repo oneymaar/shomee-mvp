@@ -50,8 +50,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
         {/* Top bar — download CTA */}
         <div
           className="absolute top-0 left-0 right-0 z-30 border-b border-white/10"
-          style={{ backgroundColor: '#914E3C' }}
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+          style={{ backgroundColor: '#914E3C', paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
           <div className="flex items-center justify-between px-4 h-[52px] gap-3">
             <p className="text-white/90 text-[13px] leading-tight">
