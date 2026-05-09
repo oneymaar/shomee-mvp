@@ -369,7 +369,7 @@ export default function PropertyDetailSheet({
               <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
 
                 {/* Scrollable body */}
-                <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 24 }}>
+                <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 32 }}>
 
                   {/* Media tabs + carousel */}
                   <div className="px-3 pt-3">
@@ -636,7 +636,7 @@ export default function PropertyDetailSheet({
               {!hideBottomBar && (
                 <div
                   className="shrink-0 bg-neutral-900 px-3 pt-3 flex gap-2 items-center"
-                  style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 12px), 12px)' }}
+                  style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 34px)' }}
                 >
                   {/* Left pill — 3 CTAs */}
                   <div className="flex-1 bg-white/10 rounded-full flex items-center overflow-hidden">
