@@ -244,7 +244,7 @@ export default function FeedPage() {
               <PropertyOverlay
                 property={property}
                 onMore={() => setDetailProperty(property)}
-                onBaia={() => setBaiaOpen(true)}
+                matchScore={Math.max(80, 95 - propIndex * 4)}
               />
               <ActionRail
                 property={property}

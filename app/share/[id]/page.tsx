@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, use } from 'react'
+import React, { useState, use } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Volume2, VolumeX } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
@@ -28,7 +28,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <MobileFrame>
-      <div className="relative w-full" style={{ height: '100dvh' }}>
+      <div className="relative w-full" style={{ height: '100dvh', '--nav-h': '0px' } as React.CSSProperties}>
         {/* Video */}
         <VideoCard property={property} isActive muted={muted} />
 
@@ -49,7 +49,8 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
 
         {/* Top bar — download CTA */}
         <div
-          className="absolute top-0 left-0 right-0 z-30 bg-black/80 backdrop-blur-sm border-b border-white/10"
+          className="absolute top-0 left-0 right-0 z-30 border-b border-white/10"
+          style={{ backgroundColor: '#914E3C' }}
           style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
           <div className="flex items-center justify-between px-4 h-[52px] gap-3">
@@ -94,7 +95,8 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="w-full bg-neutral-900 rounded-3xl p-6 shadow-2xl"
+                  className="w-full rounded-3xl p-6 shadow-2xl"
+                  style={{ backgroundColor: '#914E3C' }}
                   onClick={e => e.stopPropagation()}
                 >
                   <button
@@ -112,7 +114,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
                   <h2 className="text-white font-bold text-[20px] text-center leading-tight mb-2">
                     Voici SHOMEE
                   </h2>
-                  <p className="text-white/65 text-[14px] text-center leading-relaxed mb-6">
+                  <p className="text-white/80 text-[14px] text-center leading-relaxed mb-6">
                     Renseignez vos critères pour dénicher les plus beaux biens du marché en <strong className="text-white">avant-première</strong> et en <strong className="text-white">vidéo</strong> ✨
                   </p>
 
@@ -125,7 +127,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
 
                   <button
                     onClick={() => setPopupDismissed(true)}
-                    className="block w-full text-white/55 text-[14px] text-center py-2 active:opacity-70 transition-opacity"
+                    className="block w-full text-white/70 text-[14px] text-center py-2 active:opacity-70 transition-opacity"
                   >
                     Plus tard
                   </button>

@@ -7,8 +7,8 @@ import { formatLocation } from '@/lib/format'
 interface PropertyOverlayProps {
   property: Property
   onMore?: () => void
-  onBaia?: () => void
   agencyTopOffset?: number
+  matchScore?: number
 }
 
 const BADGE_STYLES = {
@@ -22,7 +22,7 @@ const BADGE_STYLES = {
   },
 } as const
 
-export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOffset = 0 }: PropertyOverlayProps) {
+export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0, matchScore }: PropertyOverlayProps) {
   return (
     <>
       {/* ── Top — agency ── */}
@@ -42,11 +42,13 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
         </div>
       </div>
 
-      {/* ── Bottom — badges + district + features (+ BAIA on right) ── */}
+      {/* ── Bottom — info + match score ── */}
       <div className="absolute left-0 right-0 z-20 px-3" style={{ bottom: 'calc(var(--nav-h) + 24px)' }}>
+
+        {/* Row: text content + match badge */}
         <div className="flex items-end gap-3">
 
-          {/* Left column — text content */}
+          {/* Left — text stack */}
           <div className="flex-1 min-w-0">
 
             {/* Badges */}
@@ -55,10 +57,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
                 {property.badges.map(badge => {
                   const { label, className } = BADGE_STYLES[badge]
                   return (
-                    <span
-                      key={badge}
-                      className={`backdrop-blur-sm text-[11px] font-semibold px-2.5 py-1 rounded-full tracking-wide ${className}`}
-                    >
+                    <span key={badge} className={`backdrop-blur-sm text-[11px] font-semibold px-2.5 py-1 rounded-full tracking-wide ${className}`}>
                       {label}
                     </span>
                   )
@@ -66,7 +65,7 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
               </div>
             )}
 
-            {/* District + arrondissement */}
+            {/* Address */}
             <div className="flex items-center gap-1.5 mb-1">
               <MapPin size={13} className="text-white shrink-0" />
               <p className="text-white font-bold text-[15px] leading-tight drop-shadow">
@@ -74,46 +73,50 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
               </p>
             </div>
 
-            {/* Typologie · surface · prix */}
+            {/* Type · rooms · surface · price */}
             <div className="flex items-center gap-2 mb-0.5">
               <Home size={13} strokeWidth={1.8} className="text-white shrink-0" />
               <p className="text-white text-[15px] drop-shadow">
-                T{property.rooms} · {property.surface} m² · {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €
+                Appartement · T{property.rooms} · {property.surface} m² · {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €
               </p>
             </div>
 
-            {/* Features + Voir l'annonce */}
+            {/* Criteria */}
             {property.features && property.features.filter(f => f !== 'Cave').length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <div
-                  className="flex items-center gap-x-3 overflow-hidden"
-                  style={{ flex: 1, minWidth: 0, maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)' }}
-                >
-                  {property.features.filter(f => f !== 'Cave').map(f => (
-                    <div key={f} className="flex items-center gap-1 shrink-0">
-                      <Check size={10} className="text-emerald-400 shrink-0" />
-                      <span className="text-white text-[13px] drop-shadow">{f}</span>
-                    </div>
-                  ))}
-                </div>
-                {onMore && (
-                  <button onClick={onMore} className="flex items-center gap-0.5 shrink-0">
-                    <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
-                    <ChevronDown size={14} className="text-white mt-px" />
-                  </button>
-                )}
+              <div
+                className="flex items-center gap-x-3 overflow-hidden"
+                style={{ maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 85%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)' }}
+              >
+                {property.features.filter(f => f !== 'Cave').map(f => (
+                  <div key={f} className="flex items-center gap-1 shrink-0">
+                    <Check size={10} className="text-emerald-400 shrink-0" />
+                    <span className="text-white text-[13px] drop-shadow">{f}</span>
+                  </div>
+                ))}
               </div>
-            )}
-            {/* Voir l'annonce quand pas de features */}
-            {(!property.features || property.features.filter(f => f !== 'Cave').length === 0) && onMore && (
-              <button onClick={onMore} className="flex items-center gap-0.5 shrink-0 self-start">
-                <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
-                <ChevronDown size={14} className="text-white mt-px" />
-              </button>
             )}
           </div>
 
+          {/* Right — match score badge */}
+          {matchScore !== undefined && (
+            <div
+              className="shrink-0 w-[50px] h-[50px] rounded-full flex flex-col items-center justify-center shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 55%, #ec4899 100%)' }}
+            >
+              <span className="text-white text-[9px] leading-none mb-0.5">✦</span>
+              <span className="text-white font-black text-[15px] leading-none">{matchScore}%</span>
+              <span className="text-white/75 text-[7px] leading-none mt-0.5 font-medium tracking-wide">match</span>
+            </div>
+          )}
         </div>
+
+        {/* Voir l'annonce — own line, left-aligned */}
+        {onMore && (
+          <button onClick={onMore} className="flex items-center gap-0.5 mt-1.5">
+            <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
+            <ChevronDown size={14} className="text-white mt-px" />
+          </button>
+        )}
       </div>
     </>
   )
