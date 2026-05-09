@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { ChevronDown, MapPin, Check, Home, Sparkles } from 'lucide-react'
 import type { Property } from '@/lib/types'
 import { formatLocation } from '@/lib/format'
@@ -23,29 +24,41 @@ const BADGE_STYLES = {
 } as const
 
 function MatchBadge({ score, gradId }: { score: number; gradId: string }) {
-  const r = 42
-  const strokeW = 7
-  const circumference = 2 * Math.PI * r
-  const dashoffset = circumference * (1 - score / 100)
-  // Inner cream circle sits inside the stroke: stroke outer edge = r + strokeW/2
-  // Rendered size 56px, viewBox 100 → 1 SVG unit = 0.56px
-  // Inner inset in px ≈ (strokeW/2 + 1) / 100 * 56 ≈ 2.5px → use 3px
-  const innerInset = 3
+  const [animated, setAnimated] = useState(false)
+
+  useEffect(() => {
+    setAnimated(false)
+    const t = setTimeout(() => setAnimated(true), 120)
+    return () => clearTimeout(t)
+  }, [score])
+
+  // r=40, strokeW=8, container=60px → scale=0.6
+  // arc outer edge = (40+4)*0.6 = 26.4px from center = 3.6px from edge ✓
+  // arc inner edge = (40-4)*0.6 = 21.6px from center = 8.4px from edge
+  // → innerInset=9px keeps cream circle well inside the arc
+  const r = 40
+  const strokeW = 8
+  const circumference = 2 * Math.PI * r  // ≈ 251.3
+  const targetOffset = circumference * (1 - score / 100)
+  const currentOffset = animated ? targetOffset : circumference
 
   return (
-    <div className="relative shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]" style={{ width: 56, height: 56 }}>
+    <div className="relative shrink-0 drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]" style={{ width: 60, height: 60 }}>
       {/* SVG gauge */}
-      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+      <svg
+        viewBox="0 0 100 100"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      >
         <defs>
-          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1="5" y1="5" x2="95" y2="95">
             <stop offset="0%" stopColor="#3b82f6" />
             <stop offset="50%" stopColor="#6366f1" />
             <stop offset="100%" stopColor="#14b8a6" />
           </linearGradient>
         </defs>
         {/* Track */}
-        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth={strokeW} />
-        {/* Progress arc — starts from top (12h) via rotate -90° */}
+        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth={strokeW} />
+        {/* Progress arc — starts at 12h (rotate -90°), fills CW */}
         <circle
           cx="50" cy="50" r={r}
           fill="none"
@@ -53,22 +66,20 @@ function MatchBadge({ score, gradId }: { score: number; gradId: string }) {
           strokeWidth={strokeW}
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={dashoffset}
+          strokeDashoffset={currentOffset}
           transform="rotate(-90 50 50)"
+          style={{ transition: animated ? 'stroke-dashoffset 1.1s cubic-bezier(0.4, 0, 0.2, 1)' : 'none' }}
         />
       </svg>
 
-      {/* Cream inner circle */}
-      <div
-        className="absolute rounded-full"
-        style={{ inset: innerInset, backgroundColor: '#f5f0e8', zIndex: 1 }}
-      />
+      {/* Cream inner circle — inset must be > stroke outer edge in px */}
+      <div className="absolute rounded-full" style={{ inset: 9, backgroundColor: '#f5f0e8', zIndex: 1 }} />
 
       {/* Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ zIndex: 2, gap: 1 }}>
-        <Sparkles size={11} strokeWidth={1.8} style={{ color: '#3b82f6' }} />
-        <span style={{ color: '#914E3C', fontWeight: 900, fontSize: 14, lineHeight: 1 }}>{score}%</span>
-        <span style={{ color: '#914E3C', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1.2 }}>MATCH</span>
+        <Sparkles size={12} strokeWidth={1.8} style={{ color: '#3b82f6' }} />
+        <span style={{ color: '#914E3C', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>{score}%</span>
+        <span style={{ color: '#914E3C', fontWeight: 700, fontSize: 7, letterSpacing: '0.07em', lineHeight: 1.2 }}>MATCH</span>
       </div>
     </div>
   )
