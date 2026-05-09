@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Send } from 'lucide-react'
+import { X, Send, ChevronLeft } from 'lucide-react'
 
 interface BAIAModalProps {
   open: boolean
@@ -23,11 +23,10 @@ const BAIA_REPLIES = [
   "Je vous prépare une sélection personnalisée. N'hésitez pas à préciser d'autres critères importants pour vous.",
 ]
 
-const SUGGESTIONS = [
-  '🏠 Appartement 3 pièces',
-  '💰 Budget < 500 k€',
-  '📍 Paris intra-muros',
-  '☀️ Bien lumineux',
+const EXAMPLE_QUESTIONS = [
+  'Appartement 3 pièces lumineux dans le 18e…',
+  'Budget maximum 800 000 €, terrasse obligatoire…',
+  'Quelle est la tendance des prix dans ce secteur ?',
 ]
 
 export default function BAIAModal({ open, onClose }: BAIAModalProps) {
@@ -44,6 +43,8 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
       setText('')
       setIsTyping(false)
       replyIdxRef.current = 0
+    } else {
+      setTimeout(() => textareaRef.current?.focus(), 350)
     }
   }, [open])
 
@@ -88,7 +89,8 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
       {open && (
         <motion.div
           key="baia-modal"
-          className="absolute inset-0 z-50 bg-neutral-900 flex flex-col"
+          className="absolute inset-0 z-50 flex flex-col"
+          style={{ backgroundColor: '#f5f0e8' }}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
@@ -96,114 +98,126 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
         >
           {/* ── Header ── */}
           <div
-            className="shrink-0 flex flex-col items-center gap-1 px-5 pb-4 border-b border-white/8 relative"
-            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}
+            className="shrink-0 flex items-center justify-between px-4 border-b border-black/8"
+            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: 12 }}
           >
             <button
               onClick={onClose}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-white/60"
-              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 24px)' }}
+              className="w-9 h-9 flex items-center justify-center text-neutral-500"
             >
-              <X size={22} />
+              <ChevronLeft size={22} />
             </button>
-            <img src="/Baia couleur 2.png" alt="BAIA" className="w-14 h-14 object-contain" />
-            <p className="text-white/45 text-[11px] italic -mt-0.5">Buyer's AI Agent</p>
+            <div className="flex items-center gap-2">
+              <img src="/Baia couleur 2.png" alt="BAIA" className="w-5 h-5 object-contain" />
+              <span className="text-neutral-800 font-semibold text-[15px]">BAIA</span>
+            </div>
+            <div className="w-9" />
           </div>
 
           {/* ── Messages ── */}
-          <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-3 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto px-5 flex flex-col scrollbar-hide">
 
-            {/* Greeting + suggestions */}
+            {/* Empty state — logo + greeting + examples */}
             {!hasMessages && (
-              <>
+              <div className="flex-1 flex flex-col items-center justify-center pb-8 gap-5">
                 <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22 }}
-                  className="flex items-start gap-2.5"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.05 }}
+                  className="flex flex-col items-center gap-3"
                 >
-                  <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mt-0.5" />
-                  <div className="bg-neutral-800 rounded-[20px] rounded-bl-[5px] px-4 py-3 max-w-[82%]">
-                    <p className="text-white text-[14px] leading-snug">
-                      Bonjour Olivier, en quoi puis-je vous être utile ?
-                    </p>
-                  </div>
+                  <img src="/Baia couleur 2.png" alt="BAIA" className="w-16 h-16 object-contain" />
+                  <p className="text-neutral-800 font-semibold text-[18px] text-center leading-snug max-w-[260px]">
+                    Bonjour Olivier, comment puis-je vous aider ?
+                  </p>
                 </motion.div>
 
-                <div className="flex flex-wrap gap-2 pl-[34px]">
-                  {SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => send(s)}
-                      className="text-[12px] font-medium bg-white/6 border border-white/12 text-white/75 px-3 py-1.5 rounded-full active:opacity-60 transition-opacity"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Bubbles */}
-            {messages.map((msg) => {
-              const isUser = msg.from === 'user'
-              return (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18 }}
-                  className={`flex items-end gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-                >
-                  {!isUser && (
-                    <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mb-0.5" />
-                  )}
-                  <div
-                    className={`max-w-[78%] px-4 py-3 text-[14px] leading-snug ${
-                      isUser
-                        ? 'bg-white text-black rounded-[20px] rounded-br-[5px]'
-                        : 'bg-neutral-800 text-white rounded-[20px] rounded-bl-[5px]'
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                  </div>
-                </motion.div>
-              )
-            })}
-
-            {/* Typing indicator */}
-            <AnimatePresence>
-              {isTyping && (
                 <motion.div
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex items-end gap-2.5"
+                  transition={{ duration: 0.25, delay: 0.18 }}
+                  className="flex flex-col gap-2 w-full"
                 >
-                  <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mb-0.5" />
-                  <div className="bg-neutral-800 rounded-[20px] rounded-bl-[5px] px-4 py-3.5 flex gap-1.5 items-center">
-                    {[0, 0.22, 0.44].map((delay, i) => (
-                      <motion.div
-                        key={i}
-                        className="w-[6px] h-[6px] rounded-full bg-white/50"
-                        animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
-                      />
-                    ))}
-                  </div>
+                  {EXAMPLE_QUESTIONS.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => send(q)}
+                      className="text-left text-neutral-400 text-[14px] leading-snug active:text-neutral-600 transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
                 </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            )}
 
-            <div ref={bottomRef} />
+            {/* Bubbles */}
+            {hasMessages && (
+              <div className="flex flex-col gap-3 pt-4">
+                {messages.map((msg) => {
+                  const isUser = msg.from === 'user'
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.18 }}
+                      className={`flex items-end gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
+                      {!isUser && (
+                        <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mb-0.5" />
+                      )}
+                      <div
+                        className={`max-w-[78%] px-4 py-3 text-[14px] leading-snug rounded-[20px] ${
+                          isUser
+                            ? 'bg-neutral-800 text-white rounded-br-[5px]'
+                            : 'bg-white text-neutral-900 rounded-bl-[5px] shadow-sm'
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+
+                {/* Typing indicator */}
+                <AnimatePresence>
+                  {isTyping && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 4 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex items-end gap-2"
+                    >
+                      <img src="/Baia couleur 2.png" alt="BAIA" className="w-6 h-6 object-contain shrink-0 mb-0.5" />
+                      <div className="bg-white rounded-[20px] rounded-bl-[5px] px-4 py-3.5 flex gap-1.5 items-center shadow-sm">
+                        {[0, 0.22, 0.44].map((delay, i) => (
+                          <motion.div
+                            key={i}
+                            className="w-[6px] h-[6px] rounded-full bg-neutral-400"
+                            animate={{ opacity: [0.3, 1, 0.3] }}
+                            transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div ref={bottomRef} />
+              </div>
+            )}
+
+            {!hasMessages && <div ref={bottomRef} />}
           </div>
 
           {/* ── Input bar ── */}
-          <div className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950"
+          <div
+            className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-black/8 bg-white"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
           >
-            <div className="flex-1 bg-white/8 rounded-[20px] px-4 py-2.5">
+            <div className="flex-1 bg-neutral-100 rounded-[20px] px-4 py-2.5 flex items-end gap-2">
               <textarea
                 ref={textareaRef}
                 value={text}
@@ -214,16 +228,16 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
                 rows={1}
                 placeholder="Posez votre question..."
                 style={{ resize: 'none', overflowY: 'auto', maxHeight: '120px' }}
-                className="w-full bg-transparent text-white text-[14px] placeholder:text-white/30 outline-none leading-snug block"
+                className="flex-1 bg-transparent text-neutral-900 text-[14px] placeholder:text-neutral-400 outline-none leading-snug block"
               />
             </div>
             <button
               onClick={sendText}
               className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
-                text.trim() ? 'bg-white' : 'bg-white/10'
+                text.trim() ? 'bg-neutral-900' : 'bg-neutral-200'
               }`}
             >
-              <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-black' : 'text-white/55'} />
+              <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-white' : 'text-neutral-400'} />
             </button>
           </div>
         </motion.div>

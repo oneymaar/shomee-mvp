@@ -33,7 +33,7 @@ const BADGE_LETTER_STYLE: React.CSSProperties = {
 function DpeBadge({ grade, label }: { grade: string; label: string }) {
   return (
     <div className="flex-1">
-      <p className="text-white/65 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
+      <p className="text-neutral-400 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
       <div
         style={{
           backgroundColor: DPE_COLORS[grade],
@@ -62,7 +62,7 @@ const GES_COLORS: Record<string, string> = {
 function GesBadge({ grade, label }: { grade: string; label: string }) {
   return (
     <div className="flex-1">
-      <p className="text-white/65 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
+      <p className="text-neutral-400 text-[9px] font-bold uppercase tracking-widest mb-2">{label}</p>
       <div
         style={{
           backgroundColor: GES_COLORS[grade],
@@ -122,26 +122,26 @@ const TRANSPORT_LABELS = { metro: 'Métro', rer: 'RER', tramway: 'Tramway', bus:
 function TransportItem({ line }: { line: string }) {
   const p = parseLine(line)
   return (
-    <div className="flex items-center gap-2.5 py-2 border-b border-white/6 last:border-0">
+    <div className="flex items-center gap-2.5 py-2 border-b border-neutral-200 last:border-0">
       <div
         className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-black text-[10px] leading-none"
         style={{ backgroundColor: p.color, color: p.darkText ? '#000' : '#fff' }}
       >
         {p.number}
       </div>
-      <span className="text-white/70 text-sm">{p.name}</span>
+      <span className="text-neutral-600 text-sm">{p.name}</span>
     </div>
   )
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-white/65 text-[10px] font-bold uppercase tracking-widest mb-3">{children}</h3>
+  return <h3 className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mb-3">{children}</h3>
 }
 
 function GreyBox({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={clsx('bg-white/4 border border-white/8 rounded-2xl', className)} style={style}>
+    <div className={clsx('bg-neutral-100 border border-neutral-200 rounded-2xl', className)} style={style}>
       {children}
     </div>
   )
@@ -149,9 +149,9 @@ function GreyBox({ children, className, style }: { children: React.ReactNode; cl
 
 function TableRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between py-2.5 border-b border-white/6 last:border-0 gap-4">
-      <span className="text-white/50 text-sm shrink-0">{label}</span>
-      <span className="text-white text-sm font-medium text-right">{value}</span>
+    <div className="flex items-start justify-between py-2.5 border-b border-neutral-200 last:border-0 gap-4">
+      <span className="text-neutral-500 text-sm shrink-0">{label}</span>
+      <span className="text-neutral-900 text-sm font-medium text-right">{value}</span>
     </div>
   )
 }
@@ -366,7 +366,7 @@ export default function PropertyDetailSheet({
               </div>
 
               {/* ── CONTENT AREA ──────────────────────────────────────── */}
-              <div className="flex-1 relative overflow-hidden">
+              <div className="flex-1 relative overflow-hidden bg-white">
 
                 {/* Scrollable body */}
                 <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 96 }}>
@@ -380,7 +380,7 @@ export default function PropertyDetailSheet({
                           onClick={() => setMediaTab(key)}
                           className={clsx(
                             'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all',
-                            mediaTab === key ? 'bg-white text-black' : 'text-white/65 border border-white/15',
+                            mediaTab === key ? 'bg-neutral-900 text-white' : 'text-neutral-500 border border-neutral-300',
                           )}
                         >
                           <Icon size={15} />
@@ -445,8 +445,8 @@ export default function PropertyDetailSheet({
                       )}
                       {mediaTab === 'plan' && (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                          <Map size={36} className="text-white/15" />
-                          <p className="text-white/60 text-xs">Plan disponible sur demande</p>
+                          <Map size={36} className="text-neutral-300" />
+                          <p className="text-neutral-400 text-xs">Plan disponible sur demande</p>
                         </div>
                       )}
                       {mediaTab === 'matterport' && property.matterportUrl && (
@@ -462,7 +462,7 @@ export default function PropertyDetailSheet({
                     <div>
                       <SectionTitle>Description</SectionTitle>
                       <GreyBox className="px-4 py-4">
-                        <p className="text-white/65 text-sm leading-relaxed">{property.description}</p>
+                        <p className="text-neutral-600 text-sm leading-relaxed">{property.description}</p>
                       </GreyBox>
                     </div>
 
@@ -472,9 +472,9 @@ export default function PropertyDetailSheet({
                         <SectionTitle>Quartier</SectionTitle>
                         {property.irisZone && (
                           <div className="mb-3">
-                            <p className="text-white text-sm font-semibold">{property.irisZone}</p>
+                            <p className="text-neutral-900 text-sm font-semibold">{property.irisZone}</p>
                             {property.irisDescription && (
-                              <p className="text-white/50 text-xs mt-0.5 leading-relaxed">{property.irisDescription}</p>
+                              <p className="text-neutral-500 text-xs mt-0.5 leading-relaxed">{property.irisDescription}</p>
                             )}
                           </div>
                         )}
@@ -497,7 +497,7 @@ export default function PropertyDetailSheet({
                               if (!lines.length) return null
                               return (
                                 <div key={type}>
-                                  <p className="text-white/55 text-[9px] font-bold uppercase tracking-wider pt-2 pb-0.5">
+                                  <p className="text-neutral-400 text-[9px] font-bold uppercase tracking-wider pt-2 pb-0.5">
                                     {TRANSPORT_LABELS[type]}
                                   </p>
                                   {lines.map(t => <TransportItem key={t} line={t} />)}
@@ -515,7 +515,7 @@ export default function PropertyDetailSheet({
                                 value={
                                   <div className="flex flex-col items-end gap-0.5">
                                     {property.nearbyPlaces.map((p) => (
-                                      <span key={p} className="text-white/70 text-sm">{p}</span>
+                                      <span key={p} className="text-neutral-600 text-sm">{p}</span>
                                     ))}
                                   </div>
                                 }
@@ -570,9 +570,9 @@ export default function PropertyDetailSheet({
                         <SectionTitle>Composition</SectionTitle>
                         <GreyBox className="px-4 py-1">
                           {property.composition.map(({ label, surface }) => (
-                            <div key={label} className="flex items-center justify-between py-2.5 border-b border-white/6 last:border-0">
-                              <span className="text-white/60 text-sm">{label}</span>
-                              <span className="text-white text-sm font-semibold">{surface} m²</span>
+                            <div key={label} className="flex items-center justify-between py-2.5 border-b border-neutral-200 last:border-0">
+                              <span className="text-neutral-500 text-sm">{label}</span>
+                              <span className="text-neutral-900 text-sm font-semibold">{surface} m²</span>
                             </div>
                           ))}
                         </GreyBox>
@@ -585,37 +585,37 @@ export default function PropertyDetailSheet({
                         <SectionTitle>Marché immobilier</SectionTitle>
                         <GreyBox className="px-4 py-3">
                           <div className="flex items-baseline gap-2 mb-1">
-                            <span className="text-white font-black text-xl">{fmtPrice} €</span>
-                            {fmtPpm && <span className="text-white/65 text-xs">{fmtPpm} €/m²</span>}
+                            <span className="text-neutral-900 font-black text-xl">{fmtPrice} €</span>
+                            {fmtPpm && <span className="text-neutral-500 text-xs">{fmtPpm} €/m²</span>}
                           </div>
-                          <div className="h-px bg-white/10 my-3" />
+                          <div className="h-px bg-neutral-200 my-3" />
                           <div className="flex flex-col gap-2.5">
                             <div className="flex justify-between items-center">
-                              <span className="text-white/50 text-sm">Prix moyen secteur</span>
-                              <span className="text-white text-sm font-medium">
+                              <span className="text-neutral-500 text-sm">Prix moyen secteur</span>
+                              <span className="text-neutral-900 text-sm font-medium">
                                 {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.marketAvgPricePerSqm)} €/m²
                               </span>
                             </div>
                             {property.marketEvolution10y && (
                               <div className="flex justify-between items-center">
-                                <span className="text-white/50 text-sm">Évolution 10 ans</span>
-                                <span className={clsx('text-sm font-bold', property.marketEvolution10y.startsWith('+') ? 'text-emerald-400' : 'text-red-400')}>
+                                <span className="text-neutral-500 text-sm">Évolution 10 ans</span>
+                                <span className={clsx('text-sm font-bold', property.marketEvolution10y.startsWith('+') ? 'text-emerald-600' : 'text-red-500')}>
                                   {property.marketEvolution10y}
                                 </span>
                               </div>
                             )}
                             {property.marketHighPrice && (
                               <div className="flex justify-between items-center">
-                                <span className="text-white/50 text-sm">Prix haut</span>
-                                <span className="text-white text-sm font-medium">
+                                <span className="text-neutral-500 text-sm">Prix haut</span>
+                                <span className="text-neutral-900 text-sm font-medium">
                                   {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.marketHighPrice)} €/m²
                                 </span>
                               </div>
                             )}
                             {property.marketLowPrice && (
                               <div className="flex justify-between items-center">
-                                <span className="text-white/50 text-sm">Prix bas</span>
-                                <span className="text-white text-sm font-medium">
+                                <span className="text-neutral-500 text-sm">Prix bas</span>
+                                <span className="text-neutral-900 text-sm font-medium">
                                   {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.marketLowPrice)} €/m²
                                 </span>
                               </div>
@@ -636,38 +636,38 @@ export default function PropertyDetailSheet({
                   style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
                 >
                   {/* Left pill — 3 CTAs */}
-                  <div className="flex-1 bg-white rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
+                  <div className="flex-1 bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
                     {[
                       { icon: MessageCircle, label: 'Message', onClick: onMessage },
                       { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = 'tel:+33670744935' } },
                       { icon: CalendarPlus, label: 'Visiter', onClick: undefined },
                     ].map(({ icon: Icon, label, onClick }, i, arr) => (
                       <div key={label} className="flex-1 flex items-center justify-center">
-                        <button onClick={onClick} className="flex flex-col items-center gap-0.5 flex-1 py-2.5 rounded-full active:bg-black/5 transition-colors">
-                          <Icon size={18} strokeWidth={1.8} className="text-black" />
-                          <span className="text-black text-[10px] font-semibold">{label}</span>
+                        <button onClick={onClick} className="flex flex-col items-center gap-0.5 flex-1 py-2.5 rounded-full active:bg-white/10 transition-colors">
+                          <Icon size={18} strokeWidth={1.8} className="text-white" />
+                          <span className="text-white text-[10px] font-semibold">{label}</span>
                         </button>
-                        {i < arr.length - 1 && <div className="w-px h-6 bg-black/10 shrink-0" />}
+                        {i < arr.length - 1 && <div className="w-px h-6 bg-white/20 shrink-0" />}
                       </div>
                     ))}
                   </div>
 
                   {/* Right pill — Like + Share */}
-                  <div className="bg-white rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden px-1">
+                  <div className="bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden px-1">
                     <button
                       onClick={onToggleFavorite}
-                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-black/5 transition-colors"
+                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"
                     >
-                      <Heart size={18} strokeWidth={1.8} className={clsx(isFavorite ? 'fill-red-500 text-red-500' : 'text-black')} />
-                      <span className="text-black text-[10px] font-semibold">{(property.likeCount ?? 0) + (isFavorite ? 1 : 0)}</span>
+                      <Heart size={18} strokeWidth={1.8} className={clsx(isFavorite ? 'fill-red-500 text-red-500' : 'text-white')} />
+                      <span className="text-white text-[10px] font-semibold">{(property.likeCount ?? 0) + (isFavorite ? 1 : 0)}</span>
                     </button>
-                    <div className="w-px h-6 bg-black/10" />
+                    <div className="w-px h-6 bg-white/20" />
                     <button
                       onClick={() => shareProperty(property)}
-                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-black/5 transition-colors"
+                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"
                     >
-                      <Share2 size={18} strokeWidth={1.8} className="text-black" />
-                      <span className="text-black text-[10px] font-semibold">{property.shareCount ?? 0}</span>
+                      <Share2 size={18} strokeWidth={1.8} className="text-white" />
+                      <span className="text-white text-[10px] font-semibold">{property.shareCount ?? 0}</span>
                     </button>
                   </div>
                 </div>}

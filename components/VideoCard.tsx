@@ -15,10 +15,25 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const videoRef    = useRef<HTMLVideoElement>(null)
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null)
   const progressRef = useRef<VideoProgressBarHandle>(null)
-  const holdTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const isHeldRef    = useRef(false)
-  const lastSeekRef  = useRef<number>(0)
+  const holdTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isHeldRef      = useRef(false)
+  const lastSeekRef    = useRef<number>(0)
+  const centerLabelRef = useRef<HTMLDivElement>(null)
+  const centerTextRef  = useRef<HTMLSpanElement>(null)
+  const centerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasVideo    = Boolean(property.videoUrl)
+
+  const flashCenter = (label: string) => {
+    const el = centerLabelRef.current
+    const tx = centerTextRef.current
+    if (!el || !tx) return
+    tx.textContent = label.toUpperCase()
+    el.style.opacity = '1'
+    if (centerTimerRef.current) clearTimeout(centerTimerRef.current)
+    centerTimerRef.current = setTimeout(() => {
+      if (centerLabelRef.current) centerLabelRef.current.style.opacity = '0'
+    }, 700)
+  }
 
   /* ── Play / pause on active state ── */
   useEffect(() => {
@@ -102,17 +117,20 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         if (next) {
           seek(next.fraction * video.duration)
           progressRef.current?.flashLabel(next.label, next.fraction)
+          flashCenter(next.label)
         }
       } else {
         const chapterStart = chapters[idx].fraction * video.duration
         if (video.currentTime - chapterStart > 2) {
           seek(chapterStart)
           progressRef.current?.flashLabel(chapters[idx].label, chapters[idx].fraction)
+          flashCenter(chapters[idx].label)
         } else {
           const prev = chapters[idx - 1]
           const target = prev ?? chapters[0]
           seek(target.fraction * video.duration)
           progressRef.current?.flashLabel(target.label, target.fraction)
+          flashCenter(target.label)
         }
       }
     } else {
@@ -152,7 +170,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
           loop
           muted
           playsInline
-          preload="metadata"
+          preload="auto"
           onError={(e) => {
             ;(e.currentTarget as HTMLVideoElement).style.visibility = 'hidden'
           }}
@@ -169,6 +187,19 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         priority={isActive}
         sizes="430px"
       />
+
+      {/* Chapter name center overlay */}
+      <div
+        ref={centerLabelRef}
+        className="absolute inset-0 z-[16] flex items-center justify-center pointer-events-none"
+        style={{ opacity: 0, transition: 'opacity 0.18s ease' }}
+      >
+        <span
+          ref={centerTextRef}
+          className="font-black tracking-widest text-white/55 text-center px-4"
+          style={{ fontSize: 'clamp(32px, 10vw, 52px)', lineHeight: 1.1 }}
+        />
+      </div>
 
       {/* Progress bar */}
       <VideoProgressBar ref={progressRef} videoRef={videoRef} chapters={property.chapters} />

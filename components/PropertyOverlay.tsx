@@ -74,31 +74,43 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
               </p>
             </div>
 
-            {/* Features — single line with check icons, truncated (Cave excluded like in detail sheet) */}
-            {property.features && property.features.filter(f => f !== 'Cave').length > 0 && (
-              <div className="flex items-center gap-x-3 overflow-hidden mb-0.5" style={{ maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 90%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 90%, transparent 100%)' }}>
-                {property.features.filter(f => f !== 'Cave').map(f => (
-                  <div key={f} className="flex items-center gap-1 shrink-0">
-                    <Check size={10} className="text-emerald-400 shrink-0" />
-                    <span className="text-white text-[13px] drop-shadow">{f}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Typologie · surface · prix + Plus */}
-            <div className="flex items-center gap-2">
+            {/* Typologie · surface · prix */}
+            <div className="flex items-center gap-2 mb-0.5">
               <Home size={13} strokeWidth={1.8} className="text-white shrink-0" />
               <p className="text-white text-[15px] drop-shadow">
                 T{property.rooms} · {property.surface} m² · {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)} €
               </p>
-              {onMore && (
-                <button onClick={onMore} className="flex items-center gap-0 shrink-0">
-                  <span className="text-white/65 text-[15px] font-bold">Plus</span>
-                  <ChevronDown size={16} className="text-white/65 mt-px" />
-                </button>
-              )}
             </div>
+
+            {/* Features + Voir l'annonce */}
+            {property.features && property.features.filter(f => f !== 'Cave').length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="flex items-center gap-x-3 overflow-hidden"
+                  style={{ flex: 1, minWidth: 0, maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)' }}
+                >
+                  {property.features.filter(f => f !== 'Cave').map(f => (
+                    <div key={f} className="flex items-center gap-1 shrink-0">
+                      <Check size={10} className="text-emerald-400 shrink-0" />
+                      <span className="text-white text-[13px] drop-shadow">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                {onMore && (
+                  <button onClick={onMore} className="flex items-center gap-0.5 shrink-0">
+                    <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
+                    <ChevronDown size={14} className="text-white mt-px" />
+                  </button>
+                )}
+              </div>
+            )}
+            {/* Voir l'annonce quand pas de features */}
+            {(!property.features || property.features.filter(f => f !== 'Cave').length === 0) && onMore && (
+              <button onClick={onMore} className="flex items-center gap-0.5 shrink-0 self-start">
+                <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
+                <ChevronDown size={14} className="text-white mt-px" />
+              </button>
+            )}
           </div>
 
           {/* Right — BAIA */}
