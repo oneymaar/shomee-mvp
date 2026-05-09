@@ -635,7 +635,7 @@ export default function PropertyDetailSheet({
                 {/* ── FLOATING PILLS ──────────────────────────────────── */}
                 {!hideBottomBar && <div
                   className="absolute left-0 right-0 px-3 flex gap-2 items-center z-20"
-                  style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
+                  style={{ bottom: 8, filter: 'drop-shadow(0 -2px 12px rgba(0,0,0,0.12))' }}
                 >
                   {/* Left pill — 3 CTAs */}
                   <div className="flex-1 rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden" style={{ backgroundColor: '#A9685E' }}>

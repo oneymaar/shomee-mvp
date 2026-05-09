@@ -27,7 +27,8 @@ export default function SplashPage() {
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black flex flex-col items-center justify-center"
+      className="fixed inset-0 flex flex-col items-center justify-center"
+      style={{ backgroundColor: '#f5f0e8' }}
       animate={{ opacity: exiting ? 0 : 1 }}
       initial={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
@@ -45,6 +46,7 @@ export default function SplashPage() {
           height={180}
           priority
           className="object-contain"
+          style={{ filter: 'brightness(0)' }}
         />
       </motion.div>
 
@@ -58,14 +60,15 @@ export default function SplashPage() {
         >
           <button
             onClick={navigateToFeed}
-            className="bg-white text-black font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
+            className="text-white font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
+            style={{ backgroundColor: '#A9685E' }}
           >
             Découvrir les biens
           </button>
-          <p className="text-white/35 text-[12px] text-center leading-relaxed">
+          <p className="text-neutral-400 text-[12px] text-center leading-relaxed">
             Pour ajouter SHOMEE sur votre écran d'accueil,{'\n'}
-            appuyez sur <span className="text-white/55">Partager</span> puis{' '}
-            <span className="text-white/55">Sur l'écran d'accueil</span>
+            appuyez sur <span className="text-neutral-600">Partager</span> puis{' '}
+            <span className="text-neutral-600">Sur l'écran d'accueil</span>
           </p>
         </motion.div>
       )}
