@@ -41,7 +41,7 @@ export default function FavoritesPage() {
             <Link
               href="/feed"
               className="font-semibold text-sm border rounded-full px-5 py-2.5 transition-colors active:opacity-70"
-              style={{ color: '#A9685E', borderColor: '#A9685E' }}
+              style={{ color: '#914E3C', borderColor: '#914E3C' }}
             >
               Explorer les biens
             </Link>

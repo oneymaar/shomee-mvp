@@ -105,10 +105,10 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                       onClick={() => toggle(id)}
                       className={`flex items-center gap-2 px-3 py-3 rounded-2xl border text-left transition-all ${
                         active
-                          ? 'text-white border-[#A9685E]'
+                          ? 'text-white border-[#914E3C]'
                           : 'bg-white text-neutral-700 border-black/8 active:border-black/20'
                       }`}
-                      style={active ? { backgroundColor: '#A9685E' } : {}}
+                      style={active ? { backgroundColor: '#914E3C' } : {}}
                     >
                       <span className="text-lg shrink-0">{emoji}</span>
                       <span className="text-sm font-medium leading-tight">{label}</span>
@@ -125,7 +125,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                     ? 'text-white active:opacity-90'
                     : 'bg-black/8 text-neutral-400 cursor-not-allowed'
                 }`}
-                style={selected.length > 0 ? { backgroundColor: '#A9685E' } : {}}
+                style={selected.length > 0 ? { backgroundColor: '#914E3C' } : {}}
               >
                 Envoyer mon retour
               </button>
@@ -147,7 +147,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#A9685E' }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#914E3C' }}>
                 <Check size={24} className="text-white" strokeWidth={2.5} />
               </div>
               <p className="text-neutral-900 font-semibold text-xl">Merci pour votre retour&nbsp;!</p>

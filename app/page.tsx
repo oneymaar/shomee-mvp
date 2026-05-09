@@ -40,13 +40,12 @@ export default function SplashPage() {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         <Image
-          src="/Logo-shomee.png"
+          src="/logo terracotta.png"
           alt="SHOMEE"
           width={160}
           height={180}
           priority
           className="object-contain"
-          style={{ filter: 'brightness(0)' }}
         />
       </motion.div>
 
@@ -61,7 +60,7 @@ export default function SplashPage() {
           <button
             onClick={navigateToFeed}
             className="text-white font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
-            style={{ backgroundColor: '#A9685E' }}
+            style={{ backgroundColor: '#914E3C' }}
           >
             Découvrir les biens
           </button>
