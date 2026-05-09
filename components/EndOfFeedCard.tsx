@@ -15,8 +15,8 @@ const SUGGESTIONS = [
 interface EndOfFeedCardProps {
   hasNewResults?: boolean
   newResultsCount?: number
-  onFoundResults?: () => void  // called when 'found' state starts (5 s after submit)
-  onScrollToNew?: () => void   // called 2 s after 'found' state starts
+  onFoundResults?: () => void
+  onScrollToNew?: () => void
 }
 
 export default function EndOfFeedCard({
@@ -55,17 +55,18 @@ export default function EndOfFeedCard({
 
   const resultLabel =
     newResultsCount === 1
-      ? '1 nouveau bien trouvé\u00A0!'
-      : `${newResultsCount} nouveaux biens trouvés\u00A0!`
+      ? '1 nouveau bien trouvé !'
+      : `${newResultsCount} nouveaux biens trouvés !`
 
   return (
-    <div className="relative w-full h-full bg-neutral-900 flex flex-col overflow-hidden">
+    <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
       <div className="relative z-10 h-full overflow-y-auto scrollbar-hide px-5 flex flex-col justify-center" style={{ paddingTop: '40px', paddingBottom: 'calc(var(--nav-h) + 40px)' }}>
 
-        {/* ── Hero — always visible ── */}
+        {/* ── Hero ── */}
         <div className="flex flex-col items-center text-center mb-8">
           <motion.div
-            className="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mb-4"
+            className="w-16 h-16 rounded-full border-2 flex items-center justify-center mb-4"
+            style={{ backgroundColor: 'rgba(169,104,94,0.12)', borderColor: 'rgba(169,104,94,0.35)' }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', damping: 14, stiffness: 180 }}
@@ -75,13 +76,13 @@ export default function EndOfFeedCard({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.25, type: 'spring', damping: 18 }}
             >
-              <Check size={28} className="text-emerald-400" strokeWidth={2.5} />
+              <Check size={28} strokeWidth={2.5} style={{ color: '#A9685E' }} />
             </motion.div>
           </motion.div>
-          <h2 className="text-white font-bold text-2xl leading-snug mb-2">
+          <h2 className="text-neutral-900 font-bold text-2xl leading-snug mb-2">
             Vous avez fait le tour…
           </h2>
-          <p className="text-white/50 text-sm leading-relaxed max-w-[290px]">
+          <p className="text-neutral-500 text-sm leading-relaxed max-w-[290px]">
             … pour l'instant&nbsp;! Mais vous serez alerté(e) dès qu'un nouveau bien sort dans vos critères.
           </p>
         </div>
@@ -92,7 +93,7 @@ export default function EndOfFeedCard({
           {/* idle: suggestions form */}
           {cardState === 'idle' && (
             <motion.div key="form" exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-              <p className="text-white/65 text-xs font-semibold uppercase tracking-widest mb-3">
+              <p className="text-neutral-400 text-xs font-semibold uppercase tracking-widest mb-3">
                 Élargir ma recherche
               </p>
 
@@ -104,12 +105,15 @@ export default function EndOfFeedCard({
                       key={id}
                       onClick={() => toggle(id)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
-                        active ? 'bg-white text-black border-white' : 'bg-white/5 text-white/70 border-white/10'
+                        active ? 'text-white border-[#A9685E]' : 'bg-white text-neutral-700 border-black/8'
                       }`}
+                      style={active ? { backgroundColor: '#A9685E' } : {}}
                     >
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                        active ? 'bg-black border-black' : 'border-white/30'
-                      }`}>
+                        active ? 'border-white' : 'border-black/20'
+                      }`}
+                        style={active ? { backgroundColor: 'rgba(255,255,255,0.25)' } : {}}
+                      >
                         {active && <Check size={11} strokeWidth={3} className="text-white" />}
                       </div>
                       <span className="text-sm font-medium">{label}</span>
@@ -119,11 +123,15 @@ export default function EndOfFeedCard({
 
                 {/* 4th item: free text */}
                 <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
-                  textActive ? 'bg-white border-white' : 'bg-white/5 border-white/10'
-                }`}>
+                  textActive ? 'border-[#A9685E]' : 'bg-white border-black/8'
+                }`}
+                  style={textActive ? { backgroundColor: 'rgba(169,104,94,0.08)' } : {}}
+                >
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                    textActive ? 'bg-black border-black' : 'border-white/30'
-                  }`}>
+                    textActive ? 'border-[#A9685E]' : 'border-black/20'
+                  }`}
+                    style={textActive ? { backgroundColor: '#A9685E' } : {}}
+                  >
                     {textActive && <Check size={11} strokeWidth={3} className="text-white" />}
                   </div>
                   <input
@@ -132,7 +140,7 @@ export default function EndOfFeedCard({
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Dites-nous comment avec vos mots"
                     className={`flex-1 bg-transparent text-sm focus:outline-none ${
-                      textActive ? 'text-black placeholder-black/30' : 'text-white placeholder-white/25'
+                      textActive ? 'text-neutral-900 placeholder-neutral-400' : 'text-neutral-700 placeholder-neutral-400'
                     }`}
                   />
                 </div>
@@ -142,15 +150,16 @@ export default function EndOfFeedCard({
                 onClick={handleSubmit}
                 disabled={!canSubmit}
                 className={`w-full py-4 rounded-2xl text-sm font-bold transition-all mt-5 ${
-                  canSubmit ? 'bg-white text-black' : 'bg-white/10 text-white/55 cursor-not-allowed'
+                  canSubmit ? 'text-white active:opacity-90' : 'bg-black/8 text-neutral-400 cursor-not-allowed'
                 }`}
+                style={canSubmit ? { backgroundColor: '#A9685E' } : {}}
               >
                 Modifier mes critères
               </button>
             </motion.div>
           )}
 
-          {/* loading: spinner */}
+          {/* loading */}
           {cardState === 'loading' && (
             <motion.div
               key="loading"
@@ -161,20 +170,21 @@ export default function EndOfFeedCard({
               transition={{ duration: 0.2 }}
             >
               <motion.div
-                className="w-12 h-12 rounded-full border-2 border-white/15 border-t-white/80"
+                className="w-12 h-12 rounded-full border-2 border-black/10"
+                style={{ borderTopColor: '#A9685E' }}
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               />
               <div className="text-center">
-                <p className="text-white font-semibold text-base">BAIA relance la recherche…</p>
-                <p className="text-white/65 text-sm mt-1.5">
+                <p className="text-neutral-900 font-semibold text-base">BAIA relance la recherche…</p>
+                <p className="text-neutral-500 text-sm mt-1.5">
                   Analyse des biens correspondant à vos nouveaux critères.
                 </p>
               </div>
             </motion.div>
           )}
 
-          {/* found: result count before scroll */}
+          {/* found */}
           {cardState === 'found' && (
             <motion.div
               key="found"
@@ -184,20 +194,21 @@ export default function EndOfFeedCard({
               transition={{ duration: 0.3 }}
             >
               <motion.div
-                className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center"
+                className="w-14 h-14 rounded-full flex items-center justify-center border"
+                style={{ backgroundColor: 'rgba(169,104,94,0.12)', borderColor: 'rgba(169,104,94,0.35)' }}
                 animate={{ scale: [1, 1.12, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
               >
-                <Check size={24} className="text-emerald-400" strokeWidth={2.5} />
+                <Check size={24} strokeWidth={2.5} style={{ color: '#A9685E' }} />
               </motion.div>
               <div className="text-center">
-                <p className="text-white font-bold text-xl">{resultLabel}</p>
-                <p className="text-white/65 text-sm mt-1.5">Chargement en cours…</p>
+                <p className="text-neutral-900 font-bold text-xl">{resultLabel}</p>
+                <p className="text-neutral-500 text-sm mt-1.5">Chargement en cours…</p>
               </div>
             </motion.div>
           )}
 
-          {/* confirmed: no new results — centered, auto-dismiss after 4s */}
+          {/* confirmed */}
           {cardState === 'confirmed' && (
             <motion.div
               key="confirmed"
@@ -207,17 +218,16 @@ export default function EndOfFeedCard({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             >
-              <p className="text-white font-semibold text-base">
+              <p className="text-neutral-900 font-semibold text-base">
                 Modifications prises en compte&nbsp;!
               </p>
-              <p className="text-white/50 text-sm leading-relaxed max-w-[270px]">
+              <p className="text-neutral-500 text-sm leading-relaxed max-w-[270px]">
                 Vos critères sont modifiables à tout moment dans l'onglet{' '}
-                <span className="text-white/70 font-medium">Profil</span>.
+                <span className="text-neutral-700 font-medium">Profil</span>.
               </p>
             </motion.div>
           )}
 
-          {/* done: body gone, only hero remains */}
           {cardState === 'done' && (
             <motion.div key="done" initial={{ opacity: 0 }} animate={{ opacity: 0 }} />
           )}

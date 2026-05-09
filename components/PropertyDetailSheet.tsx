@@ -297,14 +297,15 @@ export default function PropertyDetailSheet({
 
             <motion.div
               key="sheet-body"
-              className="absolute inset-0 z-[70] flex flex-col bg-neutral-950 overflow-hidden"
+              className="absolute inset-0 z-[70] flex flex-col overflow-hidden"
+              style={{ backgroundColor: '#f5f0e8' }}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             >
               {/* ── STICKY HEADER ─────────────────────────────────────── */}
-              <div className="shrink-0 bg-neutral-950" style={{ paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 4px 24px rgba(0,0,0,0.9), 0 1px 0 rgba(255,255,255,0.07)' }}>
+              <div className="shrink-0" style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 0 rgba(0,0,0,0.06)' }}>
                 <div className="px-4 py-3">
                   {/* Agency + Close */}
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -316,26 +317,26 @@ export default function PropertyDetailSheet({
                           <span className="text-white text-[11px] font-bold">{property.agentName.charAt(0)}</span>
                         )}
                       </div>
-                      <span className="text-white/70 text-sm font-medium truncate">{property.agentName}</span>
+                      <span className="text-neutral-600 text-sm font-medium truncate">{property.agentName}</span>
                     </div>
                     <button
                       onClick={onClose}
-                      className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center shrink-0"
+                      className="w-9 h-9 bg-black/8 rounded-full flex items-center justify-center shrink-0"
                     >
-                      <X size={16} className="text-white" />
+                      <X size={16} className="text-neutral-600" />
                     </button>
                   </div>
 
                   {/* Price */}
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-white font-black text-[22px] leading-none">{fmtPrice} €</span>
-                    {fmtPpm && <span className="text-white/65 text-xs">soit {fmtPpm} €/m²</span>}
+                    <span className="text-neutral-900 font-black text-[22px] leading-none">{fmtPrice} €</span>
+                    {fmtPpm && <span className="text-neutral-500 text-xs">soit {fmtPpm} €/m²</span>}
                   </div>
 
                   {/* Location — prominent */}
                   <div className="flex items-center gap-1.5 mt-1">
-                    <MapPin size={12} className="text-white/50 shrink-0" />
-                    <span className="text-white text-sm font-medium">{formatLocation(property.arrondissement, property.district)}</span>
+                    <MapPin size={12} className="text-neutral-400 shrink-0" />
+                    <span className="text-neutral-900 text-sm font-medium">{formatLocation(property.arrondissement, property.district)}</span>
                   </div>
 
                   {/* Stats chips */}
@@ -346,7 +347,7 @@ export default function PropertyDetailSheet({
                       ...(property.bedrooms ? [{ v: `${property.bedrooms} ch.` }] : []),
                       ...(property.floor ? [{ v: property.totalFloors ? `${property.floor}e / ${property.totalFloors}e ét.` : `${property.floor}e ét.` }] : []),
                     ].map(({ v }) => (
-                      <span key={v} className="bg-white/8 border border-white/12 rounded-xl px-2.5 py-1 text-white text-xs font-semibold">{v}</span>
+                      <span key={v} className="bg-black/5 border border-black/8 rounded-xl px-2.5 py-1 text-neutral-800 text-xs font-semibold">{v}</span>
                     ))}
                   </div>
 
@@ -356,13 +357,13 @@ export default function PropertyDetailSheet({
                       {property.features.filter(f => f !== 'Cave').map((f) => (
                         <div key={f} className="flex items-center gap-1">
                           <Check size={10} className="text-emerald-400 shrink-0" />
-                          <span className="text-white/65 text-xs">{f}</span>
+                          <span className="text-neutral-600 text-xs">{f}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-                <div className="h-px bg-white/8 mx-4" />
+                <div className="h-px bg-black/8 mx-4" />
               </div>
 
               {/* ── CONTENT AREA ──────────────────────────────────────── */}

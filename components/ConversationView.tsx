@@ -33,17 +33,14 @@ export default function ConversationView({ property }: { property: Property }) {
 
   const formatted = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
 
-  /* Mark conversation as seen whenever user is viewing it (on mount + on new messages) */
   useEffect(() => {
     markConversationSeen(property.id)
   }, [property.id, messages.length, markConversationSeen])
 
-  /* Auto-scroll to bottom */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
-  /* Auto-resize textarea */
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value)
     const el = e.target
@@ -92,32 +89,30 @@ export default function ConversationView({ property }: { property: Property }) {
     (found, msg, i) => found !== -1 ? found : (msg.from === 'user' && msg.read ? i : -1),
     -1,
   )
-  // "Lu" only if agent hasn't replied yet after the last read user message
   const lastMsgIsFromAgent = messages[messages.length - 1]?.from === 'agent'
-
   const hasMessages = messages.length > 0
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-black" style={{ bottom: 'var(--nav-h)' }}>
+    <div className="absolute inset-0 flex flex-col" style={{ bottom: 'var(--nav-h)', backgroundColor: '#f5f0e8' }}>
 
       {/* ── Header ── */}
       <div
-        className="shrink-0 flex items-center gap-3 px-4 border-b border-white/8 bg-neutral-950"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
+        className="shrink-0 flex items-center gap-3 px-4 border-b border-black/8"
+        style={{ backgroundColor: '#f5f0e8', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
       >
-        <button onClick={() => router.push('/messages')} className="text-white/60 -ml-1 p-1">
+        <button onClick={() => router.push('/messages')} className="text-neutral-500 -ml-1 p-1">
           <ChevronLeft size={22} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-neutral-900 border border-white/15 overflow-hidden flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-full bg-white border border-black/10 overflow-hidden flex items-center justify-center shrink-0">
           {property.agentAvatar ? (
             <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
           ) : (
-            <span className="text-black text-xs font-bold">{property.agentName.charAt(0)}</span>
+            <span className="text-neutral-700 text-xs font-bold">{property.agentName.charAt(0)}</span>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-[14px] leading-tight">{property.agentName}</p>
-          <p className="text-white/60 text-[11px] truncate">{property.title}</p>
+          <p className="text-neutral-900 font-semibold text-[14px] leading-tight">{property.agentName}</p>
+          <p className="text-neutral-500 text-[11px] truncate">{property.title}</p>
         </div>
       </div>
 
@@ -127,31 +122,31 @@ export default function ConversationView({ property }: { property: Property }) {
         {/* Empty state */}
         {!hasMessages && (
           <div className="flex-1 flex flex-col items-center justify-center gap-5 pt-4 pb-2">
-            <div className="w-[80px] h-[80px] rounded-full bg-neutral-900 border border-white/15 overflow-hidden flex items-center justify-center">
+            <div className="w-[80px] h-[80px] rounded-full bg-white border border-black/10 overflow-hidden flex items-center justify-center">
               {property.agentAvatar ? (
                 <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
               ) : (
-                <span className="text-black text-2xl font-bold">{property.agentName.charAt(0)}</span>
+                <span className="text-neutral-700 text-2xl font-bold">{property.agentName.charAt(0)}</span>
               )}
             </div>
             <div className="text-center">
-              <p className="text-white font-bold text-[17px]">{property.agentName}</p>
-              <p className="text-white/60 text-[13px] mt-1">Agence immobilière · Paris</p>
+              <p className="text-neutral-900 font-bold text-[17px]">{property.agentName}</p>
+              <p className="text-neutral-500 text-[13px] mt-1">Agence immobilière · Paris</p>
             </div>
             <button
               onClick={() => router.back()}
-              className="w-full flex items-center gap-3 bg-white/5 border border-white/8 rounded-2xl px-3.5 py-3 active:opacity-70 transition-opacity"
+              className="w-full flex items-center gap-3 bg-white border border-black/8 rounded-2xl px-3.5 py-3 active:opacity-70 transition-opacity"
             >
               <div className="w-[46px] h-[46px] rounded-xl overflow-hidden shrink-0">
                 <img src={property.imageUrlFallback} alt={property.title} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 text-left min-w-0">
-                <p className="text-white text-[13px] font-semibold leading-tight truncate">{property.title}</p>
-                <p className="text-white/65 text-[12px] mt-0.5">{property.surface} m² · {formatted} €</p>
+                <p className="text-neutral-900 text-[13px] font-semibold leading-tight truncate">{property.title}</p>
+                <p className="text-neutral-500 text-[12px] mt-0.5">{property.surface} m² · {formatted} €</p>
               </div>
-              <ChevronRight size={15} className="text-white/65 shrink-0" />
+              <ChevronRight size={15} className="text-neutral-400 shrink-0" />
             </button>
-            <p className="text-white/65 text-[13px] text-center leading-relaxed">
+            <p className="text-neutral-500 text-[13px] text-center leading-relaxed">
               Envoyez un message pour démarrer<br />votre échange avec {property.agentName}.
             </p>
           </div>
@@ -168,23 +163,22 @@ export default function ConversationView({ property }: { property: Property }) {
               transition={{ duration: 0.18 }}
               className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}
             >
-              {/* Bubble — timestamp is INSIDE, bottom-right */}
               <div
                 className={`max-w-[78%] px-4 py-3 text-[14px] leading-snug ${
                   isUser
-                    ? 'bg-white text-black rounded-[20px] rounded-br-[5px]'
-                    : 'bg-neutral-800 text-white rounded-[20px] rounded-bl-[5px]'
+                    ? 'text-white rounded-[20px] rounded-br-[5px]'
+                    : 'bg-white text-neutral-900 rounded-[20px] rounded-bl-[5px] shadow-sm'
                 }`}
+                style={isUser ? { backgroundColor: '#A9685E' } : {}}
               >
                 <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-black/60' : 'text-white/50'}`}>
+                <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-white/60' : 'text-neutral-400'}`}>
                   {formatTime(msg.timestamp)}
                 </p>
               </div>
 
-              {/* "Lu" only when message read but no agent reply yet */}
               {isUser && i === lastReadIdx && !lastMsgIsFromAgent && (
-                <span className="text-white/50 text-[11px] px-1">Lu</span>
+                <span className="text-neutral-400 text-[11px] px-1">Lu</span>
               )}
             </motion.div>
           )
@@ -199,11 +193,11 @@ export default function ConversationView({ property }: { property: Property }) {
               exit={{ opacity: 0, y: 4 }}
               transition={{ duration: 0.15 }}
             >
-              <div className="bg-neutral-800 rounded-[20px] rounded-bl-[5px] px-4 py-3.5 flex gap-1.5 items-center w-fit">
+              <div className="bg-white rounded-[20px] rounded-bl-[5px] px-4 py-3.5 flex gap-1.5 items-center w-fit shadow-sm">
                 {[0, 0.22, 0.44].map((delay, i) => (
                   <motion.div
                     key={i}
-                    className="w-[6px] h-[6px] rounded-full bg-white/50"
+                    className="w-[6px] h-[6px] rounded-full bg-neutral-400"
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{ repeat: Infinity, duration: 1.1, delay, ease: 'easeInOut' }}
                   />
@@ -216,9 +210,12 @@ export default function ConversationView({ property }: { property: Property }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Input bar — Enter creates newline, only Send button sends ── */}
-      <div className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-white/8 bg-neutral-950">
-        <div className="flex-1 bg-white/8 rounded-[20px] px-4 py-2.5">
+      {/* ── Input bar ── */}
+      <div
+        className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-black/8"
+        style={{ backgroundColor: '#f5f0e8' }}
+      >
+        <div className="flex-1 bg-white rounded-[20px] px-4 py-2.5 shadow-sm">
           <textarea
             ref={textareaRef}
             value={text}
@@ -226,16 +223,17 @@ export default function ConversationView({ property }: { property: Property }) {
             rows={1}
             placeholder="Message..."
             style={{ resize: 'none', overflowY: 'auto', maxHeight: '120px' }}
-            className="w-full bg-transparent text-white text-[14px] placeholder:text-white/30 outline-none leading-snug block"
+            className="w-full bg-transparent text-neutral-900 text-[14px] placeholder:text-neutral-400 outline-none leading-snug block"
           />
         </div>
         <button
           onClick={sendMessage}
           className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
-            text.trim() ? 'bg-white' : 'bg-white/10'
+            text.trim() ? '' : 'bg-black/8'
           }`}
+          style={text.trim() ? { backgroundColor: '#A9685E' } : {}}
         >
-          <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-black' : 'text-white/55'} />
+          <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-white' : 'text-neutral-400'} />
         </button>
       </div>
     </div>

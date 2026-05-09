@@ -20,11 +20,11 @@ export default function FavoritesPage() {
 
         {/* Header */}
         <div
-          className="sticky top-0 z-10 bg-black border-b border-white/8 px-5 pb-4"
-          style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+          className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
+          style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
         >
-          <h1 className="text-white font-bold text-xl tracking-tight">Favoris</h1>
-          <p className="text-white/65 text-xs mt-0.5">
+          <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Favoris</h1>
+          <p className="text-neutral-500 text-xs mt-0.5">
             {favProperties.length} bien{favProperties.length !== 1 ? 's' : ''} sauvegardé{favProperties.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -32,15 +32,16 @@ export default function FavoritesPage() {
         {/* Content */}
         {favProperties.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 px-8 text-center" style={{ minHeight: 'calc(100dvh - 180px)' }}>
-            <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <Heart size={28} className="text-white/55" />
+            <div className="w-16 h-16 rounded-full bg-black/5 border border-black/8 flex items-center justify-center">
+              <Heart size={28} className="text-neutral-400" />
             </div>
-            <p className="text-white/50 text-sm leading-relaxed">
+            <p className="text-neutral-500 text-sm leading-relaxed">
               Sauvegardez des biens depuis le feed pour les retrouver ici.
             </p>
             <Link
               href="/feed"
-              className="text-white font-semibold text-sm border border-white/20 rounded-full px-5 py-2.5 active:border-white/40 transition-colors"
+              className="font-semibold text-sm border rounded-full px-5 py-2.5 transition-colors active:opacity-70"
+              style={{ color: '#A9685E', borderColor: '#A9685E' }}
             >
               Explorer les biens
             </Link>
@@ -56,7 +57,7 @@ export default function FavoritesPage() {
 
               return (
                 <Link key={property.id} href={`/favorites/${property.id}`}>
-                  <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden active:scale-[0.97] transition-transform">
+                  <div className="bg-white border border-black/8 rounded-2xl overflow-hidden active:scale-[0.97] transition-transform">
                     <div className="relative h-36">
                       <Image
                         src={property.imageUrlFallback}
@@ -68,11 +69,11 @@ export default function FavoritesPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
                     <div className="p-3">
-                      <p className="text-white font-semibold text-xs leading-tight line-clamp-1">
+                      <p className="text-neutral-900 font-semibold text-xs leading-tight line-clamp-1">
                         {property.title}
                       </p>
-                      <p className="text-white font-bold text-sm mt-1">{formatted}</p>
-                      <p className="text-white/65 text-xs mt-0.5">{property.surface} m²</p>
+                      <p className="text-neutral-900 font-bold text-sm mt-1">{formatted}</p>
+                      <p className="text-neutral-500 text-xs mt-0.5">{property.surface} m²</p>
                     </div>
                   </div>
                 </Link>

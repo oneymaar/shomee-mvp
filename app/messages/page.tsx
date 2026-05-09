@@ -31,41 +31,37 @@ function ConversationRow({ conv }: { conv: Conversation }) {
   return (
     <button
       onClick={() => router.push(`/messages?bien=${conv.propertyId}`)}
-      className="w-full flex items-center gap-3 px-5 py-3.5 active:bg-white/4 transition-colors"
+      className="w-full flex items-center gap-3 px-5 py-3.5 active:bg-black/4 transition-colors"
     >
-      {/* Avatar */}
       <div className="relative shrink-0">
-        <div className="w-12 h-12 rounded-full bg-neutral-900 border border-white/15 overflow-hidden flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full bg-white border border-black/10 overflow-hidden flex items-center justify-center">
           {property.agentAvatar ? (
             <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
           ) : (
-            <span className="text-black font-bold text-sm">{property.agentName.charAt(0)}</span>
+            <span className="text-neutral-700 font-bold text-sm">{property.agentName.charAt(0)}</span>
           )}
         </div>
         {unread && (
-          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-black" />
+          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-[#f5f0e8]" />
         )}
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between gap-2">
-          <p className={`text-[14px] truncate ${unread ? 'text-white font-bold' : 'text-white font-semibold'}`}>
+          <p className={`text-[14px] truncate ${unread ? 'text-neutral-900 font-bold' : 'text-neutral-900 font-semibold'}`}>
             {property.agentName}
           </p>
           {lastMsg && (
-            <span className={`text-[11px] shrink-0 ${unread ? 'text-white font-bold' : 'text-white/65'}`}>
+            <span className={`text-[11px] shrink-0 ${unread ? 'text-neutral-900 font-bold' : 'text-neutral-400'}`}>
               {formatTime(lastMsg.timestamp)}
             </span>
           )}
         </div>
-        {/* Property description: white, includes surface + price */}
-        <p className="text-white text-[12px] truncate">
+        <p className="text-neutral-600 text-[12px] truncate">
           {formatLocation(property.arrondissement, property.district)} · {property.surface}m² · {formattedPrice} €
         </p>
-        {/* Last message preview */}
         {preview && (
-          <p className={`text-[13px] truncate mt-0.5 ${unread ? 'text-white font-semibold' : 'text-white/50 font-normal'}`}>
+          <p className={`text-[13px] truncate mt-0.5 ${unread ? 'text-neutral-800 font-semibold' : 'text-neutral-400 font-normal'}`}>
             {preview}
           </p>
         )}
@@ -78,22 +74,22 @@ function MessagesEmpty() {
   return (
     <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'var(--nav-h)' }}>
       <div
-        className="sticky top-0 z-10 bg-black border-b border-white/8 px-5 pb-4"
-        style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+        className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
+        style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
       >
-        <h1 className="text-white font-bold text-xl tracking-tight">Messages</h1>
-        <p className="text-white/65 text-xs mt-0.5">Vos échanges avec les agents</p>
+        <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Messages</h1>
+        <p className="text-neutral-500 text-xs mt-0.5">Vos échanges avec les agents</p>
       </div>
       <div
         className="flex flex-col items-center justify-center gap-4 px-8 text-center"
         style={{ minHeight: 'calc(100dvh - 180px)' }}
       >
-        <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-          <MessageCircle size={28} className="text-white/55" />
+        <div className="w-16 h-16 rounded-full bg-black/5 border border-black/8 flex items-center justify-center">
+          <MessageCircle size={28} className="text-neutral-400" />
         </div>
         <div>
-          <p className="text-white/60 text-sm font-medium">Aucun message</p>
-          <p className="text-white/55 text-xs mt-1 leading-relaxed">
+          <p className="text-neutral-500 text-sm font-medium">Aucun message</p>
+          <p className="text-neutral-400 text-xs mt-1 leading-relaxed">
             Vos échanges avec les agents<br />apparaîtront ici.
           </p>
         </div>
@@ -113,17 +109,17 @@ function MessagesList() {
   return (
     <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'var(--nav-h)' }}>
       <div
-        className="sticky top-0 z-10 bg-black border-b border-white/8 px-5 pb-4"
-        style={{ paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+        className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
+        style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
       >
-        <h1 className="text-white font-bold text-xl tracking-tight">Messages</h1>
-        <p className="text-white/65 text-xs mt-0.5">Vos échanges avec les agents</p>
+        <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Messages</h1>
+        <p className="text-neutral-500 text-xs mt-0.5">Vos échanges avec les agents</p>
       </div>
       <div>
         {sorted.map((conv, i) => (
           <div key={conv.propertyId}>
             <ConversationRow conv={conv} />
-            {i < sorted.length - 1 && <div className="mx-5 h-px bg-white/6" />}
+            {i < sorted.length - 1 && <div className="mx-5 h-px bg-black/6" />}
           </div>
         ))}
       </div>
