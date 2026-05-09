@@ -379,9 +379,10 @@ export default function PropertyDetailSheet({
                         <button
                           key={key}
                           onClick={() => setMediaTab(key)}
+                          style={mediaTab === key ? { backgroundColor: '#A9685E' } : {}}
                           className={clsx(
                             'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all',
-                            mediaTab === key ? 'bg-neutral-900 text-white' : 'text-neutral-500 border border-black/15',
+                            mediaTab === key ? 'text-white' : 'text-neutral-500 border border-black/15',
                           )}
                         >
                           <Icon size={15} />
@@ -637,7 +638,7 @@ export default function PropertyDetailSheet({
                   style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
                 >
                   {/* Left pill — 3 CTAs */}
-                  <div className="flex-1 bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
+                  <div className="flex-1 rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden" style={{ backgroundColor: '#A9685E' }}>
                     {[
                       { icon: MessageCircle, label: 'Message', onClick: onMessage },
                       { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = 'tel:+33670744935' } },
@@ -654,7 +655,7 @@ export default function PropertyDetailSheet({
                   </div>
 
                   {/* Right pill — Like + Share */}
-                  <div className="bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden px-1">
+                  <div className="rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden px-1" style={{ backgroundColor: '#A9685E' }}>
                     <button
                       onClick={onToggleFavorite}
                       className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"
