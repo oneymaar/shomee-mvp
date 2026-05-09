@@ -245,6 +245,7 @@ export default function FeedPage() {
                 property={property}
                 onMore={() => setDetailProperty(property)}
                 matchScore={Math.max(80, 95 - propIndex * 4)}
+                isActive={isActive}
               />
               <ActionRail
                 property={property}

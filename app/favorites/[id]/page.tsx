@@ -136,6 +136,7 @@ export default function FavoritesFeedPage({ params }: Props) {
                 property={property}
                 onMore={() => setDetailProperty(property)}
                 matchScore={Math.max(80, 95 - index * 4)}
+                isActive={isActive}
               />
               <ActionRail
                 property={property}

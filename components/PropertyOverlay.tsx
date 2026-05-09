@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ChevronDown, MapPin, Check, Home, Sparkles } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronDown, MapPin, Check, Home } from 'lucide-react'
 import type { Property } from '@/lib/types'
 import { formatLocation } from '@/lib/format'
 
@@ -10,6 +10,7 @@ interface PropertyOverlayProps {
   onMore?: () => void
   agencyTopOffset?: number
   matchScore?: number
+  isActive?: boolean
 }
 
 const BADGE_STYLES = {
@@ -23,69 +24,60 @@ const BADGE_STYLES = {
   },
 } as const
 
-function MatchBadge({ score, gradId }: { score: number; gradId: string }) {
-  const [animated, setAnimated] = useState(false)
+function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
+  const [displayScore, setDisplayScore] = useState(0)
+  const rafRef = useRef<number>(0)
 
   useEffect(() => {
-    setAnimated(false)
-    const t = setTimeout(() => setAnimated(true), 120)
-    return () => clearTimeout(t)
-  }, [score])
+    if (!isActive) return
+    // Reset and animate when card becomes active
+    setDisplayScore(0)
+    const duration = 2000
+    const start = performance.now()
 
-  // r=40, strokeW=8, container=60px → scale=0.6
-  // arc outer edge = (40+4)*0.6 = 26.4px from center = 3.6px from edge ✓
-  // arc inner edge = (40-4)*0.6 = 21.6px from center = 8.4px from edge
-  // → innerInset=9px keeps cream circle well inside the arc
-  const r = 40
-  const strokeW = 8
-  const circumference = 2 * Math.PI * r  // ≈ 251.3
-  const targetOffset = circumference * (1 - score / 100)
-  const currentOffset = animated ? targetOffset : circumference
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const t = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplayScore(Math.round(eased * score))
+      if (t < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [isActive, score])
 
   return (
-    <div className="relative shrink-0 drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]" style={{ width: 60, height: 60 }}>
-      {/* SVG gauge */}
-      <svg
-        viewBox="0 0 100 100"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-      >
-        <defs>
-          <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1="5" y1="5" x2="95" y2="95">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#14b8a6" />
-          </linearGradient>
-        </defs>
-        {/* Track */}
-        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(0,0,0,0.10)" strokeWidth={strokeW} />
-        {/* Progress arc — starts at 12h (rotate -90°), fills CW */}
-        <circle
-          cx="50" cy="50" r={r}
-          fill="none"
-          stroke={`url(#${gradId})`}
-          strokeWidth={strokeW}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={currentOffset}
-          transform="rotate(-90 50 50)"
-          style={{ transition: animated ? 'stroke-dashoffset 1.1s cubic-bezier(0.4, 0, 0.2, 1)' : 'none' }}
-        />
-      </svg>
-
-      {/* Cream inner circle — inset must be > stroke outer edge in px */}
-      <div className="absolute rounded-full" style={{ inset: 9, backgroundColor: '#f5f0e8', zIndex: 1 }} />
-
+    <div
+      className="relative shrink-0 drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]"
+      style={{ width: 58, height: 58 }}
+    >
+      {/* Outer ring — conic-gradient gauge, clearly OUTSIDE inner circle */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `conic-gradient(from -90deg, #3b82f6 0%, #6366f1 ${displayScore / 2}%, #14b8a6 ${displayScore}%, rgba(0,0,0,0.10) ${displayScore}% 100%)`,
+        }}
+      />
+      {/* Inner cream circle — 7px ring visible */}
+      <div
+        className="absolute rounded-full"
+        style={{ inset: 7, backgroundColor: '#f5f0e8' }}
+      />
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ zIndex: 2, gap: 1 }}>
-        <Sparkles size={12} strokeWidth={1.8} style={{ color: '#3b82f6' }} />
-        <span style={{ color: '#914E3C', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>{score}%</span>
-        <span style={{ color: '#914E3C', fontWeight: 700, fontSize: 7, letterSpacing: '0.07em', lineHeight: 1.2 }}>MATCH</span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ gap: 2 }}>
+        <span style={{ color: '#914E3C', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>
+          {displayScore}%
+        </span>
+        <span style={{ color: '#914E3C', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1 }}>
+          MATCH
+        </span>
       </div>
     </div>
   )
 }
 
-export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0, matchScore }: PropertyOverlayProps) {
+export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0, matchScore, isActive = false }: PropertyOverlayProps) {
   return (
     <>
       {/* ── Top — agency ── */}
@@ -105,13 +97,11 @@ export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0,
         </div>
       </div>
 
-      {/* ── Bottom — info + match score ── */}
+      {/* ── Bottom ── */}
       <div className="absolute left-0 right-0 z-20 px-3" style={{ bottom: 'calc(var(--nav-h) + 24px)' }}>
-
-        {/* Row: text content + match badge */}
         <div className="flex items-end gap-3">
 
-          {/* Left — text stack */}
+          {/* Left — text stack + Voir l'annonce at bottom */}
           <div className="flex-1 min-w-0">
 
             {/* Badges */}
@@ -147,7 +137,7 @@ export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0,
             {/* Criteria */}
             {property.features && property.features.filter(f => f !== 'Cave').length > 0 && (
               <div
-                className="flex items-center gap-x-3 overflow-hidden"
+                className="flex items-center gap-x-3 overflow-hidden mb-1"
                 style={{ maxHeight: '1.4em', maskImage: 'linear-gradient(to right, black 85%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)' }}
               >
                 {property.features.filter(f => f !== 'Cave').map(f => (
@@ -158,21 +148,21 @@ export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0,
                 ))}
               </div>
             )}
+
+            {/* Voir l'annonce — bottom of left column, aligns with badge */}
+            {onMore && (
+              <button onClick={onMore} className="flex items-center gap-0.5">
+                <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
+                <ChevronDown size={14} className="text-white mt-px" />
+              </button>
+            )}
           </div>
 
-          {/* Right — match gauge badge */}
+          {/* Right — match gauge badge, bottom-aligned with left column */}
           {matchScore !== undefined && (
-            <MatchBadge score={matchScore} gradId={`gauge-${property.id}`} />
+            <MatchBadge score={matchScore} isActive={isActive} />
           )}
         </div>
-
-        {/* Voir l'annonce — own line, left-aligned */}
-        {onMore && (
-          <button onClick={onMore} className="flex items-center gap-0.5 mt-1.5">
-            <span className="text-white text-[14px] font-semibold underline underline-offset-2">Voir l'annonce</span>
-            <ChevronDown size={14} className="text-white mt-px" />
-          </button>
-        )}
       </div>
     </>
   )
