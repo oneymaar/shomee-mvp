@@ -13,6 +13,17 @@ export default function SplashPage() {
   const navigateToFeed = () => setExiting(true)
 
   useEffect(() => {
+    // Match body + theme-color to splash background so safe-area zone is terracotta
+    document.body.style.backgroundColor = '#914E3C'
+    const themeMeta = document.querySelector('meta[name="theme-color"]')
+    if (themeMeta) themeMeta.setAttribute('content', '#914E3C')
+    return () => {
+      document.body.style.backgroundColor = '#f5f0e8'
+      if (themeMeta) themeMeta.setAttribute('content', '#000000')
+    }
+  }, [])
+
+  useEffect(() => {
     const isStandalone =
       (window.navigator as any).standalone === true ||
       window.matchMedia('(display-mode: standalone)').matches
