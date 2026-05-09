@@ -56,7 +56,7 @@ function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
       <div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `conic-gradient(from -90deg, #3b82f6 0%, #6366f1 ${displayScore / 2}%, #14b8a6 ${displayScore}%, rgba(0,0,0,0.10) ${displayScore}% 100%)`,
+          background: `conic-gradient(from 0deg, #3b82f6 0%, #6366f1 ${displayScore / 2}%, #14b8a6 ${displayScore}%, rgba(0,0,0,0.10) ${displayScore}% 100%)`,
         }}
       />
       {/* Inner cream circle — 7px ring visible */}
