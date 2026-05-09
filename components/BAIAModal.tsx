@@ -2,7 +2,9 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Send, ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Send } from 'lucide-react'
+
+const CREAM = '#f5f0e8'
 
 interface BAIAModalProps {
   open: boolean
@@ -24,9 +26,9 @@ const BAIA_REPLIES = [
 ]
 
 const EXAMPLE_QUESTIONS = [
-  'Appartement 3 pièces lumineux dans le 18e…',
-  'Budget maximum 800 000 €, terrasse obligatoire…',
-  'Quelle est la tendance des prix dans ce secteur ?',
+  'Ce bien correspond-il à mes critères ?',
+  'Quels transports se trouvent à proximité ?',
+  'Comment se comporte le marché dans ce quartier ?',
 ]
 
 export default function BAIAModal({ open, onClose }: BAIAModalProps) {
@@ -43,8 +45,6 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
       setText('')
       setIsTyping(false)
       replyIdxRef.current = 0
-    } else {
-      setTimeout(() => textareaRef.current?.focus(), 350)
     }
   }, [open])
 
@@ -89,45 +89,62 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
       {open && (
         <motion.div
           key="baia-modal"
-          className="absolute inset-0 z-50 flex flex-col"
-          style={{ backgroundColor: '#f5f0e8' }}
+          className="absolute inset-0 z-[60] flex flex-col"
+          style={{ backgroundColor: CREAM }}
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
         >
-          {/* ── Header ── */}
-          <div
-            className="shrink-0 flex items-center justify-between px-4 border-b border-black/8"
-            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: 12 }}
-          >
+          {/* ── Header — uniquement en mode conversation ── */}
+          <AnimatePresence>
+            {hasMessages && (
+              <motion.div
+                key="baia-header"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="shrink-0 flex items-center justify-between px-4 border-b border-black/8"
+                style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)', paddingBottom: 12, backgroundColor: CREAM }}
+              >
+                <button onClick={onClose} className="w-9 h-9 flex items-center justify-center text-neutral-500">
+                  <ChevronLeft size={22} />
+                </button>
+                <div className="flex items-center gap-2">
+                  <img src="/Baia couleur 2.png" alt="BAIA" className="w-5 h-5 object-contain" />
+                  <span className="text-neutral-800 font-semibold text-[15px]">BAIA</span>
+                </div>
+                <div className="w-9" />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Bouton fermer en mode onboarding ── */}
+          {!hasMessages && (
             <button
               onClick={onClose}
-              className="w-9 h-9 flex items-center justify-center text-neutral-500"
+              className="absolute left-4 z-10 w-9 h-9 flex items-center justify-center text-neutral-500"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
             >
               <ChevronLeft size={22} />
             </button>
-            <div className="flex items-center gap-2">
-              <img src="/Baia couleur 2.png" alt="BAIA" className="w-5 h-5 object-contain" />
-              <span className="text-neutral-800 font-semibold text-[15px]">BAIA</span>
-            </div>
-            <div className="w-9" />
-          </div>
+          )}
 
           {/* ── Messages ── */}
           <div className="flex-1 overflow-y-auto px-5 flex flex-col scrollbar-hide">
 
-            {/* Empty state — logo + greeting + examples */}
+            {/* Onboarding — logo + greeting + exemples */}
             {!hasMessages && (
-              <div className="flex-1 flex flex-col items-center justify-center pb-8 gap-5">
+              <div className="flex-1 flex flex-col items-center justify-center pb-6 gap-6">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: 0.05 }}
-                  className="flex flex-col items-center gap-3"
+                  className="flex flex-col items-center gap-4"
                 >
                   <img src="/Baia couleur 2.png" alt="BAIA" className="w-16 h-16 object-contain" />
-                  <p className="text-neutral-800 font-semibold text-[18px] text-center leading-snug max-w-[260px]">
+                  <p className="text-neutral-800 font-semibold text-[24px] text-center leading-snug max-w-[280px]">
                     Bonjour Olivier, comment puis-je vous aider ?
                   </p>
                 </motion.div>
@@ -136,13 +153,13 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, delay: 0.18 }}
-                  className="flex flex-col gap-2 w-full"
+                  className="flex flex-col gap-3 w-full items-center"
                 >
                   {EXAMPLE_QUESTIONS.map((q) => (
                     <button
                       key={q}
                       onClick={() => send(q)}
-                      className="text-left text-neutral-400 text-[14px] leading-snug active:text-neutral-600 transition-colors"
+                      className="text-center text-neutral-400 text-[14px] leading-snug active:text-neutral-600 transition-colors"
                     >
                       {q}
                     </button>
@@ -151,7 +168,7 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
               </div>
             )}
 
-            {/* Bubbles */}
+            {/* Bulles de conversation */}
             {hasMessages && (
               <div className="flex flex-col gap-3 pt-4">
                 {messages.map((msg) => {
@@ -180,7 +197,6 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
                   )
                 })}
 
-                {/* Typing indicator */}
                 <AnimatePresence>
                   {isTyping && (
                     <motion.div
@@ -212,14 +228,18 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
             {!hasMessages && <div ref={bottomRef} />}
           </div>
 
-          {/* ── Input bar ── */}
+          {/* ── Input bar — fond crème, barre blanche ── */}
           <div
-            className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-black/8 bg-white"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
+            className="shrink-0 flex items-end gap-2.5 px-4 pt-3"
+            style={{
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+              backgroundColor: CREAM,
+            }}
           >
-            <div className="flex-1 bg-neutral-100 rounded-[20px] px-4 py-2.5 flex items-end gap-2">
+            <div className="flex-1 bg-white rounded-[20px] px-4 py-2.5 shadow-sm">
               <textarea
                 ref={textareaRef}
+                autoFocus
                 value={text}
                 onChange={handleTextChange}
                 onKeyDown={(e) => {
@@ -228,16 +248,16 @@ export default function BAIAModal({ open, onClose }: BAIAModalProps) {
                 rows={1}
                 placeholder="Posez votre question..."
                 style={{ resize: 'none', overflowY: 'auto', maxHeight: '120px' }}
-                className="flex-1 bg-transparent text-neutral-900 text-[14px] placeholder:text-neutral-400 outline-none leading-snug block"
+                className="w-full bg-transparent text-neutral-900 text-[14px] placeholder:text-neutral-400 outline-none leading-snug block"
               />
             </div>
             <button
               onClick={sendText}
               className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
-                text.trim() ? 'bg-neutral-900' : 'bg-neutral-200'
+                text.trim() ? 'bg-neutral-900' : 'bg-black/15'
               }`}
             >
-              <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-white' : 'text-neutral-400'} />
+              <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-white' : 'text-neutral-500'} />
             </button>
           </div>
         </motion.div>

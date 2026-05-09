@@ -122,7 +122,7 @@ const TRANSPORT_LABELS = { metro: 'Métro', rer: 'RER', tramway: 'Tramway', bus:
 function TransportItem({ line }: { line: string }) {
   const p = parseLine(line)
   return (
-    <div className="flex items-center gap-2.5 py-2 border-b border-neutral-200 last:border-0">
+    <div className="flex items-center gap-2.5 py-2 border-b border-black/8 last:border-0">
       <div
         className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-black text-[10px] leading-none"
         style={{ backgroundColor: p.color, color: p.darkText ? '#000' : '#fff' }}
@@ -141,7 +141,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function GreyBox({ children, className, style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div className={clsx('bg-neutral-100 border border-neutral-200 rounded-2xl', className)} style={style}>
+    <div className={clsx('bg-white border border-black/8 rounded-2xl', className)} style={style}>
       {children}
     </div>
   )
@@ -149,7 +149,7 @@ function GreyBox({ children, className, style }: { children: React.ReactNode; cl
 
 function TableRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between py-2.5 border-b border-neutral-200 last:border-0 gap-4">
+    <div className="flex items-start justify-between py-2.5 border-b border-black/8 last:border-0 gap-4">
       <span className="text-neutral-500 text-sm shrink-0">{label}</span>
       <span className="text-neutral-900 text-sm font-medium text-right">{value}</span>
     </div>
@@ -366,7 +366,7 @@ export default function PropertyDetailSheet({
               </div>
 
               {/* ── CONTENT AREA ──────────────────────────────────────── */}
-              <div className="flex-1 relative overflow-hidden bg-white">
+              <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
 
                 {/* Scrollable body */}
                 <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 96 }}>
@@ -380,7 +380,7 @@ export default function PropertyDetailSheet({
                           onClick={() => setMediaTab(key)}
                           className={clsx(
                             'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all',
-                            mediaTab === key ? 'bg-neutral-900 text-white' : 'text-neutral-500 border border-neutral-300',
+                            mediaTab === key ? 'bg-neutral-900 text-white' : 'text-neutral-500 border border-black/15',
                           )}
                         >
                           <Icon size={15} />
@@ -570,7 +570,7 @@ export default function PropertyDetailSheet({
                         <SectionTitle>Composition</SectionTitle>
                         <GreyBox className="px-4 py-1">
                           {property.composition.map(({ label, surface }) => (
-                            <div key={label} className="flex items-center justify-between py-2.5 border-b border-neutral-200 last:border-0">
+                            <div key={label} className="flex items-center justify-between py-2.5 border-b border-black/8 last:border-0">
                               <span className="text-neutral-500 text-sm">{label}</span>
                               <span className="text-neutral-900 text-sm font-semibold">{surface} m²</span>
                             </div>
@@ -588,7 +588,7 @@ export default function PropertyDetailSheet({
                             <span className="text-neutral-900 font-black text-xl">{fmtPrice} €</span>
                             {fmtPpm && <span className="text-neutral-500 text-xs">{fmtPpm} €/m²</span>}
                           </div>
-                          <div className="h-px bg-neutral-200 my-3" />
+                          <div className="h-px bg-black/8 my-3" />
                           <div className="flex flex-col gap-2.5">
                             <div className="flex justify-between items-center">
                               <span className="text-neutral-500 text-sm">Prix moyen secteur</span>
