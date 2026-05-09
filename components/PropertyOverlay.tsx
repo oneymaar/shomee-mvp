@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronDown, MapPin, Check, Home } from 'lucide-react'
+import { ChevronDown, MapPin, Check, Home, Sparkles } from 'lucide-react'
 import type { Property } from '@/lib/types'
 import { formatLocation } from '@/lib/format'
 
@@ -21,6 +21,58 @@ const BADGE_STYLES = {
     className: 'bg-violet-400/15 border border-violet-300/35 text-violet-200',
   },
 } as const
+
+function MatchBadge({ score, gradId }: { score: number; gradId: string }) {
+  const r = 42
+  const strokeW = 7
+  const circumference = 2 * Math.PI * r
+  const dashoffset = circumference * (1 - score / 100)
+  // Inner cream circle sits inside the stroke: stroke outer edge = r + strokeW/2
+  // Rendered size 56px, viewBox 100 → 1 SVG unit = 0.56px
+  // Inner inset in px ≈ (strokeW/2 + 1) / 100 * 56 ≈ 2.5px → use 3px
+  const innerInset = 3
+
+  return (
+    <div className="relative shrink-0 drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]" style={{ width: 56, height: 56 }}>
+      {/* SVG gauge */}
+      <svg viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#14b8a6" />
+          </linearGradient>
+        </defs>
+        {/* Track */}
+        <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth={strokeW} />
+        {/* Progress arc — starts from top (12h) via rotate -90° */}
+        <circle
+          cx="50" cy="50" r={r}
+          fill="none"
+          stroke={`url(#${gradId})`}
+          strokeWidth={strokeW}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashoffset}
+          transform="rotate(-90 50 50)"
+        />
+      </svg>
+
+      {/* Cream inner circle */}
+      <div
+        className="absolute rounded-full"
+        style={{ inset: innerInset, backgroundColor: '#f5f0e8', zIndex: 1 }}
+      />
+
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ zIndex: 2, gap: 1 }}>
+        <Sparkles size={11} strokeWidth={1.8} style={{ color: '#3b82f6' }} />
+        <span style={{ color: '#914E3C', fontWeight: 900, fontSize: 14, lineHeight: 1 }}>{score}%</span>
+        <span style={{ color: '#914E3C', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1.2 }}>MATCH</span>
+      </div>
+    </div>
+  )
+}
 
 export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0, matchScore }: PropertyOverlayProps) {
   return (
@@ -97,16 +149,9 @@ export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0,
             )}
           </div>
 
-          {/* Right — match score badge */}
+          {/* Right — match gauge badge */}
           {matchScore !== undefined && (
-            <div
-              className="shrink-0 w-[50px] h-[50px] rounded-full flex flex-col items-center justify-center shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 55%, #ec4899 100%)' }}
-            >
-              <span className="text-white text-[9px] leading-none mb-0.5">✦</span>
-              <span className="text-white font-black text-[15px] leading-none">{matchScore}%</span>
-              <span className="text-white/75 text-[7px] leading-none mt-0.5 font-medium tracking-wide">match</span>
-            </div>
+            <MatchBadge score={matchScore} gradId={`gauge-${property.id}`} />
           )}
         </div>
 
