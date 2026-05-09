@@ -113,15 +113,6 @@ export default function PropertyOverlay({ property, onMore, onBaia, agencyTopOff
             )}
           </div>
 
-          {/* Right — BAIA */}
-          {onBaia && (
-            <button
-              onClick={onBaia}
-              className="shrink-0 active:scale-95 transition-transform"
-            >
-              <img src="/Baia couleur 2.png" alt="Baia" className="w-12 h-12 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.55)]" />
-            </button>
-          )}
         </div>
       </div>
     </>

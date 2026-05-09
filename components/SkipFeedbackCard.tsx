@@ -59,10 +59,6 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
 
       {/* Centered content */}
       <div className="relative z-10 flex flex-col h-full px-5 justify-center" style={{ paddingTop: '32px', paddingBottom: 'calc(var(--nav-h) + 32px)' }}>
-        {/* Header */}
-        <p className="text-neutral-400 text-xs font-semibold uppercase tracking-widest mb-2">
-          BAIA · Comprendre vos critères
-        </p>
         <h2 className="text-neutral-900 font-bold text-2xl leading-snug mb-6">
           Pourquoi ce bien n'a pas retenu votre attention&nbsp;?
         </h2>

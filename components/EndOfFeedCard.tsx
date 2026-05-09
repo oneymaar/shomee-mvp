@@ -176,7 +176,7 @@ export default function EndOfFeedCard({
                 transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               />
               <div className="text-center">
-                <p className="text-neutral-900 font-semibold text-base">BAIA relance la recherche…</p>
+                <p className="text-neutral-900 font-semibold text-base">La recherche est relancée</p>
                 <p className="text-neutral-500 text-sm mt-1.5">
                   Analyse des biens correspondant à vos nouveaux critères.
                 </p>
