@@ -298,7 +298,6 @@ export default function PropertyDetailSheet({
             <motion.div
               key="sheet-body"
               className="absolute inset-0 z-[70] flex flex-col bg-neutral-950 overflow-hidden"
-              style={{ backgroundClip: 'content-box', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 34px)' }}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -634,7 +633,7 @@ export default function PropertyDetailSheet({
                 {/* ── FLOATING PILLS ──────────────────────────────────── */}
                 {!hideBottomBar && <div
                   className="absolute left-0 right-0 px-3 flex gap-2 items-center z-20"
-                  style={{ bottom: 46, filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
+                  style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
                 >
                   {/* Left pill — 3 CTAs */}
                   <div className="flex-1 bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
