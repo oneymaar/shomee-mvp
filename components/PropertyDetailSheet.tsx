@@ -369,7 +369,7 @@ export default function PropertyDetailSheet({
               <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
 
                 {/* Scrollable body */}
-                <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 24 }}>
+                <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 96 }}>
 
                   {/* Media tabs + carousel */}
                   <div className="px-3 pt-3">
@@ -630,23 +630,20 @@ export default function PropertyDetailSheet({
                 </div>
 
 
-              </div>
-
-              {/* ── CTA BAR — ancrée en bas, fond noir descend jusqu'au bord ── */}
-              {!hideBottomBar && (
-                <div
-                  className="shrink-0 bg-neutral-900 px-3 pt-3 flex gap-2 items-center"
-                  style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 12px), 12px)' }}
+                {/* ── FLOATING PILLS ──────────────────────────────────── */}
+                {!hideBottomBar && <div
+                  className="absolute left-0 right-0 px-3 flex gap-2 items-center z-20"
+                  style={{ bottom: 'max(env(safe-area-inset-bottom, 12px), 12px)', filter: 'drop-shadow(0 -4px 20px rgba(0,0,0,0.5))' }}
                 >
                   {/* Left pill — 3 CTAs */}
-                  <div className="flex-1 bg-white/10 rounded-full flex items-center overflow-hidden">
+                  <div className="flex-1 bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden">
                     {[
                       { icon: MessageCircle, label: 'Message', onClick: onMessage },
                       { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = 'tel:+33670744935' } },
                       { icon: CalendarPlus, label: 'Visiter', onClick: undefined },
                     ].map(({ icon: Icon, label, onClick }, i, arr) => (
                       <div key={label} className="flex-1 flex items-center justify-center">
-                        <button onClick={onClick} className="flex flex-col items-center gap-0.5 flex-1 py-2.5 active:bg-white/10 transition-colors">
+                        <button onClick={onClick} className="flex flex-col items-center gap-0.5 flex-1 py-2.5 rounded-full active:bg-white/10 transition-colors">
                           <Icon size={18} strokeWidth={1.8} className="text-white" />
                           <span className="text-white text-[10px] font-semibold">{label}</span>
                         </button>
@@ -656,10 +653,10 @@ export default function PropertyDetailSheet({
                   </div>
 
                   {/* Right pill — Like + Share */}
-                  <div className="bg-white/10 rounded-full flex items-center overflow-hidden px-1">
+                  <div className="bg-neutral-900 rounded-full shadow-xl shadow-black/40 flex items-center overflow-hidden px-1">
                     <button
                       onClick={onToggleFavorite}
-                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 active:bg-white/10 transition-colors"
+                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"
                     >
                       <Heart size={18} strokeWidth={1.8} className={clsx(isFavorite ? 'fill-red-500 text-red-500' : 'text-white')} />
                       <span className="text-white text-[10px] font-semibold">{(property.likeCount ?? 0) + (isFavorite ? 1 : 0)}</span>
@@ -667,14 +664,15 @@ export default function PropertyDetailSheet({
                     <div className="w-px h-6 bg-white/20" />
                     <button
                       onClick={() => shareProperty(property)}
-                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 active:bg-white/10 transition-colors"
+                      className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"
                     >
                       <Share2 size={18} strokeWidth={1.8} className="text-white" />
                       <span className="text-white text-[10px] font-semibold">{property.shareCount ?? 0}</span>
                     </button>
                   </div>
-                </div>
-              )}
+                </div>}
+
+              </div>
             </motion.div>
           </>
         )}
