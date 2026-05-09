@@ -103,11 +103,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     const f = video.currentTime / video.duration
 
     const seek = (t: number) => {
-      if (typeof (video as HTMLVideoElement & { fastSeek?: (time: number) => void }).fastSeek === 'function') {
-        (video as HTMLVideoElement & { fastSeek: (time: number) => void }).fastSeek(t)
-      } else {
-        video.currentTime = t
-      }
+      video.currentTime = t
     }
 
     if (chapters && chapters.length >= 2) {
@@ -174,7 +170,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           onError={(e) => {
             ;(e.currentTarget as HTMLVideoElement).style.visibility = 'hidden'
           }}
