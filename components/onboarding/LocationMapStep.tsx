@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
-import { fetchParisGeoData, fetchParisIris, matchArrondissements, getChildQuartiers, getChildZones, type GeoZone } from '@/lib/services/geoDataService'
+import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { useSearchStore } from '@/lib/searchStore'
@@ -28,13 +28,14 @@ interface LocationMapStepProps {
 export default function LocationMapStep({ onValidate, onBack }: LocationMapStepProps) {
   const {
     locationQuery, locationLat, locationLng, locationIntent,
-    selectedArrIds, selectedQuartierIds, selectedIrisIds,
-    setLocation, setSelectedArrs, toggleArr, toggleQuartier, toggleIris,
+    selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds,
+    setLocation, setSelectedArrs, toggleArr, toggleQuartier, toggleIris, toggleCommune,
   } = useSearchStore()
 
   const [arrondissements, setArrondissements] = useState<GeoZone[]>([])
   const [quartiers, setQuartiers] = useState<GeoZone[]>([])
   const [iris, setIris] = useState<GeoZone[]>([])
+  const [communes, setCommunes] = useState<GeoZone[]>([])
   const [center, setCenter] = useState<[number, number]>(
     locationLat && locationLng ? [locationLat, locationLng] : PARIS_CENTER
   )
@@ -56,7 +57,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Lazy-load IRIS when user zooms in
+  // Lazy-load IRIS when user zooms in to level 15+
   useEffect(() => {
     if (zoom < 15 || irisLoading || iris.length > 0 || quartiersRef.current.length === 0) return
     loadIris()
@@ -68,8 +69,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     try {
       const zones = await fetchParisIris(quartiersRef.current)
       setIris(zones)
-
-      // Propagate existing quartier selection to newly loaded IRIS
+      // Propagate existing quartier selections to IRIS
       const { selectedQuartierIds: selQu } = useSearchStore.getState()
       if (selQu.length > 0) {
         const irisToSelect = zones.filter((i) => i.parentId && selQu.includes(i.parentId))
@@ -95,9 +95,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       const intent = locationIntent ?? parseLocationIntent(locationQuery)
       const primaryTerm = intent.location_terms[0] ?? locationQuery
 
-      const [geoData, geocodeResult] = await Promise.allSettled([
+      const [geoData, geocodeResult, communesResult] = await Promise.allSettled([
         fetchParisGeoData(),
         primaryTerm ? geocodeBest(primaryTerm) : Promise.resolve(null),
+        fetchSuburbanCommunes(),
       ])
 
       const { arrondissements: arrs, quartiers: qus } = geoData.status === 'fulfilled'
@@ -112,6 +113,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
       setArrondissements(arrs)
       setQuartiers(qus)
+
+      if (communesResult.status === 'fulfilled') {
+        setCommunes(communesResult.value)
+      }
 
       if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
         const geo = geocodeResult.value
@@ -155,29 +160,33 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
   const handleClickIris = useCallback((zone: GeoZone) => {
     if (!zone.parentId) return
-    const parentQuartierId = zone.parentId
-    const parentQuartier = quartiersRef.current.find((q) => q.id === parentQuartierId)
+    const parentQuartier = quartiersRef.current.find((q) => q.id === zone.parentId)
     if (!parentQuartier || !parentQuartier.parentId) return
     const parentArrId = parentQuartier.parentId
-    const allQuartierSiblingIds = iris.filter((i) => i.parentId === parentQuartierId).map((i) => i.id)
+    const allQuartierSiblingIds = iris.filter((i) => i.parentId === zone.parentId).map((i) => i.id)
     const allArrQuartierIds = getChildQuartiers(parentArrId, quartiersRef.current).map((q) => q.id)
-    toggleIris(zone.id, parentQuartierId, parentArrId, allQuartierSiblingIds, allArrQuartierIds)
+    toggleIris(zone.id, zone.parentId, parentArrId, allQuartierSiblingIds, allArrQuartierIds)
   }, [iris, toggleIris])
+
+  const handleClickCommune = useCallback((zone: GeoZone) => {
+    toggleCommune(zone.id)
+  }, [toggleCommune])
 
   const handleZoomChange = useCallback((z: number) => {
     setZoom(z)
   }, [])
 
-  // Build selection summary
+  // Selection summary
   const selectedArrs = arrondissements.filter((z) => selectedArrIds.includes(z.id))
   const partialArrs = arrondissements.filter((z) => {
     if (selectedArrIds.includes(z.id)) return false
     const childIds = getChildQuartiers(z.id, quartiers).map((q) => q.id)
     return childIds.some((id) => selectedQuartierIds.includes(id))
   })
+  const selectedCommunes = communes.filter((z) => selectedCommuneIds.includes(z.id))
 
-  const totalSelectedZones = selectedArrs.length + partialArrs.length
-  const canValidate = selectedArrIds.length > 0 || selectedQuartierIds.length > 0 || selectedIrisIds.length > 0
+  const totalSelectedZones = selectedArrs.length + partialArrs.length + selectedCommunes.length
+  const canValidate = selectedArrIds.length > 0 || selectedQuartierIds.length > 0 || selectedIrisIds.length > 0 || selectedCommuneIds.length > 0
 
   return (
     <div className="flex flex-col h-full">
@@ -200,7 +209,6 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         </div>
       </div>
 
-      {/* Location label */}
       {locationLabel && !loading && (
         <div className="flex-shrink-0 px-4 pb-2">
           <div
@@ -241,13 +249,16 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             arrondissements={arrondissements}
             quartiers={quartiers}
             iris={iris}
+            communes={communes}
             selectedArrIds={selectedArrIds}
             selectedQuartierIds={selectedQuartierIds}
             selectedIrisIds={selectedIrisIds}
+            selectedCommuneIds={selectedCommuneIds}
             irisLoading={irisLoading}
             onClickArr={handleClickArr}
             onClickQuartier={handleClickQuartier}
             onClickIris={handleClickIris}
+            onClickCommune={handleClickCommune}
             onZoomChange={handleZoomChange}
           />
         )}
@@ -271,8 +282,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold text-white active:opacity-75 transition-opacity"
                   style={{ backgroundColor: '#914E3C' }}
                 >
-                  {z.shortName}
-                  <span className="opacity-60 text-[9px] ml-0.5">✕</span>
+                  {z.shortName} <span className="opacity-60 text-[9px] ml-0.5">✕</span>
                 </button>
               ))}
               {partialArrs.map((z) => (
@@ -282,8 +292,17 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-75 transition-opacity border"
                   style={{ backgroundColor: 'rgba(145,78,60,0.1)', color: '#914E3C', borderColor: 'rgba(145,78,60,0.3)' }}
                 >
-                  {z.shortName} ~
-                  <span className="opacity-60 text-[9px] ml-0.5">✕</span>
+                  {z.shortName} ~ <span className="opacity-60 text-[9px] ml-0.5">✕</span>
+                </button>
+              ))}
+              {selectedCommunes.map((z) => (
+                <button
+                  key={z.id}
+                  onClick={() => handleClickCommune(z)}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold text-white active:opacity-75 transition-opacity"
+                  style={{ backgroundColor: '#914E3C' }}
+                >
+                  {z.shortName} <span className="opacity-60 text-[9px] ml-0.5">✕</span>
                 </button>
               ))}
             </motion.div>
@@ -322,7 +341,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           Valider ma zone
           {canValidate && (
             <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">
-              {selectedArrIds.length + partialArrs.length}
+              {selectedArrIds.length + partialArrs.length + selectedCommuneIds.length}
             </span>
           )}
         </button>

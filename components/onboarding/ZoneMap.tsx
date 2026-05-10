@@ -9,7 +9,7 @@ import type { GeoZone } from '@/lib/services/geoDataService'
 
 type ZoneState = 'unselected' | 'selected' | 'partial'
 
-function arrStyle(state: ZoneState): L.PathOptions {
+function topLevelStyle(state: ZoneState): L.PathOptions {
   switch (state) {
     case 'selected':  return { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.16, weight: 2.5, opacity: 0.9 }
     case 'partial':   return { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.05, weight: 2, opacity: 0.55, dashArray: '7 4' }
@@ -81,7 +81,6 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
   const cfgRef = useRef(cfg)
   cfgRef.current = cfg
 
-  // Build layer when zones change
   useEffect(() => {
     layerRef.current?.remove()
     labelsRef.current.forEach((m) => m.remove())
@@ -116,7 +115,6 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.zones, map])
 
-  // Update styles + labels when selection changes
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
@@ -129,7 +127,6 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     refreshLabels(layer, cfgRef.current.zones)
   })
 
-  // Toggle visibility
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
@@ -169,12 +166,15 @@ interface GeoLayersProps {
   arrondissements: GeoZone[]
   quartiers: GeoZone[]
   iris: GeoZone[]
+  communes: GeoZone[]
   selectedArrIds: string[]
   selectedQuartierIds: string[]
   selectedIrisIds: string[]
+  selectedCommuneIds: string[]
   onClickArr: (z: GeoZone) => void
   onClickQuartier: (z: GeoZone) => void
   onClickIris: (z: GeoZone) => void
+  onClickCommune: (z: GeoZone) => void
   irisLoading: boolean
   onZoomChange: (z: number) => void
 }
@@ -205,7 +205,6 @@ function computeQuartierState(id: string, allIris: GeoZone[], state: { selectedQ
 
 function GeoLayers(props: GeoLayersProps) {
   const map = useMap()
-  // Track live zoom directly from the Leaflet map — no parent prop needed
   const [zoom, setZoom] = useState(map.getZoom())
 
   useMapEvents({
@@ -216,20 +215,30 @@ function GeoLayers(props: GeoLayersProps) {
     },
   })
 
-  const { arrondissements, quartiers, iris, selectedArrIds, selectedQuartierIds, selectedIrisIds, onClickArr, onClickQuartier, onClickIris, irisLoading } = props
+  const { arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, onClickArr, onClickQuartier, onClickIris, onClickCommune, irisLoading } = props
   const sel = { selectedArrIds, selectedQuartierIds, selectedIrisIds }
 
-  const showArr = zoom <= 13
+  // Exclusive zoom ranges — only one level visible at a time
+  const showTopLevel = zoom < 12   // arrondissements + communes
   const showQuartier = zoom >= 12 && zoom < 15
   const showIris = zoom >= 15 && !irisLoading
 
   useGeoLayer(map, {
     zones: arrondissements,
-    getPathStyle: (z) => arrStyle(computeArrState(z.id, quartiers, iris, sel)),
+    getPathStyle: (z) => topLevelStyle(computeArrState(z.id, quartiers, iris, sel)),
     getLabelState: (z) => computeArrState(z.id, quartiers, iris, sel),
     fontSize: 11,
     onClick: onClickArr,
-    visible: showArr,
+    visible: showTopLevel,
+  })
+
+  useGeoLayer(map, {
+    zones: communes,
+    getPathStyle: (z) => topLevelStyle(selectedCommuneIds.includes(z.id) ? 'selected' : 'unselected'),
+    getLabelState: (z) => selectedCommuneIds.includes(z.id) ? 'selected' : 'unselected',
+    fontSize: 10,
+    onClick: onClickCommune,
+    visible: showTopLevel,
   })
 
   useGeoLayer(map, {
@@ -263,11 +272,11 @@ function MapController({ center }: { center: [number, number] }) {
     const key = `${center[0].toFixed(4)},${center[1].toFixed(4)}`
     if (prevCenter.current === null) {
       prevCenter.current = key
-      return // first render — MapContainer already positioned correctly
+      return
     }
     if (prevCenter.current === key) return
     prevCenter.current = key
-    map.flyTo(center, map.getZoom(), { duration: 0.8 }) // preserve user's current zoom
+    map.flyTo(center, map.getZoom(), { duration: 0.8 })
   }, [center, map])
 
   return null
@@ -277,21 +286,24 @@ function MapController({ center }: { center: [number, number] }) {
 
 export interface ZoneMapProps {
   center: [number, number]
-  zoom: number           // initial zoom only — not tracked after mount
+  zoom: number
   arrondissements: GeoZone[]
   quartiers: GeoZone[]
   iris: GeoZone[]
+  communes: GeoZone[]
   selectedArrIds: string[]
   selectedQuartierIds: string[]
   selectedIrisIds: string[]
+  selectedCommuneIds: string[]
   irisLoading: boolean
   onClickArr: (z: GeoZone) => void
   onClickQuartier: (z: GeoZone) => void
   onClickIris: (z: GeoZone) => void
+  onClickCommune: (z: GeoZone) => void
   onZoomChange: (z: number) => void
 }
 
-export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris, selectedArrIds, selectedQuartierIds, selectedIrisIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onZoomChange }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onZoomChange }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -305,12 +317,15 @@ export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris
         arrondissements={arrondissements}
         quartiers={quartiers}
         iris={iris}
+        communes={communes}
         selectedArrIds={selectedArrIds}
         selectedQuartierIds={selectedQuartierIds}
         selectedIrisIds={selectedIrisIds}
+        selectedCommuneIds={selectedCommuneIds}
         onClickArr={onClickArr}
         onClickQuartier={onClickQuartier}
         onClickIris={onClickIris}
+        onClickCommune={onClickCommune}
         irisLoading={irisLoading}
         onZoomChange={onZoomChange}
       />

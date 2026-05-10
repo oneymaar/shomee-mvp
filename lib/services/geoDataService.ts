@@ -1,20 +1,18 @@
 /**
- * GeoDataService — real administrative polygon data for Paris.
+ * GeoDataService — administrative polygon data for Paris + Île-de-France suburbs.
  *
- * Level 1: Arrondissements (20)  — opendata.paris.fr
- * Level 2: Quartiers admin (80)  — opendata.paris.fr
- * Level 3: IRIS zones (~992)     — public.opendatasoft.com (called "secteurs" in UI)
- *
- * IRIS → quartier mapping uses point-in-polygon (centroid of IRIS vs quartier polygons).
- * Architecture is ready for IGN/INSEE IRIS shapefile ingestion by replacing the fetch URL.
+ * Level 1 (Paris):    Arrondissements (20)       — opendata.paris.fr
+ * Level 1 (suburbs):  Communes (92/93/94)        — geo.api.gouv.fr
+ * Level 2:            Quartiers admin (80)        — opendata.paris.fr
+ * Level 3:            IRIS zones (~992)           — public.opendatasoft.com
  */
 
 export interface GeoZone {
   id: string
   name: string
   shortName: string
-  type: 'arrondissement' | 'quartier' | 'iris'
-  parentId: string | null   // arr-X for quartier; qu-X for iris
+  type: 'arrondissement' | 'quartier' | 'iris' | 'commune'
+  parentId: string | null
   feature: GeoJSON.Feature
 }
 
@@ -22,15 +20,17 @@ const cache: {
   arrondissements: GeoZone[] | null
   quartiers: GeoZone[] | null
   iris: GeoZone[] | null
-} = { arrondissements: null, quartiers: null, iris: null }
+  communes: GeoZone[] | null
+} = { arrondissements: null, quartiers: null, iris: null, communes: null }
 
 const ARRONDISSEMENTS_URL =
   'https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/arrondissements/exports/geojson?lang=fr'
 const QUARTIERS_URL =
   'https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/quartier_paris/exports/geojson?lang=fr'
-// opendatasoft — Paris IRIS zones (all of dep 75, ~992 features, CORS open)
 const IRIS_URL =
   'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/georef-france-iris/exports/geojson?where=dep_code%3D%2275%22&limit=2000&lang=fr'
+const COMMUNES_DEPT_URL = (dept: string) =>
+  `https://geo.api.gouv.fr/communes?codeDepartement=${dept}&format=geojson&geometry=contour`
 
 // ─── Point-in-polygon ──────────────────────────────────────────────────────
 
@@ -111,12 +111,10 @@ function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[]): GeoZone | null {
   const irisName = val(p.iris_name) || `Secteur ${irisCode.slice(-4)}`
   const id = `iris-${irisCode}`
 
-  // Find parent quartier via point-in-polygon
   const geom = f.geometry
   const [cLng, cLat] = polygonCentroid(geom)
   let parentId: string | null = null
 
-  // Search only in quartiers belonging to this arrondissement (faster)
   const arrQuartiers = quartiers.filter((q) => q.parentId === `arr-${arrNum}`)
   for (const q of arrQuartiers) {
     if (polygonContainsPoint(q.feature.geometry, cLng, cLat)) {
@@ -124,7 +122,6 @@ function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[]): GeoZone | null {
       break
     }
   }
-  // Fallback to arrondissement if no quartier found
   if (!parentId) parentId = `arr-${arrNum}`
 
   return {
@@ -134,6 +131,22 @@ function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[]): GeoZone | null {
     type: 'iris',
     parentId,
     feature: { ...f, properties: { ...p, _zoneId: id, _parentId: parentId } },
+  }
+}
+
+function parseCommune(f: GeoJSON.Feature): GeoZone | null {
+  const p = f.properties ?? {}
+  const code = String(p.code ?? p.insee ?? '')
+  const name = String(p.nom ?? '')
+  if (!code || !name) return null
+  const id = `com-${code}`
+  // Short name: up to 2 hyphen-separated parts, max 16 chars
+  const shortName = name.length > 16 ? name.split('-').slice(0, 2).join('-') : name
+  return {
+    id, name, shortName,
+    type: 'commune',
+    parentId: null,
+    feature: { ...f, properties: { ...p, _zoneId: id } },
   }
 }
 
@@ -180,6 +193,26 @@ export async function fetchParisIris(quartiers: GeoZone[]): Promise<GeoZone[]> {
     .filter((z): z is GeoZone => z !== null)
     .sort((a, b) => a.id.localeCompare(b.id))
   cache.iris = zones
+  return zones
+}
+
+/** Communes from departments 92/93/94 (Hauts-de-Seine, Seine-Saint-Denis, Val-de-Marne) */
+export async function fetchSuburbanCommunes(): Promise<GeoZone[]> {
+  if (cache.communes) return cache.communes
+  const depts = ['92', '93', '94']
+  const results = await Promise.allSettled(
+    depts.map((d) => fetchGeoJSON(COMMUNES_DEPT_URL(d), 15000))
+  )
+  const zones: GeoZone[] = []
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue
+    for (const f of r.value.features as GeoJSON.Feature[]) {
+      const z = parseCommune(f)
+      if (z) zones.push(z)
+    }
+  }
+  zones.sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  cache.communes = zones
   return zones
 }
 

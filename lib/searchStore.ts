@@ -27,6 +27,7 @@ export interface SearchPreferences {
   selectedArrIds: string[]
   selectedQuartierIds: string[]
   selectedIrisIds: string[]
+  selectedCommuneIds: string[]
   budgetMax: number | null
   propertyTypes: PropertyType[]
   minRooms: number | null
@@ -46,6 +47,8 @@ interface SearchStore extends SearchPreferences {
   toggleQuartier: (id: string, parentArrId: string, allSiblingIds: string[], childIrisIds: string[]) => void
   /** Toggle individual IRIS zone: propagates partial state up through quartier → arrondissement */
   toggleIris: (id: string, parentQuartierId: string, parentArrId: string, allQuartierSiblingIds: string[], allArrQuartierIds: string[]) => void
+  /** Toggle suburban commune (no hierarchy) */
+  toggleCommune: (id: string) => void
   setBudgetMax: (max: number | null) => void
   setPropertyTypes: (types: PropertyType[]) => void
   togglePropertyType: (type: PropertyType) => void
@@ -68,6 +71,7 @@ export const useSearchStore = create<SearchStore>()(
       selectedArrIds: [],
       selectedQuartierIds: [],
       selectedIrisIds: [],
+      selectedCommuneIds: [],
       budgetMax: null,
       propertyTypes: [],
       minRooms: null,
@@ -157,6 +161,15 @@ export const useSearchStore = create<SearchStore>()(
         set({ selectedArrIds: newArrIds, selectedQuartierIds: newQuartierIds, selectedIrisIds: newIrisIds })
       },
 
+      toggleCommune: (id) => {
+        const { selectedCommuneIds } = get()
+        set({
+          selectedCommuneIds: selectedCommuneIds.includes(id)
+            ? selectedCommuneIds.filter((c) => c !== id)
+            : [...selectedCommuneIds, id],
+        })
+      },
+
       setBudgetMax: (max) => set({ budgetMax: max }),
       setPropertyTypes: (types) => set({ propertyTypes: types }),
       togglePropertyType: (type) =>
@@ -169,7 +182,7 @@ export const useSearchStore = create<SearchStore>()(
       resetOnboarding: () =>
         set({
           locationQuery: '', locationLabel: '', locationLat: null, locationLng: null, locationRadius: 2,
-          locationIntent: null, selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [],
+          locationIntent: null, selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [],
           budgetMax: null, propertyTypes: [], minRooms: null, minSurface: null, maxSurface: null,
           priorities: [], onboardingCompleted: false,
         }),
