@@ -219,9 +219,12 @@ function GeoLayers(props: GeoLayersProps) {
   const sel = { selectedArrIds, selectedQuartierIds, selectedIrisIds }
 
   // Exclusive zoom ranges — only one level visible at a time
-  const showTopLevel = zoom < 12   // arrondissements + communes
-  const showQuartier = zoom >= 12 && zoom < 15
-  const showIris = zoom >= 15 && !irisLoading
+  // zoom ≤13 = tout Paris visible → arrondissements/communes
+  // 14–15   = arrondissement bien visible → quartiers
+  // ≥16     = quartier bien visible → IRIS
+  const showTopLevel = zoom <= 13
+  const showQuartier = zoom >= 14 && zoom <= 15
+  const showIris = zoom >= 16 && !irisLoading
 
   useGeoLayer(map, {
     zones: arrondissements,

@@ -40,3 +40,10 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Zone map labels — remove Leaflet DivIcon default white background/border */
+.shomee-zone-label {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}

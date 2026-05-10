@@ -59,7 +59,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
   // Lazy-load IRIS when user zooms in to level 15+
   useEffect(() => {
-    if (zoom < 15 || irisLoading || iris.length > 0 || quartiersRef.current.length === 0) return
+    if (zoom < 16 || irisLoading || iris.length > 0 || quartiersRef.current.length === 0) return
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom])
