@@ -46,8 +46,12 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
-  const openMapWithQuery = useCallback((q: string) => {
-    const intent = parseLocationIntent(q.trim())
+  const openMapWithQuery = useCallback((q: string, preselectZones?: string[]) => {
+    const parsed = parseLocationIntent(q.trim())
+    // LLM preselectZones override the rule-based parser when provided
+    const intent = preselectZones?.length
+      ? { ...parsed, location_terms: preselectZones }
+      : parsed
     setLocation({ query: q.trim(), label: q.trim(), lat: 0, lng: 0, intent })
     onOpenMap()
   }, [setLocation, onOpenMap])
@@ -62,7 +66,10 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
 
     // Fallback: if API fails or returns clear → open map directly
     if (!analysis || analysis.status === 'clear' || analysis.mapAction?.type === 'open_map') {
-      openMapWithQuery(analysis?.mapAction?.centerQuery ?? q)
+      openMapWithQuery(
+        analysis?.mapAction?.centerQuery ?? q,
+        analysis?.mapAction?.preselectQueries,
+      )
       return
     }
 

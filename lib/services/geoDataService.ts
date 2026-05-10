@@ -230,11 +230,17 @@ export function matchCommunes(terms: string[], communes: GeoZone[]): GeoZone[] {
   const matched: GeoZone[] = []
   for (const term of terms) {
     const lower = term.toLowerCase().trim()
-    const zone = communes.find((c) => {
+    const candidates = communes.filter((c) => {
       const n = c.name.toLowerCase()
       return n === lower || n.startsWith(lower + '-') || lower.startsWith(n)
     })
-    if (zone && !matched.includes(zone)) matched.push(zone)
+    if (!candidates.length) continue
+    // Prefer exact match; among prefix matches prefer dept 92 (Hauts-de-Seine)
+    // so "Neuilly" → Neuilly-sur-Seine (92) not Neuilly-Plaisance (93)
+    const exact = candidates.find((c) => c.name.toLowerCase() === lower)
+    const dept92 = exact ? null : candidates.find((c) => c.id.startsWith('com-92'))
+    const best = exact ?? dept92 ?? candidates[0]
+    if (!matched.includes(best)) matched.push(best)
   }
   return matched
 }

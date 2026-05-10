@@ -10,6 +10,37 @@ Contexte géographique couvert:
 - Communes 93 (Seine-Saint-Denis): Saint-Denis, Saint-Ouen, Aubervilliers, Pantin, Montreuil, Bagnolet, Les Lilas, Noisy-le-Sec
 - Communes 94 (Val-de-Marne): Vincennes, Saint-Mandé, Charenton-le-Pont, Ivry-sur-Seine, Gentilly, Alfortville, Maisons-Alfort
 
+Quartiers parisiens reconnus et leur traduction en arrondissements (utiliser pour preselectZones/preselectQueries):
+- Le Marais → Paris 3, Paris 4
+- Montmartre → Paris 18
+- Bastille → Paris 4, Paris 11, Paris 12
+- Belleville → Paris 11, Paris 19, Paris 20
+- Pigalle → Paris 9, Paris 18
+- Oberkampf → Paris 11
+- Nation → Paris 11, Paris 12
+- Daumesnil → Paris 12
+- Bercy → Paris 12
+- Saint-Germain-des-Prés → Paris 6
+- Châtelet / Les Halles → Paris 1, Paris 4
+- Canal Saint-Martin → Paris 10
+- Montparnasse → Paris 14, Paris 15
+- Trocadéro → Paris 16
+- Invalides → Paris 7
+- Buttes-Chaumont → Paris 19
+- La Villette → Paris 19
+- Passy → Paris 16
+- Auteuil → Paris 16
+- Batignolles → Paris 17
+- Gare du Nord → Paris 10
+- Gare de Lyon → Paris 12
+- Opéra → Paris 9
+- Madeleine → Paris 8
+- Place d'Italie → Paris 13
+- Alésia → Paris 14
+- Père-Lachaise → Paris 20
+- Champs-Élysées → Paris 8
+- République → Paris 3, Paris 10, Paris 11
+
 Lignes de métro principales:
 - Ligne 1: Château de Vincennes → Vincennes, Nation (12e), Bastille (4/11/12e), Châtelet (1/4e), Louvre (1er), Concorde (8e), Champs-Élysées (8e), La Défense (Puteaux)
 - Ligne 2: Nation (11/12e) → Bastille (11e) → Père Lachaise (20e) → Ménilmontant → Belleville (11/19e) → Anvers (18e) → Pigalle (9/18e) → Place de Clichy (8/17e)
@@ -19,12 +50,27 @@ Lignes de métro principales:
 - Ligne 13: Châtillon/Montrouge → Malakoff → Montrouge → Alésia (14e) → Montparnasse → Invalides (7e) → Champs-Élysées (8e) → Saint-Lazare (8e) → Clichy → Saint-Denis/Asnières
 
 Règles de décision:
-- Arrondissement ou commune cités explicitement → status "clear"
+- Arrondissement cité explicitement → status "clear"
+- Commune citée explicitement (Vincennes, Neuilly-sur-Seine, etc.) → status "clear"
+- Quartier parisien reconnu (Le Marais, Montmartre, Bastille, etc.) → status "clear"
+- Plusieurs lieux bien identifiés combinés ("Neuilly ou Levallois", "Paris 11 et 12") → status "clear"
 - Ligne de métro ou RER sans secteur précis → status "ambiguous", proposer 2-3 options géographiques
 - Description lifestyle vague ("calme", "animé", "proche d'un parc") sans lieu précis → status "too_vague"
 - Lieu inconnu ou hors zone → status "not_found"
 - Pour "ambiguous" et "too_vague": toujours fournir clarificationOptions avec des query exploitables
-- Les query dans clarificationOptions doivent utiliser des termes reconnaissables: "Paris 11", "Vincennes", "Montrouge", etc.`
+
+Règles de désambiguïsation géographique (CRITIQUE — toujours appliquer):
+- "Neuilly" seul ou associé à des communes/quartiers de l'ouest parisien (Levallois, Boulogne, Courbevoie, etc.) → toujours "Neuilly-sur-Seine" (jamais Neuilly-Plaisance qui est à l'est)
+- "Neuilly" + contexte est parisien (Montreuil, Vincennes, Nation) → demander clarification
+- "Marais" ou "Le Marais" → toujours le quartier du Marais (Paris 3e-4e), jamais une rue
+- "Saint-Denis" → Saint-Denis (93), pas Saint-Denis-de-la-Réunion
+
+Règles pour mapAction.preselectQueries (OBLIGATOIRE pour status "clear"):
+- Toujours remplir preselectQueries avec les zones exactes correspondant à la demande
+- Format: arrondissements "Paris 1" à "Paris 20", ou noms exacts de communes: "Neuilly-sur-Seine", "Vincennes", "Levallois-Perret"
+- Pour un quartier: utiliser les arrondissements correspondants (ex: Le Marais → ["Paris 3", "Paris 4"])
+- Pour plusieurs lieux: lister toutes les zones (ex: "Neuilly ou Levallois" → ["Neuilly-sur-Seine", "Levallois-Perret"])
+- centerQuery: toujours le nom exact du lieu principal, reconnaissable (ex: "Le Marais", "Neuilly-sur-Seine", "Paris 11")`
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,14 +108,15 @@ Retourne exactement ce JSON (sans markdown, sans commentaires):
   }
 }
 
-RÈGLES CRITIQUES pour clarificationOptions:
-- preselectZones: zones exactes à cocher sur la carte. Formats OBLIGATOIRES:
-  * Arrondissements: "Paris 1", "Paris 4", "Paris 11", "Paris 18" (chiffre seul, sans "e"/"er")
-  * Communes limitrophes: "Vincennes", "Montrouge", "Neuilly-sur-Seine", "Saint-Mandé", "Montreuil", etc.
-  * Géographiquement correct: si label="Châtelet", preselectZones=["Paris 1","Paris 4"] — jamais ["Paris 14"]
-  * Si label="Montmartre", preselectZones=["Paris 18"] — Montmartre est dans le 18e
-  * Si label="Bastille", preselectZones=["Paris 4","Paris 11","Paris 12"]
-- centerQuery: cible de géocodage pour centrer la carte. Ex: "Châtelet-Les Halles, Paris", "Montmartre, Paris", "Vincennes"`
+RÈGLES CRITIQUES pour preselectZones (clarificationOptions) ET preselectQueries (mapAction):
+- Format OBLIGATOIRE pour les arrondissements: "Paris 1", "Paris 4", "Paris 11", "Paris 18" (chiffre seul, sans "e"/"er")
+- Format OBLIGATOIRE pour les communes: nom exact — "Vincennes", "Neuilly-sur-Seine", "Levallois-Perret", "Saint-Mandé", "Montreuil"
+- Géographiquement correct: si label="Châtelet", preselectZones=["Paris 1","Paris 4"] — jamais ["Paris 14"]
+- Si label="Montmartre", preselectZones=["Paris 18"] — Montmartre est dans le 18e
+- Si label="Bastille", preselectZones=["Paris 4","Paris 11","Paris 12"]
+- Si label="Le Marais", preselectZones=["Paris 3","Paris 4"]
+- Pour status "clear" avec plusieurs lieux: mapAction.preselectQueries doit lister TOUTES les zones demandées
+- centerQuery: nom exact du lieu, sans articles superflus. Ex: "Le Marais", "Montmartre", "Neuilly-sur-Seine", "Paris 11"`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
