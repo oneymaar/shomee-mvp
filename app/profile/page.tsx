@@ -1,9 +1,11 @@
 'use client'
 
-import { User, Bell, Shield, ChevronRight, Settings } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { User, Bell, Shield, ChevronRight, Settings, RefreshCw } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import { useShomeeStore } from '@/lib/store'
+import { useSearchStore } from '@/lib/searchStore'
 import { properties } from '@/lib/mockData'
 
 const MENU_ITEMS = [
@@ -12,8 +14,38 @@ const MENU_ITEMS = [
   { icon: Settings, label: 'Paramètres',      description: "Préférences de l'app" },
 ]
 
+function formatBudget(max: number | null): string {
+  if (!max) return 'Non défini'
+  if (max >= 99_000_000) return '> 1 500 000 €'
+  return `≤ ${(max / 1000).toFixed(0)} 000 €`
+}
+
 export default function ProfilePage() {
+  const router = useRouter()
   const { favorites } = useShomeeStore()
+  const { locationLabel, budgetMax, propertyTypes, resetOnboarding } = useSearchStore()
+
+  const handleResetOnboarding = () => {
+    resetOnboarding()
+    router.push('/onboarding')
+  }
+
+  const searchPrefs = [
+    {
+      label: 'Localisation',
+      value: locationLabel || 'Non définie',
+    },
+    {
+      label: 'Budget max',
+      value: formatBudget(budgetMax),
+    },
+    {
+      label: 'Type de bien',
+      value: propertyTypes.length > 0
+        ? propertyTypes.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')
+        : 'Non défini',
+    },
+  ]
 
   return (
     <MobileFrame>
@@ -62,20 +94,21 @@ export default function ProfilePage() {
             Recherche
           </p>
           <div className="bg-white border border-black/8 rounded-2xl divide-y divide-black/6">
-            {[
-              { label: 'Budget max',    value: 'Non défini' },
-              { label: 'Localisation', value: 'Paris' },
-              { label: 'Type de bien', value: 'Appartement' },
-            ].map(({ label, value }) => (
+            {searchPrefs.map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between px-4 py-3.5">
                 <span className="text-neutral-900 text-sm">{label}</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-neutral-500 text-sm">{value}</span>
-                  <ChevronRight size={14} className="text-neutral-400" />
-                </div>
+                <span className="text-neutral-500 text-sm truncate max-w-[160px] text-right">{value}</span>
               </div>
             ))}
           </div>
+          <button
+            onClick={handleResetOnboarding}
+            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-black/8 bg-white text-sm font-medium active:bg-black/4 transition-colors"
+            style={{ color: '#914E3C' }}
+          >
+            <RefreshCw size={14} />
+            Modifier ma recherche
+          </button>
         </div>
 
         {/* Account */}
@@ -103,7 +136,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Version */}
-        <p className="text-neutral-400 text-xs text-center pb-[76px]">SHOMEE · Sprint 1 · v0.1.0</p>
+        <p className="text-neutral-400 text-xs text-center pb-[76px]">SHOMEE · Sprint 2 · v0.2.0</p>
 
       </div>
       <BottomNav />
