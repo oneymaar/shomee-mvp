@@ -73,6 +73,15 @@ interface GeoLayerConfig {
   fontSize: number
   onClick: (zone: GeoZone) => void
   visible: boolean
+  /**
+   * Opaque string that changes only when the selection state affecting this layer changes.
+   * Gates the style-refresh effect so it never runs during zoom/pan re-renders.
+   */
+  styleKey: string
+  /** Labels are hidden below this zoom level (Google-Maps-style label culling). */
+  labelMinZoom: number
+  /** Current map zoom, used to toggle label visibility without rebuilding the layer. */
+  currentZoom: number
 }
 
 function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
@@ -81,6 +90,7 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
   const cfgRef = useRef(cfg)
   cfgRef.current = cfg
 
+  // ── Effect 1: rebuild GeoJSON layer when zone geometry changes ────────────
   useEffect(() => {
     layerRef.current?.remove()
     labelsRef.current.forEach((m) => m.remove())
@@ -105,7 +115,7 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     )
     if (cfg.visible) layer.addTo(map)
     layerRef.current = layer
-    refreshLabels(layer, cfg.zones)
+    rebuildLabels(layer, cfg.zones)
 
     return () => {
       layer.remove()
@@ -115,6 +125,9 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.zones, map])
 
+  // ── Effect 2: update styles + label colors when selection changes ─────────
+  // styleKey changes ONLY when the selection arrays change, not on zoom/pan.
+  // This prevents setStyle() from running during Leaflet's SVG redraws.
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
@@ -124,24 +137,29 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
       const zone = cfgRef.current.zones.find((z) => z.id === f?.properties?._zoneId)
       if (zone) l.setStyle(cfgRef.current.getPathStyle(zone))
     })
-    refreshLabels(layer, cfgRef.current.zones)
-  })
+    rebuildLabels(layer, cfgRef.current.zones)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cfg.styleKey])
 
+  // ── Effect 3: toggle layer + labels visibility (zoom or visible flag) ─────
+  // Fast: only adds/removes from map, never recomputes geometry or styles.
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
     if (cfg.visible && !map.hasLayer(layer)) map.addLayer(layer)
     else if (!cfg.visible && map.hasLayer(layer)) map.removeLayer(layer)
-    labelsRef.current.forEach((m) => {
-      if (cfg.visible && !map.hasLayer(m)) map.addLayer(m)
-      else if (!cfg.visible && map.hasLayer(m)) map.removeLayer(m)
-    })
-  }, [cfg.visible, map])
 
-  function refreshLabels(layer: L.GeoJSON, zones: GeoZone[]) {
+    const showLabels = cfg.visible && cfg.currentZoom >= cfg.labelMinZoom
+    labelsRef.current.forEach((m) => {
+      if (showLabels && !map.hasLayer(m)) map.addLayer(m)
+      else if (!showLabels && map.hasLayer(m)) map.removeLayer(m)
+    })
+  }, [cfg.visible, cfg.currentZoom, cfg.labelMinZoom, map])
+
+  function rebuildLabels(layer: L.GeoJSON, zones: GeoZone[]) {
     labelsRef.current.forEach((m) => m.remove())
     labelsRef.current = []
-    if (!cfgRef.current.visible) return
+    const showLabels = cfgRef.current.visible && cfgRef.current.currentZoom >= cfgRef.current.labelMinZoom
     layer.eachLayer((l) => {
       if (!(l instanceof L.Path)) return
       const f = (l as any).feature as GeoJSON.Feature | undefined
@@ -154,7 +172,7 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
         interactive: false,
         zIndexOffset: 300,
       })
-      if (cfgRef.current.visible) marker.addTo(map)
+      if (showLabels) marker.addTo(map)
       labelsRef.current.push(marker)
     })
   }
@@ -230,21 +248,29 @@ function GeoLayers(props: GeoLayersProps) {
   const sel = { selectedArrIds, selectedQuartierIds, selectedIrisIds }
   const comSel = { selectedCommuneIds, selectedIrisIds }
 
-  // Paris IRIS: parent = quartier (qu-) or arrondissement (arr-)
-  // Suburb IRIS: parent = commune (com-)
-  // Memoized to avoid re-mounting GeoJSON layers on every zoom render
   const parisIris = useMemo(() => iris.filter((i) => !i.parentId?.startsWith('com-')), [iris])
   const communeIris = useMemo(() => iris.filter((i) => i.parentId?.startsWith('com-')), [iris])
 
-  // Zoom ranges
-  // ≤13: top-level arrondissements + communes
-  // 14–15: Paris quartiers + suburb commune IRIS (zoom 15 only)
-  // ≥16: Paris IRIS
-  const showTopLevel = zoom <= 13
-  // Communes always visible but faint when IRIS is shown (provides geographic context)
+  // Zoom thresholds
+  const showTopLevel   = zoom <= 13
   const showCommuneIris = zoom >= 15 && !irisLoading
-  const showParisIris = zoom >= 16 && !irisLoading
-  const showQuartier = zoom >= 14 && zoom <= 15
+  const showParisIris  = zoom >= 16 && !irisLoading
+  const showQuartier   = zoom >= 14 && zoom <= 15
+
+  // styleKeys: opaque strings that change only when the relevant selection changes.
+  // Stable across zoom/pan re-renders → style-refresh effect stays silent during animation.
+  const parisStyleKey = useMemo(
+    () => `${selectedArrIds.join()}_${selectedQuartierIds.join()}_${selectedIrisIds.join()}`,
+    [selectedArrIds, selectedQuartierIds, selectedIrisIds]
+  )
+  const communeStyleKey = useMemo(
+    () => `${selectedCommuneIds.join()}_${selectedIrisIds.join()}`,
+    [selectedCommuneIds, selectedIrisIds]
+  )
+  const irisStyleKey = useMemo(
+    () => selectedIrisIds.join(),
+    [selectedIrisIds]
+  )
 
   useGeoLayer(map, {
     zones: arrondissements,
@@ -253,6 +279,9 @@ function GeoLayers(props: GeoLayersProps) {
     fontSize: 11,
     onClick: onClickArr,
     visible: showTopLevel,
+    styleKey: parisStyleKey,
+    currentZoom: zoom,
+    labelMinZoom: 11,
   })
 
   useGeoLayer(map, {
@@ -262,6 +291,9 @@ function GeoLayers(props: GeoLayersProps) {
     fontSize: 10,
     onClick: onClickCommune,
     visible: showTopLevel || showCommuneIris,
+    styleKey: communeStyleKey,
+    currentZoom: zoom,
+    labelMinZoom: 11,
   })
 
   useGeoLayer(map, {
@@ -271,6 +303,9 @@ function GeoLayers(props: GeoLayersProps) {
     fontSize: 10,
     onClick: onClickQuartier,
     visible: showQuartier,
+    styleKey: parisStyleKey,
+    currentZoom: zoom,
+    labelMinZoom: 14,
   })
 
   useGeoLayer(map, {
@@ -280,6 +315,9 @@ function GeoLayers(props: GeoLayersProps) {
     fontSize: 9,
     onClick: onClickCommuneIris,
     visible: showCommuneIris,
+    styleKey: irisStyleKey,
+    currentZoom: zoom,
+    labelMinZoom: 999, // IRIS zones are too fine-grained for labels
   })
 
   useGeoLayer(map, {
@@ -289,6 +327,9 @@ function GeoLayers(props: GeoLayersProps) {
     fontSize: 9,
     onClick: onClickIris,
     visible: showParisIris,
+    styleKey: irisStyleKey,
+    currentZoom: zoom,
+    labelMinZoom: 999,
   })
 
   return null
