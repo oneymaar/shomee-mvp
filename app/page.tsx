@@ -11,6 +11,7 @@ export default function SplashPage() {
   const [exiting, setExiting] = useState(false)
 
   const navigateToFeed = () => setExiting(true)
+  const destination = '/onboarding'
 
   useEffect(() => {
     // Match body + theme-color to splash background so safe-area zone is terracotta
@@ -43,7 +44,7 @@ export default function SplashPage() {
       animate={{ opacity: exiting ? 0 : 1 }}
       initial={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
-      onAnimationComplete={() => { if (exiting) router.replace('/feed') }}
+      onAnimationComplete={() => { if (exiting) router.replace(destination) }}
     >
       <motion.div
         initial={{ scale: 1, opacity: 1 }}
@@ -73,7 +74,7 @@ export default function SplashPage() {
             className="text-white font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
             style={{ backgroundColor: '#f5f0e8', color: '#914E3C' }}
           >
-            Découvrir les biens
+            Commencer
           </button>
           <p className="text-white/55 text-[12px] text-center leading-relaxed">
             Pour ajouter SHOMEE sur votre écran d'accueil,{'\n'}
