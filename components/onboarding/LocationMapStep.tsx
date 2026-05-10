@@ -140,10 +140,14 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
       if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
         const geo = geocodeResult.value
-        const newCenter: [number, number] = [geo.lat, geo.lng]
-        setCenter(newCenter)
-        setLocationLabel(geo.label)
-        setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
+        // Reject results outside Île-de-France (lat 48.1–49.2, lng 1.4–3.7)
+        const inIdf = geo.lat >= 48.1 && geo.lat <= 49.2 && geo.lng >= 1.4 && geo.lng <= 3.7
+        if (inIdf) {
+          const newCenter: [number, number] = [geo.lat, geo.lng]
+          setCenter(newCenter)
+          setLocationLabel(geo.label)
+          setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
+        }
       }
 
       if (selectedArrIds.length === 0 && selectedCommuneIds.length === 0 && intent.location_terms.length > 0) {
