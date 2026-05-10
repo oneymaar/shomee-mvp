@@ -16,6 +16,7 @@
 import type { GeoZone } from './geoDataService'
 import { polygonCentroid } from './geoDataService'
 import { getStationsByLine, findStation, normalizeLineId } from './metroStationsDb'
+import { findNeighborhoodById } from './semanticNeighborhoodService'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,7 @@ export type ConstraintType =
   | 'administrative_area'
   | 'transport_line'
   | 'transport_station'
+  | 'semantic_neighborhood'  // client-side: matched via semanticNeighborhoods.json
   | 'poi'
   | 'relative_position'
   | 'lifestyle'
@@ -45,6 +47,7 @@ export interface GeoConstraint {
   zoneId?: string              // administrative_area → "arr-9", "com-92050"
   line?: string                // transport_line → "2", "A", "13"
   stationName?: string         // transport_station → "Nation", "Pigalle"
+  neighborhoodId?: string      // semantic_neighborhood → "butte_aux_cailles"
   poiType?: string             // poi → "parc", "gare", "marché"
   radiusM?: number             // override default proximity radius (metres)
 }
@@ -146,6 +149,23 @@ function filterIrisByStation(
   })
 }
 
+/**
+ * Given a set of candidate IRIS zones, keep only those within radiusM of explicit coordinates.
+ * Used for semantic neighborhoods where the center is defined in the JSON.
+ */
+function filterIrisByCoords(
+  candidates: GeoZone[],
+  lat: number,
+  lng: number,
+  radiusM: number
+): GeoZone[] {
+  return candidates.filter((zone) => {
+    const centroid = irisCentroid(zone)
+    if (!centroid) return false
+    return haversineM(centroid[0], centroid[1], lat, lng) <= radiusM
+  })
+}
+
 // ─── Main resolver ─────────────────────────────────────────────────────────
 
 /**
@@ -188,19 +208,34 @@ export function resolveConstraints(
     return { irisIds: [], fallbackZoneIds, matchSummary: [], wasNarrowed: false }
   }
 
-  // Station-only path: no administrative_area but a transport_station present.
-  // Directly select IRIS within the station's proximity radius without needing a zone pool.
+  // No-primary-zone paths: station-only or neighborhood-only.
+  // Directly select IRIS by coordinates without a zone pool.
   if (!fallbackZoneIds.length) {
+    // Semantic neighborhood
+    const neighborhoodC = secondaryConstraints.find((c) => c.type === 'semantic_neighborhood' && c.neighborhoodId)
+    if (neighborhoodC?.neighborhoodId) {
+      const n = findNeighborhoodById(neighborhoodC.neighborhoodId)
+      if (n) {
+        const radius = neighborhoodC.radiusM ?? n.confidenceRadiusMeters
+        const nearIris = filterIrisByCoords(iris, n.center.lat, n.center.lng, radius)
+        if (nearIris.length > 0) {
+          return {
+            irisIds: nearIris.map((z) => z.id),
+            fallbackZoneIds: [],
+            matchSummary: [n.label],
+            wasNarrowed: true,
+          }
+        }
+      }
+    }
+
+    // Transport station
     const stationC = secondaryConstraints.find((c) => c.type === 'transport_station' && c.stationName)
     if (stationC?.stationName) {
       const station = findStation(stationC.stationName)
       if (station) {
         const radius = stationC.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
-        const nearIris = iris.filter((zone) => {
-          const centroid = irisCentroid(zone)
-          if (!centroid) return false
-          return haversineM(centroid[0], centroid[1], station.lat, station.lng) <= radius
-        })
+        const nearIris = filterIrisByCoords(iris, station.lat, station.lng, radius)
         if (nearIris.length > 0) {
           return {
             irisIds: nearIris.map((z) => z.id),
@@ -211,6 +246,7 @@ export function resolveConstraints(
         }
       }
     }
+
     return { irisIds: [], fallbackZoneIds: [], matchSummary: [], wasNarrowed: false }
   }
 
@@ -240,6 +276,13 @@ export function resolveConstraints(
     } else if (c.type === 'transport_station' && c.stationName) {
       filtered = filterIrisByStation(narrowed, c.stationName, c.radiusM)
       if (filtered.length > 0) summary.push(`proche ${c.stationName}`)
+    } else if (c.type === 'semantic_neighborhood' && c.neighborhoodId) {
+      const n = findNeighborhoodById(c.neighborhoodId)
+      if (n) {
+        const radius = c.radiusM ?? n.confidenceRadiusMeters
+        filtered = filterIrisByCoords(narrowed, n.center.lat, n.center.lng, radius)
+        if (filtered.length > 0) summary.push(n.label)
+      }
     }
     // Future: poi, relative_position, lifestyle
 

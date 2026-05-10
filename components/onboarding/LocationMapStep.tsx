@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
 import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
 import { findStation } from '@/lib/services/metroStationsDb'
+import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { resolveConstraints } from '@/lib/services/geoConstraintService'
@@ -152,6 +153,34 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         setCommunes(communesResult.value)
       }
 
+      // ── Semantic neighborhood enrichment ─────────────────────────────────
+      // Match the raw query against semanticNeighborhoods.json before processing
+      // the LLM's geoConstraints. If a neighborhood is found, inject its constraints
+      // so resolveConstraints can narrow to the relevant IRIS zone (not the full arr).
+      const neighborhoodMatch = matchNeighborhood(locationQuery)
+      let enrichedConstraints = intent.geoConstraints ?? []
+
+      if (neighborhoodMatch) {
+        const alreadyHasNeighborhood = enrichedConstraints.some((c) => c.type === 'semantic_neighborhood')
+        if (!alreadyHasNeighborhood) {
+          const nbConstraints = neighborhoodToConstraints(neighborhoodMatch)
+          // Keep existing administrative_area if LLM provided one; otherwise use the one
+          // derived from the neighborhood's arrondissement field.
+          const hasAdminArea = enrichedConstraints.some((c) => c.type === 'administrative_area')
+          enrichedConstraints = [
+            ...(hasAdminArea
+              ? enrichedConstraints
+              : nbConstraints.filter((c) => c.type === 'administrative_area')),
+            ...enrichedConstraints.filter((c) => c.type !== 'administrative_area'),
+            nbConstraints.find((c) => c.type === 'semantic_neighborhood')!,
+          ]
+        }
+      }
+
+      const enrichedIntent = enrichedConstraints !== (intent.geoConstraints ?? [])
+        ? { ...intent, geoConstraints: enrichedConstraints }
+        : intent
+
       if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
         const geo = geocodeResult.value
         // Reject results outside Île-de-France (lat 48.1–49.2, lng 1.4–3.7)
@@ -160,16 +189,23 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           const newCenter: [number, number] = [geo.lat, geo.lng]
           setCenter(newCenter)
           setLocationLabel(geo.label)
-          setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
+          setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent: enrichedIntent })
         }
+      } else if (neighborhoodMatch) {
+        // No geocoding result but neighborhood matched: center on neighborhood
+        setLocation({ query: locationQuery, label: neighborhoodMatch.label, lat: neighborhoodMatch.center.lat, lng: neighborhoodMatch.center.lng, intent: enrichedIntent })
       }
 
-      // Fine-grained query: transport station or high-confidence POI.
-      // Open at IRIS zoom level immediately, don't pre-select the whole arrondissement —
-      // resolveConstraints will select only the relevant IRIS zones.
-      const hasFineConstraint = intent.geoConstraints?.some(
-        (c) => (c.type === 'transport_station') && c.confidence >= 0.75
-      ) ?? false
+      // Always center on the neighborhood's exact center (overrides geocoding if needed)
+      if (neighborhoodMatch) {
+        setCenter([neighborhoodMatch.center.lat, neighborhoodMatch.center.lng])
+      }
+
+      // ── Fine constraint detection ─────────────────────────────────────────
+      // Station OR semantic neighborhood → open at IRIS zoom, skip whole-arr pre-selection
+      const hasFineConstraint = enrichedConstraints.some(
+        (c) => (c.type === 'transport_station' || c.type === 'semantic_neighborhood') && c.confidence >= 0.75
+      )
 
       if (hasFineConstraint) {
         // Clear any stale zone selections from a previous query so fine IRIS selection
@@ -181,11 +217,13 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           selectedCommuneIds: [],
         })
 
-        // Safety net: make sure the map centers on the actual station
-        const stationC = intent.geoConstraints?.find((c) => c.type === 'transport_station' && c.stationName)
-        if (stationC?.stationName) {
-          const station = findStation(stationC.stationName)
-          if (station) setCenter([station.lat, station.lng])
+        // Safety net: for station queries, also pin the center on the station
+        if (!neighborhoodMatch) {
+          const stationC = enrichedConstraints.find((c) => c.type === 'transport_station' && c.stationName)
+          if (stationC?.stationName) {
+            const station = findStation(stationC.stationName)
+            if (station) setCenter([station.lat, station.lng])
+          }
         }
 
         setZoom(15) // triggers loadIris via useEffect([zoom])
@@ -200,8 +238,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
         // Safety net: if term matching failed but we have a station constraint, derive zone
         // from station coordinates (e.g. LLM returned "Vincennes" for "Daumesnil").
-        if (newArrIds.length === 0 && newCommuneIds.length === 0 && intent.geoConstraints?.length) {
-          const stationC = intent.geoConstraints.find((c) => c.type === 'transport_station' && c.stationName)
+        if (newArrIds.length === 0 && newCommuneIds.length === 0 && enrichedConstraints.length) {
+          const stationC = enrichedConstraints.find((c) => c.type === 'transport_station' && c.stationName)
           if (stationC?.stationName) {
             const station = findStation(stationC.stationName)
             if (station) {
