@@ -81,7 +81,20 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       if (intent?.geoConstraints?.length) {
         const result = resolveConstraints(intent.geoConstraints, zones, quartiersRef.current, communesRef.current)
         if (result.wasNarrowed && result.irisIds.length > 0) {
-          useSearchStore.setState({ selectedIrisIds: [...new Set([...selectedIrisIds, ...result.irisIds])] })
+          // Precise IRIS selected: clear any pre-selected arrondissements / quartiers that
+          // belong to the narrowed zones so the map shows partial (not full) highlights.
+          const narrowedArrIds = new Set(result.fallbackZoneIds.filter((id) => id.startsWith('arr-')))
+          const { selectedArrIds: curArrs, selectedQuartierIds: curQus } = useSearchStore.getState()
+          const clearedArrs = curArrs.filter((id) => !narrowedArrIds.has(id))
+          const clearedQus = curQus.filter((qId) => {
+            const q = quartiersRef.current.find((q) => q.id === qId)
+            return !q || !narrowedArrIds.has(q.parentId ?? '')
+          })
+          useSearchStore.setState({
+            selectedIrisIds: result.irisIds,
+            selectedArrIds: clearedArrs,
+            selectedQuartierIds: clearedQus,
+          })
           if (result.matchSummary.length > 0) setConstraintSummary(result.matchSummary)
           return
         }
@@ -151,7 +164,32 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         }
       }
 
-      if (selectedArrIds.length === 0 && selectedCommuneIds.length === 0 && intent.location_terms.length > 0) {
+      // Fine-grained query: transport station or high-confidence POI.
+      // Open at IRIS zoom level immediately, don't pre-select the whole arrondissement —
+      // resolveConstraints will select only the relevant IRIS zones.
+      const hasFineConstraint = intent.geoConstraints?.some(
+        (c) => (c.type === 'transport_station') && c.confidence >= 0.75
+      ) ?? false
+
+      if (hasFineConstraint) {
+        // Clear any stale zone selections from a previous query so fine IRIS selection
+        // starts clean. resolveConstraints (in loadIris) will set selectedIrisIds.
+        useSearchStore.setState({
+          selectedArrIds: [],
+          selectedQuartierIds: [],
+          selectedIrisIds: [],
+          selectedCommuneIds: [],
+        })
+
+        // Safety net: make sure the map centers on the actual station
+        const stationC = intent.geoConstraints?.find((c) => c.type === 'transport_station' && c.stationName)
+        if (stationC?.stationName) {
+          const station = findStation(stationC.stationName)
+          if (station) setCenter([station.lat, station.lng])
+        }
+
+        setZoom(15) // triggers loadIris via useEffect([zoom])
+      } else {
         const loadedCommunes = communesResult.status === 'fulfilled' ? communesResult.value : []
         const matchedArrs = matchArrondissements(intent.location_terms, arrs)
         const matchedComms = matchCommunes(intent.location_terms, loadedCommunes)
@@ -160,8 +198,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         let newQuartierIds = matchedArrs.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
         let newCommuneIds = matchedComms.map((z) => z.id)
 
-        // Safety net: if term matching failed (LLM returned wrong zone) but we have a
-        // transport_station constraint, derive the zone from the station's coordinates.
+        // Safety net: if term matching failed but we have a station constraint, derive zone
+        // from station coordinates (e.g. LLM returned "Vincennes" for "Daumesnil").
         if (newArrIds.length === 0 && newCommuneIds.length === 0 && intent.geoConstraints?.length) {
           const stationC = intent.geoConstraints.find((c) => c.type === 'transport_station' && c.stationName)
           if (stationC?.stationName) {
@@ -176,24 +214,22 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                 const matchedComm = loadedC.find((c) => polygonContainsPoint(c.feature.geometry, station.lng, station.lat))
                 if (matchedComm) newCommuneIds = [matchedComm.id]
               }
-              // Re-center the map on the actual station if geocoding was wrong
               setCenter([station.lat, station.lng])
             }
           }
         }
 
-        if (newArrIds.length > 0 || newCommuneIds.length > 0) {
+        if (selectedArrIds.length === 0 && selectedCommuneIds.length === 0 && (newArrIds.length > 0 || newCommuneIds.length > 0)) {
           useSearchStore.setState({
             selectedArrIds: newArrIds,
             selectedQuartierIds: newQuartierIds,
             selectedCommuneIds: newCommuneIds,
           })
         }
-      }
 
-      const matchedCount = selectedArrIds.length + selectedCommuneIds.length ||
-        matchArrondissements(intent.location_terms, arrs).length
-      setZoom(matchedCount <= 2 ? 13 : 12)
+        const matchedCount = newArrIds.length + newCommuneIds.length
+        setZoom(matchedCount <= 2 ? 13 : 12)
+      }
     } catch (e) {
       console.error(e)
       setError('Erreur lors du chargement de la carte. Réessayez.')

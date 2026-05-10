@@ -262,7 +262,7 @@ function GeoLayers(props: GeoLayersProps) {
   // Zoom thresholds
   const showTopLevel    = zoom <= 13
   const showCommuneIris = zoom >= 15 && !irisLoading
-  const showParisIris   = zoom >= 16 && !irisLoading
+  const showParisIris   = zoom >= 15 && !irisLoading  // aligned with suburbs — fine queries open at 15
   const showQuartier    = zoom >= 14 && zoom <= 15
   // Communes have no intermediate quartier level, so they stay visible at all
   // zooms — at zoom 14 they bridge the gap; at zoom 15+ they outline IRIS zones.
