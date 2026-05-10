@@ -64,6 +64,12 @@ Règles de désambiguïsation géographique (CRITIQUE — toujours appliquer):
 - "Neuilly" + contexte est parisien (Montreuil, Vincennes, Nation) → demander clarification
 - "Marais" ou "Le Marais" → toujours le quartier du Marais (Paris 3e-4e), jamais une rue
 - "Saint-Denis" → Saint-Denis (93), pas Saint-Denis-de-la-Réunion
+- NOM DE STATION DE MÉTRO SEUL → TOUJOURS l'arrondissement parisien de la station. JAMAIS une commune de banlieue même si un lac/bois du même nom est en banlieue.
+- "Daumesnil" → OBLIGATOIREMENT Paris 12 (station lignes 6 et 8, avenue Daumesnil, Paris 12e). JAMAIS Vincennes. Le lac Daumesnil est dans le bois de Vincennes mais "Daumesnil" comme lieu de vie = Paris 12. preselectQueries = ["Paris 12"].
+- "Nation" seul → Paris 11, Paris 12 (station de métro). Jamais une commune.
+- "Bastille" seul → Paris 4, Paris 11, Paris 12. Jamais une commune.
+- "Pigalle" seul → Paris 9. Jamais une commune.
+- "Oberkampf" seul → Paris 11. Jamais une commune.
 
 Règles pour mapAction.preselectQueries (OBLIGATOIRE pour status "clear"):
 - Toujours remplir preselectQueries avec les zones exactes correspondant à la demande
@@ -91,6 +97,17 @@ Retourne exactement ce JSON (sans markdown, sans commentaires):
   "inferredConstraints": [
     { "type": "near_transport" | "near_poi" | "lifestyle" | "exclude_area", "value": string, "confidence": number }
   ],
+  "geoConstraints": [
+    {
+      "type": "administrative_area" | "transport_line" | "transport_station" | "poi" | "relative_position" | "lifestyle",
+      "label": string,
+      "operator": "inside" | "near" | "around" | "between" | "exclude" | "prefer",
+      "confidence": number,
+      "zoneId": string | null,
+      "line": string | null,
+      "stationName": string | null
+    }
+  ],
   "clarificationQuestion": string | null,
   "clarificationOptions": [
     {
@@ -107,6 +124,16 @@ Retourne exactement ce JSON (sans markdown, sans commentaires):
     "preselectQueries": string[]
   }
 }
+
+RÈGLES pour geoConstraints (OBLIGATOIRE quand des contraintes existent):
+- Toujours inclure un constraint "administrative_area" pour chaque zone géographique principale
+- zoneId pour arrondissements: "arr-1" à "arr-20" (ex: Paris 9 → "arr-9")
+- zoneId pour communes: "com-" + code INSEE 5 chiffres (ex: Vincennes → "com-94078", Neuilly-sur-Seine → "com-92050", Levallois-Perret → "com-92044", Saint-Mandé → "com-94067")
+- Pour "Paris 9 proche ligne 2": deux constraints — administrative_area(zoneId:"arr-9") + transport_line(line:"2", operator:"near")
+- Pour "proche station Nation": transport_station(stationName:"Nation", operator:"near")
+- Pour "Paris 11 et 12": deux constraints administrative_area séparés
+- line: numéro de ligne seul — "1", "2", "13", "A", "B" (sans "ligne" ou "RER")
+- STATION SEULE (ex: "Daumesnil", "Nation", "Bastille"): TOUJOURS deux constraints — administrative_area(zoneId de l'arrondissement) + transport_station(stationName). Exemple pour "Daumesnil": [{"type":"administrative_area","zoneId":"arr-12","operator":"inside"},{"type":"transport_station","stationName":"Daumesnil","operator":"near"}]
 
 RÈGLES CRITIQUES pour preselectZones (clarificationOptions) ET preselectQueries (mapAction):
 - Format OBLIGATOIRE pour les arrondissements: "Paris 1", "Paris 4", "Paris 11", "Paris 18" (chiffre seul, sans "e"/"er")

@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
-import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
+import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
+import { findStation } from '@/lib/services/metroStationsDb'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { resolveConstraints } from '@/lib/services/geoConstraintService'
@@ -155,9 +156,31 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         const matchedArrs = matchArrondissements(intent.location_terms, arrs)
         const matchedComms = matchCommunes(intent.location_terms, loadedCommunes)
 
-        const newArrIds = matchedArrs.map((z) => z.id)
-        const newQuartierIds = matchedArrs.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
-        const newCommuneIds = matchedComms.map((z) => z.id)
+        let newArrIds = matchedArrs.map((z) => z.id)
+        let newQuartierIds = matchedArrs.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
+        let newCommuneIds = matchedComms.map((z) => z.id)
+
+        // Safety net: if term matching failed (LLM returned wrong zone) but we have a
+        // transport_station constraint, derive the zone from the station's coordinates.
+        if (newArrIds.length === 0 && newCommuneIds.length === 0 && intent.geoConstraints?.length) {
+          const stationC = intent.geoConstraints.find((c) => c.type === 'transport_station' && c.stationName)
+          if (stationC?.stationName) {
+            const station = findStation(stationC.stationName)
+            if (station) {
+              const matchedArr = arrs.find((a) => polygonContainsPoint(a.feature.geometry, station.lng, station.lat))
+              if (matchedArr) {
+                newArrIds = [matchedArr.id]
+                newQuartierIds = getChildQuartiers(matchedArr.id, qus).map((q) => q.id)
+              } else {
+                const loadedC = communesResult.status === 'fulfilled' ? communesResult.value : []
+                const matchedComm = loadedC.find((c) => polygonContainsPoint(c.feature.geometry, station.lng, station.lat))
+                if (matchedComm) newCommuneIds = [matchedComm.id]
+              }
+              // Re-center the map on the actual station if geocoding was wrong
+              setCenter([station.lat, station.lng])
+            }
+          }
+        }
 
         if (newArrIds.length > 0 || newCommuneIds.length > 0) {
           useSearchStore.setState({

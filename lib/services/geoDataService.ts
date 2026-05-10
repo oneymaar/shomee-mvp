@@ -46,7 +46,7 @@ function pointInRing(px: number, py: number, ring: number[][]): boolean {
   return inside
 }
 
-function polygonContainsPoint(geom: GeoJSON.Geometry, lng: number, lat: number): boolean {
+export function polygonContainsPoint(geom: GeoJSON.Geometry, lng: number, lat: number): boolean {
   if (geom.type === 'Polygon') return pointInRing(lng, lat, geom.coordinates[0] as number[][])
   if (geom.type === 'MultiPolygon') {
     return (geom.coordinates as number[][][][]).some((c) => pointInRing(lng, lat, c[0]))
@@ -54,7 +54,7 @@ function polygonContainsPoint(geom: GeoJSON.Geometry, lng: number, lat: number):
   return false
 }
 
-function polygonCentroid(geom: GeoJSON.Geometry): [number, number] {
+export function polygonCentroid(geom: GeoJSON.Geometry): [number, number] {
   let ring: number[][]
   if (geom.type === 'Polygon') ring = geom.coordinates[0] as number[][]
   else if (geom.type === 'MultiPolygon') {
