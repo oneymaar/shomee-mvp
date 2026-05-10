@@ -163,16 +163,13 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       if (neighborhoodMatch) {
         const alreadyHasNeighborhood = enrichedConstraints.some((c) => c.type === 'semantic_neighborhood')
         if (!alreadyHasNeighborhood) {
-          const nbConstraints = neighborhoodToConstraints(neighborhoodMatch)
-          // Keep existing administrative_area if LLM provided one; otherwise use the one
-          // derived from the neighborhood's arrondissement field.
-          const hasAdminArea = enrichedConstraints.some((c) => c.type === 'administrative_area')
+          // Drop any LLM-provided administrative_area: resolveConstraints will use the
+          // no-primary-zone path and scan all loaded IRIS by radius from the neighborhood
+          // center. This is the only approach that correctly covers multi-arrondissement
+          // neighborhoods (e.g. Le Marais spans Paris 3 + Paris 4).
           enrichedConstraints = [
-            ...(hasAdminArea
-              ? enrichedConstraints
-              : nbConstraints.filter((c) => c.type === 'administrative_area')),
             ...enrichedConstraints.filter((c) => c.type !== 'administrative_area'),
-            nbConstraints.find((c) => c.type === 'semantic_neighborhood')!,
+            ...neighborhoodToConstraints(neighborhoodMatch),
           ]
         }
       }

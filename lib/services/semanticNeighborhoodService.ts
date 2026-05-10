@@ -73,36 +73,20 @@ export function findNeighborhoodById(id: string): SemanticNeighborhood | null {
 }
 
 /**
- * Build the GeoConstraints for a matched neighborhood:
- * - One administrative_area for the arrondissement (provides the IRIS pool)
- * - One semantic_neighborhood for the radius-based narrowing
+ * Build the GeoConstraint for a matched neighborhood.
  *
- * If the arrondissement cannot be parsed (suburban), only the
- * semantic_neighborhood constraint is returned and resolveConstraints handles it
- * via the no-primary-zone path.
+ * Only emits semantic_neighborhood — NO administrative_area.
+ * resolveConstraints uses the no-primary-zone path which scans all loaded
+ * IRIS by radius from the center. This correctly handles neighborhoods that
+ * span multiple arrondissements (e.g. Le Marais: Paris 3 / Paris 4).
  */
 export function neighborhoodToConstraints(n: SemanticNeighborhood): GeoConstraint[] {
-  const constraints: GeoConstraint[] = []
-
-  const arrMatch = n.arrondissement.match(/Paris (\d{1,2})/)
-  if (arrMatch) {
-    constraints.push({
-      type: 'administrative_area',
-      label: n.arrondissement,
-      operator: 'inside',
-      confidence: 0.9,
-      zoneId: `arr-${parseInt(arrMatch[1])}`,
-    })
-  }
-
-  constraints.push({
+  return [{
     type: 'semantic_neighborhood',
     label: n.label,
     operator: 'near',
     confidence: 0.95,
     neighborhoodId: n.id,
     radiusM: n.confidenceRadiusMeters,
-  })
-
-  return constraints
+  }]
 }
