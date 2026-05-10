@@ -19,7 +19,9 @@ export interface SearchPreferences {
   locationLng: number | null
   locationRadius: number
   locationIntent: LocationIntent | null
-  selectedZoneIds: string[]
+  // Hierarchical zone selection
+  selectedArrIds: string[]    // e.g. ['arr-11', 'arr-12']
+  selectedQuartierIds: string[] // e.g. ['qu-41', 'qu-42'] — explicit quartier selection at high zoom
   budgetMax: number | null
   propertyTypes: PropertyType[]
   minRooms: number | null
@@ -30,16 +32,11 @@ export interface SearchPreferences {
 }
 
 interface SearchStore extends SearchPreferences {
-  setLocation: (opts: {
-    query: string
-    label: string
-    lat: number
-    lng: number
-    intent?: LocationIntent | null
-  }) => void
+  setLocation: (opts: { query: string; label: string; lat: number; lng: number; intent?: LocationIntent | null }) => void
   setLocationRadius: (radius: number) => void
-  setSelectedZones: (ids: string[]) => void
-  toggleZone: (id: string) => void
+  setSelectedArrs: (ids: string[]) => void
+  toggleArr: (id: string, childIds: string[]) => void
+  toggleQuartier: (id: string, parentId: string, allSiblingIds: string[]) => void
   setBudgetMax: (max: number | null) => void
   setPropertyTypes: (types: PropertyType[]) => void
   togglePropertyType: (type: PropertyType) => void
@@ -52,14 +49,15 @@ interface SearchStore extends SearchPreferences {
 
 export const useSearchStore = create<SearchStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       locationQuery: '',
       locationLabel: '',
       locationLat: null,
       locationLng: null,
       locationRadius: 2,
       locationIntent: null,
-      selectedZoneIds: [],
+      selectedArrIds: [],
+      selectedQuartierIds: [],
       budgetMax: null,
       propertyTypes: [],
       minRooms: null,
@@ -73,14 +71,55 @@ export const useSearchStore = create<SearchStore>()(
 
       setLocationRadius: (radius) => set({ locationRadius: radius }),
 
-      setSelectedZones: (ids) => set({ selectedZoneIds: ids }),
+      setSelectedArrs: (ids) => set({ selectedArrIds: ids }),
 
-      toggleZone: (id) =>
-        set((state) => ({
-          selectedZoneIds: state.selectedZoneIds.includes(id)
-            ? state.selectedZoneIds.filter((z) => z !== id)
-            : [...state.selectedZoneIds, id],
-        })),
+      /** Toggle an arrondissement. childIds = all quartier IDs belonging to this arr. */
+      toggleArr: (id, childIds) => {
+        const state = get()
+        const isSelected = state.selectedArrIds.includes(id)
+        if (isSelected) {
+          // Deselect arr + all its quartiers
+          set({
+            selectedArrIds: state.selectedArrIds.filter((a) => a !== id),
+            selectedQuartierIds: state.selectedQuartierIds.filter((q) => !childIds.includes(q)),
+          })
+        } else {
+          // Select arr + all its quartiers
+          const newQuartierIds = [...new Set([...state.selectedQuartierIds, ...childIds])]
+          set({
+            selectedArrIds: [...state.selectedArrIds, id],
+            selectedQuartierIds: newQuartierIds,
+          })
+        }
+      },
+
+      /** Toggle a single quartier. Updates parent partial/full state accordingly. */
+      toggleQuartier: (id, parentId, allSiblingIds) => {
+        const state = get()
+        const isSelected = state.selectedQuartierIds.includes(id)
+        let newQuartierIds: string[]
+        if (isSelected) {
+          newQuartierIds = state.selectedQuartierIds.filter((q) => q !== id)
+        } else {
+          newQuartierIds = [...state.selectedQuartierIds, id]
+        }
+
+        // Recompute parent arr selection
+        const selectedSiblings = allSiblingIds.filter((s) => newQuartierIds.includes(s))
+        let newArrIds = state.selectedArrIds
+        if (selectedSiblings.length === 0) {
+          // No siblings selected → parent not selected
+          newArrIds = newArrIds.filter((a) => a !== parentId)
+        } else if (selectedSiblings.length === allSiblingIds.length) {
+          // All siblings selected → parent fully selected
+          if (!newArrIds.includes(parentId)) newArrIds = [...newArrIds, parentId]
+        } else {
+          // Partial → parent removed from fully-selected list (handled by partial state in UI)
+          newArrIds = newArrIds.filter((a) => a !== parentId)
+        }
+
+        set({ selectedQuartierIds: newQuartierIds, selectedArrIds: newArrIds })
+      },
 
       setBudgetMax: (max) => set({ budgetMax: max }),
 
@@ -114,7 +153,8 @@ export const useSearchStore = create<SearchStore>()(
           locationLng: null,
           locationRadius: 2,
           locationIntent: null,
-          selectedZoneIds: [],
+          selectedArrIds: [],
+          selectedQuartierIds: [],
           budgetMax: null,
           propertyTypes: [],
           minRooms: null,

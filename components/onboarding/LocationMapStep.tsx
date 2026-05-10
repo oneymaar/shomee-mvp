@@ -1,25 +1,24 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
-import { ArrowLeft, CheckCircle, Loader2, MapPin } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
+import { fetchParisGeoData, matchArrondissements, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
-import { findZonesByTerms, getZonesAroundPoint, type Zone } from '@/lib/services/zoneService'
 import { useSearchStore } from '@/lib/searchStore'
 
 const ZoneMap = dynamic(() => import('./ZoneMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-neutral-100">
-      <Loader2 size={24} className="text-neutral-400 animate-spin" />
+    <div className="w-full h-full flex items-center justify-center bg-neutral-50">
+      <Loader2 size={24} className="text-neutral-300 animate-spin" />
     </div>
   ),
 })
 
-// Default center: Paris
-const PARIS: [number, number] = [48.8566, 2.3522]
+const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
 interface LocationMapStepProps {
   onValidate: () => void
@@ -27,99 +26,146 @@ interface LocationMapStepProps {
 }
 
 export default function LocationMapStep({ onValidate, onBack }: LocationMapStepProps) {
-  const { locationQuery, locationLat, locationLng, setLocation, setSelectedZones, toggleZone, selectedZoneIds } = useSearchStore()
+  const {
+    locationQuery, locationLat, locationLng, locationIntent,
+    selectedArrIds, selectedQuartierIds,
+    setLocation, setSelectedArrs, toggleArr, toggleQuartier,
+  } = useSearchStore()
 
+  const [arrondissements, setArrondissements] = useState<GeoZone[]>([])
+  const [quartiers, setQuartiers] = useState<GeoZone[]>([])
   const [center, setCenter] = useState<[number, number]>(
-    locationLat && locationLng ? [locationLat, locationLng] : PARIS
+    locationLat && locationLng ? [locationLat, locationLng] : PARIS_CENTER
   )
   const [zoom, setZoom] = useState(12)
-  const [zones, setZones] = useState<Zone[]>([])
   const [loading, setLoading] = useState(true)
-  const [locationLabel, setLocationLabel] = useState('')
-  const didInit = useRef(false)
+  const [error, setError] = useState<string | null>(null)
+  const [locationLabel, setLocationLabel] = useState(
+    locationLat && locationLng ? locationQuery : ''
+  )
+  const initialized = useRef(false)
 
   useEffect(() => {
-    if (didInit.current) return
-    didInit.current = true
-
-    async function init() {
-      setLoading(true)
-      try {
-        const intent = parseLocationIntent(locationQuery)
-
-        // Geocode the primary location
-        let resolvedCenter = center
-        let resolvedLabel = locationQuery
-
-        const primaryTerm = intent.location_terms[0] ?? locationQuery
-        if (primaryTerm) {
-          const geo = await geocodeBest(primaryTerm)
-          if (geo) {
-            resolvedCenter = [geo.lat, geo.lng]
-            resolvedLabel = geo.label
-            setCenter(resolvedCenter)
-            setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
-          }
-        } else if (locationLat && locationLng) {
-          resolvedCenter = [locationLat, locationLng]
-        }
-
-        setLocationLabel(resolvedLabel)
-
-        // Find zones to display
-        const matchedZones = findZonesByTerms(intent.location_terms)
-        const nearbyZones = getZonesAroundPoint(resolvedCenter[0], resolvedCenter[1], 7)
-
-        // Merge: matched zones first, then nearby (dedup)
-        const seen = new Set<string>()
-        const merged: Zone[] = []
-        for (const z of [...matchedZones, ...nearbyZones]) {
-          if (!seen.has(z.id)) { seen.add(z.id); merged.push(z) }
-        }
-        setZones(merged.slice(0, 30))
-
-        // Pre-select matched zones
-        if (matchedZones.length > 0) {
-          setSelectedZones(matchedZones.map((z) => z.id))
-        }
-
-        // Set zoom based on context
-        const inParis = resolvedCenter[0] > 48.81 && resolvedCenter[0] < 48.91 &&
-                        resolvedCenter[1] > 2.22 && resolvedCenter[1] < 2.47
-        setZoom(inParis ? 12 : 11)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    init()
+    if (initialized.current) return
+    initialized.current = true
+    initMap()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const selectedZones = zones.filter((z) => selectedZoneIds.includes(z.id))
-  const canValidate = selectedZoneIds.length > 0
+  async function initMap() {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Fetch geo data and geocode in parallel
+      const intent = locationIntent ?? parseLocationIntent(locationQuery)
+      const primaryTerm = intent.location_terms[0] ?? locationQuery
+
+      const [geoData, geocodeResult] = await Promise.allSettled([
+        fetchParisGeoData(),
+        primaryTerm ? geocodeBest(primaryTerm) : Promise.resolve(null),
+      ])
+
+      const { arrondissements: arrs, quartiers: qus } = geoData.status === 'fulfilled'
+        ? geoData.value
+        : { arrondissements: [], quartiers: [] }
+
+      if (!arrs.length) {
+        setError('Impossible de charger les données géographiques. Vérifiez votre connexion.')
+        setLoading(false)
+        return
+      }
+
+      setArrondissements(arrs)
+      setQuartiers(qus)
+
+      // Resolve center
+      if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
+        const geo = geocodeResult.value
+        const newCenter: [number, number] = [geo.lat, geo.lng]
+        setCenter(newCenter)
+        setLocationLabel(geo.label)
+        setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
+      }
+
+      // Pre-select matching arrondissements if none already selected
+      if (selectedArrIds.length === 0 && intent.location_terms.length > 0) {
+        const matched = matchArrondissements(intent.location_terms, arrs)
+        if (matched.length > 0) {
+          const newArrIds = matched.map((z) => z.id)
+          const newQuartierIds = matched.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
+          setSelectedArrs(newArrIds)
+          // Also update quartier selection
+          useSearchStore.setState({ selectedArrIds: newArrIds, selectedQuartierIds: newQuartierIds })
+
+          // Center on first matched arr
+          const firstMatch = matched[0]
+          // Find center from feature bounds — use the geocoded center if available, otherwise keep Paris center
+        }
+      }
+
+      // Determine zoom based on number of matched arrondissements
+      const matchedCount = selectedArrIds.length || matchArrondissements(intent.location_terms, arrs).length
+      setZoom(matchedCount <= 2 ? 13 : 12)
+    } catch (e) {
+      console.error(e)
+      setError('Erreur lors du chargement de la carte. Réessayez.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClickArr = useCallback((zone: GeoZone) => {
+    const childIds = getChildQuartiers(zone.id, quartiers).map((q) => q.id)
+    toggleArr(zone.id, childIds)
+  }, [quartiers, toggleArr])
+
+  const handleClickQuartier = useCallback((zone: GeoZone) => {
+    if (!zone.parentId) return
+    const siblings = getChildQuartiers(zone.parentId, quartiers).map((q) => q.id)
+    toggleQuartier(zone.id, zone.parentId, siblings)
+  }, [quartiers, toggleQuartier])
+
+  // Build selection summary
+  const selectedArrs = arrondissements.filter((z) => selectedArrIds.includes(z.id))
+  // Partial arrondissements: some children selected but not fully selected
+  const partialArrs = arrondissements.filter((z) => {
+    if (selectedArrIds.includes(z.id)) return false
+    const childIds = getChildQuartiers(z.id, quartiers).map((q) => q.id)
+    return childIds.some((id) => selectedQuartierIds.includes(id))
+  })
+
+  const totalSelectedZones = selectedArrs.length + partialArrs.length
+  const canValidate = selectedArrIds.length > 0 || selectedQuartierIds.length > 0
 
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-3 flex items-center gap-3">
+      <div
+        className="flex-shrink-0 px-4 pb-2 flex items-center gap-3"
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+      >
         <button
           onClick={onBack}
-          className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center active:bg-black/5 transition-colors"
+          className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center active:bg-black/5 transition-colors flex-shrink-0"
         >
           <ArrowLeft size={17} className="text-neutral-600" />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h3 className="text-[15px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h3>
-          <p className="text-[12px] text-neutral-400 mt-0.5">Touchez les zones pour les sélectionner</p>
+          <p className="text-[11px] text-neutral-400 mt-0.5">
+            Touchez pour sélectionner · Zoomez pour affiner
+          </p>
         </div>
       </div>
 
       {/* Location label */}
-      {locationLabel && (
+      {locationLabel && !loading && (
         <div className="flex-shrink-0 px-4 pb-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium w-fit"
-            style={{ backgroundColor: 'rgba(145,78,60,0.08)', color: '#914E3C' }}>
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
+            style={{ backgroundColor: 'rgba(145,78,60,0.08)', color: '#914E3C' }}
+          >
             <MapPin size={11} />
             {locationLabel}
           </div>
@@ -129,39 +175,69 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       {/* Map */}
       <div className="flex-1 mx-4 rounded-2xl overflow-hidden border border-black/8 relative min-h-0">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-neutral-100">
-            <Loader2 size={24} className="text-neutral-400 animate-spin" />
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-50 gap-3">
+            <Loader2 size={28} className="text-neutral-300 animate-spin" />
+            <p className="text-[13px] text-neutral-400">Chargement des zones…</p>
           </div>
         )}
-        <ZoneMap
-          center={center}
-          zoom={zoom}
-          zones={zones}
-          selectedIds={selectedZoneIds}
-          onToggle={toggleZone}
-        />
+        {error && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-50 gap-3 px-6 text-center">
+            <AlertCircle size={28} className="text-neutral-300" />
+            <p className="text-[13px] text-neutral-500">{error}</p>
+            <button
+              onClick={initMap}
+              className="text-[13px] font-semibold px-4 py-2 rounded-full"
+              style={{ backgroundColor: '#914E3C', color: 'white' }}
+            >
+              Réessayer
+            </button>
+          </div>
+        )}
+        {!loading && !error && arrondissements.length > 0 && (
+          <ZoneMap
+            center={center}
+            zoom={zoom}
+            arrondissements={arrondissements}
+            quartiers={quartiers}
+            selectedArrIds={selectedArrIds}
+            selectedQuartierIds={selectedQuartierIds}
+            onClickArr={handleClickArr}
+            onClickQuartier={handleClickQuartier}
+          />
+        )}
       </div>
 
-      {/* Selected zones summary */}
-      <div className="flex-shrink-0 px-4 pt-3 min-h-[44px]">
+      {/* Selection chips */}
+      <div className="flex-shrink-0 px-4 pt-2.5 min-h-[36px]">
         <AnimatePresence>
-          {selectedZones.length > 0 && (
+          {totalSelectedZones > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="flex flex-wrap gap-1.5"
             >
-              {selectedZones.map((z) => (
+              {selectedArrs.map((z) => (
                 <button
                   key={z.id}
-                  onClick={() => toggleZone(z.id)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-medium text-white active:opacity-80"
+                  onClick={() => handleClickArr(z)}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold text-white active:opacity-75 transition-opacity"
                   style={{ backgroundColor: '#914E3C' }}
                 >
-                  {z.shortLabel}
-                  <span className="opacity-70 text-[10px]">✕</span>
+                  {z.shortName}
+                  <span className="opacity-60 text-[9px] ml-0.5">✕</span>
+                </button>
+              ))}
+              {partialArrs.map((z) => (
+                <button
+                  key={z.id}
+                  onClick={() => handleClickArr(z)}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-75 transition-opacity border"
+                  style={{ backgroundColor: 'rgba(145,78,60,0.1)', color: '#914E3C', borderColor: 'rgba(145,78,60,0.3)' }}
+                >
+                  {z.shortName} ~
+                  <span className="opacity-60 text-[9px] ml-0.5">✕</span>
                 </button>
               ))}
             </motion.div>
@@ -169,28 +245,44 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         </AnimatePresence>
       </div>
 
+      {/* Legend */}
+      {!loading && !error && (
+        <div className="flex-shrink-0 px-4 pt-1 pb-1">
+          <div className="flex items-center gap-4 text-[11px] text-neutral-400">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'rgba(145,78,60,0.18)', border: '2px solid #914E3C' }} />
+              <span>Sélectionné</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'rgba(145,78,60,0.06)', border: '2px dashed rgba(145,78,60,0.6)' }} />
+              <span>Partiel</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CTAs */}
       <div
-        className="px-4 pt-2 flex flex-col gap-2.5 flex-shrink-0"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
+        className="px-4 pt-2 flex flex-col gap-2 flex-shrink-0"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
       >
         <button
           onClick={onValidate}
           disabled={!canValidate}
-          className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
+          className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
           style={{ backgroundColor: canValidate ? '#914E3C' : '#D4A89A', cursor: canValidate ? 'pointer' : 'default' }}
         >
-          <CheckCircle size={18} />
+          <CheckCircle size={17} />
           Valider ma zone
-          {selectedZoneIds.length > 0 && (
-            <span className="bg-white/20 text-white text-[12px] px-2 py-0.5 rounded-full ml-1">
-              {selectedZoneIds.length}
+          {canValidate && (
+            <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">
+              {selectedArrIds.length + partialArrs.length}
             </span>
           )}
         </button>
         <button
           onClick={onValidate}
-          className="w-full py-2.5 text-[13px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
+          className="w-full py-2 text-[13px] font-medium text-neutral-400 active:text-neutral-600"
         >
           Continuer sans sélectionner
         </button>
