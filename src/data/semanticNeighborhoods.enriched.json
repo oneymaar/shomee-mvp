@@ -1,0 +1,1496 @@
+[
+  {
+    "id": "butte_aux_cailles",
+    "label": "Butte-aux-Cailles",
+    "aliases": [
+      "Butte aux Cailles",
+      "La Butte",
+      "Butocaï"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8272,
+      "lng": 2.3491
+    },
+    "relatedStations": [
+      "Corvisart",
+      "Nationale",
+      "Place d'Italie",
+      "Tolbiac",
+      "Glacière"
+    ],
+    "confidenceRadiusMeters": 700,
+    "description": "Quartier-village du 13e, connu pour ses rues pavées, ses petites maisons, ses guinguettes et son ambiance conviviale hors du temps.",
+    "vibeTags": [
+      "village",
+      "calme",
+      "convivial",
+      "restaurants",
+      "charme",
+      "authentique"
+    ],
+    "relatedIrisIds": [
+      "iris-751135109",
+      "iris-751135111",
+      "iris-751135112",
+      "iris-751135113",
+      "iris-751135114",
+      "iris-751135115",
+      "iris-751135116",
+      "iris-751135117",
+      "iris-751135118",
+      "iris-751135119",
+      "iris-751135120",
+      "iris-751135121",
+      "iris-751135122",
+      "iris-751135123",
+      "iris-751135124",
+      "iris-751135125",
+      "iris-751135202",
+      "iris-751135203",
+      "iris-751135204"
+    ]
+  },
+  {
+    "id": "aligre",
+    "label": "Aligre",
+    "aliases": [
+      "Marché d'Aligre",
+      "Faubourg Saint-Antoine",
+      "Aligre-Faubourg"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8503,
+      "lng": 2.378
+    },
+    "relatedStations": [
+      "Faidherbe-Chaligny",
+      "Quai de la Rapée",
+      "Gare de Lyon",
+      "Charonne",
+      "Bastille",
+      "Reuilly-Diderot"
+    ],
+    "confidenceRadiusMeters": 600,
+    "description": "Secteur populaire et vivant autour du marché d'Aligre, l'un des marchés les plus animés de Paris. Mélange d'artisanat, de bistrots et de mixité sociale.",
+    "vibeTags": [
+      "marché",
+      "populaire",
+      "animé",
+      "mixte",
+      "artisanat",
+      "bistrots"
+    ],
+    "relatedIrisIds": [
+      "iris-751114307",
+      "iris-751114308",
+      "iris-751114309",
+      "iris-751114310",
+      "iris-751114311",
+      "iris-751114404",
+      "iris-751114405",
+      "iris-751114406",
+      "iris-751114407",
+      "iris-751124801",
+      "iris-751124802",
+      "iris-751124805",
+      "iris-751124806",
+      "iris-751124807",
+      "iris-751124808",
+      "iris-751124809",
+      "iris-751124810",
+      "iris-751124813"
+    ]
+  },
+  {
+    "id": "batignolles",
+    "label": "Batignolles",
+    "aliases": [
+      "Les Batignolles",
+      "Village des Batignolles"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8873,
+      "lng": 2.3237
+    },
+    "relatedStations": [
+      "Place de Clichy",
+      "La Fourche",
+      "Blanche",
+      "Rome",
+      "Malesherbes",
+      "Pigalle"
+    ],
+    "confidenceRadiusMeters": 750,
+    "description": "Ancien village annexé à Paris au XIXe, conservant un caractère de quartier résidentiel calme avec marché, square et petits commerces de proximité.",
+    "vibeTags": [
+      "village",
+      "résidentiel",
+      "calme",
+      "marché",
+      "familial",
+      "square"
+    ],
+    "relatedIrisIds": [
+      "iris-751083207",
+      "iris-751093306",
+      "iris-751176701",
+      "iris-751176702",
+      "iris-751176703",
+      "iris-751176704",
+      "iris-751176705",
+      "iris-751176706",
+      "iris-751176707",
+      "iris-751176708",
+      "iris-751176709",
+      "iris-751176711",
+      "iris-751176712",
+      "iris-751176713",
+      "iris-751176801",
+      "iris-751176802",
+      "iris-751176803",
+      "iris-751176804",
+      "iris-751176805",
+      "iris-751176807",
+      "iris-751176808",
+      "iris-751176812",
+      "iris-751186903",
+      "iris-751186904",
+      "iris-751186905",
+      "iris-751186906",
+      "iris-751186907",
+      "iris-751186915"
+    ]
+  },
+  {
+    "id": "le_marais",
+    "label": "Le Marais",
+    "aliases": [
+      "Marais",
+      "Le Marais historique",
+      "Haut-Marais",
+      "Bas-Marais"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8555,
+      "lng": 2.3534
+    },
+    "relatedStations": [
+      "Hôtel de Ville",
+      "Pont Marie",
+      "Cité",
+      "Châtelet",
+      "Saint-Michel",
+      "Rambuteau",
+      "Saint-Paul",
+      "Sully-Morland",
+      "Cluny-La Sorbonne",
+      "Pont Neuf",
+      "Louvre-Rivoli"
+    ],
+    "confidenceRadiusMeters": 900,
+    "description": "Quartier historique classé, mêlant hôtels particuliers du XVIIe, galeries d'art contemporain, boutiques de mode, communauté LGBTQ+ et vie juive. L'un des quartiers les plus touristiques et vivants de Paris.",
+    "vibeTags": [
+      "historique",
+      "branché",
+      "LGBTQ+",
+      "galeries",
+      "tourisme",
+      "shopping",
+      "animé"
+    ],
+    "relatedIrisIds": [
+      "iris-751010101",
+      "iris-751010102",
+      "iris-751010201",
+      "iris-751010202",
+      "iris-751031103",
+      "iris-751031104",
+      "iris-751031201",
+      "iris-751031202",
+      "iris-751031203",
+      "iris-751031204",
+      "iris-751041301",
+      "iris-751041302",
+      "iris-751041303",
+      "iris-751041304",
+      "iris-751041305",
+      "iris-751041399",
+      "iris-751041401",
+      "iris-751041402",
+      "iris-751041403",
+      "iris-751041404",
+      "iris-751041499",
+      "iris-751041502",
+      "iris-751041599",
+      "iris-751041601",
+      "iris-751041602",
+      "iris-751041603",
+      "iris-751041699",
+      "iris-751051704",
+      "iris-751051705",
+      "iris-751051799",
+      "iris-751052003",
+      "iris-751052004",
+      "iris-751052099",
+      "iris-751062103"
+    ]
+  },
+  {
+    "id": "montorgueil",
+    "label": "Montorgueil",
+    "aliases": [
+      "Rue Montorgueil",
+      "Montorgueil-Saint-Denis",
+      "Sentier-Montorgueil"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8638,
+      "lng": 2.3478
+    },
+    "relatedStations": [
+      "Les Halles",
+      "Sentier",
+      "Châtelet-Les Halles",
+      "Réaumur-Sébastopol",
+      "Étienne Marcel",
+      "Louvre-Rivoli",
+      "Rambuteau",
+      "Strasbourg-Saint-Denis",
+      "Bourse",
+      "Châtelet",
+      "Arts et Métiers",
+      "Bonne Nouvelle",
+      "Hôtel de Ville"
+    ],
+    "confidenceRadiusMeters": 500,
+    "description": "Rue commerçante piétonne emblématique du 2e arrondissement, entourée de petites rues animées, de bistrots parisiens et de commerces de bouche. Ambiance village en plein cœur de Paris.",
+    "vibeTags": [
+      "piéton",
+      "commerçant",
+      "animé",
+      "bistrots",
+      "village",
+      "centre"
+    ],
+    "relatedIrisIds": [
+      "iris-751010201",
+      "iris-751010202",
+      "iris-751010203",
+      "iris-751010204",
+      "iris-751010205",
+      "iris-751010206",
+      "iris-751020701",
+      "iris-751020702",
+      "iris-751020801",
+      "iris-751020802",
+      "iris-751020803",
+      "iris-751031203",
+      "iris-751031204",
+      "iris-751041303"
+    ]
+  },
+  {
+    "id": "oberkampf",
+    "label": "Oberkampf",
+    "aliases": [
+      "Parmentier",
+      "Oberkampf-Parmentier",
+      "Saint-Maur"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8644,
+      "lng": 2.3776
+    },
+    "relatedStations": [
+      "Couronnes",
+      "Richard-Lenoir",
+      "Rue Saint-Maur",
+      "Goncourt",
+      "Belleville"
+    ],
+    "confidenceRadiusMeters": 650,
+    "description": "Quartier emblématique de la vie nocturne et de la scène culturelle parisienne. Bars, restaurants, music-halls et galeries dans un cadre populaire et dynamique.",
+    "vibeTags": [
+      "nocturne",
+      "bars",
+      "culturel",
+      "jeune",
+      "dynamique",
+      "populaire"
+    ],
+    "relatedIrisIds": [
+      "iris-751114101",
+      "iris-751114102",
+      "iris-751114103",
+      "iris-751114104",
+      "iris-751114108",
+      "iris-751114109",
+      "iris-751114110",
+      "iris-751114114",
+      "iris-751114201",
+      "iris-751114202",
+      "iris-751114203",
+      "iris-751114204",
+      "iris-751114205",
+      "iris-751114206",
+      "iris-751114210",
+      "iris-751114211",
+      "iris-751114212",
+      "iris-751114213",
+      "iris-751114214",
+      "iris-751114317",
+      "iris-751114320",
+      "iris-751207906"
+    ]
+  },
+  {
+    "id": "passy",
+    "label": "Passy",
+    "aliases": [
+      "Village de Passy",
+      "La Muette",
+      "Passy-La Muette"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8578,
+      "lng": 2.2853
+    },
+    "relatedStations": [
+      "Passy",
+      "Bir-Hakeim",
+      "Trocadéro",
+      "La Muette",
+      "Rue de la Pompe",
+      "Ranelagh",
+      "Champ de Mars-Tour Eiffel"
+    ],
+    "confidenceRadiusMeters": 800,
+    "description": "Quartier résidentiel huppé du 16e, avec ses commerces de luxe, ses belles avenues arborées, ses musées (Marmottan, Balzac) et sa clientèle aisée.",
+    "vibeTags": [
+      "résidentiel",
+      "huppé",
+      "luxe",
+      "calme",
+      "bourgeois",
+      "musées",
+      "verdure"
+    ],
+    "relatedIrisIds": [
+      "iris-751155918",
+      "iris-751155919",
+      "iris-751155999",
+      "iris-751166201",
+      "iris-751166203",
+      "iris-751166211",
+      "iris-751166212",
+      "iris-751166213",
+      "iris-751166214",
+      "iris-751166215",
+      "iris-751166216",
+      "iris-751166217",
+      "iris-751166218",
+      "iris-751166219",
+      "iris-751166220",
+      "iris-751166221",
+      "iris-751166222",
+      "iris-751166299",
+      "iris-751166301",
+      "iris-751166410"
+    ]
+  },
+  {
+    "id": "auteuil",
+    "label": "Auteuil",
+    "aliases": [
+      "Village d'Auteuil",
+      "Auteuil-Boulogne"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.848,
+      "lng": 2.2656
+    },
+    "relatedStations": [
+      "Michel-Ange-Molitor",
+      "Michel-Ange-Auteuil",
+      "Exelmans",
+      "Chardon-Lagache",
+      "Mirabeau",
+      "Jasmin"
+    ],
+    "confidenceRadiusMeters": 850,
+    "description": "Ancien village du 16e aux rues calmes et verdoyantes, connu pour ses villas, ses hôtels particuliers, la proximité du Bois de Boulogne et du stade Roland-Garros.",
+    "vibeTags": [
+      "calme",
+      "verdure",
+      "résidentiel",
+      "huppé",
+      "villas",
+      "bois"
+    ],
+    "relatedIrisIds": [
+      "iris-751166106",
+      "iris-751166109",
+      "iris-751166110",
+      "iris-751166111",
+      "iris-751166112",
+      "iris-751166113",
+      "iris-751166114",
+      "iris-751166115",
+      "iris-751166116",
+      "iris-751166117",
+      "iris-751166118",
+      "iris-751166119",
+      "iris-751166120",
+      "iris-751166121",
+      "iris-751166122",
+      "iris-751166123",
+      "iris-751166124",
+      "iris-751166125",
+      "iris-751166126",
+      "iris-751166127",
+      "iris-751166128",
+      "iris-751166129",
+      "iris-751166199"
+    ]
+  },
+  {
+    "id": "saint_germain_des_pres",
+    "label": "Saint-Germain-des-Prés",
+    "aliases": [
+      "Saint-Germain",
+      "SG",
+      "Rive Gauche",
+      "Odéon"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.854,
+      "lng": 2.3325
+    },
+    "relatedStations": [
+      "Saint-Germain-des-Prés",
+      "Mabillon",
+      "Saint-Sulpice",
+      "Rue du Bac",
+      "Sèvres-Babylone",
+      "Musée d'Orsay"
+    ],
+    "confidenceRadiusMeters": 750,
+    "description": "Quartier littéraire et intellectuel de la rive gauche, haut lieu de la philosophie existentialiste, des cafés historiques (Flore, Deux Magots), des librairies et des galeries d'art.",
+    "vibeTags": [
+      "intellectuel",
+      "littéraire",
+      "cafés",
+      "galeries",
+      "luxe",
+      "rive gauche"
+    ],
+    "relatedIrisIds": [
+      "iris-751010199",
+      "iris-751062101",
+      "iris-751062102",
+      "iris-751062103",
+      "iris-751062199",
+      "iris-751062202",
+      "iris-751062203",
+      "iris-751062204",
+      "iris-751062309",
+      "iris-751062310",
+      "iris-751062311",
+      "iris-751062401",
+      "iris-751062402",
+      "iris-751062499",
+      "iris-751072501",
+      "iris-751072502",
+      "iris-751072504",
+      "iris-751072505",
+      "iris-751072506",
+      "iris-751072507",
+      "iris-751072599"
+    ]
+  },
+  {
+    "id": "pigalle",
+    "label": "Pigalle",
+    "aliases": [
+      "Pig'alle",
+      "SoPi",
+      "South Pigalle",
+      "Nouvelle Athènes"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8826,
+      "lng": 2.3346
+    },
+    "relatedStations": [
+      "Pigalle",
+      "Abbesses",
+      "Saint-Georges",
+      "Blanche",
+      "Notre-Dame-de-Lorette",
+      "Liège",
+      "Place de Clichy",
+      "Trinité-d'Estienne-d'Orves",
+      "Anvers"
+    ],
+    "confidenceRadiusMeters": 700,
+    "description": "Quartier en pleine transformation, passé de son image sulfureuse à un secteur branché avec bars à vins, restaurants, disquaires et galeries. La partie sud (SoPi) attire une population jeune et créative.",
+    "vibeTags": [
+      "branché",
+      "nocturne",
+      "bars",
+      "musique",
+      "créatif",
+      "jeune",
+      "en mutation"
+    ],
+    "relatedIrisIds": [
+      "iris-751083207",
+      "iris-751093301",
+      "iris-751093302",
+      "iris-751093303",
+      "iris-751093304",
+      "iris-751093305",
+      "iris-751093306",
+      "iris-751093307",
+      "iris-751093308",
+      "iris-751093309",
+      "iris-751093310",
+      "iris-751093603",
+      "iris-751093604",
+      "iris-751093609",
+      "iris-751176701",
+      "iris-751186901",
+      "iris-751186902",
+      "iris-751186903",
+      "iris-751186904",
+      "iris-751186908",
+      "iris-751186909",
+      "iris-751186910",
+      "iris-751186911",
+      "iris-751187002",
+      "iris-751187003",
+      "iris-751187004",
+      "iris-751187005"
+    ]
+  },
+  {
+    "id": "montmartre",
+    "label": "Montmartre",
+    "aliases": [
+      "La Butte Montmartre",
+      "La Butte",
+      "Abbesses",
+      "Sacré-Cœur"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8867,
+      "lng": 2.3431
+    },
+    "relatedStations": [
+      "Anvers",
+      "Jules Joffrin",
+      "Abbesses",
+      "Château Rouge",
+      "Lamarck-Caulaincourt",
+      "Barbès-Rochechouart",
+      "Pigalle"
+    ],
+    "confidenceRadiusMeters": 900,
+    "description": "Colline iconique du 18e, village-musée avec ses rues sinueuses, la place du Tertre, le Sacré-Cœur, les ateliers d'artistes et les vignes. Très touristique sur les hauteurs, plus résidentiel en bas.",
+    "vibeTags": [
+      "touristique",
+      "village",
+      "artiste",
+      "romantique",
+      "vue",
+      "historique",
+      "escaliers"
+    ],
+    "relatedIrisIds": [
+      "iris-751093308",
+      "iris-751093309",
+      "iris-751093310",
+      "iris-751093605",
+      "iris-751093607",
+      "iris-751093608",
+      "iris-751093609",
+      "iris-751093610",
+      "iris-751103706",
+      "iris-751103711",
+      "iris-751186901",
+      "iris-751186902",
+      "iris-751186903",
+      "iris-751186908",
+      "iris-751186909",
+      "iris-751186910",
+      "iris-751186911",
+      "iris-751186912",
+      "iris-751186913",
+      "iris-751186918",
+      "iris-751187001",
+      "iris-751187002",
+      "iris-751187003",
+      "iris-751187004",
+      "iris-751187005",
+      "iris-751187006",
+      "iris-751187007",
+      "iris-751187008",
+      "iris-751187009",
+      "iris-751187010",
+      "iris-751187011",
+      "iris-751187012",
+      "iris-751187013",
+      "iris-751187014",
+      "iris-751187015",
+      "iris-751187016",
+      "iris-751187017",
+      "iris-751187019",
+      "iris-751187021",
+      "iris-751187022",
+      "iris-751187023",
+      "iris-751187102",
+      "iris-751187103",
+      "iris-751187104",
+      "iris-751187105",
+      "iris-751187106",
+      "iris-751187107",
+      "iris-751187108"
+    ]
+  },
+  {
+    "id": "gambetta",
+    "label": "Gambetta",
+    "aliases": [
+      "Ménilmontant-haut",
+      "Pelleport",
+      "Saint-Fargeau"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8653,
+      "lng": 2.3982
+    },
+    "relatedStations": [
+      "Gambetta",
+      "Pelleport",
+      "Philippe Auguste",
+      "Père Lachaise"
+    ],
+    "confidenceRadiusMeters": 700,
+    "description": "Secteur résidentiel calme du 20e, à l'écart de l'agitation, avec des commerces de quartier, le cimetière du Père-Lachaise à proximité et une population populaire et mixte.",
+    "vibeTags": [
+      "résidentiel",
+      "calme",
+      "populaire",
+      "mixte",
+      "verdure",
+      "quartier"
+    ],
+    "relatedIrisIds": [
+      "iris-751207802",
+      "iris-751207806",
+      "iris-751207807",
+      "iris-751207808",
+      "iris-751207815",
+      "iris-751207901",
+      "iris-751207902",
+      "iris-751207903",
+      "iris-751207904",
+      "iris-751207905",
+      "iris-751207908",
+      "iris-751207909",
+      "iris-751207910",
+      "iris-751207911",
+      "iris-751207912",
+      "iris-751207913",
+      "iris-751207914",
+      "iris-751207915",
+      "iris-751207916",
+      "iris-751207917"
+    ]
+  },
+  {
+    "id": "jourdain",
+    "label": "Jourdain",
+    "aliases": [
+      "Pyrénées-Jourdain",
+      "Belleville haut",
+      "Mouzaïa"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8766,
+      "lng": 2.3892
+    },
+    "relatedStations": [
+      "Jourdain",
+      "Buttes-Chaumont",
+      "Place des Fêtes",
+      "Pyrénées",
+      "Botzaris"
+    ],
+    "confidenceRadiusMeters": 600,
+    "description": "Quartier résidentiel et calme du 20e, apprécié pour son marché local, ses petits restaurants et une ambiance de quartier préservée. Proche des escaliers de Ménilmontant.",
+    "vibeTags": [
+      "résidentiel",
+      "calme",
+      "marché",
+      "local",
+      "convivial",
+      "authentique"
+    ],
+    "relatedIrisIds": [
+      "iris-751197504",
+      "iris-751197505",
+      "iris-751197506",
+      "iris-751197507",
+      "iris-751197508",
+      "iris-751197509",
+      "iris-751197510",
+      "iris-751197514",
+      "iris-751197515",
+      "iris-751197601",
+      "iris-751197602",
+      "iris-751197603",
+      "iris-751197604",
+      "iris-751197617",
+      "iris-751207702",
+      "iris-751207704",
+      "iris-751207711",
+      "iris-751207712",
+      "iris-751207713",
+      "iris-751207714"
+    ]
+  },
+  {
+    "id": "belleville",
+    "label": "Belleville",
+    "aliases": [
+      "Ménilmontant",
+      "Couronnes",
+      "Bas-Belleville"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8714,
+      "lng": 2.3788
+    },
+    "relatedStations": [
+      "Belleville",
+      "Couronnes",
+      "Botzaris",
+      "Pyrénées",
+      "Colonel Fabien",
+      "Ménilmontant"
+    ],
+    "confidenceRadiusMeters": 800,
+    "description": "Quartier cosmopolite et populaire à cheval sur le 11e, 19e et 20e. Communautés chinoises, africaines et maghrébines, scène artistique foisonnante, ateliers d'artistes, restaurants du monde et vie nocturne.",
+    "vibeTags": [
+      "cosmopolite",
+      "populaire",
+      "artistique",
+      "diversité",
+      "nocturne",
+      "restaurants",
+      "vivant"
+    ],
+    "relatedIrisIds": [
+      "iris-751104001",
+      "iris-751104002",
+      "iris-751104003",
+      "iris-751104004",
+      "iris-751104005",
+      "iris-751104006",
+      "iris-751114101",
+      "iris-751114102",
+      "iris-751114103",
+      "iris-751114108",
+      "iris-751114109",
+      "iris-751114110",
+      "iris-751114111",
+      "iris-751114112",
+      "iris-751114113",
+      "iris-751114114",
+      "iris-751114115",
+      "iris-751114201",
+      "iris-751114213",
+      "iris-751114214",
+      "iris-751197601",
+      "iris-751197603",
+      "iris-751197604",
+      "iris-751197605",
+      "iris-751197606",
+      "iris-751197607",
+      "iris-751197608",
+      "iris-751197609",
+      "iris-751207704",
+      "iris-751207705",
+      "iris-751207706",
+      "iris-751207707",
+      "iris-751207708",
+      "iris-751207709",
+      "iris-751207710",
+      "iris-751207711",
+      "iris-751207907"
+    ]
+  },
+  {
+    "id": "canal_saint_martin",
+    "label": "Canal Saint-Martin",
+    "aliases": [
+      "Canal",
+      "Saint-Martin",
+      "Quais du canal"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8709,
+      "lng": 2.3619
+    },
+    "relatedStations": [
+      "Jacques Bonsergent",
+      "République",
+      "Château d'Eau",
+      "Colonel Fabien",
+      "Goncourt",
+      "Louis Blanc",
+      "Gare de l'Est"
+    ],
+    "confidenceRadiusMeters": 700,
+    "description": "Secteur phare de la gentrification parisienne, avec ses boutiques indé, ses cafés branchés, ses hôtels tendance et ses quais animés le week-end. Ambiance bobo-hipster assumée.",
+    "vibeTags": [
+      "branché",
+      "bobo",
+      "indépendant",
+      "cafés",
+      "quais",
+      "hipster",
+      "jeune"
+    ],
+    "relatedIrisIds": [
+      "iris-751030901",
+      "iris-751030902",
+      "iris-751030903",
+      "iris-751030905",
+      "iris-751031001",
+      "iris-751103801",
+      "iris-751103802",
+      "iris-751103901",
+      "iris-751103902",
+      "iris-751103903",
+      "iris-751103904",
+      "iris-751103905",
+      "iris-751103906",
+      "iris-751103907",
+      "iris-751103908",
+      "iris-751103909",
+      "iris-751103910",
+      "iris-751103988",
+      "iris-751104003",
+      "iris-751104004",
+      "iris-751104008",
+      "iris-751104012",
+      "iris-751114105",
+      "iris-751114107",
+      "iris-751114115"
+    ]
+  },
+  {
+    "id": "sentier",
+    "label": "Sentier",
+    "aliases": [
+      "Le Sentier",
+      "Silicon Sentier",
+      "Bonne Nouvelle"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8668,
+      "lng": 2.3488
+    },
+    "relatedStations": [
+      "Réaumur-Sébastopol",
+      "Sentier",
+      "Strasbourg-Saint-Denis",
+      "Bonne Nouvelle",
+      "Étienne Marcel",
+      "Les Halles",
+      "Bourse",
+      "Grands Boulevards",
+      "Châtelet-Les Halles",
+      "Arts et Métiers",
+      "Château d'Eau",
+      "Rambuteau",
+      "Louvre-Rivoli"
+    ],
+    "confidenceRadiusMeters": 550,
+    "description": "Ancien quartier de la confection textile devenu le cœur de la tech et des startups parisiennes. Immeubles haussmanniens réhabilités en espaces de coworking, restaus tendance et vie nocturne.",
+    "vibeTags": [
+      "tech",
+      "startups",
+      "branché",
+      "dynamique",
+      "coworking",
+      "en mutation"
+    ],
+    "relatedIrisIds": [
+      "iris-751010204",
+      "iris-751020701",
+      "iris-751020702",
+      "iris-751020703",
+      "iris-751020704",
+      "iris-751020801",
+      "iris-751020802",
+      "iris-751020803",
+      "iris-751020804",
+      "iris-751020805",
+      "iris-751030905",
+      "iris-751031204",
+      "iris-751103803"
+    ]
+  },
+  {
+    "id": "bercy",
+    "label": "Bercy",
+    "aliases": [
+      "Bercy Village",
+      "Cour Saint-Emilion",
+      "Bercy-Charenton"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8386,
+      "lng": 2.3798
+    },
+    "relatedStations": [
+      "Bercy",
+      "Cour Saint-Émilion",
+      "Dugommier"
+    ],
+    "confidenceRadiusMeters": 800,
+    "description": "Secteur en plein essor autour de l'ancienne halle aux vins, avec Bercy Village (commerces dans les chais réhabilités), le Parc de Bercy, l'Accor Arena et des immeubles neufs.",
+    "vibeTags": [
+      "moderne",
+      "shopping",
+      "parc",
+      "famille",
+      "réhabilité",
+      "en développement"
+    ],
+    "relatedIrisIds": [
+      "iris-751124701",
+      "iris-751124702",
+      "iris-751124704",
+      "iris-751124705",
+      "iris-751124707",
+      "iris-751124799",
+      "iris-751124801",
+      "iris-751124802",
+      "iris-751124811",
+      "iris-751135018"
+    ]
+  },
+  {
+    "id": "daumesnil",
+    "label": "Daumesnil",
+    "aliases": [
+      "Avenue Daumesnil",
+      "Daumesnil-Nation",
+      "Viaduc des Arts"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8399,
+      "lng": 2.3947
+    },
+    "relatedStations": [
+      "Daumesnil",
+      "Dugommier",
+      "Bel-Air"
+    ],
+    "confidenceRadiusMeters": 650,
+    "description": "Secteur tranquille du 12e autour de la station Daumesnil, marqué par le viaduc des Arts réhabilité en galeries et ateliers, et la proximité du lac Daumesnil (Bois de Vincennes).",
+    "vibeTags": [
+      "calme",
+      "artisanat",
+      "galeries",
+      "résidentiel",
+      "verdure",
+      "bois"
+    ],
+    "relatedIrisIds": [
+      "iris-751124504",
+      "iris-751124505",
+      "iris-751124604",
+      "iris-751124605",
+      "iris-751124606",
+      "iris-751124608",
+      "iris-751124609",
+      "iris-751124610",
+      "iris-751124611",
+      "iris-751124612",
+      "iris-751124613",
+      "iris-751124614",
+      "iris-751124615",
+      "iris-751124616",
+      "iris-751124704"
+    ]
+  },
+  {
+    "id": "nation",
+    "label": "Nation",
+    "aliases": [
+      "Place de la Nation",
+      "Cours de Vincennes",
+      "Nation-Picpus"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8484,
+      "lng": 2.3962
+    },
+    "relatedStations": [
+      "Nation",
+      "Avron",
+      "Reuilly-Diderot",
+      "Rue des Boulets",
+      "Bel-Air"
+    ],
+    "confidenceRadiusMeters": 700,
+    "description": "Grand carrefour à l'est de Paris, nœud de transport majeur. Environnement commerçant et résidentiel, avec le Cours de Vincennes, les marchés et une population familiale et populaire.",
+    "vibeTags": [
+      "carrefour",
+      "commerçant",
+      "familial",
+      "populaire",
+      "transport",
+      "animé"
+    ],
+    "relatedIrisIds": [
+      "iris-751114401",
+      "iris-751114402",
+      "iris-751114403",
+      "iris-751114408",
+      "iris-751114409",
+      "iris-751114410",
+      "iris-751124513",
+      "iris-751124514",
+      "iris-751124615",
+      "iris-751124616",
+      "iris-751124617",
+      "iris-751124618",
+      "iris-751124622",
+      "iris-751124623",
+      "iris-751124624",
+      "iris-751208003",
+      "iris-751208004",
+      "iris-751208005",
+      "iris-751208006",
+      "iris-751208014",
+      "iris-751208015",
+      "iris-751208016"
+    ]
+  },
+  {
+    "id": "convention",
+    "label": "Convention",
+    "aliases": [
+      "Vaugirard",
+      "Félix Faure",
+      "Convention-Vaugirard"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8396,
+      "lng": 2.2988
+    },
+    "relatedStations": [
+      "Boucicaut",
+      "Vaugirard",
+      "Félix Faure",
+      "Émile Zola",
+      "Lourmel",
+      "Commerce"
+    ],
+    "confidenceRadiusMeters": 650,
+    "description": "Quartier résidentiel calme du 15e, avec ses marchés couverts, ses commerces de proximité et une ambiance populaire et familiale appréciée des Parisiens en quête de tranquillité.",
+    "vibeTags": [
+      "résidentiel",
+      "calme",
+      "familial",
+      "populaire",
+      "marché",
+      "tranquille"
+    ],
+    "relatedIrisIds": [
+      "iris-751155711",
+      "iris-751155712",
+      "iris-751155713",
+      "iris-751155714",
+      "iris-751155715",
+      "iris-751155716",
+      "iris-751155722",
+      "iris-751155723",
+      "iris-751155724",
+      "iris-751155725",
+      "iris-751155726",
+      "iris-751155727",
+      "iris-751155728",
+      "iris-751155729",
+      "iris-751155730",
+      "iris-751155731",
+      "iris-751155805",
+      "iris-751155806",
+      "iris-751155809",
+      "iris-751155810",
+      "iris-751155901",
+      "iris-751156020"
+    ]
+  },
+  {
+    "id": "mouffetard",
+    "label": "Mouffetard",
+    "aliases": [
+      "La Mouffe",
+      "Rue Mouffetard",
+      "Contrescarpe"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8435,
+      "lng": 2.3508
+    },
+    "relatedStations": [
+      "Place Monge",
+      "Censier-Daubenton",
+      "Jussieu",
+      "Cardinal Lemoine",
+      "Saint-Marcel"
+    ],
+    "confidenceRadiusMeters": 600,
+    "description": "L'une des plus vieilles rues de Paris, avec ses étals de fromages, fruits et charcuteries, ses restaurants internationaux et la Place de la Contrescarpe. Quartier latin par excellence.",
+    "vibeTags": [
+      "historique",
+      "marché",
+      "gastronomie",
+      "étudiant",
+      "touristique",
+      "latin"
+    ],
+    "relatedIrisIds": [
+      "iris-751051701",
+      "iris-751051702",
+      "iris-751051703",
+      "iris-751051704",
+      "iris-751051706",
+      "iris-751051803",
+      "iris-751051804",
+      "iris-751051806",
+      "iris-751051807",
+      "iris-751051808",
+      "iris-751051906",
+      "iris-751051907",
+      "iris-751051908",
+      "iris-751052001"
+    ]
+  },
+  {
+    "id": "republique",
+    "label": "République",
+    "aliases": [
+      "Place de la République",
+      "Oberkampf-République",
+      "Temple"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8674,
+      "lng": 2.3634
+    },
+    "relatedStations": [
+      "République",
+      "Goncourt",
+      "Château d'Eau",
+      "Jacques Bonsergent",
+      "Temple",
+      "Colonel Fabien",
+      "Arts et Métiers",
+      "Richard-Lenoir"
+    ],
+    "confidenceRadiusMeters": 700,
+    "description": "Grand hub parisien à la croisée de plusieurs arrondissements populaires. Place récemment piétonisée, nombreux bars et restaurants, point de départ de manifestations et de rassemblements.",
+    "vibeTags": [
+      "hub",
+      "animé",
+      "bars",
+      "jeune",
+      "populaire",
+      "piéton",
+      "vivant"
+    ],
+    "relatedIrisIds": [
+      "iris-751030901",
+      "iris-751030902",
+      "iris-751030903",
+      "iris-751030904",
+      "iris-751030905",
+      "iris-751031001",
+      "iris-751031002",
+      "iris-751031003",
+      "iris-751031004",
+      "iris-751031201",
+      "iris-751103901",
+      "iris-751103902",
+      "iris-751103903",
+      "iris-751103904",
+      "iris-751103905",
+      "iris-751103907",
+      "iris-751103908",
+      "iris-751103909",
+      "iris-751103988",
+      "iris-751104004",
+      "iris-751114104",
+      "iris-751114105",
+      "iris-751114106",
+      "iris-751114107",
+      "iris-751114108",
+      "iris-751114115"
+    ]
+  },
+  {
+    "id": "bastille",
+    "label": "Bastille",
+    "aliases": [
+      "Place de la Bastille",
+      "Roquette",
+      "Bastille-Oberkampf"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8533,
+      "lng": 2.3692
+    },
+    "relatedStations": [
+      "Bastille",
+      "Breguet-Sabin",
+      "Saint-Paul",
+      "Quai de la Rapée"
+    ],
+    "confidenceRadiusMeters": 750,
+    "description": "Secteur emblématique du Paris populaire et festif, avec l'Opéra Bastille, la rue de la Roquette, la rue de Lappe et une vie nocturne intense. Mélange de résidents historiques et de nouveau public branché.",
+    "vibeTags": [
+      "nocturne",
+      "festif",
+      "bars",
+      "opéra",
+      "populaire",
+      "jeune",
+      "animé"
+    ],
+    "relatedIrisIds": [
+      "iris-751031101",
+      "iris-751031102",
+      "iris-751041404",
+      "iris-751041501",
+      "iris-751041502",
+      "iris-751041503",
+      "iris-751041504",
+      "iris-751041588",
+      "iris-751041599",
+      "iris-751114207",
+      "iris-751114308",
+      "iris-751114309",
+      "iris-751114310",
+      "iris-751114311",
+      "iris-751114312",
+      "iris-751114313",
+      "iris-751114314",
+      "iris-751114315",
+      "iris-751114404",
+      "iris-751124804",
+      "iris-751124805",
+      "iris-751124806",
+      "iris-751124807",
+      "iris-751124888"
+    ]
+  },
+  {
+    "id": "beaubourg",
+    "label": "Beaubourg",
+    "aliases": [
+      "Centre Pompidou",
+      "Rambuteau",
+      "Châtelet-Beaubourg"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8607,
+      "lng": 2.3516
+    },
+    "relatedStations": [
+      "Rambuteau",
+      "Châtelet-Les Halles",
+      "Étienne Marcel",
+      "Châtelet",
+      "Hôtel de Ville",
+      "Les Halles",
+      "Louvre-Rivoli",
+      "Arts et Métiers",
+      "Réaumur-Sébastopol",
+      "Sentier",
+      "Pont Neuf",
+      "Cité",
+      "Temple"
+    ],
+    "confidenceRadiusMeters": 500,
+    "description": "Secteur autour du Centre Pompidou, très touristique et culturel. Musées, galeries, fontaine Stravinsky, commerces et restaurants dans un cadre architectural unique en son genre.",
+    "vibeTags": [
+      "culturel",
+      "touristique",
+      "musées",
+      "art",
+      "architecture",
+      "animé"
+    ],
+    "relatedIrisIds": [
+      "iris-751010101",
+      "iris-751010201",
+      "iris-751031201",
+      "iris-751031202",
+      "iris-751031203",
+      "iris-751031204",
+      "iris-751041301",
+      "iris-751041302",
+      "iris-751041303",
+      "iris-751041304",
+      "iris-751041305",
+      "iris-751041402"
+    ]
+  },
+  {
+    "id": "saint_lazare",
+    "label": "Saint-Lazare",
+    "aliases": [
+      "Gare Saint-Lazare",
+      "Europe",
+      "Saint-Augustin",
+      "Havre-Caumartin"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "type": "semantic_neighborhood",
+    "center": {
+      "lat": 48.8752,
+      "lng": 2.3248
+    },
+    "relatedStations": [
+      "Saint-Lazare",
+      "Haussmann-Saint-Lazare",
+      "Havre-Caumartin",
+      "Saint-Augustin",
+      "Liège",
+      "Auber",
+      "Madeleine",
+      "Opéra",
+      "Trinité-d'Estienne-d'Orves",
+      "Chaussée d'Antin-La Fayette",
+      "Europe",
+      "Miromesnil"
+    ],
+    "confidenceRadiusMeters": 800,
+    "description": "Quartier de la grande gare de banlieue, très commerçant avec les Galeries Lafayette, le Printemps, les Grands Magasins et de nombreux bureaux. Ambiance business et transit intense.",
+    "vibeTags": [
+      "transport",
+      "commerce",
+      "gare",
+      "bureaux",
+      "animé",
+      "central",
+      "shopping"
+    ],
+    "relatedIrisIds": [
+      "iris-751083103",
+      "iris-751083104",
+      "iris-751083105",
+      "iris-751083106",
+      "iris-751083107",
+      "iris-751083108",
+      "iris-751083201",
+      "iris-751083202",
+      "iris-751083205",
+      "iris-751083206",
+      "iris-751083207",
+      "iris-751083208",
+      "iris-751083209",
+      "iris-751093303",
+      "iris-751093304",
+      "iris-751093305",
+      "iris-751093311",
+      "iris-751093402",
+      "iris-751093403",
+      "iris-751093404",
+      "iris-751093405",
+      "iris-751093408",
+      "iris-751093409"
+    ]
+  }
+]
