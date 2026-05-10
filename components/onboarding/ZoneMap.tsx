@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { GeoZone } from '@/lib/services/geoDataService'
@@ -232,8 +232,9 @@ function GeoLayers(props: GeoLayersProps) {
 
   // Paris IRIS: parent = quartier (qu-) or arrondissement (arr-)
   // Suburb IRIS: parent = commune (com-)
-  const parisIris = iris.filter((i) => !i.parentId?.startsWith('com-'))
-  const communeIris = iris.filter((i) => i.parentId?.startsWith('com-'))
+  // Memoized to avoid re-mounting GeoJSON layers on every zoom render
+  const parisIris = useMemo(() => iris.filter((i) => !i.parentId?.startsWith('com-')), [iris])
+  const communeIris = useMemo(() => iris.filter((i) => i.parentId?.startsWith('com-')), [iris])
 
   // Zoom ranges
   // ≤13: top-level arrondissements + communes
@@ -256,14 +257,7 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: communes,
-    getPathStyle: (z) => {
-      const state = computeCommuneState(z.id, communeIris, comSel)
-      // When suburb IRIS is shown, use a lighter outline style so IRIS fills the detail
-      if (showCommuneIris && state === 'unselected') {
-        return { color: '#914E3C', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.2, dashArray: '4 3' }
-      }
-      return topLevelStyle(state)
-    },
+    getPathStyle: (z) => topLevelStyle(computeCommuneState(z.id, communeIris, comSel)),
     getLabelState: (z) => computeCommuneState(z.id, communeIris, comSel),
     fontSize: 10,
     onClick: onClickCommune,
