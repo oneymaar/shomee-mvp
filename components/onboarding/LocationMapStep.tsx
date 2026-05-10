@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
-import { fetchParisGeoData, matchArrondissements, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
+import { fetchParisGeoData, fetchParisIris, matchArrondissements, getChildQuartiers, getChildZones, type GeoZone } from '@/lib/services/geoDataService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { useSearchStore } from '@/lib/searchStore'
@@ -28,22 +28,26 @@ interface LocationMapStepProps {
 export default function LocationMapStep({ onValidate, onBack }: LocationMapStepProps) {
   const {
     locationQuery, locationLat, locationLng, locationIntent,
-    selectedArrIds, selectedQuartierIds,
-    setLocation, setSelectedArrs, toggleArr, toggleQuartier,
+    selectedArrIds, selectedQuartierIds, selectedIrisIds,
+    setLocation, setSelectedArrs, toggleArr, toggleQuartier, toggleIris,
   } = useSearchStore()
 
   const [arrondissements, setArrondissements] = useState<GeoZone[]>([])
   const [quartiers, setQuartiers] = useState<GeoZone[]>([])
+  const [iris, setIris] = useState<GeoZone[]>([])
   const [center, setCenter] = useState<[number, number]>(
     locationLat && locationLng ? [locationLat, locationLng] : PARIS_CENTER
   )
   const [zoom, setZoom] = useState(12)
   const [loading, setLoading] = useState(true)
+  const [irisLoading, setIrisLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [locationLabel, setLocationLabel] = useState(
     locationLat && locationLng ? locationQuery : ''
   )
   const initialized = useRef(false)
+  const quartiersRef = useRef<GeoZone[]>([])
+  quartiersRef.current = quartiers
 
   useEffect(() => {
     if (initialized.current) return
@@ -52,12 +56,42 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Lazy-load IRIS when user zooms in
+  useEffect(() => {
+    if (zoom < 15 || irisLoading || iris.length > 0 || quartiersRef.current.length === 0) return
+    loadIris()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom])
+
+  async function loadIris() {
+    setIrisLoading(true)
+    try {
+      const zones = await fetchParisIris(quartiersRef.current)
+      setIris(zones)
+
+      // Propagate existing quartier selection to newly loaded IRIS
+      const { selectedQuartierIds: selQu } = useSearchStore.getState()
+      if (selQu.length > 0) {
+        const irisToSelect = zones.filter((i) => i.parentId && selQu.includes(i.parentId))
+        if (irisToSelect.length > 0) {
+          const { selectedIrisIds } = useSearchStore.getState()
+          useSearchStore.setState({
+            selectedIrisIds: [...new Set([...selectedIrisIds, ...irisToSelect.map((i) => i.id)])],
+          })
+        }
+      }
+    } catch (e) {
+      console.error('IRIS load failed', e)
+    } finally {
+      setIrisLoading(false)
+    }
+  }
+
   async function initMap() {
     setLoading(true)
     setError(null)
 
     try {
-      // Fetch geo data and geocode in parallel
       const intent = locationIntent ?? parseLocationIntent(locationQuery)
       const primaryTerm = intent.location_terms[0] ?? locationQuery
 
@@ -79,7 +113,6 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       setArrondissements(arrs)
       setQuartiers(qus)
 
-      // Resolve center
       if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
         const geo = geocodeResult.value
         const newCenter: [number, number] = [geo.lat, geo.lng]
@@ -88,23 +121,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
       }
 
-      // Pre-select matching arrondissements if none already selected
       if (selectedArrIds.length === 0 && intent.location_terms.length > 0) {
         const matched = matchArrondissements(intent.location_terms, arrs)
         if (matched.length > 0) {
           const newArrIds = matched.map((z) => z.id)
           const newQuartierIds = matched.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
-          setSelectedArrs(newArrIds)
-          // Also update quartier selection
           useSearchStore.setState({ selectedArrIds: newArrIds, selectedQuartierIds: newQuartierIds })
-
-          // Center on first matched arr
-          const firstMatch = matched[0]
-          // Find center from feature bounds — use the geocoded center if available, otherwise keep Paris center
         }
       }
 
-      // Determine zoom based on number of matched arrondissements
       const matchedCount = selectedArrIds.length || matchArrondissements(intent.location_terms, arrs).length
       setZoom(matchedCount <= 2 ? 13 : 12)
     } catch (e) {
@@ -116,19 +141,35 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   }
 
   const handleClickArr = useCallback((zone: GeoZone) => {
-    const childIds = getChildQuartiers(zone.id, quartiers).map((q) => q.id)
-    toggleArr(zone.id, childIds)
-  }, [quartiers, toggleArr])
+    const childQuartierIds = getChildQuartiers(zone.id, quartiersRef.current).map((q) => q.id)
+    const childIrisIds = iris.filter((i) => childQuartierIds.includes(i.parentId ?? '')).map((i) => i.id)
+    toggleArr(zone.id, childQuartierIds, childIrisIds)
+  }, [iris, toggleArr])
 
   const handleClickQuartier = useCallback((zone: GeoZone) => {
     if (!zone.parentId) return
-    const siblings = getChildQuartiers(zone.parentId, quartiers).map((q) => q.id)
-    toggleQuartier(zone.id, zone.parentId, siblings)
-  }, [quartiers, toggleQuartier])
+    const siblings = getChildQuartiers(zone.parentId, quartiersRef.current).map((q) => q.id)
+    const childIrisIds = iris.filter((i) => i.parentId === zone.id).map((i) => i.id)
+    toggleQuartier(zone.id, zone.parentId, siblings, childIrisIds)
+  }, [iris, toggleQuartier])
+
+  const handleClickIris = useCallback((zone: GeoZone) => {
+    if (!zone.parentId) return
+    const parentQuartierId = zone.parentId
+    const parentQuartier = quartiersRef.current.find((q) => q.id === parentQuartierId)
+    if (!parentQuartier || !parentQuartier.parentId) return
+    const parentArrId = parentQuartier.parentId
+    const allQuartierSiblingIds = iris.filter((i) => i.parentId === parentQuartierId).map((i) => i.id)
+    const allArrQuartierIds = getChildQuartiers(parentArrId, quartiersRef.current).map((q) => q.id)
+    toggleIris(zone.id, parentQuartierId, parentArrId, allQuartierSiblingIds, allArrQuartierIds)
+  }, [iris, toggleIris])
+
+  const handleZoomChange = useCallback((z: number) => {
+    setZoom(z)
+  }, [])
 
   // Build selection summary
   const selectedArrs = arrondissements.filter((z) => selectedArrIds.includes(z.id))
-  // Partial arrondissements: some children selected but not fully selected
   const partialArrs = arrondissements.filter((z) => {
     if (selectedArrIds.includes(z.id)) return false
     const childIds = getChildQuartiers(z.id, quartiers).map((q) => q.id)
@@ -136,7 +177,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   })
 
   const totalSelectedZones = selectedArrs.length + partialArrs.length
-  const canValidate = selectedArrIds.length > 0 || selectedQuartierIds.length > 0
+  const canValidate = selectedArrIds.length > 0 || selectedQuartierIds.length > 0 || selectedIrisIds.length > 0
 
   return (
     <div className="flex flex-col h-full">
@@ -199,10 +240,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             zoom={zoom}
             arrondissements={arrondissements}
             quartiers={quartiers}
+            iris={iris}
             selectedArrIds={selectedArrIds}
             selectedQuartierIds={selectedQuartierIds}
+            selectedIrisIds={selectedIrisIds}
+            irisLoading={irisLoading}
             onClickArr={handleClickArr}
             onClickQuartier={handleClickQuartier}
+            onClickIris={handleClickIris}
+            onZoomChange={handleZoomChange}
           />
         )}
       </div>
