@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { GeoZone } from '@/lib/services/geoDataService'
@@ -31,18 +31,17 @@ function irisStyle(selected: boolean): L.PathOptions {
     : { color: '#777', fillColor: 'transparent', fillOpacity: 0, weight: 0.6, opacity: 0.3 }
 }
 
-// ─── Label icons — centered, no dot, clean ────────────────────────────────
+// ─── Labels — text only, centered, no background ──────────────────────────
 
 function makeLabel(text: string, state: ZoneState | 'selected' | 'unselected', fontSize = 11, bold = true): L.DivIcon {
   const isSelected = state === 'selected'
   const color = isSelected ? '#914E3C' : '#2a2a2a'
-  const weight = bold ? 700 : 500
   return L.divIcon({
     html: `<div style="
       transform:translate(-50%,-50%);
       color:${color};
       font-size:${fontSize}px;
-      font-weight:${weight};
+      font-weight:${bold ? 700 : 500};
       white-space:nowrap;
       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       text-shadow:0 1px 3px rgba(255,255,255,0.95),0 0 6px rgba(255,255,255,0.8);
@@ -69,7 +68,6 @@ function layerCenter(l: L.Layer): L.LatLng | null {
 
 interface GeoLayerConfig {
   zones: GeoZone[]
-  getState: (zone: GeoZone) => ZoneState | boolean
   getPathStyle: (zone: GeoZone) => L.PathOptions
   getLabelState: (zone: GeoZone) => ZoneState | 'selected' | 'unselected'
   fontSize: number
@@ -118,7 +116,7 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cfg.zones, map])
 
-  // Update styles + labels when selection state changes
+  // Update styles + labels when selection changes
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
@@ -165,7 +163,7 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
   }
 }
 
-// ─── Main layers component ─────────────────────────────────────────────────
+// ─── GeoLayers — owns live zoom via useMapEvents ───────────────────────────
 
 interface GeoLayersProps {
   arrondissements: GeoZone[]
@@ -177,8 +175,8 @@ interface GeoLayersProps {
   onClickArr: (z: GeoZone) => void
   onClickQuartier: (z: GeoZone) => void
   onClickIris: (z: GeoZone) => void
-  zoom: number
   irisLoading: boolean
+  onZoomChange: (z: number) => void
 }
 
 function computeArrState(id: string, allQuartiers: GeoZone[], allIris: GeoZone[], state: { selectedArrIds: string[]; selectedQuartierIds: string[]; selectedIrisIds: string[] }): ZoneState {
@@ -207,7 +205,18 @@ function computeQuartierState(id: string, allIris: GeoZone[], state: { selectedQ
 
 function GeoLayers(props: GeoLayersProps) {
   const map = useMap()
-  const { arrondissements, quartiers, iris, selectedArrIds, selectedQuartierIds, selectedIrisIds, onClickArr, onClickQuartier, onClickIris, zoom, irisLoading } = props
+  // Track live zoom directly from the Leaflet map — no parent prop needed
+  const [zoom, setZoom] = useState(map.getZoom())
+
+  useMapEvents({
+    zoomend: () => {
+      const z = map.getZoom()
+      setZoom(z)
+      props.onZoomChange(z)
+    },
+  })
+
+  const { arrondissements, quartiers, iris, selectedArrIds, selectedQuartierIds, selectedIrisIds, onClickArr, onClickQuartier, onClickIris, irisLoading } = props
   const sel = { selectedArrIds, selectedQuartierIds, selectedIrisIds }
 
   const showArr = zoom <= 13
@@ -216,7 +225,6 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: arrondissements,
-    getState: (z) => computeArrState(z.id, quartiers, iris, sel),
     getPathStyle: (z) => arrStyle(computeArrState(z.id, quartiers, iris, sel)),
     getLabelState: (z) => computeArrState(z.id, quartiers, iris, sel),
     fontSize: 11,
@@ -226,7 +234,6 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: quartiers,
-    getState: (z) => computeQuartierState(z.id, iris, sel),
     getPathStyle: (z) => quartierStyle(computeQuartierState(z.id, iris, sel)),
     getLabelState: (z) => computeQuartierState(z.id, iris, sel),
     fontSize: 10,
@@ -236,7 +243,6 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: iris,
-    getState: (z) => selectedIrisIds.includes(z.id),
     getPathStyle: (z) => irisStyle(selectedIrisIds.includes(z.id)),
     getLabelState: (z) => selectedIrisIds.includes(z.id) ? 'selected' : 'unselected',
     fontSize: 9,
@@ -247,18 +253,23 @@ function GeoLayers(props: GeoLayersProps) {
   return null
 }
 
-// ─── Zoom watcher + flyTo ──────────────────────────────────────────────────
+// ─── MapController — only handles center flyTo, never touches zoom ─────────
 
-function MapController({ center, targetZoom, onZoomChange }: { center: [number, number]; targetZoom: number; onZoomChange: (z: number) => void }) {
+function MapController({ center }: { center: [number, number] }) {
   const map = useMap()
-  const prevKey = useRef('')
-  useMapEvents({ zoomend: () => onZoomChange(map.getZoom()), zoom: () => onZoomChange(map.getZoom()) })
+  const prevCenter = useRef<string | null>(null)
+
   useEffect(() => {
-    const key = `${center[0].toFixed(4)},${center[1].toFixed(4)},${targetZoom}`
-    if (prevKey.current === key) return
-    prevKey.current = key
-    map.flyTo(center, targetZoom, { duration: 0.8 })
-  }, [center, targetZoom, map])
+    const key = `${center[0].toFixed(4)},${center[1].toFixed(4)}`
+    if (prevCenter.current === null) {
+      prevCenter.current = key
+      return // first render — MapContainer already positioned correctly
+    }
+    if (prevCenter.current === key) return
+    prevCenter.current = key
+    map.flyTo(center, map.getZoom(), { duration: 0.8 }) // preserve user's current zoom
+  }, [center, map])
+
   return null
 }
 
@@ -266,7 +277,7 @@ function MapController({ center, targetZoom, onZoomChange }: { center: [number, 
 
 export interface ZoneMapProps {
   center: [number, number]
-  zoom: number
+  zoom: number           // initial zoom only — not tracked after mount
   arrondissements: GeoZone[]
   quartiers: GeoZone[]
   iris: GeoZone[]
@@ -300,10 +311,10 @@ export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris
         onClickArr={onClickArr}
         onClickQuartier={onClickQuartier}
         onClickIris={onClickIris}
-        zoom={zoom}
         irisLoading={irisLoading}
+        onZoomChange={onZoomChange}
       />
-      <MapController center={center} targetZoom={zoom} onZoomChange={onZoomChange} />
+      <MapController center={center} />
     </MapContainer>
   )
 }

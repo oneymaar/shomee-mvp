@@ -3,8 +3,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Dev mode: reset all persisted state on every page load for easy testing
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+// Reset persisted state on every page load — each refresh = fresh onboarding
+if (typeof window !== 'undefined') {
   localStorage.removeItem('shomee-search')
 }
 
