@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-rea
 import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
+import { resolveConstraints } from '@/lib/services/geoConstraintService'
 import { useSearchStore } from '@/lib/searchStore'
 
 const ZoneMap = dynamic(() => import('./ZoneMap'), {
@@ -42,6 +43,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const [zoom, setZoom] = useState(12)
   const [loading, setLoading] = useState(true)
   const [irisLoading, setIrisLoading] = useState(false)
+  const [constraintSummary, setConstraintSummary] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [locationLabel, setLocationLabel] = useState(
     locationLat && locationLng ? locationQuery : ''
@@ -72,8 +74,19 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       const zones = await fetchParisIris(quartiersRef.current, communesRef.current)
       setIris(zones)
 
-      // Propagate existing Paris quartier selections to IRIS
-      const { selectedQuartierIds: selQu, selectedCommuneIds: selCom, selectedIrisIds } = useSearchStore.getState()
+      const { locationIntent: intent, selectedQuartierIds: selQu, selectedCommuneIds: selCom, selectedIrisIds, selectedArrIds } = useSearchStore.getState()
+
+      // Try geo-constraint intersection first
+      if (intent?.geoConstraints?.length) {
+        const result = resolveConstraints(intent.geoConstraints, zones, quartiersRef.current, communesRef.current)
+        if (result.wasNarrowed && result.irisIds.length > 0) {
+          useSearchStore.setState({ selectedIrisIds: [...new Set([...selectedIrisIds, ...result.irisIds])] })
+          if (result.matchSummary.length > 0) setConstraintSummary(result.matchSummary)
+          return
+        }
+      }
+
+      // Fallback: propagate existing Paris quartier selections to IRIS
       const toAdd: string[] = []
       if (selQu.length > 0) {
         zones.filter((i) => i.parentId && selQu.includes(i.parentId)).forEach((i) => toAdd.push(i.id))
@@ -232,15 +245,26 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         </div>
       </div>
 
-      {locationLabel && !loading && (
-        <div className="flex-shrink-0 px-4 pb-2">
-          <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
-            style={{ backgroundColor: 'rgba(145,78,60,0.08)', color: '#914E3C' }}
-          >
-            <MapPin size={11} />
-            {locationLabel}
-          </div>
+      {(locationLabel || constraintSummary.length > 0) && !loading && (
+        <div className="flex-shrink-0 px-4 pb-2 flex flex-wrap items-center gap-2">
+          {locationLabel && (
+            <div
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
+              style={{ backgroundColor: 'rgba(145,78,60,0.08)', color: '#914E3C' }}
+            >
+              <MapPin size={11} />
+              {locationLabel}
+            </div>
+          )}
+          {constraintSummary.map((s) => (
+            <div
+              key={s}
+              className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium"
+              style={{ backgroundColor: 'rgba(59,130,246,0.08)', color: '#2563eb' }}
+            >
+              {s}
+            </div>
+          ))}
         </div>
       )}
 
