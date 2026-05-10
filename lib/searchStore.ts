@@ -49,6 +49,8 @@ interface SearchStore extends SearchPreferences {
   toggleIris: (id: string, parentQuartierId: string, parentArrId: string, allQuartierSiblingIds: string[], allArrQuartierIds: string[]) => void
   /** Toggle suburban commune (no hierarchy) */
   toggleCommune: (id: string) => void
+  /** Toggle IRIS zone inside a suburban commune — propagates up to commune */
+  toggleCommuneIris: (id: string, parentCommuneId: string, allCommuneSiblingIds: string[]) => void
   setBudgetMax: (max: number | null) => void
   setPropertyTypes: (types: PropertyType[]) => void
   togglePropertyType: (type: PropertyType) => void
@@ -168,6 +170,26 @@ export const useSearchStore = create<SearchStore>()(
             ? selectedCommuneIds.filter((c) => c !== id)
             : [...selectedCommuneIds, id],
         })
+      },
+
+      toggleCommuneIris: (id, parentCommuneId, allCommuneSiblingIds) => {
+        const { selectedCommuneIds, selectedIrisIds } = get()
+        const isSelected = selectedIrisIds.includes(id)
+        const newIrisIds = isSelected
+          ? selectedIrisIds.filter((i) => i !== id)
+          : [...selectedIrisIds, id]
+
+        // Propagate to parent commune
+        const selectedSiblings = allCommuneSiblingIds.filter((s) => newIrisIds.includes(s))
+        let newCommuneIds = selectedCommuneIds
+        if (selectedSiblings.length === 0) {
+          newCommuneIds = newCommuneIds.filter((c) => c !== parentCommuneId)
+        } else if (selectedSiblings.length === allCommuneSiblingIds.length) {
+          if (!newCommuneIds.includes(parentCommuneId)) newCommuneIds = [...newCommuneIds, parentCommuneId]
+        } else {
+          newCommuneIds = newCommuneIds.filter((c) => c !== parentCommuneId)
+        }
+        set({ selectedCommuneIds: newCommuneIds, selectedIrisIds: newIrisIds })
       },
 
       setBudgetMax: (max) => set({ budgetMax: max }),

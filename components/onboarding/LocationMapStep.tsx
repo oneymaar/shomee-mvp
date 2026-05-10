@@ -29,7 +29,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const {
     locationQuery, locationLat, locationLng, locationIntent,
     selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds,
-    setLocation, setSelectedArrs, toggleArr, toggleQuartier, toggleIris, toggleCommune,
+    setLocation, setSelectedArrs, toggleArr, toggleQuartier, toggleIris, toggleCommune, toggleCommuneIris,
   } = useSearchStore()
 
   const [arrondissements, setArrondissements] = useState<GeoZone[]>([])
@@ -49,6 +49,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const initialized = useRef(false)
   const quartiersRef = useRef<GeoZone[]>([])
   quartiersRef.current = quartiers
+  const communesRef = useRef<GeoZone[]>([])
+  communesRef.current = communes
 
   useEffect(() => {
     if (initialized.current) return
@@ -57,9 +59,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Lazy-load IRIS when user zooms in to level 15+
+  // Lazy-load IRIS (Paris + suburbs) when user zooms to level 15+
   useEffect(() => {
-    if (zoom < 16 || irisLoading || iris.length > 0 || quartiersRef.current.length === 0) return
+    if (zoom < 15 || irisLoading || iris.length > 0) return
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom])
@@ -67,18 +69,21 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   async function loadIris() {
     setIrisLoading(true)
     try {
-      const zones = await fetchParisIris(quartiersRef.current)
+      const zones = await fetchParisIris(quartiersRef.current, communesRef.current)
       setIris(zones)
-      // Propagate existing quartier selections to IRIS
-      const { selectedQuartierIds: selQu } = useSearchStore.getState()
+
+      // Propagate existing Paris quartier selections to IRIS
+      const { selectedQuartierIds: selQu, selectedCommuneIds: selCom, selectedIrisIds } = useSearchStore.getState()
+      const toAdd: string[] = []
       if (selQu.length > 0) {
-        const irisToSelect = zones.filter((i) => i.parentId && selQu.includes(i.parentId))
-        if (irisToSelect.length > 0) {
-          const { selectedIrisIds } = useSearchStore.getState()
-          useSearchStore.setState({
-            selectedIrisIds: [...new Set([...selectedIrisIds, ...irisToSelect.map((i) => i.id)])],
-          })
-        }
+        zones.filter((i) => i.parentId && selQu.includes(i.parentId)).forEach((i) => toAdd.push(i.id))
+      }
+      // Propagate existing suburb commune selections to IRIS
+      if (selCom.length > 0) {
+        zones.filter((i) => i.parentId && selCom.includes(i.parentId)).forEach((i) => toAdd.push(i.id))
+      }
+      if (toAdd.length > 0) {
+        useSearchStore.setState({ selectedIrisIds: [...new Set([...selectedIrisIds, ...toAdd])] })
       }
     } catch (e) {
       console.error('IRIS load failed', e)
@@ -184,6 +189,12 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     toggleCommune(zone.id)
   }, [toggleCommune])
 
+  const handleClickCommuneIris = useCallback((zone: GeoZone) => {
+    if (!zone.parentId) return
+    const allSiblingIds = iris.filter((i) => i.parentId === zone.parentId).map((i) => i.id)
+    toggleCommuneIris(zone.id, zone.parentId, allSiblingIds)
+  }, [iris, toggleCommuneIris])
+
   const handleZoomChange = useCallback((z: number) => {
     setZoom(z)
   }, [])
@@ -271,6 +282,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             onClickQuartier={handleClickQuartier}
             onClickIris={handleClickIris}
             onClickCommune={handleClickCommune}
+            onClickCommuneIris={handleClickCommuneIris}
             onZoomChange={handleZoomChange}
           />
         )}

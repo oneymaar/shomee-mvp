@@ -27,8 +27,8 @@ const ARRONDISSEMENTS_URL =
   'https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/arrondissements/exports/geojson?lang=fr'
 const QUARTIERS_URL =
   'https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/quartier_paris/exports/geojson?lang=fr'
-const IRIS_URL =
-  'https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/georef-france-iris/exports/geojson?where=dep_code%3D%2275%22&limit=2000&lang=fr'
+const IRIS_URL_DEPT = (dept: string) =>
+  `https://public.opendatasoft.com/api/explore/v2.1/catalog/datasets/georef-france-iris/exports/geojson?where=dep_code%3D%22${dept}%22&limit=2000&lang=fr`
 const COMMUNES_DEPT_URL = (dept: string) =>
   `https://geo.api.gouv.fr/communes?codeDepartement=${dept}&format=geojson&geometry=contour`
 
@@ -98,39 +98,55 @@ function val(v: unknown): string {
   return Array.isArray(v) ? String(v[0] ?? '') : String(v ?? '')
 }
 
-function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[]): GeoZone | null {
+function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[], communes: GeoZone[]): GeoZone | null {
   const p = f.properties ?? {}
   const irisCode = val(p.iris_code)
   if (!irisCode || irisCode.length < 9) return null
 
-  // IRIS code format: "75AAANNNN" where AAA = arr code (101-120), NNNN = iris number
-  // slice(3,5) gives "01"…"20" = arrondissement number
-  const arrNum = parseInt(irisCode.slice(3, 5))
-  if (isNaN(arrNum) || arrNum < 1 || arrNum > 20) return null
-
+  const depCode = irisCode.slice(0, 2)
   const irisName = val(p.iris_name) || `Secteur ${irisCode.slice(-4)}`
   const id = `iris-${irisCode}`
 
-  const geom = f.geometry
-  const [cLng, cLat] = polygonCentroid(geom)
-  let parentId: string | null = null
+  if (depCode === '75') {
+    // Paris: IRIS code "75AAANNNN" → AAA = arr code (101-120) → slice(3,5) = "01"…"20"
+    const arrNum = parseInt(irisCode.slice(3, 5))
+    if (isNaN(arrNum) || arrNum < 1 || arrNum > 20) return null
 
-  const arrQuartiers = quartiers.filter((q) => q.parentId === `arr-${arrNum}`)
-  for (const q of arrQuartiers) {
-    if (polygonContainsPoint(q.feature.geometry, cLng, cLat)) {
-      parentId = q.id
-      break
+    const geom = f.geometry
+    const [cLng, cLat] = polygonCentroid(geom)
+    let parentId: string | null = null
+
+    const arrQuartiers = quartiers.filter((q) => q.parentId === `arr-${arrNum}`)
+    for (const q of arrQuartiers) {
+      if (polygonContainsPoint(q.feature.geometry, cLng, cLat)) {
+        parentId = q.id
+        break
+      }
+    }
+    if (!parentId) parentId = `arr-${arrNum}`
+
+    return {
+      id,
+      name: irisName.charAt(0).toUpperCase() + irisName.slice(1).toLowerCase(),
+      shortName: irisName.split(' ').slice(0, 2).join(' '),
+      type: 'iris',
+      parentId,
+      feature: { ...f, properties: { ...p, _zoneId: id, _parentId: parentId } },
     }
   }
-  if (!parentId) parentId = `arr-${arrNum}`
+
+  // Suburban commune (92/93/94): IRIS code "CCCCCNNNN" → first 5 digits = INSEE commune code
+  const communeCode = irisCode.slice(0, 5)
+  const commune = communes.find((c) => c.id === `com-${communeCode}`)
+  if (!commune) return null
 
   return {
     id,
     name: irisName.charAt(0).toUpperCase() + irisName.slice(1).toLowerCase(),
     shortName: irisName.split(' ').slice(0, 2).join(' '),
     type: 'iris',
-    parentId,
-    feature: { ...f, properties: { ...p, _zoneId: id, _parentId: parentId } },
+    parentId: commune.id,
+    feature: { ...f, properties: { ...p, _zoneId: id, _parentId: commune.id } },
   }
 }
 
@@ -184,14 +200,26 @@ export async function fetchParisQuartiers(): Promise<GeoZone[]> {
   }
 }
 
-/** Lazy-loaded — call only when user reaches zoom ≥ 15. Needs quartiers for parent mapping. */
-export async function fetchParisIris(quartiers: GeoZone[]): Promise<GeoZone[]> {
+/**
+ * Lazy-loaded — call only when user reaches zoom ≥ 15.
+ * Needs quartiers for Paris parent mapping, communes for suburban parent mapping.
+ * Fetches Paris (75) + departments 92/93/94 in parallel.
+ */
+export async function fetchParisIris(quartiers: GeoZone[], communes: GeoZone[] = []): Promise<GeoZone[]> {
   if (cache.iris) return cache.iris
-  const geojson = await fetchGeoJSON(IRIS_URL, 20000)
-  const zones = (geojson.features as GeoJSON.Feature[])
-    .map((f) => parseIris(f, quartiers))
-    .filter((z): z is GeoZone => z !== null)
-    .sort((a, b) => a.id.localeCompare(b.id))
+  const depts = ['75', '92', '93', '94']
+  const results = await Promise.allSettled(
+    depts.map((d) => fetchGeoJSON(IRIS_URL_DEPT(d), 20000))
+  )
+  const zones: GeoZone[] = []
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue
+    for (const f of r.value.features as GeoJSON.Feature[]) {
+      const z = parseIris(f, quartiers, communes)
+      if (z) zones.push(z)
+    }
+  }
+  zones.sort((a, b) => a.id.localeCompare(b.id))
   cache.iris = zones
   return zones
 }

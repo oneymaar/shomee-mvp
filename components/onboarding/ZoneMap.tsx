@@ -175,6 +175,7 @@ interface GeoLayersProps {
   onClickQuartier: (z: GeoZone) => void
   onClickIris: (z: GeoZone) => void
   onClickCommune: (z: GeoZone) => void
+  onClickCommuneIris: (z: GeoZone) => void
   irisLoading: boolean
   onZoomChange: (z: number) => void
 }
@@ -203,6 +204,16 @@ function computeQuartierState(id: string, allIris: GeoZone[], state: { selectedQ
   return 'unselected'
 }
 
+function computeCommuneState(id: string, communeIris: GeoZone[], state: { selectedCommuneIds: string[]; selectedIrisIds: string[] }): ZoneState {
+  if (state.selectedCommuneIds.includes(id)) return 'selected'
+  const childIris = communeIris.filter((i) => i.parentId === id)
+  if (childIris.length === 0) return 'unselected'
+  const selIris = childIris.filter((i) => state.selectedIrisIds.includes(i.id))
+  if (selIris.length === childIris.length) return 'selected'
+  if (selIris.length > 0) return 'partial'
+  return 'unselected'
+}
+
 function GeoLayers(props: GeoLayersProps) {
   const map = useMap()
   const [zoom, setZoom] = useState(map.getZoom())
@@ -215,21 +226,29 @@ function GeoLayers(props: GeoLayersProps) {
     },
   })
 
-  const { arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, onClickArr, onClickQuartier, onClickIris, onClickCommune, irisLoading } = props
+  const { arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, irisLoading } = props
   const sel = { selectedArrIds, selectedQuartierIds, selectedIrisIds }
+  const comSel = { selectedCommuneIds, selectedIrisIds }
 
-  // Exclusive zoom ranges — only one level visible at a time
-  // zoom ≤13 = tout Paris visible → arrondissements/communes
-  // 14–15   = arrondissement bien visible → quartiers
-  // ≥16     = quartier bien visible → IRIS
+  // Paris IRIS: parent = quartier (qu-) or arrondissement (arr-)
+  // Suburb IRIS: parent = commune (com-)
+  const parisIris = iris.filter((i) => !i.parentId?.startsWith('com-'))
+  const communeIris = iris.filter((i) => i.parentId?.startsWith('com-'))
+
+  // Zoom ranges
+  // ≤13: top-level arrondissements + communes
+  // 14–15: Paris quartiers + suburb commune IRIS (zoom 15 only)
+  // ≥16: Paris IRIS
   const showTopLevel = zoom <= 13
+  // Communes always visible but faint when IRIS is shown (provides geographic context)
+  const showCommuneIris = zoom >= 15 && !irisLoading
+  const showParisIris = zoom >= 16 && !irisLoading
   const showQuartier = zoom >= 14 && zoom <= 15
-  const showIris = zoom >= 16 && !irisLoading
 
   useGeoLayer(map, {
     zones: arrondissements,
-    getPathStyle: (z) => topLevelStyle(computeArrState(z.id, quartiers, iris, sel)),
-    getLabelState: (z) => computeArrState(z.id, quartiers, iris, sel),
+    getPathStyle: (z) => topLevelStyle(computeArrState(z.id, quartiers, parisIris, sel)),
+    getLabelState: (z) => computeArrState(z.id, quartiers, parisIris, sel),
     fontSize: 11,
     onClick: onClickArr,
     visible: showTopLevel,
@@ -237,29 +256,45 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: communes,
-    getPathStyle: (z) => topLevelStyle(selectedCommuneIds.includes(z.id) ? 'selected' : 'unselected'),
-    getLabelState: (z) => selectedCommuneIds.includes(z.id) ? 'selected' : 'unselected',
+    getPathStyle: (z) => {
+      const state = computeCommuneState(z.id, communeIris, comSel)
+      // When suburb IRIS is shown, use a lighter outline style so IRIS fills the detail
+      if (showCommuneIris && state === 'unselected') {
+        return { color: '#914E3C', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.2, dashArray: '4 3' }
+      }
+      return topLevelStyle(state)
+    },
+    getLabelState: (z) => computeCommuneState(z.id, communeIris, comSel),
     fontSize: 10,
     onClick: onClickCommune,
-    visible: showTopLevel,
+    visible: showTopLevel || showCommuneIris,
   })
 
   useGeoLayer(map, {
     zones: quartiers,
-    getPathStyle: (z) => quartierStyle(computeQuartierState(z.id, iris, sel)),
-    getLabelState: (z) => computeQuartierState(z.id, iris, sel),
+    getPathStyle: (z) => quartierStyle(computeQuartierState(z.id, parisIris, sel)),
+    getLabelState: (z) => computeQuartierState(z.id, parisIris, sel),
     fontSize: 10,
     onClick: onClickQuartier,
     visible: showQuartier,
   })
 
   useGeoLayer(map, {
-    zones: iris,
+    zones: communeIris,
+    getPathStyle: (z) => irisStyle(selectedIrisIds.includes(z.id)),
+    getLabelState: (z) => selectedIrisIds.includes(z.id) ? 'selected' : 'unselected',
+    fontSize: 9,
+    onClick: onClickCommuneIris,
+    visible: showCommuneIris,
+  })
+
+  useGeoLayer(map, {
+    zones: parisIris,
     getPathStyle: (z) => irisStyle(selectedIrisIds.includes(z.id)),
     getLabelState: (z) => selectedIrisIds.includes(z.id) ? 'selected' : 'unselected',
     fontSize: 9,
     onClick: onClickIris,
-    visible: showIris,
+    visible: showParisIris,
   })
 
   return null
@@ -303,10 +338,11 @@ export interface ZoneMapProps {
   onClickQuartier: (z: GeoZone) => void
   onClickIris: (z: GeoZone) => void
   onClickCommune: (z: GeoZone) => void
+  onClickCommuneIris: (z: GeoZone) => void
   onZoomChange: (z: number) => void
 }
 
-export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onZoomChange }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -329,6 +365,7 @@ export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris
         onClickQuartier={onClickQuartier}
         onClickIris={onClickIris}
         onClickCommune={onClickCommune}
+        onClickCommuneIris={onClickCommuneIris}
         irisLoading={irisLoading}
         onZoomChange={onZoomChange}
       />
