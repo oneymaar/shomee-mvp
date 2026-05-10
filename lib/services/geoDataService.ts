@@ -226,6 +226,19 @@ export async function fetchParisGeoData(): Promise<{ arrondissements: GeoZone[];
 
 // ─── Zone helpers ──────────────────────────────────────────────────────────
 
+export function matchCommunes(terms: string[], communes: GeoZone[]): GeoZone[] {
+  const matched: GeoZone[] = []
+  for (const term of terms) {
+    const lower = term.toLowerCase().trim()
+    const zone = communes.find((c) => {
+      const n = c.name.toLowerCase()
+      return n === lower || n.startsWith(lower + '-') || lower.startsWith(n)
+    })
+    if (zone && !matched.includes(zone)) matched.push(zone)
+  }
+  return matched
+}
+
 export function matchArrondissements(terms: string[], arrondissements: GeoZone[]): GeoZone[] {
   const matched: GeoZone[] = []
   for (const term of terms) {

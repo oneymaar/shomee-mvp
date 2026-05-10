@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
-import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
+import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, getChildQuartiers, type GeoZone } from '@/lib/services/geoDataService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { useSearchStore } from '@/lib/searchStore'
@@ -93,11 +93,13 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
     try {
       const intent = locationIntent ?? parseLocationIntent(locationQuery)
-      const primaryTerm = intent.location_terms[0] ?? locationQuery
+      // locationQuery = centerQuery from clarification (or original user query)
+      // intent.location_terms = preselectZones from clarification (or parsed terms)
+      const geocodeTarget = locationQuery || intent.location_terms[0] || ''
 
       const [geoData, geocodeResult, communesResult] = await Promise.allSettled([
         fetchParisGeoData(),
-        primaryTerm ? geocodeBest(primaryTerm) : Promise.resolve(null),
+        geocodeTarget ? geocodeBest(geocodeTarget) : Promise.resolve(null),
         fetchSuburbanCommunes(),
       ])
 
@@ -126,16 +128,26 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent })
       }
 
-      if (selectedArrIds.length === 0 && intent.location_terms.length > 0) {
-        const matched = matchArrondissements(intent.location_terms, arrs)
-        if (matched.length > 0) {
-          const newArrIds = matched.map((z) => z.id)
-          const newQuartierIds = matched.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
-          useSearchStore.setState({ selectedArrIds: newArrIds, selectedQuartierIds: newQuartierIds })
+      if (selectedArrIds.length === 0 && selectedCommuneIds.length === 0 && intent.location_terms.length > 0) {
+        const loadedCommunes = communesResult.status === 'fulfilled' ? communesResult.value : []
+        const matchedArrs = matchArrondissements(intent.location_terms, arrs)
+        const matchedComms = matchCommunes(intent.location_terms, loadedCommunes)
+
+        const newArrIds = matchedArrs.map((z) => z.id)
+        const newQuartierIds = matchedArrs.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
+        const newCommuneIds = matchedComms.map((z) => z.id)
+
+        if (newArrIds.length > 0 || newCommuneIds.length > 0) {
+          useSearchStore.setState({
+            selectedArrIds: newArrIds,
+            selectedQuartierIds: newQuartierIds,
+            selectedCommuneIds: newCommuneIds,
+          })
         }
       }
 
-      const matchedCount = selectedArrIds.length || matchArrondissements(intent.location_terms, arrs).length
+      const matchedCount = selectedArrIds.length + selectedCommuneIds.length ||
+        matchArrondissements(intent.location_terms, arrs).length
       setZoom(matchedCount <= 2 ? 13 : 12)
     } catch (e) {
       console.error(e)

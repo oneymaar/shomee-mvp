@@ -83,9 +83,22 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     setUi({ kind: 'clarification', analysis })
   }, [query, openMapWithQuery])
 
-  const handleSelectOption = useCallback((q: string) => {
-    openMapWithQuery(q)
-  }, [openMapWithQuery])
+  const handleSelectOption = useCallback((opt: { preselectZones: string[]; centerQuery: string; label: string; query: string }) => {
+    // Bypass the rule-based parser: use explicit zones from LLM directly
+    const intent = {
+      location_terms: opt.preselectZones ?? [],
+      lifestyle_terms: [] as string[],
+      transport_constraints: [] as string[],
+      confidence: 0.95,
+    }
+    setLocation({
+      query: opt.centerQuery || opt.query,
+      label: opt.label,
+      lat: 0, lng: 0,
+      intent,
+    })
+    onOpenMap()
+  }, [setLocation, onOpenMap])
 
   const handleBackToTyping = useCallback(() => {
     setUi({ kind: 'typing' })
@@ -194,7 +207,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
                   {ui.analysis.clarificationOptions.map((opt) => (
                     <button
                       key={opt.query}
-                      onClick={() => handleSelectOption(opt.query)}
+                      onClick={() => handleSelectOption(opt)}
                       className="text-left w-full bg-white rounded-xl px-3.5 py-2.5 border border-black/8 active:bg-black/4 transition-colors"
                     >
                       <p className="text-[13px] font-semibold text-neutral-900 leading-tight">{opt.label}</p>

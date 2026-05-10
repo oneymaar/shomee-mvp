@@ -47,14 +47,29 @@ Retourne exactement ce JSON (sans markdown, sans commentaires):
   ],
   "clarificationQuestion": string | null,
   "clarificationOptions": [
-    { "label": string, "description": string, "query": string }
+    {
+      "label": string,
+      "description": string,
+      "query": string,
+      "preselectZones": string[],
+      "centerQuery": string
+    }
   ] | null,
   "mapAction": {
     "type": "open_map" | "ask_clarification",
     "centerQuery": string | null,
     "preselectQueries": string[]
   }
-}`
+}
+
+RÈGLES CRITIQUES pour clarificationOptions:
+- preselectZones: zones exactes à cocher sur la carte. Formats OBLIGATOIRES:
+  * Arrondissements: "Paris 1", "Paris 4", "Paris 11", "Paris 18" (chiffre seul, sans "e"/"er")
+  * Communes limitrophes: "Vincennes", "Montrouge", "Neuilly-sur-Seine", "Saint-Mandé", "Montreuil", etc.
+  * Géographiquement correct: si label="Châtelet", preselectZones=["Paris 1","Paris 4"] — jamais ["Paris 14"]
+  * Si label="Montmartre", preselectZones=["Paris 18"] — Montmartre est dans le 18e
+  * Si label="Bastille", preselectZones=["Paris 4","Paris 11","Paris 12"]
+- centerQuery: cible de géocodage pour centrer la carte. Ex: "Châtelet-Les Halles, Paris", "Montmartre, Paris", "Vincennes"`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

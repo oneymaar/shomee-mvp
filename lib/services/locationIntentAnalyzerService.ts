@@ -13,7 +13,9 @@ export interface InferredConstraint {
 export interface ClarificationOption {
   label: string
   description: string
-  query: string
+  query: string            // human-readable fallback
+  preselectZones: string[] // explicit zone names: ["Paris 1", "Paris 4", "Vincennes"]
+  centerQuery: string      // geocoding target for map centering: "Châtelet, Paris"
 }
 
 export interface LocationIntentAnalysis {
