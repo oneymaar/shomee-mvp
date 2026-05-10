@@ -8,7 +8,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8272, "lng": 2.3491 },
     "relatedStations": ["Corvisart", "Place d'Italie", "Tolbiac"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 480,
     "vibeTags": ["village", "calme", "convivial", "restaurants", "charme", "petites rues"],
     "description": "Quartier-village du 13e, apprécié pour ses petites rues, son ambiance conviviale, ses restaurants et son côté préservé."
   },
@@ -21,7 +21,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8492, "lng": 2.3787 },
     "relatedStations": ["Ledru-Rollin", "Faidherbe-Chaligny", "Gare de Lyon"],
-    "confidenceRadiusMeters": 600,
+    "confidenceRadiusMeters": 400,
     "vibeTags": ["marché", "vivant", "commerçant", "convivial", "populaire", "central"],
     "description": "Secteur vivant autour du marché d'Aligre, recherché pour son ambiance de quartier, ses commerces et sa proximité avec Bastille et Gare de Lyon."
   },
@@ -34,7 +34,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8874, "lng": 2.3174 },
     "relatedStations": ["Rome", "La Fourche", "Brochant", "Pont Cardinet"],
-    "confidenceRadiusMeters": 850,
+    "confidenceRadiusMeters": 600,
     "vibeTags": ["familial", "branché", "village", "commerçant", "parcs", "bobo"],
     "description": "Quartier familial et vivant du 17e, apprécié pour son esprit village, ses commerces, ses restaurants et ses espaces verts."
   },
@@ -47,7 +47,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8597, "lng": 2.3622 },
     "relatedStations": ["Saint-Paul", "Hôtel de Ville", "Filles du Calvaire", "Arts et Métiers"],
-    "confidenceRadiusMeters": 900,
+    "confidenceRadiusMeters": 650,
     "vibeTags": ["historique", "branché", "central", "commerces", "culture", "patrimonial"],
     "description": "Quartier historique et très recherché, connu pour ses rues anciennes, ses commerces, ses galeries, ses hôtels particuliers et son animation."
   },
@@ -60,7 +60,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8645, "lng": 2.3471 },
     "relatedStations": ["Étienne Marcel", "Sentier", "Les Halles"],
-    "confidenceRadiusMeters": 550,
+    "confidenceRadiusMeters": 400,
     "vibeTags": ["central", "commerçant", "piéton", "vivant", "restaurants", "urbain"],
     "description": "Secteur très central et animé autour de la rue Montorgueil, recherché pour ses commerces, ses restaurants et son ambiance piétonne."
   },
@@ -73,7 +73,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8644, "lng": 2.3766 },
     "relatedStations": ["Oberkampf", "Parmentier", "Ménilmontant", "Rue Saint-Maur"],
-    "confidenceRadiusMeters": 700,
+    "confidenceRadiusMeters": 500,
     "vibeTags": ["vivant", "bars", "restaurants", "jeune", "branché", "animé"],
     "description": "Quartier animé du 11e, connu pour ses bars, restaurants, lieux culturels et son atmosphère jeune et urbaine."
   },
@@ -86,7 +86,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8574, "lng": 2.2801 },
     "relatedStations": ["Passy", "La Muette", "Trocadéro"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 550,
     "vibeTags": ["bourgeois", "familial", "calme", "commerçant", "standing", "résidentiel"],
     "description": "Secteur résidentiel et commerçant du 16e, recherché pour son standing, son calme relatif et ses bonnes adresses de proximité."
   },
@@ -99,7 +99,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8474, "lng": 2.2637 },
     "relatedStations": ["Église d'Auteuil", "Michel-Ange Auteuil", "Jasmin"],
-    "confidenceRadiusMeters": 850,
+    "confidenceRadiusMeters": 620,
     "vibeTags": ["familial", "bourgeois", "calme", "résidentiel", "village", "espaces verts"],
     "description": "Quartier résidentiel de l'ouest parisien, avec une ambiance familiale, calme et villageoise autour d'Auteuil."
   },
@@ -112,7 +112,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8542, "lng": 2.3330 },
     "relatedStations": ["Saint-Germain-des-Prés", "Mabillon", "Odéon"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 500,
     "vibeTags": ["historique", "chic", "culturel", "central", "patrimonial", "prestige"],
     "description": "Quartier emblématique de la rive gauche, associé aux cafés historiques, aux galeries, aux librairies et à une forte image patrimoniale."
   },
@@ -125,7 +125,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8822, "lng": 2.3374 },
     "relatedStations": ["Pigalle", "Blanche", "Anvers", "Saint-Georges"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 500,
     "vibeTags": ["animé", "nocturne", "branché", "restaurants", "culture", "central"],
     "description": "Secteur animé entre 9e et 18e, connu pour ses sorties, ses restaurants, ses salles de spectacle et son énergie urbaine."
   },
@@ -138,7 +138,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8867, "lng": 2.3431 },
     "relatedStations": ["Abbesses", "Lamarck-Caulaincourt", "Anvers", "Château Rouge"],
-    "confidenceRadiusMeters": 900,
+    "confidenceRadiusMeters": 650,
     "vibeTags": ["village", "touristique", "charme", "pentes", "artistique", "vue"],
     "description": "Quartier iconique du 18e, recherché pour son charme, ses rues en pente, son ambiance village et ses vues sur Paris."
   },
@@ -151,7 +151,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8652, "lng": 2.3984 },
     "relatedStations": ["Gambetta", "Pelleport", "Père Lachaise"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 500,
     "vibeTags": ["familial", "populaire", "résidentiel", "commerçant", "est parisien"],
     "description": "Quartier de l'est parisien autour de la place Gambetta, avec une ambiance résidentielle, commerçante et familiale."
   },
@@ -164,7 +164,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8752, "lng": 2.3892 },
     "relatedStations": ["Jourdain", "Place des Fêtes", "Pyrénées"],
-    "confidenceRadiusMeters": 700,
+    "confidenceRadiusMeters": 480,
     "vibeTags": ["village", "familial", "commerçant", "calme", "est parisien"],
     "description": "Secteur à l'ambiance village entre 19e et 20e, apprécié pour ses commerces, sa vie locale et son côté familial."
   },
@@ -177,7 +177,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8720, "lng": 2.3765 },
     "relatedStations": ["Belleville", "Couronnes", "Pyrénées"],
-    "confidenceRadiusMeters": 850,
+    "confidenceRadiusMeters": 600,
     "vibeTags": ["populaire", "mixte", "artistique", "vivant", "cosmopolite", "est parisien"],
     "description": "Quartier populaire et cosmopolite, connu pour sa vie de quartier, ses commerces, ses ateliers et son énergie créative."
   },
@@ -190,7 +190,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8722, "lng": 2.3645 },
     "relatedStations": ["Jacques Bonsergent", "République", "Goncourt"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 550,
     "vibeTags": ["branché", "bords d'eau", "restaurants", "jeune", "vivant", "promenade"],
     "description": "Secteur très recherché autour du canal, apprécié pour ses restaurants, ses boutiques, ses promenades et son ambiance branchée."
   },
@@ -203,7 +203,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8771, "lng": 2.3397 },
     "relatedStations": ["Notre-Dame-de-Lorette", "Saint-Georges", "Pigalle"],
-    "confidenceRadiusMeters": 600,
+    "confidenceRadiusMeters": 420,
     "vibeTags": ["commerçant", "branché", "vivant", "restaurants", "central", "charme"],
     "description": "Secteur vivant et recherché du 9e, apprécié pour ses commerces de bouche, ses cafés, ses restaurants et son ambiance de quartier."
   },
@@ -216,7 +216,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8756, "lng": 2.3258 },
     "relatedStations": ["Saint-Lazare", "Europe", "Havre-Caumartin"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 520,
     "vibeTags": ["central", "transports", "bureaux", "commerces", "urbain", "pratique"],
     "description": "Secteur très connecté autour de la gare Saint-Lazare, pratique pour les transports, les commerces et la vie professionnelle."
   },
@@ -229,7 +229,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8784, "lng": 2.3219 },
     "relatedStations": ["Europe", "Saint-Lazare", "Villiers"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 480,
     "vibeTags": ["résidentiel", "bourgeois", "central", "calme", "haussmannien"],
     "description": "Quartier résidentiel et central du 8e, marqué par une forte présence haussmannienne et une bonne accessibilité."
   },
@@ -242,7 +242,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8785, "lng": 2.2986 },
     "relatedStations": ["Ternes", "Courcelles", "Charles de Gaulle - Étoile"],
-    "confidenceRadiusMeters": 700,
+    "confidenceRadiusMeters": 520,
     "vibeTags": ["bourgeois", "commerçant", "familial", "standing", "central"],
     "description": "Secteur bourgeois et commerçant du 17e, apprécié pour sa proximité avec l'Étoile, ses commerces et son standing résidentiel."
   },
@@ -255,7 +255,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8797, "lng": 2.3091 },
     "relatedStations": ["Monceau", "Courcelles", "Malesherbes"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 620,
     "vibeTags": ["bourgeois", "familial", "prestige", "parc", "calme", "haussmannien"],
     "description": "Quartier résidentiel très recherché autour du parc Monceau, associé au calme, au standing et aux beaux immeubles haussmanniens."
   },
@@ -268,7 +268,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8845, "lng": 2.2977 },
     "relatedStations": ["Pereire", "Porte de Champerret", "Wagram"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 520,
     "vibeTags": ["familial", "résidentiel", "bourgeois", "calme", "pratique"],
     "description": "Secteur résidentiel du 17e, apprécié pour son calme relatif, ses immeubles familiaux et sa bonne desserte."
   },
@@ -281,7 +281,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8780, "lng": 2.2826 },
     "relatedStations": ["Porte Maillot", "Argentine"],
-    "confidenceRadiusMeters": 700,
+    "confidenceRadiusMeters": 480,
     "vibeTags": ["transports", "bureaux", "ouest parisien", "pratique", "urbain"],
     "description": "Secteur stratégique de l'ouest parisien, marqué par les transports, les bureaux et la proximité avec Neuilly."
   },
@@ -294,7 +294,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8629, "lng": 2.2870 },
     "relatedStations": ["Trocadéro", "Iéna", "Boissière"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 430,
     "vibeTags": ["prestige", "touristique", "vue", "bourgeois", "standing", "patrimonial"],
     "description": "Secteur prestigieux du 16e, connu pour ses vues sur la Tour Eiffel, son standing et son caractère patrimonial."
   },
@@ -307,7 +307,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8698, "lng": 2.2854 },
     "relatedStations": ["Victor Hugo", "Boissière", "Rue de la Pompe"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 500,
     "vibeTags": ["bourgeois", "familial", "standing", "commerçant", "résidentiel"],
     "description": "Quartier résidentiel et commerçant du 16e, recherché pour son standing, ses grandes avenues et son caractère familial."
   },
@@ -320,7 +320,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8581, "lng": 2.2740 },
     "relatedStations": ["La Muette", "Rue de la Pompe", "Boulainvilliers"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 550,
     "vibeTags": ["bourgeois", "familial", "calme", "résidentiel", "espaces verts"],
     "description": "Secteur résidentiel du 16e, apprécié pour son calme, son environnement familial et sa proximité avec le Ranelagh."
   },
@@ -333,7 +333,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8487, "lng": 2.2857 },
     "relatedStations": ["Charles Michels", "Javel", "Dupleix"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 580,
     "vibeTags": ["moderne", "commerces", "tours", "seine", "familial", "pratique"],
     "description": "Secteur moderne du 15e, proche de la Seine et du centre Beaugrenelle, avec une forte dimension pratique et commerçante."
   },
@@ -346,7 +346,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8450, "lng": 2.2946 },
     "relatedStations": ["Commerce", "Avenue Émile Zola", "La Motte-Picquet - Grenelle"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 480,
     "vibeTags": ["familial", "commerçant", "résidentiel", "pratique", "vivant"],
     "description": "Quartier familial et commerçant du 15e, centré autour de la rue du Commerce et apprécié pour sa vie de proximité."
   },
@@ -359,7 +359,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8396, "lng": 2.3010 },
     "relatedStations": ["Vaugirard", "Volontaires", "Convention"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 580,
     "vibeTags": ["familial", "résidentiel", "calme", "pratique", "commerçant"],
     "description": "Secteur résidentiel du 15e, apprécié pour son calme relatif, sa vie de quartier et ses commerces du quotidien."
   },
@@ -372,7 +372,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8324, "lng": 2.2877 },
     "relatedStations": ["Porte de Versailles", "Convention", "Balard"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 580,
     "vibeTags": ["pratique", "transports", "familial", "résidentiel", "événementiel"],
     "description": "Secteur du sud-ouest parisien connu pour le parc des expositions, avec une dimension pratique et résidentielle."
   },
@@ -385,7 +385,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8339, "lng": 2.3324 },
     "relatedStations": ["Denfert-Rochereau", "Mouton-Duvernet", "Raspail"],
-    "confidenceRadiusMeters": 700,
+    "confidenceRadiusMeters": 450,
     "vibeTags": ["transports", "résidentiel", "rive gauche", "pratique", "familial"],
     "description": "Secteur très bien connecté du 14e, à la croisée des transports, avec une ambiance résidentielle de rive gauche."
   },
@@ -398,7 +398,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8281, "lng": 2.3267 },
     "relatedStations": ["Alésia", "Pernety", "Mouton-Duvernet"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 580,
     "vibeTags": ["familial", "résidentiel", "commerçant", "rive gauche", "pratique"],
     "description": "Quartier résidentiel et commerçant du 14e, apprécié pour sa vie de proximité et son atmosphère familiale."
   },
@@ -411,7 +411,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8342, "lng": 2.3184 },
     "relatedStations": ["Pernety", "Plaisance", "Gaîté"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 420,
     "vibeTags": ["village", "calme", "familial", "résidentiel", "charme"],
     "description": "Petit secteur du 14e à l'ambiance village, apprécié pour ses rues calmes, ses commerces de proximité et son esprit résidentiel."
   },
@@ -424,7 +424,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8422, "lng": 2.3495 },
     "relatedStations": ["Place Monge", "Censier-Daubenton", "Cardinal Lemoine"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 420,
     "vibeTags": ["historique", "étudiant", "vivant", "commerçant", "village", "rive gauche"],
     "description": "Quartier historique et animé du 5e, connu pour la rue Mouffetard, ses commerces, ses restaurants et son ambiance étudiante."
   },
@@ -437,7 +437,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8493, "lng": 2.3430 },
     "relatedStations": ["Cluny - La Sorbonne", "Maubert - Mutualité", "Odéon"],
-    "confidenceRadiusMeters": 850,
+    "confidenceRadiusMeters": 650,
     "vibeTags": ["étudiant", "historique", "culturel", "central", "rive gauche"],
     "description": "Quartier emblématique de la rive gauche, associé aux universités, librairies, cinémas, cafés et à une forte identité culturelle."
   },
@@ -450,7 +450,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8462, "lng": 2.3550 },
     "relatedStations": ["Jussieu", "Cardinal Lemoine", "Place Monge"],
-    "confidenceRadiusMeters": 650,
+    "confidenceRadiusMeters": 450,
     "vibeTags": ["étudiant", "rive gauche", "central", "calme", "institutionnel"],
     "description": "Secteur universitaire du 5e, proche du Jardin des Plantes, avec une ambiance étudiante et résidentielle."
   },
@@ -463,7 +463,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8519, "lng": 2.3575 },
     "relatedStations": ["Pont Marie", "Sully - Morland", "Cité"],
-    "confidenceRadiusMeters": 450,
+    "confidenceRadiusMeters": 350,
     "vibeTags": ["prestige", "historique", "seine", "calme", "patrimonial", "central"],
     "description": "Secteur patrimonial très prestigieux au cœur de Paris, apprécié pour son calme relatif, ses quais et son caractère unique."
   },
@@ -476,7 +476,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8556, "lng": 2.3655 },
     "relatedStations": ["Saint-Paul", "Bastille", "Chemin Vert"],
-    "confidenceRadiusMeters": 500,
+    "confidenceRadiusMeters": 380,
     "vibeTags": ["prestige", "historique", "patrimonial", "central", "charme"],
     "description": "Micro-secteur prestigieux du Marais autour de la Place des Vosges, très recherché pour son patrimoine et son charme."
   },
@@ -489,7 +489,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8516, "lng": 2.3831 },
     "relatedStations": ["Faidherbe-Chaligny", "Ledru-Rollin", "Reuilly-Diderot"],
-    "confidenceRadiusMeters": 750,
+    "confidenceRadiusMeters": 550,
     "vibeTags": ["vivant", "artisanal", "commerçant", "central", "mixte", "restaurants"],
     "description": "Secteur vivant entre 11e et 12e, marqué par son histoire artisanale, ses commerces, ses restaurants et sa proximité avec Bastille et Aligre."
   },
@@ -502,7 +502,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8473, "lng": 2.3862 },
     "relatedStations": ["Reuilly-Diderot", "Montgallet", "Faidherbe-Chaligny"],
-    "confidenceRadiusMeters": 600,
+    "confidenceRadiusMeters": 420,
     "vibeTags": ["pratique", "familial", "transports", "commerçant", "résidentiel", "central"],
     "description": "Secteur pratique et recherché du 12e, bien desservi par les transports et proche de commerces, écoles et quartiers vivants."
   },
@@ -515,7 +515,7 @@
     "type": "semantic_neighborhood",
     "center": { "lat": 48.8396, "lng": 2.4009 },
     "relatedStations": ["Picpus", "Bel-Air", "Michel Bizot"],
-    "confidenceRadiusMeters": 800,
+    "confidenceRadiusMeters": 580,
     "vibeTags": ["familial", "calme", "résidentiel", "espaces verts", "pratique"],
     "description": "Quartier résidentiel et familial du 12e, apprécié pour son calme, ses espaces verts et sa proximité avec Nation et le bois de Vincennes."
   }
