@@ -1,136 +1,140 @@
 import type { LocationIntent } from '../searchStore'
 
 const LIFESTYLE_KEYWORDS: Record<string, string[]> = {
-  calme: ['calme', 'tranquille', 'paisible', 'résidentiel', 'quiet', 'serein'],
-  animé: ['animé', 'vivant', 'dynamique', 'branché', 'festif', 'nightlife'],
-  familial: ['familial', 'famille', 'enfants', 'école', 'sécurisé', 'sécurisée'],
+  calme: ['calme', 'tranquille', 'paisible', 'résidentiel', 'serein'],
+  animé: ['animé', 'vivant', 'dynamique', 'branché', 'festif'],
+  familial: ['familial', 'famille', 'enfants', 'école', 'sécurisé'],
   nature: ['nature', 'vert', 'parc', 'bois', 'jardin', 'forêt', 'verdure'],
   patrimoine: ['patrimoine', 'historique', 'haussmannien', 'ancien', 'charme'],
   lumineux: ['lumineux', 'ensoleillé', 'soleil', 'clair'],
-  village: ['village', 'quartier de village', 'ambiance village', 'petit village'],
+  village: ['village', 'ambiance village', 'petit village'],
 }
 
 const TRANSPORT_PATTERNS: Array<{ pattern: RegExp; extract: (m: RegExpMatchArray) => string }> = [
-  { pattern: /ligne\s+(\d+|[A-E])/gi, extract: (m) => `ligne ${m[1]}` },
-  { pattern: /m[eé]tro\s+(\d+)/gi, extract: (m) => `métro ${m[1]}` },
-  { pattern: /rer\s+([A-E])/gi, extract: (m) => `RER ${m[1]}` },
-  { pattern: /station\s+([\w\s-]+?)(?:\s|$|,)/gi, extract: (m) => `station ${m[1].trim()}` },
-  { pattern: /tram(?:way)?\s+(\w+)/gi, extract: (m) => `tram ${m[1]}` },
+  { pattern: /ligne\s+(\d+|[A-Ea-e])/g, extract: (m) => `ligne ${m[1]}` },
+  { pattern: /m[eé]tro\s+(\d+)/g, extract: (m) => `métro ${m[1]}` },
+  { pattern: /rer\s+([A-Ea-e])/g, extract: (m) => `RER ${m[1].toUpperCase()}` },
+  { pattern: /tram(?:way)?\s+(\w+)/g, extract: (m) => `tram ${m[1]}` },
 ]
 
-const PROXIMITY_PATTERNS = [
-  /(?:proche|près|à\s+côté)(?:\s+du?e?s?)?\s+([\w\s''-]+?)(?:\s*,|\s*$|\s+et\s)/gi,
-  /autour\s+de\s+([\w\s''-]+?)(?:\s*,|\s*$|\s+et\s)/gi,
-  /quartier\s+([\w\s''-]+?)(?:\s*,|\s*$|\s+et\s)/gi,
-  /dans\s+le\s+([\w\s''-]+?)(?:\s*,|\s*$|\s+et\s)/gi,
-  /à\s+\d+\s+min(?:utes?)?\s+de\s+([\w\s''-]+?)(?:\s*,|\s*$|\s+et\s)/gi,
-]
+// Roman numeral → arabic
+const ROMAN_TO_NUM: Record<string, number> = {
+  i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 9, x: 10,
+  xi: 11, xii: 12, xiii: 13, xiv: 14, xv: 15, xvi: 16, xvii: 17, xviii: 18, xix: 19, xx: 20,
+}
 
-const FRENCH_CITIES = [
-  'paris', 'marseille', 'lyon', 'toulouse', 'nice', 'nantes', 'montpellier',
-  'strasbourg', 'bordeaux', 'lille', 'rennes', 'reims', 'saint-étienne',
-  'toulon', 'grenoble', 'dijon', 'angers', 'nîmes', 'villeurbanne', 'saint-denis',
-  'le havre', 'clermont-ferrand', 'brest', 'tours', 'amiens', 'limoges',
-  'perpignan', 'besançon', 'boulogne-billancourt', 'metz', 'nanterre',
-  'versailles', 'argenteuil', 'rouen', 'montreuil', 'saint-paul', 'mulhouse',
-  'roubaix', 'tourcoing', 'dunkerque', 'issy-les-moulineaux', 'neuilly-sur-seine',
-  'la défense', 'vincennes', 'saint-cloud', 'levallois-perret', 'boulogne',
-  'annecy', 'aix-en-provence', 'cannes', 'antibes', 'bayonne', 'pau',
-  'avignon', 'poitiers', 'caen', 'lorient', 'calais', 'valenciennes',
-]
+function parseParisArrondissement(text: string): string[] {
+  const found: string[] = []
+  const lower = text.toLowerCase()
 
-const PARIS_ARRONDISSEMENTS = Array.from({ length: 20 }, (_, i) =>
-  [`${i + 1}e`, `${i + 1}ème`, `paris ${i + 1}`, `75${String(i + 1).padStart(3, '0')}`]
-).flat()
+  // "Paris 11", "Paris 11e", "Paris 11ème", "Paris 11er"
+  const numPattern = /paris\s+(\d{1,2})(?:e|ème|eme|er)?/g
+  for (const m of lower.matchAll(numPattern)) {
+    const n = parseInt(m[1])
+    if (n >= 1 && n <= 20) found.push(`Paris ${n}e`)
+  }
+
+  // "11e arrondissement", "11ème arrondissement"
+  const arrPattern = /(\d{1,2})(?:e|ème|eme|er)?\s*(?:arr(?:ondissement)?)/g
+  for (const m of lower.matchAll(arrPattern)) {
+    const n = parseInt(m[1])
+    if (n >= 1 && n <= 20) found.push(`Paris ${n}e`)
+  }
+
+  // Roman numerals: "Paris XI", "Paris XIe", "Xe arrondissement"
+  const romanPattern = /paris\s+(x{0,3}(?:ix|iv|v?i{0,3}))/g
+  for (const m of lower.matchAll(romanPattern)) {
+    const n = ROMAN_TO_NUM[m[1].toLowerCase()]
+    if (n) found.push(`Paris ${n}e`)
+  }
+
+  return [...new Set(found)]
+}
 
 function extractTransportConstraints(text: string): string[] {
   const found: string[] = []
   for (const { pattern, extract } of TRANSPORT_PATTERNS) {
-    const matches = [...text.matchAll(pattern)]
-    for (const m of matches) found.push(extract(m))
+    const re = new RegExp(pattern.source, pattern.flags)
+    for (const m of text.matchAll(re)) found.push(extract(m))
   }
   return [...new Set(found)]
 }
 
 function extractLifestyleTerms(text: string): string[] {
   const lower = text.toLowerCase()
-  const found: string[] = []
-  for (const [category, keywords] of Object.entries(LIFESTYLE_KEYWORDS)) {
-    if (keywords.some((kw) => lower.includes(kw))) found.push(category)
-  }
-  return found
+  return Object.entries(LIFESTYLE_KEYWORDS)
+    .filter(([, keywords]) => keywords.some((kw) => lower.includes(kw)))
+    .map(([category]) => category)
 }
 
-function extractLocationTerms(text: string): string[] {
-  const terms: string[] = []
+const KNOWN_PLACES = [
+  'vincennes', 'saint-mandé', 'saint mande', 'neuilly', 'levallois', 'boulogne',
+  'issy', 'montreuil', 'charenton', 'nogent', 'fontenay', 'joinville',
+  'saint-maur', 'saint maur', 'bagnolet', 'pantin', 'aubervilliers',
+  'montrouge', 'malakoff', 'vanves', 'clichy', 'saint-ouen', 'saint ouen',
+  'ivry', 'gentilly', 'les lilas',
+  'nation', 'bastille', 'montmartre', 'pigalle', 'marais', 'saint-germain',
+  'montparnasse', 'batignolles', 'belleville', 'oberkampf', 'daumesnil', 'bercy',
+  'invalides', 'passy', 'auteuil', 'trocadero', 'madeleine', 'opéra',
+  'buttes-chaumont', 'la villette', 'canal saint martin', 'gare du nord',
+  'gobelins', "place d'italie", 'alésia', 'pernety', 'aligre',
+]
+
+function extractKnownPlaces(text: string): string[] {
   const lower = text.toLowerCase()
-
-  // Detect Paris arrondissements
-  for (const arr of PARIS_ARRONDISSEMENTS) {
-    if (lower.includes(arr)) {
-      terms.push(arr)
-    }
-  }
-
-  // Extract proximity patterns
-  for (const pattern of PROXIMITY_PATTERNS) {
-    const matches = [...text.matchAll(pattern)]
-    for (const m of matches) {
-      const term = m[1]?.trim()
-      if (term && term.length > 1) terms.push(term)
-    }
-  }
-
-  // Detect known French cities
-  for (const city of FRENCH_CITIES) {
-    if (lower.includes(city)) terms.push(city)
-  }
-
-  // If no terms found, treat the whole query as a location term
-  if (terms.length === 0) {
-    const cleaned = text.trim().replace(/[.,!?]/g, '')
-    if (cleaned.length > 1) terms.push(cleaned)
-  }
-
-  return [...new Set(terms)]
+  return KNOWN_PLACES.filter((place) => lower.includes(place))
 }
 
-function computeConfidence(text: string, locationTerms: string[], lifestyleTerms: string[], transportTerms: string[]): number {
-  let score = 0.5
+const PROXIMITY_PATTERNS = [
+  /(?:proche|près|à\s+côté)(?:\s+du?e?s?)?\s+([\w\s''-]+?)(?:\s*[,.]|\s*$)/gi,
+  /autour\s+de\s+([\w\s''-]+?)(?:\s*[,.]|\s*$)/gi,
+  /quartier\s+([\w\s''-]+?)(?:\s*[,.]|\s*$)/gi,
+  /dans\s+le\s+([\w\s''-]+?)(?:\s*[,.]|\s*$)/gi,
+  /à\s+\d+\s+min(?:utes?)?\s+de\s+([\w\s''-]+?)(?:\s*[,.]|\s*$)/gi,
+]
 
-  // Boost for explicit location terms
-  if (locationTerms.length > 0) score += 0.2
-  if (locationTerms.some((t) => FRENCH_CITIES.includes(t.toLowerCase()))) score += 0.15
-  if (locationTerms.some((t) => PARIS_ARRONDISSEMENTS.includes(t.toLowerCase()))) score += 0.15
+function extractProximityTerms(text: string): string[] {
+  const terms: string[] = []
+  for (const pattern of PROXIMITY_PATTERNS) {
+    const re = new RegExp(pattern.source, pattern.flags)
+    for (const m of text.matchAll(re)) {
+      const term = m[1]?.trim()
+      if (term && term.length > 1 && !['le', 'la', 'du', 'de', 'un', 'une'].includes(term.toLowerCase())) {
+        terms.push(term)
+      }
+    }
+  }
+  return terms
+}
 
-  // Boost for transport constraints (user is specific)
+function computeConfidence(locationTerms: string[], lifestyleTerms: string[], transportTerms: string[], rawQuery: string): number {
+  let score = 0.4
+  if (locationTerms.length > 0) score += 0.25
+  if (locationTerms.some((t) => /paris\s*\d/i.test(t))) score += 0.15
   if (transportTerms.length > 0) score += 0.1
-
-  // Slight boost for lifestyle terms (user is expressive)
   if (lifestyleTerms.length > 0) score += 0.05
-
-  // Penalize very short queries
-  if (text.trim().length < 5) score -= 0.3
-
+  if (rawQuery.trim().length < 4) score -= 0.35
   return Math.max(0, Math.min(1, score))
 }
 
 export function parseLocationIntent(query: string): LocationIntent {
   const text = query.trim()
-  const location_terms = extractLocationTerms(text)
+
+  const parisArr = parseParisArrondissement(text)
+  const knownPlaces = extractKnownPlaces(text)
+  const proximity = extractProximityTerms(text)
+
+  // Combine — deduplicate by value
+  const location_terms = [...new Set([...parisArr, ...knownPlaces, ...proximity])]
   const lifestyle_terms = extractLifestyleTerms(text)
   const transport_constraints = extractTransportConstraints(text)
-  const confidence = computeConfidence(text, location_terms, lifestyle_terms, transport_constraints)
+  const confidence = computeConfidence(location_terms, lifestyle_terms, transport_constraints, text)
 
   return { location_terms, lifestyle_terms, transport_constraints, confidence }
 }
 
-/** Extract the best geocodable query from an intent */
+/** Return the best single query to geocode from an intent */
 export function intentToGeocodableQuery(query: string, intent: LocationIntent): string {
-  // If we have explicit location terms, use them as geocoding input
-  if (intent.location_terms.length > 0) {
-    return intent.location_terms[0]
-  }
-  // Otherwise use the raw query
-  return query
+  if (intent.location_terms.length > 0) return intent.location_terms[0]
+  return query.trim()
 }

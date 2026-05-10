@@ -19,6 +19,7 @@ export interface SearchPreferences {
   locationLng: number | null
   locationRadius: number
   locationIntent: LocationIntent | null
+  selectedZoneIds: string[]
   budgetMax: number | null
   propertyTypes: PropertyType[]
   minRooms: number | null
@@ -37,6 +38,8 @@ interface SearchStore extends SearchPreferences {
     intent?: LocationIntent | null
   }) => void
   setLocationRadius: (radius: number) => void
+  setSelectedZones: (ids: string[]) => void
+  toggleZone: (id: string) => void
   setBudgetMax: (max: number | null) => void
   setPropertyTypes: (types: PropertyType[]) => void
   togglePropertyType: (type: PropertyType) => void
@@ -56,6 +59,7 @@ export const useSearchStore = create<SearchStore>()(
       locationLng: null,
       locationRadius: 2,
       locationIntent: null,
+      selectedZoneIds: [],
       budgetMax: null,
       propertyTypes: [],
       minRooms: null,
@@ -68,6 +72,15 @@ export const useSearchStore = create<SearchStore>()(
         set({ locationQuery: query, locationLabel: label, locationLat: lat, locationLng: lng, locationIntent: intent ?? null }),
 
       setLocationRadius: (radius) => set({ locationRadius: radius }),
+
+      setSelectedZones: (ids) => set({ selectedZoneIds: ids }),
+
+      toggleZone: (id) =>
+        set((state) => ({
+          selectedZoneIds: state.selectedZoneIds.includes(id)
+            ? state.selectedZoneIds.filter((z) => z !== id)
+            : [...state.selectedZoneIds, id],
+        })),
 
       setBudgetMax: (max) => set({ budgetMax: max }),
 
@@ -101,6 +114,7 @@ export const useSearchStore = create<SearchStore>()(
           locationLng: null,
           locationRadius: 2,
           locationIntent: null,
+          selectedZoneIds: [],
           budgetMax: null,
           propertyTypes: [],
           minRooms: null,

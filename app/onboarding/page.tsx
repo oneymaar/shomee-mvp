@@ -7,62 +7,59 @@ import { ChevronLeft } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
 import IntroStep from '@/components/onboarding/IntroStep'
 import LocationStep from '@/components/onboarding/LocationStep'
+import LocationMapStep from '@/components/onboarding/LocationMapStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
 import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep'
 import PrioritiesStep from '@/components/onboarding/PrioritiesStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 
-const TOTAL_STEPS = 5 // steps 1–5 (excluding intro=0 and AI prep=6)
+// Steps: 0=Intro, 1=Location text, 2=Budget, 3=Type, 4=Priorities, 5=AI
+// locationMapOpen is a sub-state of step 1
+const TOTAL_STEPS = 5
 
 type Direction = 1 | -1
 
 const variants = {
-  enter: (dir: Direction) => ({
-    x: dir > 0 ? '100%' : '-100%',
-    opacity: 0,
-  }),
+  enter: (dir: Direction) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  exit: (dir: Direction) => ({
-    x: dir > 0 ? '-60%' : '60%',
-    opacity: 0,
-  }),
+  exit: (dir: Direction) => ({ x: dir > 0 ? '-55%' : '55%', opacity: 0 }),
 }
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { onboardingCompleted, resetOnboarding } = useSearchStore()
+  const { onboardingCompleted } = useSearchStore()
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
+  const [locationMapOpen, setLocationMapOpen] = useState(false)
 
   useEffect(() => {
-    if (onboardingCompleted) {
-      router.replace('/feed')
-    }
+    if (onboardingCompleted) router.replace('/feed')
   }, [onboardingCompleted, router])
 
   const goTo = useCallback((next: number, dir: Direction = 1) => {
     setDirection(dir)
+    setLocationMapOpen(false)
     setStep(next)
   }, [])
 
   const handleNext = useCallback(() => goTo(step + 1, 1), [step, goTo])
   const handleBack = useCallback(() => {
+    if (locationMapOpen) { setLocationMapOpen(false); return }
     if (step === 0) return
     goTo(step - 1, -1)
-  }, [step, goTo])
+  }, [step, locationMapOpen, goTo])
   const handleSkip = useCallback(() => goTo(step + 1, 1), [step, goTo])
+  const handleQuick = useCallback(() => goTo(5, 1), [goTo])
+  const handleReady = useCallback(() => router.replace('/feed'), [router])
 
-  // Quick test: skip to AI prep
-  const handleQuick = useCallback(() => {
-    goTo(6, 1)
-  }, [goTo])
+  const handleOpenMap = useCallback(() => setLocationMapOpen(true), [])
+  const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
-  const handleReady = useCallback(() => {
-    router.replace('/feed')
-  }, [router])
+  const showBack = step > 0
+  const showProgress = step >= 1 && step <= 4
 
-  const showBack = step > 0 && step < 6
-  const showProgress = step >= 1 && step <= 5
+  // Unique key per "screen" so AnimatePresence correctly animates sub-steps
+  const screenKey = step === 1 ? (locationMapOpen ? '1-map' : '1-text') : String(step)
 
   return (
     <div
@@ -88,25 +85,27 @@ export default function OnboardingPage() {
 
           {showProgress && (
             <div className="flex-1 flex gap-1.5">
-              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-1 h-1 rounded-full transition-all duration-300"
-                  style={{
-                    backgroundColor: i < step ? '#914E3C' : i === step - 1 ? '#914E3C' : 'rgba(0,0,0,0.1)',
-                  }}
-                />
-              ))}
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
+                const filled = i < step - 1 || (i === step - 1 && !locationMapOpen)
+                const active = i === step - 1
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 h-1 rounded-full transition-all duration-400"
+                    style={{ backgroundColor: filled || active ? '#914E3C' : 'rgba(0,0,0,0.1)' }}
+                  />
+                )
+              })}
             </div>
           )}
         </div>
       )}
 
-      {/* Step content */}
+      {/* Animated step content */}
       <div className="flex-1 relative overflow-hidden">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
-            key={step}
+            key={screenKey}
             custom={direction}
             variants={variants}
             initial="enter"
@@ -118,19 +117,28 @@ export default function OnboardingPage() {
             {step === 0 && (
               <IntroStep onStart={handleNext} onQuick={handleQuick} />
             )}
-            {step === 1 && (
-              <LocationStep onNext={handleNext} onSkip={handleSkip} />
+
+            {step === 1 && !locationMapOpen && (
+              <LocationStep onOpenMap={handleOpenMap} onSkip={handleSkip} />
             )}
+
+            {step === 1 && locationMapOpen && (
+              <LocationMapStep onValidate={handleMapValidate} onBack={() => setLocationMapOpen(false)} />
+            )}
+
             {step === 2 && (
               <BudgetStep onNext={handleNext} onSkip={handleSkip} />
             )}
+
             {step === 3 && (
               <PropertyTypeStep onNext={handleNext} onSkip={handleSkip} />
             )}
+
             {step === 4 && (
               <PrioritiesStep onNext={handleNext} onSkip={handleSkip} />
             )}
-            {(step === 5 || step === 6) && (
+
+            {step === 5 && (
               <AIPreparationStep onReady={handleReady} />
             )}
           </motion.div>
