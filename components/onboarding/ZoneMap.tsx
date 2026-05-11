@@ -411,6 +411,17 @@ function GeoLayers(props: GeoLayersProps) {
   return null
 }
 
+// ─── ZoomDebugOverlay — real-time zoom level display for UX debugging ────────
+
+function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMap()
+  useMapEvents({
+    zoom: () => onZoom(map.getZoom()),
+    zoomend: () => onZoom(map.getZoom()),
+  })
+  return null
+}
+
 // ─── MapController — only handles center flyTo, never touches zoom ─────────
 
 function MapController({ center }: { center: [number, number] }) {
@@ -454,33 +465,50 @@ export interface ZoneMapProps {
 }
 
 export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
+  const [liveZoom, setLiveZoom] = useState(zoom)
+
   return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      zoomControl={false}
-      attributionControl={false}
-    >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-      <GeoLayers
-        arrondissements={arrondissements}
-        quartiers={quartiers}
-        iris={iris}
-        communes={communes}
-        selectedArrIds={selectedArrIds}
-        selectedQuartierIds={selectedQuartierIds}
-        selectedIrisIds={selectedIrisIds}
-        selectedCommuneIds={selectedCommuneIds}
-        onClickArr={onClickArr}
-        onClickQuartier={onClickQuartier}
-        onClickIris={onClickIris}
-        onClickCommune={onClickCommune}
-        onClickCommuneIris={onClickCommuneIris}
-        irisLoading={irisLoading}
-        onZoomChange={onZoomChange}
-      />
-      <MapController center={center} />
-    </MapContainer>
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+        zoomControl={false}
+        attributionControl={false}
+      >
+        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+        <ZoomTracker onZoom={setLiveZoom} />
+        <GeoLayers
+          arrondissements={arrondissements}
+          quartiers={quartiers}
+          iris={iris}
+          communes={communes}
+          selectedArrIds={selectedArrIds}
+          selectedQuartierIds={selectedQuartierIds}
+          selectedIrisIds={selectedIrisIds}
+          selectedCommuneIds={selectedCommuneIds}
+          onClickArr={onClickArr}
+          onClickQuartier={onClickQuartier}
+          onClickIris={onClickIris}
+          onClickCommune={onClickCommune}
+          onClickCommuneIris={onClickCommuneIris}
+          irisLoading={irisLoading}
+          onZoomChange={onZoomChange}
+        />
+        <MapController center={center} />
+      </MapContainer>
+      {/* Debug overlay — zoom level in real time */}
+      <div
+        style={{
+          position: 'absolute', bottom: 8, left: 8, zIndex: 1000,
+          background: 'rgba(0,0,0,0.55)', color: '#fff',
+          padding: '2px 8px', borderRadius: 4,
+          fontSize: 11, fontFamily: 'monospace',
+          pointerEvents: 'none', userSelect: 'none',
+        }}
+      >
+        zoom {liveZoom.toFixed(2)}
+      </div>
+    </div>
   )
 }
