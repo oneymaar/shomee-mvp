@@ -31,6 +31,15 @@ function irisStyle(selected: boolean): L.PathOptions {
     : { color: '#777', fillColor: 'transparent', fillOpacity: 0, weight: 0.6, opacity: 0.3 }
 }
 
+// At zoom < 15 (not the natural IRIS zoom), show selected IRIS as a solid merged area:
+// weight:0 removes borders between adjacent selected zones so they fuse into one shape.
+// Unselected IRIS are fully transparent — invisible at low zoom (no visual noise).
+function irisStyleLowZoom(selected: boolean): L.PathOptions {
+  return selected
+    ? { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.22, weight: 0, opacity: 0 }
+    : { fillColor: 'transparent', fillOpacity: 0, weight: 0, opacity: 0 }
+}
+
 // ─── Labels — text only, centered, no background ──────────────────────────
 
 function makeLabel(text: string, state: ZoneState | 'selected' | 'unselected', fontSize = 11, bold = true): L.DivIcon {
@@ -80,6 +89,12 @@ interface GeoLayerConfig {
   styleKey: string
   /** Pre-computed boolean: labels visible. Changes only at zoom thresholds, not on every tick. */
   showLabels: boolean
+  /**
+   * When false, all SVG paths in this layer get pointer-events:none so clicks fall
+   * through to the layer underneath. Used to restore correct click targets when
+   * sticky-visible layers are shown outside their natural interactive zoom range.
+   */
+  clickable: boolean
 }
 
 function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
@@ -161,6 +176,17 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
       else if (!cfg.showLabels && map.hasLayer(m)) map.removeLayer(m)
     })
   }, [cfg.visible, cfg.showLabels, map])
+
+  // ── Effect 4: toggle pointer-events when clickable changes ────────────────
+  // L.Path.setStyle({ interactive }) propagates to SVG pointer-events attribute.
+  // false → pointer-events:none → clicks fall through to layers underneath.
+  useEffect(() => {
+    const layer = layerRef.current
+    if (!layer) return
+    layer.eachLayer((l) => {
+      if (l instanceof L.Path) l.setStyle({ interactive: cfg.clickable })
+    })
+  }, [cfg.clickable])
 
   function rebuildLabels(layer: L.GeoJSON, zones: GeoZone[]) {
     labelsRef.current.forEach((m) => m.remove())
@@ -275,8 +301,14 @@ function GeoLayers(props: GeoLayersProps) {
   // zooms — at zoom 14 they bridge the gap; at zoom 15+ they outline IRIS zones.
   const showCommunes    = true
 
+  // Clickable: each layer is only interactive in its natural zoom range.
+  // Outside that range (sticky-visible), pointer-events:none lets clicks fall through.
+  const irisZoomHi       = zoom >= 15                        // IRIS natural range
+  const quartierNatural  = zoom >= 14 && zoom <= 15          // Quartier natural range
+
   // styleKeys: opaque strings that change only when the relevant selection changes.
   // Stable across zoom/pan re-renders → style-refresh effect stays silent during animation.
+  // irisStyleKey also encodes the zoom band so styles update when crossing zoom 15.
   const parisStyleKey = useMemo(
     () => `${selectedArrIds.join()}_${selectedQuartierIds.join()}_${selectedIrisIds.join()}`,
     [selectedArrIds, selectedQuartierIds, selectedIrisIds]
@@ -286,8 +318,8 @@ function GeoLayers(props: GeoLayersProps) {
     [selectedCommuneIds, selectedIrisIds]
   )
   const irisStyleKey = useMemo(
-    () => selectedIrisIds.join(),
-    [selectedIrisIds]
+    () => `${selectedIrisIds.join()}_${irisZoomHi ? 1 : 0}`,
+    [selectedIrisIds, irisZoomHi]
   )
 
   useGeoLayer(map, {
@@ -299,6 +331,7 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showTopLevel,
     styleKey: parisStyleKey,
     showLabels: showTopLevel && zoom >= 11,
+    clickable: true,
   })
 
   useGeoLayer(map, {
@@ -310,6 +343,7 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showCommunes,
     styleKey: communeStyleKey,
     showLabels: zoom >= 11,
+    clickable: true,
   })
 
   useGeoLayer(map, {
@@ -322,28 +356,38 @@ function GeoLayers(props: GeoLayersProps) {
     styleKey: parisStyleKey,
     // Labels only in the natural quartier zoom range — not when force-shown by sticky selection
     showLabels: zoom >= 14 && zoom <= 15,
+    // Non-interactive when sticky-shown outside natural range (lets arr clicks through)
+    clickable: quartierNatural,
   })
 
   useGeoLayer(map, {
     zones: communeIris,
-    getPathStyle: (z) => irisStyle(selectedIrisIds.includes(z.id)),
+    // Low zoom: merged style (no borders, unselected invisible) — high zoom: detail style
+    getPathStyle: (z) => irisZoomHi
+      ? irisStyle(selectedIrisIds.includes(z.id))
+      : irisStyleLowZoom(selectedIrisIds.includes(z.id)),
     getLabelState: (z) => selectedIrisIds.includes(z.id) ? 'selected' : 'unselected',
     fontSize: 9,
     onClick: onClickCommuneIris,
     visible: showCommuneIris,
     styleKey: irisStyleKey,
     showLabels: false,
+    clickable: irisZoomHi,
   })
 
   useGeoLayer(map, {
     zones: parisIris,
-    getPathStyle: (z) => irisStyle(selectedIrisIds.includes(z.id)),
+    // Low zoom: merged style (no borders, unselected invisible) — high zoom: detail style
+    getPathStyle: (z) => irisZoomHi
+      ? irisStyle(selectedIrisIds.includes(z.id))
+      : irisStyleLowZoom(selectedIrisIds.includes(z.id)),
     getLabelState: (z) => selectedIrisIds.includes(z.id) ? 'selected' : 'unselected',
     fontSize: 9,
     onClick: onClickIris,
     visible: showParisIris,
     styleKey: irisStyleKey,
     showLabels: false,
+    clickable: irisZoomHi,
   })
 
   return null
