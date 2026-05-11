@@ -1,0 +1,5089 @@
+[
+  {
+    "id": "abbesses",
+    "label": "Abbesses",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8843,
+      "lng": 2.3385
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "alesia",
+    "label": "Alésia",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8281,
+      "lng": 2.3247
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "alesia_antoine_chantin",
+    "label": "Alésia - Antoine Chantin",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8259,
+      "lng": 2.3184
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "alexandre_dumas",
+    "label": "Alexandre Dumas",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8567,
+      "lng": 2.3968
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "alma_marceau",
+    "label": "Alma-Marceau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8636,
+      "lng": 2.3011
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "anvers",
+    "label": "Anvers",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8842,
+      "lng": 2.3445
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "aqueduc_pont_d_issy",
+    "label": "Aqueduc - Pont d'Issy",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8291,
+      "lng": 2.2782
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "argentine",
+    "label": "Argentine",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8752,
+      "lng": 2.293
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "arts_et_metiers",
+    "label": "Arts et Métiers",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 3",
+    "coordinates": {
+      "lat": 48.8638,
+      "lng": 2.3562
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "assemblee_nationale",
+    "label": "Assemblée Nationale",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8602,
+      "lng": 2.3198
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "auber",
+    "label": "Auber",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8741,
+      "lng": 2.3313
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "austerlitz",
+    "label": "Austerlitz",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5",
+      "10",
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.843,
+      "lng": 2.3659
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "avenue_de_versailles",
+    "label": "Avenue de Versailles",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8568,
+      "lng": 2.2534
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "avron",
+    "label": "Avron",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.849,
+      "lng": 2.4044
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "balard",
+    "label": "Balard",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8",
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8391,
+      "lng": 2.2793
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "barbes_rochechouart",
+    "label": "Barbès-Rochechouart",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8837,
+      "lng": 2.3499
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bastille",
+    "label": "Bastille",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "5",
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.8533,
+      "lng": 2.3692
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bel_air",
+    "label": "Bel-Air",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8429,
+      "lng": 2.403
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "belleville",
+    "label": "Belleville",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8714,
+      "lng": 2.3788
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bercy",
+    "label": "Bercy",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6",
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8387,
+      "lng": 2.3793
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bibliotheque_francois_mitterrand",
+    "label": "Bibliothèque François Mitterrand",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8299,
+      "lng": 2.3762
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bir_hakeim",
+    "label": "Bir-Hakeim",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6",
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8534,
+      "lng": 2.2891
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "blanche",
+    "label": "Blanche",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.884,
+      "lng": 2.3277
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "boissiere",
+    "label": "Boissière",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8666,
+      "lng": 2.2903
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bolivar",
+    "label": "Bolivar",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8789,
+      "lng": 2.3762
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bonne_nouvelle",
+    "label": "Bonne Nouvelle",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.8694,
+      "lng": 2.3489
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "botzaris",
+    "label": "Botzaris",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8772,
+      "lng": 2.382
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "boucicaut",
+    "label": "Boucicaut",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8396,
+      "lng": 2.2985
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bourse",
+    "label": "Bourse",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.8673,
+      "lng": 2.3418
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "brancion",
+    "label": "Brancion",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8347,
+      "lng": 2.2953
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "breguet_sabin",
+    "label": "Breguet-Sabin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.8577,
+      "lng": 2.3693
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "buttes_chaumont",
+    "label": "Buttes-Chaumont",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8773,
+      "lng": 2.3863
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "buzenval",
+    "label": "Buzenval",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8514,
+      "lng": 2.4074
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "cadet",
+    "label": "Cadet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8762,
+      "lng": 2.3453
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "cambronne",
+    "label": "Cambronne",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8449,
+      "lng": 2.3136
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "campo_formio",
+    "label": "Campo-Formio",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8351,
+      "lng": 2.3563
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "cardinal_lemoine",
+    "label": "Cardinal Lemoine",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.8474,
+      "lng": 2.3524
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "censier_daubenton",
+    "label": "Censier-Daubenton",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.8406,
+      "lng": 2.3521
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "champ_de_mars_tour_eiffel",
+    "label": "Champ de Mars-Tour Eiffel",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8558,
+      "lng": 2.2952
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "champs_elysees_clemenceau",
+    "label": "Champs-Élysées-Clemenceau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.866,
+      "lng": 2.3134
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chardon_lagache",
+    "label": "Chardon-Lagache",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.844,
+      "lng": 2.2694
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "charles_de_gaulle_etoile",
+    "label": "Charles de Gaulle-Étoile",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "2",
+      "6",
+      "A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8737,
+      "lng": 2.295
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "charles_michels",
+    "label": "Charles Michels",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8457,
+      "lng": 2.2866
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "charonne",
+    "label": "Charonne",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.8554,
+      "lng": 2.3837
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chateau_d_eau",
+    "label": "Château d'Eau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 3",
+    "coordinates": {
+      "lat": 48.8683,
+      "lng": 2.3575
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chateau_rouge",
+    "label": "Château Rouge",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8875,
+      "lng": 2.3496
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chatelet",
+    "label": "Châtelet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "4",
+      "7",
+      "11",
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8585,
+      "lng": 2.3477
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chatelet_les_halles",
+    "label": "Châtelet-Les Halles",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "A",
+      "B",
+      "D"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8618,
+      "lng": 2.3476
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "chaussee_d_antin_la_fayette",
+    "label": "Chaussée d'Antin-La Fayette",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8731,
+      "lng": 2.3341
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chevaleret",
+    "label": "Chevaleret",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8247,
+      "lng": 2.3642
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "cite",
+    "label": "Cité",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8548,
+      "lng": 2.3464
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "cite_universitaire",
+    "label": "Cité Universitaire",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8202,
+      "lng": 2.336
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "cluny_la_sorbonne",
+    "label": "Cluny-La Sorbonne",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.8504,
+      "lng": 2.3467
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "colonel_fabien",
+    "label": "Colonel Fabien",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.8716,
+      "lng": 2.3693
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "commerce",
+    "label": "Commerce",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8424,
+      "lng": 2.3086
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "concorde",
+    "label": "Concorde",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "8",
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8654,
+      "lng": 2.3215
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "corentin_cariou",
+    "label": "Corentin Cariou",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.899,
+      "lng": 2.3722
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "corentin_celton",
+    "label": "Corentin Celton",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8261,
+      "lng": 2.2969
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "corvisart",
+    "label": "Corvisart",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8306,
+      "lng": 2.3501
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "cour_saint_emilion",
+    "label": "Cour Saint-Émilion",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8351,
+      "lng": 2.384
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "courcelles",
+    "label": "Courcelles",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8789,
+      "lng": 2.2972
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "couronnes",
+    "label": "Couronnes",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.869,
+      "lng": 2.3789
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "crimee",
+    "label": "Crimée",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8943,
+      "lng": 2.3725
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "daumesnil",
+    "label": "Daumesnil",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6",
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8399,
+      "lng": 2.3947
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "denfert_rochereau",
+    "label": "Denfert-Rochereau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "6",
+      "B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8337,
+      "lng": 2.3325
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "desnouettes",
+    "label": "Desnouettes",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8378,
+      "lng": 2.2927
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "dugommier",
+    "label": "Dugommier",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8406,
+      "lng": 2.387
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "dupleix",
+    "label": "Dupleix",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8503,
+      "lng": 2.2942
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "duroc",
+    "label": "Duroc",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10",
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8471,
+      "lng": 2.3167
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "ecole_militaire",
+    "label": "École Militaire",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8555,
+      "lng": 2.3062
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "edgar_quinet",
+    "label": "Edgar Quinet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8413,
+      "lng": 2.3233
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "eglise_de_pantin",
+    "label": "Église de Pantin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8966,
+      "lng": 2.4026
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "ella_fitzgerald",
+    "label": "Ella Fitzgerald",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8855,
+      "lng": 2.397
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "emile_zola",
+    "label": "Émile Zola",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8451,
+      "lng": 2.2941
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "etienne_marcel",
+    "label": "Étienne Marcel",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8637,
+      "lng": 2.3512
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "europe",
+    "label": "Europe",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8796,
+      "lng": 2.3172
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "exelmans",
+    "label": "Exelmans",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8435,
+      "lng": 2.2658
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "faidherbe_chaligny",
+    "label": "Faidherbe-Chaligny",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.8516,
+      "lng": 2.3856
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "felix_faure",
+    "label": "Félix Faure",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8413,
+      "lng": 2.3069
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "franklin_d_roosevelt",
+    "label": "Franklin D. Roosevelt",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8691,
+      "lng": 2.3118
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "gambetta",
+    "label": "Gambetta",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "3",
+      "3bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8653,
+      "lng": 2.3982
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "gare_d_austerlitz",
+    "label": "Gare d'Austerlitz",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5",
+      "10",
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.843,
+      "lng": 2.3659
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "gare_de_l_est",
+    "label": "Gare de l'Est",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "5",
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.877,
+      "lng": 2.3568
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "gare_de_lyon",
+    "label": "Gare de Lyon",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "14",
+      "A",
+      "D"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8449,
+      "lng": 2.3735
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "gare_du_nord",
+    "label": "Gare du Nord",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "5",
+      "B",
+      "D",
+      "E"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.8809,
+      "lng": 2.3553
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "george_v",
+    "label": "George V",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8715,
+      "lng": 2.3019
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "georges_brassens",
+    "label": "Georges Brassens",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8394,
+      "lng": 2.2886
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "glaciere",
+    "label": "Glacière",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8336,
+      "lng": 2.3448
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "goncourt",
+    "label": "Goncourt",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 3",
+    "coordinates": {
+      "lat": 48.8681,
+      "lng": 2.3688
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "grands_boulevards",
+    "label": "Grands Boulevards",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.871,
+      "lng": 2.3449
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "guy_moquet",
+    "label": "Guy Môquet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8972,
+      "lng": 2.3424
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "haussmann_saint_lazare",
+    "label": "Haussmann-Saint-Lazare",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "E"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8752,
+      "lng": 2.3248
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "havre_caumartin",
+    "label": "Havre-Caumartin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8741,
+      "lng": 2.3299
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "hoche",
+    "label": "Hoche",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8885,
+      "lng": 2.4
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "hotel_de_ville",
+    "label": "Hôtel de Ville",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8573,
+      "lng": 2.3519
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "iena",
+    "label": "Iéna",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8657,
+      "lng": 2.2941
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "issy",
+    "label": "Issy",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8267,
+      "lng": 2.2733
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "issy_val_de_seine",
+    "label": "Issy-Val-de-Seine",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8244,
+      "lng": 2.2764
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "jacques_bonsergent",
+    "label": "Jacques Bonsergent",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.8704,
+      "lng": 2.3593
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "jasmin",
+    "label": "Jasmin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8515,
+      "lng": 2.2734
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "jaures",
+    "label": "Jaurès",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "5",
+      "7bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8827,
+      "lng": 2.3705
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "javel",
+    "label": "Javel",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8459,
+      "lng": 2.2807
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "javel_andre_citroen",
+    "label": "Javel-André Citroën",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8459,
+      "lng": 2.2807
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "jourdain",
+    "label": "Jourdain",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8748,
+      "lng": 2.3887
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "jules_joffrin",
+    "label": "Jules Joffrin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8895,
+      "lng": 2.344
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "jussieu",
+    "label": "Jussieu",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7",
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.8464,
+      "lng": 2.3544
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "kleber",
+    "label": "Kléber",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8701,
+      "lng": 2.2932
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_chapelle",
+    "label": "La Chapelle",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.8828,
+      "lng": 2.3564
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_defense",
+    "label": "La Défense",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8921,
+      "lng": 2.238
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "la_fourche",
+    "label": "La Fourche",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8913,
+      "lng": 2.324
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_motte_picquet_grenelle",
+    "label": "La Motte-Picquet-Grenelle",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6",
+      "8",
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8492,
+      "lng": 2.3
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_muette",
+    "label": "La Muette",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.859,
+      "lng": 2.2769
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_plaine_saint_denis_porte_de_la_villette",
+    "label": "La Plaine Saint-Denis - Porte de la Villette",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8961,
+      "lng": 2.381
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "la_tour_maubourg",
+    "label": "La Tour-Maubourg",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8572,
+      "lng": 2.3099
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "lamarck_caulaincourt",
+    "label": "Lamarck-Caulaincourt",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.89,
+      "lng": 2.3381
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "laumiere",
+    "label": "Laumière",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8879,
+      "lng": 2.3766
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "le_peletier",
+    "label": "Le Peletier",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8753,
+      "lng": 2.3388
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "les_gobelins",
+    "label": "Les Gobelins",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8354,
+      "lng": 2.3533
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "les_halles",
+    "label": "Les Halles",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8629,
+      "lng": 2.3476
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "liege",
+    "label": "Liège",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8794,
+      "lng": 2.3263
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "louis_blanc",
+    "label": "Louis Blanc",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7",
+      "7bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.8774,
+      "lng": 2.3625
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "lourmel",
+    "label": "Lourmel",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8381,
+      "lng": 2.2885
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "louvre_rivoli",
+    "label": "Louvre-Rivoli",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8602,
+      "lng": 2.3453
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "luxembourg",
+    "label": "Luxembourg",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8473,
+      "lng": 2.3373
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "mabillon",
+    "label": "Mabillon",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8531,
+      "lng": 2.3345
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "madeleine",
+    "label": "Madeleine",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8",
+      "12",
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8701,
+      "lng": 2.3253
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "magenta",
+    "label": "Magenta",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "E",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 10",
+    "coordinates": {
+      "lat": 48.8809,
+      "lng": 2.3574
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "mairie_des_lilas",
+    "label": "Mairie des Lilas",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8806,
+      "lng": 2.4151
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "maison_blanche",
+    "label": "Maison Blanche",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8214,
+      "lng": 2.36
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "malesherbes",
+    "label": "Malesherbes",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.884,
+      "lng": 2.3155
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "maraichers",
+    "label": "Maraîchers",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8548,
+      "lng": 2.4113
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "marcadet_poissonniers",
+    "label": "Marcadet-Poissonniers",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8904,
+      "lng": 2.3579
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "marx_dormoy",
+    "label": "Marx Dormoy",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8934,
+      "lng": 2.3612
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "menilmontant",
+    "label": "Ménilmontant",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8689,
+      "lng": 2.3876
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "meudon_sur_seine",
+    "label": "Meudon-sur-Seine",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8219,
+      "lng": 2.2596
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "michel_ange_auteuil",
+    "label": "Michel-Ange-Auteuil",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8468,
+      "lng": 2.2713
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "michel_ange_molitor",
+    "label": "Michel-Ange-Molitor",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8463,
+      "lng": 2.2699
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "mirabeau",
+    "label": "Mirabeau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8466,
+      "lng": 2.2735
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "miromesnil",
+    "label": "Miromesnil",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8749,
+      "lng": 2.3143
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "monceau",
+    "label": "Monceau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8816,
+      "lng": 2.3051
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "montparnasse_bienvenue",
+    "label": "Montparnasse-Bienvenue",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "6",
+      "12",
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.842,
+      "lng": 2.3215
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "montrouge_bagneux_lucie_aubrac",
+    "label": "Montrouge-Bagneux-Lucie Aubrac",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8159,
+      "lng": 2.3168
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "montsouris",
+    "label": "Montsouris",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8262,
+      "lng": 2.3103
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "mouton_duvernet",
+    "label": "Mouton-Duvernet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8334,
+      "lng": 2.3251
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "musee_d_orsay",
+    "label": "Musée d'Orsay",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.86,
+      "lng": 2.3271
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "musee_de_sevres",
+    "label": "Musée de Sèvres",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8224,
+      "lng": 2.2287
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "nation",
+    "label": "Nation",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "2",
+      "6",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8484,
+      "lng": 2.3962
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "nationale",
+    "label": "Nationale",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8269,
+      "lng": 2.3576
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "notre_dame_de_lorette",
+    "label": "Notre-Dame-de-Lorette",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.877,
+      "lng": 2.3377
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "odeon",
+    "label": "Odéon",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8522,
+      "lng": 2.3431
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "olympiades",
+    "label": "Olympiades",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8245,
+      "lng": 2.3647
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "opera",
+    "label": "Opéra",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "7",
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8718,
+      "lng": 2.3311
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "ourcq",
+    "label": "Ourcq",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8915,
+      "lng": 2.3833
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "palais_royal_musee_du_louvre",
+    "label": "Palais Royal-Musée du Louvre",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8635,
+      "lng": 2.3367
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "parc_de_saint_cloud",
+    "label": "Parc de Saint-Cloud",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8455,
+      "lng": 2.2219
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "passy",
+    "label": "Passy",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8578,
+      "lng": 2.2853
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pasteur",
+    "label": "Pasteur",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6",
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.844,
+      "lng": 2.3171
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pelleport",
+    "label": "Pelleport",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8699,
+      "lng": 2.4003
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pere_lachaise",
+    "label": "Père Lachaise",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8607,
+      "lng": 2.3945
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pereire",
+    "label": "Pereire",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8894,
+      "lng": 2.3085
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pernety",
+    "label": "Pernety",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8328,
+      "lng": 2.3163
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "philippe_auguste",
+    "label": "Philippe Auguste",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8617,
+      "lng": 2.3925
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "picpus",
+    "label": "Picpus",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8467,
+      "lng": 2.4075
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pigalle",
+    "label": "Pigalle",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8842,
+      "lng": 2.3332
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "place_d_italie",
+    "label": "Place d'Italie",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5",
+      "6",
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8309,
+      "lng": 2.3555
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "place_de_clichy",
+    "label": "Place de Clichy",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8834,
+      "lng": 2.325
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "place_des_fetes",
+    "label": "Place des Fêtes",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5",
+      "7bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8769,
+      "lng": 2.3936
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "place_monge",
+    "label": "Place Monge",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.8437,
+      "lng": 2.3517
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "plaisance",
+    "label": "Plaisance",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8316,
+      "lng": 2.3148
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pont_de_saint_cloud",
+    "label": "Pont de Saint-Cloud",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8373,
+      "lng": 2.2559
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pont_du_gard",
+    "label": "Pont du Gard",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8167,
+      "lng": 2.3519
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "pont_marie",
+    "label": "Pont Marie",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8533,
+      "lng": 2.3554
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pont_neuf",
+    "label": "Pont Neuf",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8572,
+      "lng": 2.3432
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "port_royal",
+    "label": "Port-Royal",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8387,
+      "lng": 2.3372
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "porte_d_issy",
+    "label": "Porte d'Issy",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8319,
+      "lng": 2.28
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_d_orleans",
+    "label": "Porte d'Orléans",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.823,
+      "lng": 2.3244
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_bagnolet",
+    "label": "Porte de Bagnolet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8621,
+      "lng": 2.4097
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "porte_de_champerret",
+    "label": "Porte de Champerret",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8886,
+      "lng": 2.2945
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "porte_de_clignancourt",
+    "label": "Porte de Clignancourt",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.9023,
+      "lng": 2.3467
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "porte_de_la_chapelle",
+    "label": "Porte de la Chapelle",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.9074,
+      "lng": 2.3585
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "porte_de_la_plaine",
+    "label": "Porte de la Plaine",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8344,
+      "lng": 2.2885
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_la_villette",
+    "label": "Porte de la Villette",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8974,
+      "lng": 2.3784
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_lilas",
+    "label": "Porte de Lilas",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.872,
+      "lng": 2.409
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_montreuil",
+    "label": "Porte de Montreuil",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8549,
+      "lng": 2.4087
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_pantin",
+    "label": "Porte de Pantin",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8886,
+      "lng": 2.3882
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_vanves",
+    "label": "Porte de Vanves",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8271,
+      "lng": 2.2997
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_de_vincennes",
+    "label": "Porte de Vincennes",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8486,
+      "lng": 2.4131
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "porte_des_lilas",
+    "label": "Porte des Lilas",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8728,
+      "lng": 2.4082
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "porte_maillot",
+    "label": "Porte Maillot",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8778,
+      "lng": 2.2817
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pre_saint_gervais_hopital",
+    "label": "Pré-Saint-Gervais - Hôpital",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.878,
+      "lng": 2.4066
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "pres_saint_gervais",
+    "label": "Prés-Saint-Gervais",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.883,
+      "lng": 2.3988
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pyramides",
+    "label": "Pyramides",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7",
+      "14"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.8654,
+      "lng": 2.3336
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pyrenees",
+    "label": "Pyrénées",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8721,
+      "lng": 2.3882
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "quai_de_la_gare",
+    "label": "Quai de la Gare",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8321,
+      "lng": 2.372
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "quai_de_la_rapee",
+    "label": "Quai de la Rapée",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8464,
+      "lng": 2.372
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "quatre_septembre",
+    "label": "Quatre-Septembre",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8706,
+      "lng": 2.338
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "rambuteau",
+    "label": "Rambuteau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8605,
+      "lng": 2.3519
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "ranelagh",
+    "label": "Ranelagh",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8548,
+      "lng": 2.2762
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "raspail",
+    "label": "Raspail",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8389,
+      "lng": 2.3275
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "reaumur_sebastopol",
+    "label": "Réaumur-Sébastopol",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.8656,
+      "lng": 2.3498
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "republique",
+    "label": "République",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "5",
+      "8",
+      "9",
+      "11"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 3",
+    "coordinates": {
+      "lat": 48.8672,
+      "lng": 2.3629
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "reuilly_diderot",
+    "label": "Reuilly-Diderot",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1",
+      "8"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 12",
+    "coordinates": {
+      "lat": 48.8481,
+      "lng": 2.3875
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "richard_lenoir",
+    "label": "Richard-Lenoir",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 3",
+    "coordinates": {
+      "lat": 48.8629,
+      "lng": 2.3694
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "richelieu_drouot",
+    "label": "Richelieu-Drouot",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "8",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8732,
+      "lng": 2.3415
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "riquet",
+    "label": "Riquet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7",
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8937,
+      "lng": 2.37
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "rome",
+    "label": "Rome",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8844,
+      "lng": 2.3189
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "rosa_parks",
+    "label": "Rosa Parks",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.891,
+      "lng": 2.3677
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "rue_de_la_pompe",
+    "label": "Rue de la Pompe",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8628,
+      "lng": 2.2787
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "rue_des_boulets",
+    "label": "Rue des Boulets",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.8539,
+      "lng": 2.3901
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "rue_du_bac",
+    "label": "Rue du Bac",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8562,
+      "lng": 2.3248
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "rue_saint_maur",
+    "label": "Rue Saint-Maur",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 11",
+    "coordinates": {
+      "lat": 48.8618,
+      "lng": 2.3852
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_augustin",
+    "label": "Saint-Augustin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 8",
+    "coordinates": {
+      "lat": 48.8764,
+      "lng": 2.3191
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_fargeau",
+    "label": "Saint-Fargeau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3bis"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 20",
+    "coordinates": {
+      "lat": 48.8752,
+      "lng": 2.4017
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_francois_xavier",
+    "label": "Saint-François-Xavier",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8497,
+      "lng": 2.3116
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_georges",
+    "label": "Saint-Georges",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8793,
+      "lng": 2.3356
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_germain_des_pres",
+    "label": "Saint-Germain-des-Prés",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.854,
+      "lng": 2.3325
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_jacques",
+    "label": "Saint-Jacques",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 14",
+    "coordinates": {
+      "lat": 48.8367,
+      "lng": 2.3343
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_lazare",
+    "label": "Saint-Lazare",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3",
+      "12",
+      "13",
+      "14",
+      "E"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.8752,
+      "lng": 2.3248
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_marcel",
+    "label": "Saint-Marcel",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 5",
+    "coordinates": {
+      "lat": 48.8399,
+      "lng": 2.3594
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_michel",
+    "label": "Saint-Michel",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "B",
+      "C"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8531,
+      "lng": 2.3466
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_paul",
+    "label": "Saint-Paul",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8547,
+      "lng": 2.3611
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_placide",
+    "label": "Saint-Placide",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8471,
+      "lng": 2.3293
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_sulpice",
+    "label": "Saint-Sulpice",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8508,
+      "lng": 2.3328
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "segur",
+    "label": "Ségur",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.848,
+      "lng": 2.3082
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "sentier",
+    "label": "Sentier",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.8656,
+      "lng": 2.3473
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "sevres_babylone",
+    "label": "Sèvres-Babylone",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10",
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8512,
+      "lng": 2.3247
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "sevres_lecourbe",
+    "label": "Sèvres-Lecourbe",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8455,
+      "lng": 2.3087
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "simplon",
+    "label": "Simplon",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 18",
+    "coordinates": {
+      "lat": 48.8959,
+      "lng": 2.3483
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "solferino",
+    "label": "Solférino",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8607,
+      "lng": 2.3228
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "stade_charlety_porte_de_gentilly",
+    "label": "Stade Charléty - Porte de Gentilly",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3A"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8178,
+      "lng": 2.3413
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "stalingrad",
+    "label": "Stalingrad",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "5",
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 19",
+    "coordinates": {
+      "lat": 48.8844,
+      "lng": 2.3692
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "strasbourg_saint_denis",
+    "label": "Strasbourg-Saint-Denis",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4",
+      "8",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 2",
+    "coordinates": {
+      "lat": 48.8679,
+      "lng": 2.3519
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "sully_morland",
+    "label": "Sully-Morland",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 4",
+    "coordinates": {
+      "lat": 48.8505,
+      "lng": 2.3574
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "suresnes_longchamp",
+    "label": "Surèsnes-Longchamp",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8648,
+      "lng": 2.222
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "temple",
+    "label": "Temple",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 3",
+    "coordinates": {
+      "lat": 48.8628,
+      "lng": 2.3617
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "tolbiac",
+    "label": "Tolbiac",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 13",
+    "coordinates": {
+      "lat": 48.8277,
+      "lng": 2.3588
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "trinite_d_estienne_d_orves",
+    "label": "Trinité-d'Estienne-d'Orves",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 9",
+    "coordinates": {
+      "lat": 48.876,
+      "lng": 2.333
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "trocadero",
+    "label": "Trocadéro",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "6",
+      "9"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8626,
+      "lng": 2.2893
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "tuileries",
+    "label": "Tuileries",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 1",
+    "coordinates": {
+      "lat": 48.8635,
+      "lng": 2.3347
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "varenne",
+    "label": "Varenne",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 7",
+    "coordinates": {
+      "lat": 48.8539,
+      "lng": 2.3153
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "vaugirard",
+    "label": "Vaugirard",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 15",
+    "coordinates": {
+      "lat": 48.8382,
+      "lng": 2.3068
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "vavin",
+    "label": "Vavin",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "4"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 6",
+    "coordinates": {
+      "lat": 48.8438,
+      "lng": 2.3301
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "victor_hugo",
+    "label": "Victor Hugo",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 16",
+    "coordinates": {
+      "lat": 48.8672,
+      "lng": 2.2865
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "villiers",
+    "label": "Villiers",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "2",
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8844,
+      "lng": 2.3087
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "wagram",
+    "label": "Wagram",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Paris",
+    "arrondissement": "Paris 17",
+    "coordinates": {
+      "lat": 48.8866,
+      "lng": 2.3128
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "aeroport_charles_de_gaulle",
+    "label": "Aéroport Charles de Gaulle",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "B"
+    ],
+    "city": "",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 49.0044,
+      "lng": 2.5695
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "anatole_france",
+    "label": "Anatole France",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Levallois-Perret",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8934,
+      "lng": 2.2968
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "aubervilliers_pantin_4_chemins",
+    "label": "Aubervilliers-Pantin-4 Chemins",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Aubervilliers",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9138,
+      "lng": 2.3922
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bagneux_lucie_aubrac",
+    "label": "Bagneux-Lucie Aubrac",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "B"
+    ],
+    "city": "Bagneux",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.7987,
+      "lng": 2.3108
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "basilique_de_saint_denis",
+    "label": "Basilique de Saint-Denis",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Saint-Denis",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9353,
+      "lng": 2.3547
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "berault",
+    "label": "Bérault",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Vincennes",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8419,
+      "lng": 2.4284
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "billancourt",
+    "label": "Billancourt",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9",
+      "10"
+    ],
+    "city": "Boulogne-Billancourt",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8323,
+      "lng": 2.2426
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bobigny_pablo_picasso",
+    "label": "Bobigny-Pablo Picasso",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Bobigny",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9063,
+      "lng": 2.4467
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "bobigny_pantin_raymond_queneau",
+    "label": "Bobigny-Pantin-Raymond Queneau",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "5"
+    ],
+    "city": "Pantin",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9031,
+      "lng": 2.4256
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "boissy_saint_leger",
+    "label": "Boissy-Saint-Léger",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "A"
+    ],
+    "city": "Boissy-Saint-Léger",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.7524,
+      "lng": 2.5081
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "boulogne_jean_jaures",
+    "label": "Boulogne-Jean Jaurès",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Boulogne-Billancourt",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8345,
+      "lng": 2.2391
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "boulogne_pont_de_saint_cloud",
+    "label": "Boulogne-Pont de Saint-Cloud",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "10"
+    ],
+    "city": "Boulogne-Billancourt",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8373,
+      "lng": 2.2313
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "brimborion",
+    "label": "Brimborion",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Sèvres",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8264,
+      "lng": 2.2154
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "carrefour_pleyel",
+    "label": "Carrefour Pleyel",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Saint-Denis",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9217,
+      "lng": 2.3302
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chateau_de_vincennes",
+    "label": "Château de Vincennes",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Vincennes",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8434,
+      "lng": 2.4392
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "chatillon_montrouge",
+    "label": "Châtillon-Montrouge",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Châtillon",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8099,
+      "lng": 2.3109
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "croix_de_chavaux",
+    "label": "Croix de Chavaux",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Montreuil",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8585,
+      "lng": 2.4289
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "esplanade_de_la_defense",
+    "label": "Esplanade de La Défense",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Courbevoie",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8895,
+      "lng": 2.2478
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "fort_d_aubervilliers",
+    "label": "Fort d'Aubervilliers",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Aubervilliers",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9193,
+      "lng": 2.3965
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "front_populaire",
+    "label": "Front Populaire",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Saint-Denis",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9198,
+      "lng": 2.363
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "gallieni",
+    "label": "Gallieni",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Bagnolet",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8596,
+      "lng": 2.4173
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "garibaldi",
+    "label": "Garibaldi",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Saint-Ouen",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9031,
+      "lng": 2.3373
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "joinville_le_pont",
+    "label": "Joinville-le-Pont",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "A"
+    ],
+    "city": "Joinville-le-Pont",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8188,
+      "lng": 2.4674
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "kremlin_bicetre",
+    "label": "Kremlin-Bicêtre",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Le Kremlin-Bicêtre",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8139,
+      "lng": 2.3626
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_courneuve_8_mai_1945",
+    "label": "La Courneuve-8 Mai 1945",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "La Courneuve",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9266,
+      "lng": 2.3929
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_defense_grande_arche",
+    "label": "La Défense Grande Arche",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Puteaux",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8917,
+      "lng": 2.238
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "la_plaine_stade_de_france",
+    "label": "La Plaine-Stade de France",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "B",
+      "D"
+    ],
+    "city": "Saint-Denis",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9193,
+      "lng": 2.3618
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "les_moulineaux",
+    "label": "Les Moulineaux",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Issy-les-Moulineaux",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8378,
+      "lng": 2.2178
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "les_sablons",
+    "label": "Les Sablons",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Neuilly-sur-Seine",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8789,
+      "lng": 2.2636
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "louise_michel",
+    "label": "Louise Michel",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Levallois-Perret",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8905,
+      "lng": 2.3025
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "mairie_d_issy",
+    "label": "Mairie d'Issy",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "12"
+    ],
+    "city": "Issy-les-Moulineaux",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8225,
+      "lng": 2.2752
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "mairie_de_montreuil",
+    "label": "Mairie de Montreuil",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Montreuil",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8628,
+      "lng": 2.4397
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "mairie_de_saint_ouen",
+    "label": "Mairie de Saint-Ouen",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Saint-Ouen",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9115,
+      "lng": 2.3335
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "malakoff_plateau_de_vanves",
+    "label": "Malakoff-Plateau de Vanves",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Malakoff",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8152,
+      "lng": 2.3013
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "malakoff_rue_etienne_dolet",
+    "label": "Malakoff-Rue Étienne Dolet",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Malakoff",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8168,
+      "lng": 2.3052
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "marcel_sembat",
+    "label": "Marcel Sembat",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Boulogne-Billancourt",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8355,
+      "lng": 2.2513
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "nanterre_prefecture",
+    "label": "Nanterre-Préfecture",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "A"
+    ],
+    "city": "Nanterre",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8929,
+      "lng": 2.2125
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "pont_de_levallois_becon",
+    "label": "Pont de Levallois-Bécon",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "3"
+    ],
+    "city": "Levallois-Perret",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.897,
+      "lng": 2.2894
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pont_de_neuilly",
+    "label": "Pont de Neuilly",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Neuilly-sur-Seine",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8842,
+      "lng": 2.2558
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "pont_de_sevres",
+    "label": "Pont de Sèvres",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "9"
+    ],
+    "city": "Boulogne-Billancourt",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8257,
+      "lng": 2.2296
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "porte_d_aubervilliers",
+    "label": "Porte d'Aubervilliers",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T3B"
+    ],
+    "city": "Aubervilliers",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9104,
+      "lng": 2.3737
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "robinson",
+    "label": "Robinson",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "B"
+    ],
+    "city": "Châtillon",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.7786,
+      "lng": 2.2855
+    },
+    "defaultRadiusMeters": 500
+  },
+  {
+    "id": "saint_denis_porte_de_paris",
+    "label": "Saint-Denis-Porte de Paris",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Saint-Denis",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9291,
+      "lng": 2.3568
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_denis_universite",
+    "label": "Saint-Denis-Université",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "13"
+    ],
+    "city": "Saint-Denis",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.9409,
+      "lng": 2.3534
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "saint_mande",
+    "label": "Saint-Mandé",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "1"
+    ],
+    "city": "Saint-Mandé",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8449,
+      "lng": 2.4166
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "val_de_seine",
+    "label": "Val de Seine",
+    "aliases": [],
+    "type": "tram_station",
+    "network": "RATP",
+    "lines": [
+      "T2"
+    ],
+    "city": "Issy-les-Moulineaux",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8323,
+      "lng": 2.2143
+    },
+    "defaultRadiusMeters": 300
+  },
+  {
+    "id": "villejuif_louis_aragon",
+    "label": "Villejuif-Louis Aragon",
+    "aliases": [],
+    "type": "metro_station",
+    "network": "RATP",
+    "lines": [
+      "7"
+    ],
+    "city": "Villejuif",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.7985,
+      "lng": 2.3647
+    },
+    "defaultRadiusMeters": 350
+  },
+  {
+    "id": "vincennes",
+    "label": "Vincennes",
+    "aliases": [],
+    "type": "rer_station",
+    "network": "RATP/SNCF",
+    "lines": [
+      "A"
+    ],
+    "city": "Vincennes",
+    "arrondissement": "",
+    "coordinates": {
+      "lat": 48.8479,
+      "lng": 2.4383
+    },
+    "defaultRadiusMeters": 500
+  }
+]
