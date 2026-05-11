@@ -25,6 +25,14 @@ function quartierStyle(state: ZoneState): L.PathOptions {
   }
 }
 
+// At zoom < 14 (arrondissement level), quartiers are not individually interactive.
+// Selected: solid fill, no border → adjacent QAs fuse into one shape.
+// Partial/unselected: fully invisible → IRIS layer handles partial areas.
+function quartierStyleLowZoom(state: ZoneState): L.PathOptions {
+  if (state === 'selected') return { fillColor: '#914E3C', fillOpacity: 0.18, weight: 0, opacity: 0 }
+  return { fillOpacity: 0, weight: 0, opacity: 0 }
+}
+
 function irisStyle(selected: boolean): L.PathOptions {
   return selected
     ? { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.28, weight: 1.5, opacity: 0.9 }
@@ -308,10 +316,16 @@ function GeoLayers(props: GeoLayersProps) {
 
   // styleKeys: opaque strings that change only when the relevant selection changes.
   // Stable across zoom/pan re-renders → style-refresh effect stays silent during animation.
-  // irisStyleKey also encodes the zoom band so styles update when crossing zoom 15.
+  // irisStyleKey and quartierStyleKey encode their zoom band so styles update when
+  // crossing their respective zoom thresholds (14 for QA, 15 for IRIS).
   const parisStyleKey = useMemo(
     () => `${selectedArrIds.join()}_${selectedQuartierIds.join()}_${selectedIrisIds.join()}`,
     [selectedArrIds, selectedQuartierIds, selectedIrisIds]
+  )
+  // Separate key for quartiers: includes zoom band (hi = 14-15, lo = <14)
+  const quartierStyleKey = useMemo(
+    () => `${selectedArrIds.join()}_${selectedQuartierIds.join()}_${selectedIrisIds.join()}_${quartierNatural ? 1 : 0}`,
+    [selectedArrIds, selectedQuartierIds, selectedIrisIds, quartierNatural]
   )
   const communeStyleKey = useMemo(
     () => `${selectedCommuneIds.join()}_${selectedIrisIds.join()}`,
@@ -348,12 +362,16 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: quartiers,
-    getPathStyle: (z) => quartierStyle(computeQuartierState(z.id, parisIris, sel)),
+    // Low zoom (<14): merged style — no borders, only selected zones filled, others invisible
+    // Natural range (14-15): full quartier style with borders and partial states
+    getPathStyle: (z) => quartierNatural
+      ? quartierStyle(computeQuartierState(z.id, parisIris, sel))
+      : quartierStyleLowZoom(computeQuartierState(z.id, parisIris, sel)),
     getLabelState: (z) => computeQuartierState(z.id, parisIris, sel),
     fontSize: 10,
     onClick: onClickQuartier,
     visible: showQuartier,
-    styleKey: parisStyleKey,
+    styleKey: quartierStyleKey,
     // Labels only in the natural quartier zoom range — not when force-shown by sticky selection
     showLabels: zoom >= 14 && zoom <= 15,
     // Non-interactive when sticky-shown outside natural range (lets arr clicks through)
