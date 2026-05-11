@@ -135,7 +135,16 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
         },
       }
     )
-    if (cfg.visible) layer.addTo(map)
+    if (cfg.visible) {
+      layer.addTo(map)
+      // Apply interactive state immediately — Effect 4 won't re-run if clickable
+      // didn't change since last render (same value, different layer instance).
+      if (!cfgRef.current.clickable) {
+        layer.eachLayer((l) => {
+          if (l instanceof L.Path) l.setStyle({ interactive: false })
+        })
+      }
+    }
     layerRef.current = layer
     rebuildLabels(layer, cfg.zones)
 
@@ -299,20 +308,21 @@ function GeoLayers(props: GeoLayersProps) {
   const hasSelectedQuartiers = selectedQuartierIds.length > 0
 
   // Zoom thresholds
-  const showTopLevel    = zoom <= 13
+  // Paris:   ≥15 IRIS  |  13-14 QA  |  ≤12 arrondissements
+  // Suburbs: ≥15 IRIS  |  ≤14 communes
+  const showTopLevel    = zoom <= 12
   // IRIS: visible at zoom ≥15, AND always visible once some IRIS are selected (sticky)
   const showCommuneIris = !irisLoading && (zoom >= 15 || hasSelectedIris)
   const showParisIris   = !irisLoading && (zoom >= 15 || hasSelectedIris)
-  // Quartier: visible at zoom 14–15, AND stays visible at lower zoom if quartiers are selected
-  const showQuartier    = (zoom >= 14 && zoom <= 15) || (zoom < 14 && hasSelectedQuartiers)
-  // Communes have no intermediate quartier level, so they stay visible at all
-  // zooms — at zoom 14 they bridge the gap; at zoom 15+ they outline IRIS zones.
+  // Quartier: natural range 13-14, sticky below 13 if quartiers are selected
+  const showQuartier    = (zoom >= 13 && zoom <= 14) || (zoom < 13 && hasSelectedQuartiers)
+  // Communes have no intermediate quartier level, so they stay visible at all zooms.
   const showCommunes    = true
 
   // Clickable: each layer is only interactive in its natural zoom range.
   // Outside that range (sticky-visible), pointer-events:none lets clicks fall through.
   const irisZoomHi       = zoom >= 15                        // IRIS natural range
-  const quartierNatural  = zoom >= 14 && zoom <= 15          // Quartier natural range
+  const quartierNatural  = zoom >= 13 && zoom <= 14          // Quartier natural range
 
   // styleKeys: opaque strings that change only when the relevant selection changes.
   // Stable across zoom/pan re-renders → style-refresh effect stays silent during animation.
@@ -373,7 +383,7 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showQuartier,
     styleKey: quartierStyleKey,
     // Labels only in the natural quartier zoom range — not when force-shown by sticky selection
-    showLabels: zoom >= 14 && zoom <= 15,
+    showLabels: zoom >= 13 && zoom <= 14,
     // Non-interactive when sticky-shown outside natural range (lets arr clicks through)
     clickable: quartierNatural,
   })
