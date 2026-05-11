@@ -63,12 +63,21 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Lazy-load IRIS (Paris + suburbs) when user zooms to level 15+
+  // Lazy-load IRIS when user zooms to level 15+
   useEffect(() => {
     if (zoom < 15 || irisLoading || iris.length > 0) return
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom])
+
+  // Eager-load IRIS when the map is ready and IRIS IDs are already selected
+  // but the geometry hasn't been fetched yet (e.g. map opens at low zoom after
+  // a fine-grained query, or user navigates back with selections in the store).
+  useEffect(() => {
+    if (loading || irisLoading || iris.length > 0 || selectedIrisIds.length === 0) return
+    loadIris()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, selectedIrisIds.length])
 
   async function loadIris() {
     setIrisLoading(true)
