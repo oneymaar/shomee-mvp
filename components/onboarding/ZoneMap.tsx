@@ -259,11 +259,18 @@ function GeoLayers(props: GeoLayersProps) {
   const parisIris = useMemo(() => iris.filter((i) => !i.parentId?.startsWith('com-')), [iris])
   const communeIris = useMemo(() => iris.filter((i) => i.parentId?.startsWith('com-')), [iris])
 
+  // "Sticky selection" flags: layers with active selections stay visible when zooming out
+  // so the user always sees their selection mosaic, regardless of zoom level.
+  const hasSelectedIris      = selectedIrisIds.length > 0
+  const hasSelectedQuartiers = selectedQuartierIds.length > 0
+
   // Zoom thresholds
   const showTopLevel    = zoom <= 13
-  const showCommuneIris = zoom >= 15 && !irisLoading
-  const showParisIris   = zoom >= 15 && !irisLoading  // aligned with suburbs — fine queries open at 15
-  const showQuartier    = zoom >= 14 && zoom <= 15
+  // IRIS: visible at zoom ≥15, AND always visible once some IRIS are selected (sticky)
+  const showCommuneIris = !irisLoading && (zoom >= 15 || hasSelectedIris)
+  const showParisIris   = !irisLoading && (zoom >= 15 || hasSelectedIris)
+  // Quartier: visible at zoom 14–15, AND stays visible at lower zoom if quartiers are selected
+  const showQuartier    = (zoom >= 14 && zoom <= 15) || (zoom < 14 && hasSelectedQuartiers)
   // Communes have no intermediate quartier level, so they stay visible at all
   // zooms — at zoom 14 they bridge the gap; at zoom 15+ they outline IRIS zones.
   const showCommunes    = true
@@ -313,7 +320,8 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickQuartier,
     visible: showQuartier,
     styleKey: parisStyleKey,
-    showLabels: showQuartier,
+    // Labels only in the natural quartier zoom range — not when force-shown by sticky selection
+    showLabels: zoom >= 14 && zoom <= 15,
   })
 
   useGeoLayer(map, {
