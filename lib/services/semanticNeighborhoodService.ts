@@ -21,6 +21,8 @@ export interface SemanticNeighborhood {
   center: { lat: number; lng: number }
   relatedStations: string[]
   confidenceRadiusMeters: number
+  /** Hard cap on the number of pre-selected IRIS. Sorted by distance from center. */
+  maxSelectedIris?: number
   description: string
   vibeTags: string[]
 }

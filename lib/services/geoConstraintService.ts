@@ -166,6 +166,27 @@ function filterIrisByCoords(
   })
 }
 
+/**
+ * Sort IRIS by ascending distance from a point and cap to maxCount.
+ * Ensures the most central zones are kept when too many match.
+ */
+function capIrisByDistance(
+  zones: GeoZone[],
+  lat: number,
+  lng: number,
+  maxCount: number
+): GeoZone[] {
+  if (zones.length <= maxCount) return zones
+  return zones
+    .map((zone) => {
+      const c = irisCentroid(zone)
+      return { zone, dist: c ? haversineM(c[0], c[1], lat, lng) : Infinity }
+    })
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, maxCount)
+    .map(({ zone }) => zone)
+}
+
 // ─── Main resolver ─────────────────────────────────────────────────────────
 
 /**
@@ -217,7 +238,10 @@ export function resolveConstraints(
       const n = findNeighborhoodById(neighborhoodC.neighborhoodId)
       if (n) {
         const radius = neighborhoodC.radiusM ?? n.confidenceRadiusMeters
-        const nearIris = filterIrisByCoords(iris, n.center.lat, n.center.lng, radius)
+        let nearIris = filterIrisByCoords(iris, n.center.lat, n.center.lng, radius)
+        if (n.maxSelectedIris) {
+          nearIris = capIrisByDistance(nearIris, n.center.lat, n.center.lng, n.maxSelectedIris)
+        }
         if (nearIris.length > 0) {
           return {
             irisIds: nearIris.map((z) => z.id),
@@ -280,7 +304,11 @@ export function resolveConstraints(
       const n = findNeighborhoodById(c.neighborhoodId)
       if (n) {
         const radius = c.radiusM ?? n.confidenceRadiusMeters
-        filtered = filterIrisByCoords(narrowed, n.center.lat, n.center.lng, radius)
+        let nbFiltered = filterIrisByCoords(narrowed, n.center.lat, n.center.lng, radius)
+        if (n.maxSelectedIris) {
+          nbFiltered = capIrisByDistance(nbFiltered, n.center.lat, n.center.lng, n.maxSelectedIris)
+        }
+        filtered = nbFiltered
         if (filtered.length > 0) summary.push(n.label)
       }
     }
