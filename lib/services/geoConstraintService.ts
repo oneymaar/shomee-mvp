@@ -485,9 +485,14 @@ export function resolveConstraints(
     }
   }
 
+  // Non-admin includes (neighborhood, station) always produce a fine-grained
+  // coordinate-based IRIS selection — treat as narrowed even without filtering.
+  const hasNonAdminInclude = includeConstraints.some(c => c.type !== 'administrative_area')
+
   const wasNarrowed =
     narrowed.length > 0 &&
     (hasDirectional ||
+      hasNonAdminInclude ||
       filterConstraints.length > 0 ||
       excludeConstraints.length > 0 ||
       narrowed.length < unionIris.length)

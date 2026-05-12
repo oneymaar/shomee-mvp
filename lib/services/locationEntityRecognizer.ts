@@ -144,6 +144,11 @@ function neighborhoodBySubstring(q: string): RawNeighborhood | null {
 
 // ─── Public API ────────────────────────────────────────────────────────────
 
+// Patterns that indicate the query contains multiple geographic entities.
+// These queries must go to the LLM — matching a single entity by substring
+// would silently drop all the others ("Batignolles et Paris 18e" → only Batignolles).
+const COMPOUND_RE = /\b(et|ou|sauf|sans|hors|mais|entre)\b|[,+\/]/i
+
 /**
  * Recognize a location entity from raw user text.
  *
@@ -157,6 +162,9 @@ export function recognizeLocationEntity(
 ): RecognizedLocationEntity | [RecognizedLocationEntity, RecognizedLocationEntity] | null {
   const q = query.trim()
   if (q.length < 2) return null
+
+  // Compound queries contain multiple zones — always send to LLM so no zone is dropped
+  if (COMPOUND_RE.test(q)) return null
 
   // 1. Explicit transport prefix
   const pre = q.match(PREFIX_RE)
