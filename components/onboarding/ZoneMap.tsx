@@ -377,7 +377,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickArr,
     visible: showTopLevel,
     styleKey: parisStyleKey,
-    showLabels: false,
+    showLabels: showTopLevel && zoom >= 11,
     clickable: true,
   })
 
@@ -389,7 +389,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickCommune,
     visible: showCommunes,
     styleKey: communeStyleKey,
-    showLabels: false,
+    showLabels: zoom >= 11,
     clickable: true,
   })
 
@@ -406,7 +406,7 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showQuartier,
     styleKey: quartierStyleKey,
     // Labels only in the natural quartier zoom range — not when force-shown by sticky selection
-    showLabels: false,
+    showLabels: zoom >= 13 && zoom <= 14,
     // Non-interactive when sticky-shown outside natural range (lets arr clicks through)
     clickable: quartierNatural,
   })
@@ -495,7 +495,7 @@ export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris
       zoomControl={false}
       attributionControl={false}
     >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png" />
       <GeoLayers
         arrondissements={arrondissements}
         quartiers={quartiers}
