@@ -64,6 +64,8 @@ export interface ConstraintResolutionResult {
   matchSummary: string[]
   /** True if at least one constraining (non-admin) constraint narrowed the selection */
   wasNarrowed: boolean
+  /** For "between" queries: midpoint coordinates to center the map on */
+  suggestedCenter?: [number, number]
 }
 
 // ─── Haversine distance (metres) ───────────────────────────────────────────
@@ -229,6 +231,89 @@ function capIrisByDistance(
     .map(({ zone }) => zone)
 }
 
+// ─── Between-entities helpers ──────────────────────────────────────────────
+
+/**
+ * Resolve geographic coordinates for any constraint type.
+ * Used by selectIntermediateArea to locate each entity of a "between" pair.
+ */
+function getEntityCoordinates(
+  c: GeoConstraint,
+  iris: GeoZone[],
+  quartiers: GeoZone[],
+): [number, number] | null {
+  if (c.type === 'semantic_neighborhood' && c.neighborhoodId) {
+    const n = findNeighborhoodById(c.neighborhoodId)
+    if (n) return [n.center.lat, n.center.lng]
+  }
+  if (c.type === 'transport_station' && c.stationName) {
+    const s = findStation(c.stationName)
+    if (s) return [s.lat, s.lng]
+  }
+  if (c.type === 'administrative_area' && c.zoneId) {
+    const zoneIris = getIrisInZone(c.zoneId, iris, quartiers)
+    const centroids = zoneIris.map(irisCentroid).filter(Boolean) as [number, number][]
+    if (centroids.length) {
+      return [
+        centroids.reduce((s, c) => s + c[0], 0) / centroids.length,
+        centroids.reduce((s, c) => s + c[1], 0) / centroids.length,
+      ]
+    }
+  }
+  return null
+}
+
+/**
+ * Build the intermediate IRIS selection for "entre X et Y" queries.
+ *
+ * Algorithm:
+ *   1. Resolve coordinates for each entity
+ *   2. Compute midpoint + radius (60% of distance, min 400m, max 1500m)
+ *   3. If distance > 5km → return empty (entities too far apart for a coherent zone)
+ *   4. Select + cap IRIS near the midpoint; return suggestedCenter for map centering
+ */
+function selectIntermediateArea(
+  betweenCs: GeoConstraint[],
+  iris: GeoZone[],
+  quartiers: GeoZone[],
+): ConstraintResolutionResult {
+  const coords = betweenCs.map(c => getEntityCoordinates(c, iris, quartiers))
+  if (coords.some(c => c === null)) {
+    return { irisIds: [], fallbackZoneIds: [], matchSummary: [], wasNarrowed: false }
+  }
+
+  const [c1, c2] = coords as [number, number][]
+  const distance = haversineM(c1[0], c1[1], c2[0], c2[1])
+
+  // Too far apart — can't build a coherent intermediate zone
+  if (distance > 5000) {
+    return { irisIds: [], fallbackZoneIds: [], matchSummary: [], wasNarrowed: false }
+  }
+
+  const midLat = (c1[0] + c2[0]) / 2
+  const midLng = (c1[1] + c2[1]) / 2
+  const radius = Math.min(Math.max(distance * 0.60, 400), 1500)
+
+  let nearIris = filterIrisByCoords(iris, midLat, midLng, radius)
+  if (nearIris.length > 20) {
+    nearIris = capIrisByDistance(nearIris, midLat, midLng, 20)
+  }
+  if (nearIris.length === 0) {
+    return { irisIds: [], fallbackZoneIds: [], matchSummary: [], wasNarrowed: false }
+  }
+
+  const label1 = betweenCs[0].stationName ?? betweenCs[0].label
+  const label2 = betweenCs[1].stationName ?? betweenCs[1].label
+
+  return {
+    irisIds: nearIris.map(z => z.id),
+    fallbackZoneIds: [],
+    matchSummary: [`entre ${label1} et ${label2}`],
+    wasNarrowed: true,
+    suggestedCenter: [midLat, midLng],
+  }
+}
+
 // ─── Main resolver ─────────────────────────────────────────────────────────
 
 /**
@@ -251,6 +336,14 @@ export function resolveConstraints(
   communes: GeoZone[]
 ): ConstraintResolutionResult {
   const summary: string[] = []
+
+  // ── Between path: "entre X et Y" — resolved before standard primary/secondary ──
+  const betweenConstraints = constraints.filter(c => c.operator === 'between')
+  if (betweenConstraints.length >= 2 && iris.length > 0) {
+    const result = selectIntermediateArea(betweenConstraints.slice(0, 2), iris, quartiers)
+    if (result.wasNarrowed) return result
+    // If too far apart, fall through — map will show nothing (user can adjust)
+  }
 
   // ── Step 1: primary zones (administrative_area + inside) ─────────────────
   const primaryConstraints = constraints.filter(

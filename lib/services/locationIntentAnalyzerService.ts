@@ -29,7 +29,8 @@ export interface LocationIntentAnalysis {
   /** Which resolution algorithm the map layer should apply */
   resolutionStrategy?: 'direct_area_selection' | 'semantic_neighborhood_selection'
     | 'point_radius_intersection' | 'transport_line_intersection'
-    | 'directional_area_slice' | 'exclude_from_area' | 'ask_clarification'
+    | 'directional_area_slice' | 'exclude_from_area' | 'between_entities'
+    | 'ask_clarification'
   mapAction: {
     type: 'open_map' | 'ask_clarification'
     centerQuery: string | null

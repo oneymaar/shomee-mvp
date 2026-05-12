@@ -152,6 +152,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             irisIds: result.irisIds,
             communeIds: [...curComs],
           }
+          // For between-entities queries, center the map on the computed midpoint
+          if (result.suggestedCenter) {
+            setCenter(result.suggestedCenter)
+          }
           if (result.matchSummary.length > 0) setConstraintSummary(result.matchSummary)
           return
         }
@@ -265,10 +269,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       }
 
       // ── Fine constraint detection ─────────────────────────────────────────
-      // Station OR semantic neighborhood → open at IRIS zoom, skip whole-arr pre-selection
+      // Station, semantic neighborhood, or between-entities → IRIS zoom, no arr pre-selection
       const hasFineConstraint = enrichedConstraints.some(
         (c) => (c.type === 'transport_station' || c.type === 'semantic_neighborhood') && c.confidence >= 0.75
-      )
+      ) || enrichedConstraints.some(c => c.operator === 'between')
 
       if (hasFineConstraint) {
         // Clear any stale zone selections from a previous query so fine IRIS selection

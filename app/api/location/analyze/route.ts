@@ -76,8 +76,38 @@ Exemple : "J'aimerais vivre dans le 17e, mais pas trop excentré" → idem
 LOGIQUE MULTIPLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "," / "et" / "ou" / "+" / "/" entre des zones → ADDITION (operator:"inside" pour chaque zone)
-"entre X et Y" → relation spatiale ambiguë → clarification (pas une addition de zones)
 Exclusion : "sauf" / "mais pas" / "sans" / "hors" / "éviter" / "pas vers" → operator:"exclude"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRUCTURE "ENTRE X ET Y" — PRIORITÉ HAUTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Le mot "entre" CHANGE COMPLÈTEMENT le sens. Ce n'est PAS une addition.
+"entre X et Y" = relation spatiale intermédiaire entre deux zones.
+→ operator:"between" pour LES DEUX entités
+→ resolutionStrategy:"between_entities"
+→ status:"clear" si les zones sont proches (<5km estimé)
+→ NE PAS ignorer l'une des deux entités
+→ NE PAS traiter comme operator:"inside" ou addition
+
+Exemples OBLIGATOIRES à traiter comme between :
+"entre Passy et Trocadéro"
+  → [{type:"semantic_neighborhood", label:"Passy", neighborhoodId:"passy", operator:"between"},
+     {type:"semantic_neighborhood", label:"Trocadéro", neighborhoodId:"trocadero", operator:"between"}]
+"entre Nation et Daumesnil"
+  → [{type:"semantic_neighborhood", label:"Nation", neighborhoodId:"nation", operator:"between"},
+     {type:"semantic_neighborhood", label:"Daumesnil", neighborhoodId:"daumesnil", operator:"between"}]
+"entre Oberkampf et Parmentier"
+  → [{type:"transport_station", label:"Oberkampf", stationName:"Oberkampf", operator:"between"},
+     {type:"transport_station", label:"Parmentier", stationName:"Parmentier", operator:"between"}]
+"entre Bastille et République"
+  → [{type:"semantic_neighborhood", label:"Bastille", operator:"between"},
+     {type:"semantic_neighborhood", label:"République", operator:"between"}]
+
+Si les deux zones semblent très éloignées (>5km, ex: "entre Vincennes et Levallois") :
+  → status:"ambiguous", clarificationQuestion expliquant le problème, proposer alternatives.
+
+preselectQueries pour between : utiliser le lieu le plus représentatif ou laisser vide.
+mapAction.centerQuery : nom de l'un des deux lieux ou du secteur intermédiaire.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTRADICTIONS
