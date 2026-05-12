@@ -310,7 +310,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
               <p className="text-[13px] font-semibold text-neutral-700 mb-3">
                 Que voulez-vous dire par <span className="italic">{query.trim()}</span> ?
               </p>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 overflow-y-auto max-h-52">
                 {ui.entities.map((entity) => {
                   const colors = ENTITY_COLORS[entity.type]
                   return (
@@ -366,7 +366,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
                 </p>
               </div>
               {ui.analysis.clarificationOptions && ui.analysis.clarificationOptions.length > 0 && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 overflow-y-auto max-h-52">
                   {ui.analysis.clarificationOptions.map((opt) => (
                     <button
                       key={opt.query}
