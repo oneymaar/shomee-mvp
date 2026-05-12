@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
@@ -56,6 +56,12 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
 
+  // Snapshot of the engine's initial selection — captured once, used to distinguish
+  // engine-origin tags (terracotta) from user-added tags (blue) and for reset.
+  const initialStateRef = useRef<{
+    arrIds: string[]; quartierIds: string[]; irisIds: string[]; communeIds: string[]
+  } | null>(null)
+
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
@@ -78,6 +84,20 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, selectedIrisIds.length])
+
+  // Capture initial selection state once — first non-empty selection is the engine's output.
+  useEffect(() => {
+    if (initialStateRef.current !== null) return
+    const hasSelection = selectedArrIds.length > 0 || selectedQuartierIds.length > 0 ||
+      selectedIrisIds.length > 0 || selectedCommuneIds.length > 0
+    if (!hasSelection) return
+    initialStateRef.current = {
+      arrIds: [...selectedArrIds],
+      quartierIds: [...selectedQuartierIds],
+      irisIds: [...selectedIrisIds],
+      communeIds: [...selectedCommuneIds],
+    }
+  }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds])
 
   async function loadIris() {
     setIrisLoading(true)
@@ -319,16 +339,95 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     setZoom(z)
   }, [])
 
-  // Selection summary
-  const selectedArrs = arrondissements.filter((z) => selectedArrIds.includes(z.id))
-  const partialArrs = arrondissements.filter((z) => {
-    if (selectedArrIds.includes(z.id)) return false
-    const childIds = getChildQuartiers(z.id, quartiers).map((q) => q.id)
-    return childIds.some((id) => selectedQuartierIds.includes(id))
-  })
-  const selectedCommunes = communes.filter((z) => selectedCommuneIds.includes(z.id))
+  // ── Tag removal handlers ──────────────────────────────────────────────────
 
-  const totalSelectedZones = selectedArrs.length + partialArrs.length + selectedCommunes.length
+  const handleRemoveTag = useCallback((tag: { id: string; state: 'full' | 'partial'; zoneType: 'arrondissement' | 'commune' }) => {
+    if (tag.zoneType === 'arrondissement') {
+      const childQus = getChildQuartiers(tag.id, quartiersRef.current)
+      const childQuSet = new Set(childQus.map(q => q.id))
+      const childIrisSet = new Set(
+        iris.filter(i => !i.parentId?.startsWith('com-') &&
+          childQuSet.has(i.parentId ?? '')).map(i => i.id)
+      )
+      useSearchStore.setState({
+        selectedArrIds: selectedArrIds.filter(id => id !== tag.id),
+        selectedQuartierIds: selectedQuartierIds.filter(id => !childQuSet.has(id)),
+        selectedIrisIds: selectedIrisIds.filter(id => !childIrisSet.has(id)),
+      })
+    } else {
+      // commune (full or partial)
+      const comIrisSet = new Set(iris.filter(i => i.parentId === tag.id).map(i => i.id))
+      useSearchStore.setState({
+        selectedCommuneIds: selectedCommuneIds.filter(id => id !== tag.id),
+        selectedIrisIds: selectedIrisIds.filter(id => !comIrisSet.has(id)),
+      })
+    }
+  }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, iris])
+
+  const handleReset = useCallback(() => {
+    const init = initialStateRef.current
+    if (!init) return
+    useSearchStore.setState({
+      selectedArrIds: init.arrIds,
+      selectedQuartierIds: init.quartierIds,
+      selectedIrisIds: init.irisIds,
+      selectedCommuneIds: init.communeIds,
+    })
+  }, [])
+
+  // ── Tag computation ───────────────────────────────────────────────────────
+
+  type TagItem = { id: string; label: string; state: 'full' | 'partial'; origin: 'engine' | 'user'; zoneType: 'arrondissement' | 'commune' }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const allTags = useMemo((): TagItem[] => {
+    const result: TagItem[] = []
+    const snap = initialStateRef.current
+
+    for (const arr of arrondissements) {
+      const fullSel = selectedArrIds.includes(arr.id)
+      const childQus = getChildQuartiers(arr.id, quartiers)
+      const hasPartialQu = childQus.some(q => selectedQuartierIds.includes(q.id))
+      const hasPartialIris = iris.some(i => {
+        if (i.parentId?.startsWith('com-')) return false
+        const q = quartiers.find(q => q.id === i.parentId)
+        return q?.parentId === arr.id && selectedIrisIds.includes(i.id)
+      })
+      if (!fullSel && !hasPartialQu && !hasPartialIris) continue
+      const state = (fullSel ? 'full' : 'partial') as 'full' | 'partial'
+      const isEngine = !snap || snap.arrIds.includes(arr.id) ||
+        childQus.some(q => snap.quartierIds.includes(q.id)) ||
+        iris.some(i => {
+          const q = quartiers.find(q => q.id === i.parentId)
+          return q?.parentId === arr.id && snap.irisIds.includes(i.id)
+        })
+      result.push({ id: arr.id, label: arr.shortName, state, origin: isEngine ? 'engine' : 'user', zoneType: 'arrondissement' })
+    }
+
+    for (const com of communes) {
+      const fullSel = selectedCommuneIds.includes(com.id)
+      const hasPartialIris = iris.some(i => i.parentId === com.id && selectedIrisIds.includes(i.id))
+      if (!fullSel && !hasPartialIris) continue
+      const state = (fullSel ? 'full' : 'partial') as 'full' | 'partial'
+      const isEngine = !snap || snap.communeIds.includes(com.id) ||
+        iris.some(i => i.parentId === com.id && snap.irisIds.includes(i.id))
+      result.push({ id: com.id, label: com.shortName, state, origin: isEngine ? 'engine' : 'user', zoneType: 'commune' })
+    }
+
+    return result
+  }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, iris, arrondissements, communes, quartiers])
+
+  const engineTags = allTags.filter(t => t.origin === 'engine')
+  const userTags   = allTags.filter(t => t.origin === 'user')
+
+  const snap = initialStateRef.current
+  const hasChangedFromInitial = snap !== null && (
+    [...selectedArrIds].sort().join() !== [...snap.arrIds].sort().join() ||
+    [...selectedQuartierIds].sort().join() !== [...snap.quartierIds].sort().join() ||
+    [...selectedIrisIds].sort().join() !== [...snap.irisIds].sort().join() ||
+    [...selectedCommuneIds].sort().join() !== [...snap.communeIds].sort().join()
+  )
+
   const canValidate = selectedArrIds.length > 0 || selectedQuartierIds.length > 0 || selectedIrisIds.length > 0 || selectedCommuneIds.length > 0
 
   return (
@@ -419,67 +518,91 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         )}
       </div>
 
-      {/* Selection chips */}
-      <div className="flex-shrink-0 px-4 pt-2.5 min-h-[36px]">
+      {/* Tag system — engine (terracotta) + user-added (blue) */}
+      <div className="flex-shrink-0 px-4 pt-2 min-h-[36px]">
         <AnimatePresence>
-          {totalSelectedZones > 0 && (
+          {allTags.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-wrap gap-1.5"
+              className="flex flex-col gap-1.5"
             >
-              {selectedArrs.map((z) => (
-                <button
-                  key={z.id}
-                  onClick={() => handleClickArr(z)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold text-white active:opacity-75 transition-opacity"
-                  style={{ backgroundColor: '#914E3C' }}
-                >
-                  {z.shortName} <span className="opacity-60 text-[9px] ml-0.5">✕</span>
-                </button>
-              ))}
-              {partialArrs.map((z) => (
-                <button
-                  key={z.id}
-                  onClick={() => handleClickArr(z)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-75 transition-opacity border"
-                  style={{ backgroundColor: 'rgba(145,78,60,0.1)', color: '#914E3C', borderColor: 'rgba(145,78,60,0.3)' }}
-                >
-                  {z.shortName} ~ <span className="opacity-60 text-[9px] ml-0.5">✕</span>
-                </button>
-              ))}
-              {selectedCommunes.map((z) => (
-                <button
-                  key={z.id}
-                  onClick={() => handleClickCommune(z)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold text-white active:opacity-75 transition-opacity"
-                  style={{ backgroundColor: '#914E3C' }}
-                >
-                  {z.shortName} <span className="opacity-60 text-[9px] ml-0.5">✕</span>
-                </button>
-              ))}
+              {/* Engine tags row — terracotta */}
+              {engineTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {engineTags.map((tag) => {
+                    const isFull = tag.state === 'full'
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => handleRemoveTag(tag)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border"
+                        style={{
+                          backgroundColor: isFull ? 'rgba(145,78,60,0.14)' : 'rgba(145,78,60,0.07)',
+                          color: '#914E3C',
+                          borderColor: isFull ? '#914E3C' : 'rgba(145,78,60,0.45)',
+                          borderStyle: isFull ? 'solid' : 'dashed',
+                        }}
+                      >
+                        {tag.label}
+                        {!isFull && <span className="opacity-55 text-[9px]">~</span>}
+                        <span className="opacity-40 ml-0.5 text-[11px]">×</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              {/* User-added tags row — blue */}
+              {userTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {userTags.map((tag) => {
+                    const isFull = tag.state === 'full'
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => handleRemoveTag(tag)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border"
+                        style={{
+                          backgroundColor: isFull ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.06)',
+                          color: '#2563eb',
+                          borderColor: isFull ? '#2563eb' : 'rgba(37,99,235,0.4)',
+                          borderStyle: isFull ? 'solid' : 'dashed',
+                        }}
+                      >
+                        {tag.label}
+                        {!isFull && <span className="opacity-55 text-[9px]">~</span>}
+                        <span className="opacity-40 ml-0.5 text-[11px]">×</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Legend */}
-      {!loading && !error && (
-        <div className="flex-shrink-0 px-4 pt-1 pb-1">
-          <div className="flex items-center gap-4 text-[11px] text-neutral-400">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'rgba(145,78,60,0.18)', border: '2px solid #914E3C' }} />
-              <span>Sélectionné</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'rgba(145,78,60,0.06)', border: '2px dashed rgba(145,78,60,0.6)' }} />
-              <span>Partiel</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Reset button — only visible when user has diverged from engine's initial selection */}
+      <AnimatePresence>
+        {hasChangedFromInitial && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex-shrink-0 px-4 py-0.5"
+          >
+            <button
+              onClick={handleReset}
+              className="text-[11px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
+            >
+              ↺ Réinitialiser la sélection
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* CTAs */}
       <div
@@ -496,7 +619,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           Valider ma zone
           {canValidate && (
             <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">
-              {selectedArrIds.length + partialArrs.length + selectedCommuneIds.length}
+              {allTags.length}
             </span>
           )}
         </button>
