@@ -46,6 +46,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const [loading, setLoading] = useState(true)
   const [irisLoading, setIrisLoading] = useState(false)
   const [constraintSummary, setConstraintSummary] = useState<string[]>([])
+  const [briefDismissed, setBriefDismissed] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [locationLabel, setLocationLabel] = useState(
     locationLat && locationLng ? locationQuery : ''
@@ -384,6 +385,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   type BriefTag = { id: string; label: string; icon: 'station' | 'pin' }
 
   const briefTags = useMemo((): BriefTag[] => {
+    // Hidden once the user explicitly dismissed the brief, even if new selections appear
+    if (briefDismissed) return []
     const geoC = locationIntent?.geoConstraints ?? []
     const nonAdmin = geoC.filter(c => c.type !== 'administrative_area')
     if (nonAdmin.length === 0) return []
@@ -402,22 +405,23 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       result.push({ id: `${c.type}_${label}`, label, icon: isStation ? 'station' : 'pin' })
     }
     return result
-  }, [locationIntent?.geoConstraints])
+  }, [briefDismissed, locationIntent?.geoConstraints])
 
   const handleRemoveBrief = useCallback(() => {
-    // Dismissing the brief clears the engine's selection and resets the snapshot
-    useSearchStore.setState({ selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [] })
+    // Mark brief as dismissed (prevents re-appearance if user later adds zones manually)
+    setBriefDismissed(true)
     initialStateRef.current = null
+    useSearchStore.setState({ selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [] })
   }, [])
 
   // ── Tag computation ───────────────────────────────────────────────────────
 
-  type TagItem = { id: string; label: string; state: 'full' | 'partial'; origin: 'engine' | 'user'; zoneType: 'arrondissement' | 'commune' }
+  // All administrative zone tags — engine and user additions unified in one terracotta row.
+  // No origin distinction needed: the only signal is full (solid) vs partial (dashed).
+  type TagItem = { id: string; label: string; state: 'full' | 'partial'; zoneType: 'arrondissement' | 'commune' }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const allTags = useMemo((): TagItem[] => {
     const result: TagItem[] = []
-    const snap = initialStateRef.current
 
     for (const arr of arrondissements) {
       const fullSel = selectedArrIds.includes(arr.id)
@@ -429,31 +433,18 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         return q?.parentId === arr.id && selectedIrisIds.includes(i.id)
       })
       if (!fullSel && !hasPartialQu && !hasPartialIris) continue
-      const state = (fullSel ? 'full' : 'partial') as 'full' | 'partial'
-      const isEngine = !snap || snap.arrIds.includes(arr.id) ||
-        childQus.some(q => snap.quartierIds.includes(q.id)) ||
-        iris.some(i => {
-          const q = quartiers.find(q => q.id === i.parentId)
-          return q?.parentId === arr.id && snap.irisIds.includes(i.id)
-        })
-      result.push({ id: arr.id, label: arr.shortName, state, origin: isEngine ? 'engine' : 'user', zoneType: 'arrondissement' })
+      result.push({ id: arr.id, label: arr.shortName, state: fullSel ? 'full' : 'partial', zoneType: 'arrondissement' })
     }
 
     for (const com of communes) {
       const fullSel = selectedCommuneIds.includes(com.id)
       const hasPartialIris = iris.some(i => i.parentId === com.id && selectedIrisIds.includes(i.id))
       if (!fullSel && !hasPartialIris) continue
-      const state = (fullSel ? 'full' : 'partial') as 'full' | 'partial'
-      const isEngine = !snap || snap.communeIds.includes(com.id) ||
-        iris.some(i => i.parentId === com.id && snap.irisIds.includes(i.id))
-      result.push({ id: com.id, label: com.shortName, state, origin: isEngine ? 'engine' : 'user', zoneType: 'commune' })
+      result.push({ id: com.id, label: com.shortName, state: fullSel ? 'full' : 'partial', zoneType: 'commune' })
     }
 
     return result
   }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, iris, arrondissements, communes, quartiers])
-
-  const engineTags = allTags.filter(t => t.origin === 'engine')
-  const userTags   = allTags.filter(t => t.origin === 'user')
 
   const snap = initialStateRef.current
   const hasChangedFromInitial = snap !== null && (
@@ -525,7 +516,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       {/* Tag system — 3 rows under the map */}
       <div className="flex-shrink-0 px-4 pt-2 min-h-[36px]">
         <AnimatePresence>
-          {(briefTags.length > 0 || allTags.length > 0) && (
+          {(briefTags.length > 0 || allTags.length > 0 || hasChangedFromInitial) && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -559,10 +550,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   ))}
                 </div>
               )}
-              {/* Ligne 2 — zones admin concernées (terracotta, engine initial) */}
-              {engineTags.length > 0 && (
+              {/* Ligne 2 — zones admin concernées (moteur + ajouts manuels, tout en terracotta) */}
+              {allTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {engineTags.map((tag) => {
+                  {allTags.map((tag) => {
                     const isFull = tag.state === 'full'
                     return (
                       <button
@@ -573,31 +564,6 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                           backgroundColor: isFull ? 'rgba(145,78,60,0.14)' : 'rgba(145,78,60,0.07)',
                           color: '#914E3C',
                           borderColor: isFull ? '#914E3C' : 'rgba(145,78,60,0.45)',
-                          borderStyle: isFull ? 'solid' : 'dashed',
-                        }}
-                      >
-                        {tag.label}
-                        {!isFull && <span className="opacity-55 text-[9px]">~</span>}
-                        <span className="opacity-40 ml-0.5 text-[11px]">×</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-              {/* Ligne 3 — ajouts manuels utilisateur (bleu) */}
-              {userTags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {userTags.map((tag) => {
-                    const isFull = tag.state === 'full'
-                    return (
-                      <button
-                        key={tag.id}
-                        onClick={() => handleRemoveTag(tag)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border"
-                        style={{
-                          backgroundColor: isFull ? 'rgba(37,99,235,0.12)' : 'rgba(37,99,235,0.06)',
-                          color: '#2563eb',
-                          borderColor: isFull ? '#2563eb' : 'rgba(37,99,235,0.4)',
                           borderStyle: isFull ? 'solid' : 'dashed',
                         }}
                       >
