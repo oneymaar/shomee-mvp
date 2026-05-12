@@ -73,10 +73,60 @@ Exemple : "17e pas trop excentré" → geoConstraint { type:"administrative_area
 Exemple : "J'aimerais vivre dans le 17e, mais pas trop excentré" → idem
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LOGIQUE MULTIPLE
+LOGIQUE MULTIPLE — PARSER LA STRUCTURE AVANT LES ZONES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-"," / "et" / "ou" / "+" / "/" entre des zones → ADDITION (operator:"inside" pour chaque zone)
-Exclusion : "sauf" / "mais pas" / "sans" / "hors" / "éviter" / "pas vers" → operator:"exclude"
+ÉTAPE 1 : identifier la relation logique (addition / exclusion / intersection / between).
+ÉTAPE 2 : extraire les entités.
+ÉTAPE 3 : attribuer les operators.
+
+ADDITION — "," / "et" / "ou" / "+" / "/" entre des zones :
+→ CHAQUE entité obtient operator:"inside", PEU IMPORTE son type
+→ Le système calcule l'UNION des zones résultantes — NE PAS traiter comme un filtre
+→ resolutionStrategy:"direct_area_selection" pour les additions pures
+
+Exemples :
+"Paris 12 et Batignolles"
+  → [{type:"administrative_area", zoneId:"arr-12", operator:"inside"},
+     {type:"semantic_neighborhood", neighborhoodId:"batignolles", operator:"inside"}]
+"Paris 11, Paris 12"
+  → [{type:"administrative_area", zoneId:"arr-11", operator:"inside"},
+     {type:"administrative_area", zoneId:"arr-12", operator:"inside"}]
+"Batignolles et Levallois"
+  → [{type:"semantic_neighborhood", neighborhoodId:"batignolles", operator:"inside"},
+     {type:"administrative_area", zoneId:"com-92044", operator:"inside"}]
+"Paris 11 et métro Nation"
+  → [{type:"administrative_area", zoneId:"arr-11", operator:"inside"},
+     {type:"transport_station", stationName:"Nation", operator:"inside"}]
+
+EXCLUSION — identifier AVANT de résoudre les zones :
+Déclencheurs : "sauf" / "mais pas" / "sans" / "hors" / "éviter" / "pas" / "pas vers" / "je ne veux pas" / "exclure"
+→ operator:"exclude" sur la zone exclue, PEU IMPORTE son type (administrative_area, semantic_neighborhood, transport_station)
+→ CRITIQUE : ne JAMAIS mettre operator:"inside" sur une zone précédée d'un terme d'exclusion
+
+Exemples :
+"Paris 17 mais pas les Épinettes"
+  → [{type:"administrative_area", zoneId:"arr-17", operator:"inside"},
+     {type:"semantic_neighborhood", label:"Épinettes", operator:"exclude"}]
+"Paris 10 sauf Canal Saint-Martin"
+  → [{type:"administrative_area", zoneId:"arr-10", operator:"inside"},
+     {type:"semantic_neighborhood", neighborhoodId:"canal_saint_martin", operator:"exclude"}]
+"Paris 12 sans Bercy"
+  → [{type:"administrative_area", zoneId:"arr-12", operator:"inside"},
+     {type:"semantic_neighborhood", label:"Bercy", operator:"exclude"}]
+
+INTERSECTION — zone + contrainte de proximité transport :
+→ La zone obtient operator:"inside"
+→ La contrainte transport obtient operator:"near"
+→ resolutionStrategy:"transport_line_intersection"
+→ NE JAMAIS afficher tout l'arrondissement — seulement les IRIS proches de la ligne
+
+Exemples :
+"Paris 12 proche ligne 1"
+  → [{type:"administrative_area", zoneId:"arr-12", operator:"inside"},
+     {type:"transport_line", line:"1", operator:"near"}]
+"Batignolles proche ligne 13"
+  → [{type:"semantic_neighborhood", neighborhoodId:"batignolles", operator:"inside"},
+     {type:"transport_line", line:"13", operator:"near"}]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STRUCTURE "ENTRE X ET Y" — PRIORITÉ HAUTE
@@ -89,19 +139,33 @@ Le mot "entre" CHANGE COMPLÈTEMENT le sens. Ce n'est PAS une addition.
 → NE PAS ignorer l'une des deux entités
 → NE PAS traiter comme operator:"inside" ou addition
 
+OBLIGATOIRE pour "between" — chaque contrainte DOIT avoir l'un de ces champs renseigné :
+  • neighborhoodId (quartier connu) — utiliser les IDs exacts de la liste ci-dessous
+  • stationName (station de transport)
+  • zoneId (arrondissement ou commune)
+Si une entité n'est pas reconnue, status:"ambiguous" plutôt que de l'omettre.
+
+IDs quartiers reconnus pour between : passy, trocadero, batignolles, le_marais, oberkampf,
+canal_saint_martin, belleville, montmartre, pigalle, nation (→ faubourg_saint_antoine),
+bastille (→ faubourg_saint_antoine), republique (→ oberkampf), daumesnil, reuilly_diderot,
+aligre, saint_germain_des_pres, quartier_latin, mouffetard, butte_aux_cailles, alesia
+
 Exemples OBLIGATOIRES à traiter comme between :
 "entre Passy et Trocadéro"
   → [{type:"semantic_neighborhood", label:"Passy", neighborhoodId:"passy", operator:"between"},
      {type:"semantic_neighborhood", label:"Trocadéro", neighborhoodId:"trocadero", operator:"between"}]
 "entre Nation et Daumesnil"
-  → [{type:"semantic_neighborhood", label:"Nation", neighborhoodId:"nation", operator:"between"},
+  → [{type:"semantic_neighborhood", label:"Nation", neighborhoodId:"faubourg_saint_antoine", operator:"between"},
      {type:"semantic_neighborhood", label:"Daumesnil", neighborhoodId:"daumesnil", operator:"between"}]
 "entre Oberkampf et Parmentier"
   → [{type:"transport_station", label:"Oberkampf", stationName:"Oberkampf", operator:"between"},
      {type:"transport_station", label:"Parmentier", stationName:"Parmentier", operator:"between"}]
 "entre Bastille et République"
-  → [{type:"semantic_neighborhood", label:"Bastille", operator:"between"},
-     {type:"semantic_neighborhood", label:"République", operator:"between"}]
+  → [{type:"semantic_neighborhood", label:"Bastille", neighborhoodId:"faubourg_saint_antoine", operator:"between"},
+     {type:"semantic_neighborhood", label:"République", neighborhoodId:"oberkampf", operator:"between"}]
+"entre Paris 11 et Paris 12"
+  → [{type:"administrative_area", label:"Paris 11", zoneId:"arr-11", operator:"between"},
+     {type:"administrative_area", label:"Paris 12", zoneId:"arr-12", operator:"between"}]
 
 Si les deux zones semblent très éloignées (>5km, ex: "entre Vincennes et Levallois") :
   → status:"ambiguous", clarificationQuestion expliquant le problème, proposer alternatives.
@@ -140,12 +204,13 @@ LIGNE DE MÉTRO SEULE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STRATÉGIES DE RÉSOLUTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-"direct_area_selection"           → zone(s) administrative(s) seule(s)
-"semantic_neighborhood_selection" → quartier vécu de semanticNeighborhoods.json
-"point_radius_intersection"       → station/POI + rayon
-"transport_line_intersection"     → zone + ligne de transport
+"direct_area_selection"           → zone(s) administrative(s) ou addition de zones de types mixtes
+"semantic_neighborhood_selection" → quartier vécu seul (sans zone admin)
+"point_radius_intersection"       → station/POI seul + rayon
+"transport_line_intersection"     → zone + ligne de transport (intersection)
 "directional_area_slice"          → zone + modificateur directionnel
-"exclude_from_area"               → zone principale + exclusion
+"exclude_from_area"               → zone principale + exclusion d'une sous-zone
+"between_entities"                → zone intermédiaire entre deux entités
 "ask_clarification"               → trop ambigu pour résoudre
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -211,7 +276,7 @@ Retourne exactement ce JSON (sans markdown, sans commentaires) :
       "direction": "north"|"south"|"east"|"west"|"central"|"not_too_peripheral"|null
     }
   ],
-  "resolutionStrategy": "direct_area_selection"|"semantic_neighborhood_selection"|"point_radius_intersection"|"transport_line_intersection"|"directional_area_slice"|"exclude_from_area"|"ask_clarification",
+  "resolutionStrategy": "direct_area_selection"|"semantic_neighborhood_selection"|"point_radius_intersection"|"transport_line_intersection"|"directional_area_slice"|"exclude_from_area"|"between_entities"|"ask_clarification",
   "clarificationQuestion": string|null,
   "clarificationOptions": [
     {
@@ -237,9 +302,17 @@ RÈGLES geoConstraints — CRITIQUE :
   → "Paris 11, Paris 12, proche ligne 1" = DEUX administrative_area (arr-11 et arr-12) seulement
   → La ligne 1 est une contrainte secondaire : transport_line(line:"1"), pas un administrative_area
 - direction UNIQUEMENT sur administrative_area, jamais sur transport_*
-- operator "exclude" pour exclusions ("Paris 12 mais pas Bercy" → arr-12 inside + Bercy/IRIS exclude)
+- operator SEMANTICS (s'applique à TOUS les types) :
+  • "inside"  → zone incluse dans l'union (admin, semantic_neighborhood, transport_station)
+  • "near"    → filtre de proximité : transport_line ou transport_station comme contrainte secondaire
+  • "exclude" → zone exclue (admin, semantic_neighborhood, transport_station)
+  → NE JAMAIS mettre operator "inside" sur une zone précédée de "sauf", "mais pas", "sans", "hors"
+  → L'exclusion s'applique à TOUS les types, pas seulement administrative_area
 - resolutionStrategy "directional_area_slice" si direction présent
-- resolutionStrategy "transport_line_intersection" si ligne + zone
+- resolutionStrategy "transport_line_intersection" si zone + ligne (intersection)
+- resolutionStrategy "between_entities" si operator "between" sur deux entités
+- resolutionStrategy "exclude_from_area" si exclusion d'une sous-zone
+- resolutionStrategy "direct_area_selection" pour additions de zones (même types mixtes)
 - resolutionStrategy "ask_clarification" si status ≠ "clear"
 
 RÈGLES preselectQueries (mapAction) — CRITIQUE :
