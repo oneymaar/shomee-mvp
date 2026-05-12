@@ -55,6 +55,7 @@ function makeLabel(text: string, state: ZoneState | 'selected' | 'unselected', f
   const color = isSelected ? '#914E3C' : '#2a2a2a'
   return L.divIcon({
     html: `<div style="
+      display:inline-block;
       transform:translate(-50%,-50%);
       color:${color};
       font-size:${fontSize}px;
@@ -68,6 +69,7 @@ function makeLabel(text: string, state: ZoneState | 'selected' | 'unselected', f
       letter-spacing:-0.01em;
     ">${text}</div>`,
     className: 'shomee-zone-label',
+    iconSize: [0, 0],
     iconAnchor: [0, 0],
   })
 }
