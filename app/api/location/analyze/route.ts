@@ -229,18 +229,25 @@ Retourne exactement ce JSON (sans markdown, sans commentaires) :
   }
 }
 
-RÈGLES geoConstraints :
+RÈGLES geoConstraints — CRITIQUE :
 - zoneId arrondissements : "arr-1" à "arr-20"
 - zoneId communes : "com-" + code INSEE (ex: Vincennes="com-94078", Neuilly-sur-Seine="com-92050")
+- N'ajouter un administrative_area QUE pour les zones EXPLICITEMENT mentionnées par l'utilisateur
+- NE JAMAIS ajouter des arrondissements traversés par une ligne de transport
+  → "Paris 11, Paris 12, proche ligne 1" = DEUX administrative_area (arr-11 et arr-12) seulement
+  → La ligne 1 est une contrainte secondaire : transport_line(line:"1"), pas un administrative_area
 - direction UNIQUEMENT sur administrative_area, jamais sur transport_*
 - operator "exclude" pour exclusions ("Paris 12 mais pas Bercy" → arr-12 inside + Bercy/IRIS exclude)
 - resolutionStrategy "directional_area_slice" si direction présent
 - resolutionStrategy "transport_line_intersection" si ligne + zone
 - resolutionStrategy "ask_clarification" si status ≠ "clear"
 
-RÈGLES preselectQueries (mapAction) :
+RÈGLES preselectQueries (mapAction) — CRITIQUE :
 - Format obligatoire : "Paris 1" à "Paris 20" ou noms de communes exacts
-- Lister TOUTES les zones
+- Lister UNIQUEMENT les zones EXPLICITEMENT nommées dans la requête utilisateur
+- NE JAMAIS ajouter les arrondissements traversés par une ligne de transport
+  → "Paris 11, Paris 12, proche ligne 1" → preselectQueries: ["Paris 11", "Paris 12"] seulement
+  → "Paris 9, proche ligne 2" → preselectQueries: ["Paris 9"] seulement
 - centerQuery : nom exact du lieu principal
 
 RÈGLES clarification (status ≠ "clear") :
