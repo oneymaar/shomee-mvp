@@ -23,6 +23,31 @@ const ZoneMap = dynamic(() => import('./ZoneMap'), {
 
 const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
+/** Compute a [SW, NE] bounding box from an array of GeoZone polygons. */
+function zonesToBounds(zones: GeoZone[]): [[number, number], [number, number]] | null {
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity
+  let found = false
+  for (const zone of zones) {
+    const geom = zone.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon
+    const rings: GeoJSON.Position[][] =
+      geom.type === 'Polygon' ? geom.coordinates
+      : geom.type === 'MultiPolygon' ? geom.coordinates.flat()
+      : []
+    for (const ring of rings) {
+      for (const pos of ring) {
+        const lng = pos[0], lat = pos[1]
+        if (!isFinite(lat) || !isFinite(lng)) continue
+        if (lat < minLat) minLat = lat
+        if (lat > maxLat) maxLat = lat
+        if (lng < minLng) minLng = lng
+        if (lng > maxLng) maxLng = lng
+        found = true
+      }
+    }
+  }
+  return found ? [[minLat, minLng], [maxLat, maxLng]] : null
+}
+
 interface LocationMapStepProps {
   onValidate: () => void
   onBack: () => void
@@ -45,6 +70,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const [zoom, setZoom] = useState(12)
   const [loading, setLoading] = useState(true)
   const [irisLoading, setIrisLoading] = useState(false)
+  const [fitBounds, setFitBounds] = useState<[[number, number], [number, number]] | null>(null)
   const [constraintSummary, setConstraintSummary] = useState<string[]>([])
   const [briefDismissed, setBriefDismissed] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -152,10 +178,11 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             irisIds: result.irisIds,
             communeIds: [...curComs],
           }
-          // For between-entities queries, center the map on the computed midpoint
-          if (result.suggestedCenter) {
-            setCenter(result.suggestedCenter)
-          }
+          // Fit the map view to encompass all selected IRIS zones
+          const selectedZones = zones.filter(z => result.irisIds.includes(z.id))
+          const bounds = zonesToBounds(selectedZones)
+          if (bounds) setFitBounds(bounds)
+          else if (result.suggestedCenter) setCenter(result.suggestedCenter)
           if (result.matchSummary.length > 0) setConstraintSummary(result.matchSummary)
           return
         }
@@ -330,6 +357,13 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             selectedQuartierIds: newQuartierIds,
             selectedCommuneIds: newCommuneIds,
           })
+          // Fit the map view to encompass all selected administrative zones
+          const selectedZones = [
+            ...arrs.filter(z => newArrIds.includes(z.id)),
+            ...loadedCommunes.filter(z => newCommuneIds.includes(z.id)),
+          ]
+          const bounds = zonesToBounds(selectedZones)
+          if (bounds) setFitBounds(bounds)
         }
 
         const matchedCount = newArrIds.length + newCommuneIds.length
@@ -562,6 +596,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           <ZoneMap
             center={center}
             zoom={zoom}
+            fitBounds={fitBounds}
             arrondissements={arrondissements}
             quartiers={quartiers}
             iris={iris}

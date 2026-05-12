@@ -444,22 +444,43 @@ function GeoLayers(props: GeoLayersProps) {
   return null
 }
 
-// ─── MapController — only handles center flyTo, never touches zoom ─────────
+// ─── MapViewController — fitBounds prioritaire sur flyTo ──────────────────
+//
+// fitBounds est utilisé pour l'état initial (moteur sémantique → vue sur
+// toutes les zones sélectionnées). flyTo prend le relais pour les navigations
+// ultérieures (changement de centrage après interaction utilisateur).
 
-function MapController({ center }: { center: [number, number] }) {
+function MapViewController({
+  center,
+  fitBounds,
+}: {
+  center: [number, number]
+  fitBounds: [[number, number], [number, number]] | null
+}) {
   const map = useMap()
   const prevCenter = useRef<string | null>(null)
+  const prevBoundsKey = useRef<string | null>(null)
 
   useEffect(() => {
-    const key = `${center[0].toFixed(4)},${center[1].toFixed(4)}`
-    if (prevCenter.current === null) {
-      prevCenter.current = key
+    // fitBounds prime sur flyTo — positionne sur l'ensemble des zones
+    if (fitBounds) {
+      const key = fitBounds.flat().map(n => n.toFixed(5)).join(',')
+      if (key === prevBoundsKey.current) return
+      prevBoundsKey.current = key
+      map.fitBounds(fitBounds, { padding: [28, 28], maxZoom: 15, animate: true, duration: 0.5 })
       return
     }
-    if (prevCenter.current === key) return
-    prevCenter.current = key
+
+    // flyTo pour les changements de centrage ultérieurs
+    const cKey = `${center[0].toFixed(4)},${center[1].toFixed(4)}`
+    if (prevCenter.current === null) {
+      prevCenter.current = cKey
+      return
+    }
+    if (prevCenter.current === cKey) return
+    prevCenter.current = cKey
     map.flyTo(center, map.getZoom(), { duration: 0.8 })
-  }, [center, map])
+  }, [center, fitBounds, map])
 
   return null
 }
@@ -469,6 +490,7 @@ function MapController({ center }: { center: [number, number] }) {
 export interface ZoneMapProps {
   center: [number, number]
   zoom: number
+  fitBounds?: [[number, number], [number, number]] | null
   arrondissements: GeoZone[]
   quartiers: GeoZone[]
   iris: GeoZone[]
@@ -486,7 +508,7 @@ export interface ZoneMapProps {
   onZoomChange: (z: number) => void
 }
 
-export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -521,7 +543,7 @@ export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris
         irisLoading={irisLoading}
         onZoomChange={onZoomChange}
       />
-      <MapController center={center} />
+      <MapViewController center={center} fitBounds={fitBounds ?? null} />
     </MapContainer>
   )
 }
