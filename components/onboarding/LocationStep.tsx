@@ -75,10 +75,11 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
 
   // ── Map opening helpers ──────────────────────────────────────────────────
 
-  const openMapWithEntity = useCallback((entity: RecognizedLocationEntity) => {
+  // rawInput = la saisie brute de l'utilisateur, restaurée dans le textarea au retour
+  const openMapWithEntity = useCallback((entity: RecognizedLocationEntity, rawInput: string) => {
     const intent = entityToIntent(entity)
     setLocation({
-      query: entity.label,
+      query: rawInput,           // saisie brute → restaurée au retour
       label: entity.displayLabel,
       lat: entity.coordinates?.lat ?? 0,
       lng: entity.coordinates?.lng ?? 0,
@@ -88,18 +89,19 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   }, [setLocation, onOpenMap])
 
   const openMapWithQuery = useCallback((
-    q: string,
+    centerQuery: string,          // utilisé pour le géocodage dans initMap
     preselectZones?: string[],
     geoConstraints?: import('@/lib/services/geoConstraintService').GeoConstraint[],
     resolutionStrategy?: string,
+    rawInput?: string,            // saisie brute → restaurée au retour
   ) => {
-    const parsed = parseLocationIntent(q.trim())
+    const parsed = parseLocationIntent(centerQuery.trim())
     const intent = {
       ...(preselectZones?.length ? { ...parsed, location_terms: preselectZones } : parsed),
       ...(geoConstraints?.length ? { geoConstraints } : {}),
       ...(resolutionStrategy ? { resolutionStrategy } : {}),
     }
-    setLocation({ query: q.trim(), label: q.trim(), lat: 0, lng: 0, intent })
+    setLocation({ query: (rawInput ?? centerQuery).trim(), label: centerQuery.trim(), lat: 0, lng: 0, intent })
     onOpenMap()
   }, [setLocation, onOpenMap])
 
@@ -116,7 +118,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         setUi({ kind: 'disambiguation', entities: recognizedEntity })
         return
       }
-      openMapWithEntity(recognizedEntity)
+      openMapWithEntity(recognizedEntity, q)  // q = saisie brute
       return
     }
 
@@ -130,6 +132,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         analysis?.mapAction?.preselectQueries,
         analysis?.geoConstraints,
         analysis?.resolutionStrategy,
+        q,  // q = saisie brute
       )
       return
     }
@@ -181,9 +184,10 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
       transport_constraints: [] as string[],
       confidence: 0.95,
     }
-    setLocation({ query: opt.centerQuery || opt.query, label: opt.label, lat: 0, lng: 0, intent })
+    // query.trim() = saisie brute originale, pas le label de l'option choisie
+    setLocation({ query: query.trim(), label: opt.label, lat: 0, lng: 0, intent })
     onOpenMap()
-  }, [setLocation, onOpenMap])
+  }, [query, setLocation, onOpenMap])
 
   const handleBackToTyping = useCallback(() => {
     setUi({ kind: 'typing' })
@@ -316,7 +320,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
                   return (
                     <button
                       key={entity.id}
-                      onClick={() => openMapWithEntity(entity)}
+                      onClick={() => openMapWithEntity(entity, query.trim())}
                       className="flex items-center gap-3 w-full text-left bg-white rounded-xl px-3.5 py-3 border border-black/8 active:bg-black/4 transition-colors"
                     >
                       <span className="text-[18px] flex-shrink-0">{entity.emoji}</span>
