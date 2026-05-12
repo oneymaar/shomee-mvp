@@ -375,6 +375,41 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     })
   }, [])
 
+  // ── Brief intent tags (Ligne 1) ───────────────────────────────────────────
+  // Derived from geoConstraints: non-administrative constraints = what the engine
+  // understood from the user's text (station name, neighborhood, metro line).
+  // These are NEVER duplicated in Ligne 2/3 because they represent intent labels,
+  // not administrative zone names.
+
+  type BriefTag = { id: string; label: string; icon: 'station' | 'pin' }
+
+  const briefTags = useMemo((): BriefTag[] => {
+    const geoC = locationIntent?.geoConstraints ?? []
+    const nonAdmin = geoC.filter(c => c.type !== 'administrative_area')
+    if (nonAdmin.length === 0) return []
+
+    const result: BriefTag[] = []
+    const seen = new Set<string>()
+
+    for (const c of nonAdmin) {
+      const label =
+        c.type === 'transport_station' ? (c.stationName ?? c.label) :
+        c.type === 'transport_line'    ? `Ligne ${c.line ?? c.label}` :
+        c.label
+      if (!label || seen.has(label)) continue
+      seen.add(label)
+      const isStation = c.type === 'transport_station' || c.type === 'transport_line'
+      result.push({ id: `${c.type}_${label}`, label, icon: isStation ? 'station' : 'pin' })
+    }
+    return result
+  }, [locationIntent?.geoConstraints])
+
+  const handleRemoveBrief = useCallback(() => {
+    // Dismissing the brief clears the engine's selection and resets the snapshot
+    useSearchStore.setState({ selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [] })
+    initialStateRef.current = null
+  }, [])
+
   // ── Tag computation ───────────────────────────────────────────────────────
 
   type TagItem = { id: string; label: string; state: 'full' | 'partial'; origin: 'engine' | 'user'; zoneType: 'arrondissement' | 'commune' }
@@ -432,47 +467,16 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
   return (
     <div className="flex flex-col h-full">
-      {/* Top bar */}
+      {/* Top bar — title only, back button removed (parent onboarding has one) */}
       <div
-        className="flex-shrink-0 px-4 pb-2 flex items-center gap-3"
+        className="flex-shrink-0 px-4 pb-2"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
-        <button
-          onClick={onBack}
-          className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center active:bg-black/5 transition-colors flex-shrink-0"
-        >
-          <ArrowLeft size={17} className="text-neutral-600" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h3>
-          <p className="text-[11px] text-neutral-400 mt-0.5">
-            Touchez pour sélectionner · Zoomez pour affiner
-          </p>
-        </div>
+        <h3 className="text-[15px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h3>
+        <p className="text-[11px] text-neutral-400 mt-0.5">
+          Touchez pour sélectionner · Zoomez pour affiner
+        </p>
       </div>
-
-      {(locationLabel || constraintSummary.length > 0) && !loading && (
-        <div className="flex-shrink-0 px-4 pb-2 flex flex-wrap items-center gap-2">
-          {locationLabel && (
-            <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium"
-              style={{ backgroundColor: 'rgba(145,78,60,0.08)', color: '#914E3C' }}
-            >
-              <MapPin size={11} />
-              {locationLabel}
-            </div>
-          )}
-          {constraintSummary.map((s) => (
-            <div
-              key={s}
-              className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-medium"
-              style={{ backgroundColor: 'rgba(59,130,246,0.08)', color: '#2563eb' }}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Map */}
       <div className="flex-1 mx-4 rounded-2xl overflow-hidden border border-black/8 relative min-h-0">
@@ -518,10 +522,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         )}
       </div>
 
-      {/* Tag system — engine (terracotta) + user-added (blue) */}
+      {/* Tag system — 3 rows under the map */}
       <div className="flex-shrink-0 px-4 pt-2 min-h-[36px]">
         <AnimatePresence>
-          {allTags.length > 0 && (
+          {(briefTags.length > 0 || allTags.length > 0) && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -529,7 +533,33 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-1.5"
             >
-              {/* Engine tags row — terracotta */}
+              {/* Ligne 1 — brief initial: station (M) or neighborhood (pin) */}
+              {briefTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {briefTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      onClick={handleRemoveBrief}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border border-[rgba(145,78,60,0.35)]"
+                      style={{ backgroundColor: 'rgba(145,78,60,0.1)', color: '#914E3C' }}
+                    >
+                      {tag.icon === 'station' ? (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          width: 14, height: 14, borderRadius: '50%',
+                          border: '1.5px solid currentColor',
+                          fontSize: 8, fontWeight: 900, lineHeight: 1, flexShrink: 0,
+                        }}>M</span>
+                      ) : (
+                        <MapPin size={10} className="flex-shrink-0" />
+                      )}
+                      {tag.label}
+                      <span className="opacity-40 text-[11px]">×</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* Ligne 2 — zones admin concernées (terracotta, engine initial) */}
               {engineTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {engineTags.map((tag) => {
@@ -554,7 +584,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   })}
                 </div>
               )}
-              {/* User-added tags row — blue */}
+              {/* Ligne 3 — ajouts manuels utilisateur (bleu) */}
               {userTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {userTags.map((tag) => {
