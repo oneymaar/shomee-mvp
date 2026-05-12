@@ -112,10 +112,10 @@ mapAction.centerQuery : nom de l'un des deux lieux ou du secteur intermédiaire.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTRADICTIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Si une ligne de métro ne dessert PAS l'arrondissement mentionné → status "contradictory".
-Exemple : "ligne 1 dans le 18e" → contradiction (ligne 1 ne dessert pas le 18e).
-Exemple : "RER B dans Paris 12" → contradiction.
-Dans ces cas : fournir une clarificationQuestion et des options.
+N'utiliser status "contradictory" QUE pour des incompatibilités logiques ÉVIDENTES et CERTAINES.
+Ne PAS l'utiliser pour ligne + arrondissement : la résolution déterministe gère les intersections vides.
+Exemples de vraies contradictions : two zones géographiquement opposées avec une contrainte exclusive irrésoluble.
+En cas de doute → status "clear" avec les contraintes telles quelles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CAS AMBIGUS : STATION VS QUARTIER
