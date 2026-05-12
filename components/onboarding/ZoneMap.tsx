@@ -495,7 +495,15 @@ export default function ZoneMap({ center, zoom, arrondissements, quartiers, iris
       zoomControl={false}
       attributionControl={false}
     >
+      {/* Base sans labels — nos labels custom restent les seuls au zoom large */}
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png" />
+      {/* Labels CartoDB (rues, POI, monuments) visibles seulement au zoom ≥ 15
+          où nos labels custom d'arrondissement / quartier ne sont plus affichés */}
+      <TileLayer
+        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+        minZoom={15}
+        opacity={0.85}
+      />
       <GeoLayers
         arrondissements={arrondissements}
         quartiers={quartiers}
