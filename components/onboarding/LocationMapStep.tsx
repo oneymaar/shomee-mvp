@@ -531,8 +531,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         className="flex-shrink-0 px-4 pb-2"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
-        <h3 className="text-[15px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h3>
-        <p className="text-[11px] text-neutral-400 mt-0.5">
+        <h3 className="text-[20px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h3>
+        <p className="text-[13px] text-neutral-400 mt-1">
           Touchez pour sélectionner · Zoomez pour affiner
         </p>
       </div>
