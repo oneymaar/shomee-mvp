@@ -13,6 +13,8 @@ export interface LocationIntent {
   lifestyle_terms: string[]
   transport_constraints: string[]
   confidence: number
+  geoConstraints?: import('./services/geoConstraintService').GeoConstraint[]
+  resolutionStrategy?: string
 }
 
 export type PropertyType = 'appartement' | 'maison' | 'studio' | 'loft' | 'duplex'

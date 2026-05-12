@@ -91,11 +91,13 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     q: string,
     preselectZones?: string[],
     geoConstraints?: import('@/lib/services/geoConstraintService').GeoConstraint[],
+    resolutionStrategy?: string,
   ) => {
     const parsed = parseLocationIntent(q.trim())
     const intent = {
       ...(preselectZones?.length ? { ...parsed, location_terms: preselectZones } : parsed),
       ...(geoConstraints?.length ? { geoConstraints } : {}),
+      ...(resolutionStrategy ? { resolutionStrategy } : {}),
     }
     setLocation({ query: q.trim(), label: q.trim(), lat: 0, lng: 0, intent })
     onOpenMap()
@@ -127,6 +129,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         analysis?.mapAction?.centerQuery ?? q,
         analysis?.mapAction?.preselectQueries,
         analysis?.geoConstraints,
+        analysis?.resolutionStrategy,
       )
       return
     }
