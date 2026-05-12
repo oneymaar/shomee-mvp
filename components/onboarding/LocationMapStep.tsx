@@ -86,6 +86,19 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, selectedIrisIds.length])
 
+  // Eager-load IRIS for transport_line constraints ("Paris 11 proche ligne 1").
+  // Unlike transport_station/semantic_neighborhood (hasFineConstraint→zoom 15),
+  // transport_line queries open at arrondissement zoom with the full arr pre-selected.
+  // Without this trigger the selection would only narrow when the user manually zooms
+  // to 15. With it, resolveConstraints runs immediately and shows the partial state.
+  useEffect(() => {
+    if (loading || irisLoading || iris.length > 0) return
+    const geoC = locationIntent?.geoConstraints ?? []
+    if (!geoC.some(c => c.type === 'transport_line')) return
+    loadIris()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading])
+
   // Capture initial selection state once — first non-empty selection is the engine's output.
   useEffect(() => {
     if (initialStateRef.current !== null) return
@@ -126,6 +139,16 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             selectedArrIds: clearedArrs,
             selectedQuartierIds: clearedQus,
           })
+          // The pre-IRIS arr selection was a placeholder. Update the initial state
+          // snapshot so the reset button restores to the *narrowed* selection, not
+          // the full arrondissement that was pre-selected before IRIS loaded.
+          const { selectedCommuneIds: curComs } = useSearchStore.getState()
+          initialStateRef.current = {
+            arrIds: clearedArrs,
+            quartierIds: clearedQus,
+            irisIds: result.irisIds,
+            communeIds: [...curComs],
+          }
           if (result.matchSummary.length > 0) setConstraintSummary(result.matchSummary)
           return
         }
