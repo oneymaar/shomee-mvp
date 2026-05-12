@@ -19,11 +19,17 @@ export interface ClarificationOption {
 }
 
 export interface LocationIntentAnalysis {
-  status: 'clear' | 'ambiguous' | 'too_vague' | 'not_found'
+  status: 'clear' | 'ambiguous' | 'too_vague' | 'not_found' | 'contradictory'
   explicitLocations: ExplicitLocation[]
   inferredConstraints: InferredConstraint[]
   clarificationQuestion: string | null
   clarificationOptions: ClarificationOption[] | null
+  /** Structured constraints for fine-grained IRIS-level resolution */
+  geoConstraints?: import('./geoConstraintService').GeoConstraint[]
+  /** Which resolution algorithm the map layer should apply */
+  resolutionStrategy?: 'direct_area_selection' | 'semantic_neighborhood_selection'
+    | 'point_radius_intersection' | 'transport_line_intersection'
+    | 'directional_area_slice' | 'exclude_from_area' | 'ask_clarification'
   mapAction: {
     type: 'open_map' | 'ask_clarification'
     centerQuery: string | null

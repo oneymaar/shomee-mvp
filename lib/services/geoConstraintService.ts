@@ -50,6 +50,9 @@ export interface GeoConstraint {
   neighborhoodId?: string      // semantic_neighborhood → "butte_aux_cailles"
   poiType?: string             // poi → "parc", "gare", "marché"
   radiusM?: number             // override default proximity radius (metres)
+  /** Directional slice applied to the zone's IRIS pool before secondary constraints.
+   *  "north" | "south" | "east" | "west" | "central" | "not_too_peripheral" */
+  direction?: string
 }
 
 export interface ConstraintResolutionResult {
@@ -147,6 +150,45 @@ function filterIrisByStation(
     const [lat, lng] = centroid
     return haversineM(lat, lng, station.lat, station.lng) <= radiusM
   })
+}
+
+/**
+ * Filter IRIS zones to the directional half (or subset) of their bounding box.
+ * Used for "Paris 16 nord", "17e pas trop excentré", etc.
+ *
+ * Strategy: compute the mid-point (or mean centroid) of all candidates, then keep
+ * only the zones on the requested side.  "central" / "not_too_peripheral" keep the
+ * innermost 50% / 65% by distance from the mean centroid.
+ */
+function filterIrisByDirection(candidates: GeoZone[], direction: string): GeoZone[] {
+  if (!direction || candidates.length === 0) return candidates
+
+  const entries = candidates
+    .map(z => ({ zone: z, c: irisCentroid(z) }))
+    .filter(e => e.c !== null) as { zone: GeoZone; c: [number, number] }[]
+  if (entries.length === 0) return candidates
+
+  const lats = entries.map(e => e.c[0])
+  const lngs = entries.map(e => e.c[1])
+  const midLat = (Math.min(...lats) + Math.max(...lats)) / 2
+  const midLng = (Math.min(...lngs) + Math.max(...lngs)) / 2
+
+  switch (direction) {
+    case 'north': return entries.filter(e => e.c[0] >= midLat).map(e => e.zone)
+    case 'south': return entries.filter(e => e.c[0] <= midLat).map(e => e.zone)
+    case 'east':  return entries.filter(e => e.c[1] >= midLng).map(e => e.zone)
+    case 'west':  return entries.filter(e => e.c[1] <= midLng).map(e => e.zone)
+    case 'central':
+    case 'not_too_peripheral': {
+      const meanLat = lats.reduce((a, b) => a + b, 0) / lats.length
+      const meanLng = lngs.reduce((a, b) => a + b, 0) / lngs.length
+      const dists = entries.map(e => haversineM(e.c[0], e.c[1], meanLat, meanLng))
+      const maxDist = Math.max(...dists)
+      const threshold = maxDist * (direction === 'central' ? 0.50 : 0.65)
+      return entries.filter((_, i) => dists[i] <= threshold).map(e => e.zone)
+    }
+    default: return candidates
+  }
 }
 
 /**
@@ -275,9 +317,12 @@ export function resolveConstraints(
   }
 
   // ── Step 2: build candidate IRIS pool from primary zones ──────────────────
-  let candidates: GeoZone[] = primaryConstraints.flatMap((c) =>
-    c.zoneId ? getIrisInZone(c.zoneId, iris, quartiers) : []
-  )
+  // Apply directional filter per zone if specified (e.g. "Paris 16 nord").
+  let candidates: GeoZone[] = primaryConstraints.flatMap((c) => {
+    if (!c.zoneId) return []
+    const zoneIris = getIrisInZone(c.zoneId, iris, quartiers)
+    return c.direction ? filterIrisByDirection(zoneIris, c.direction) : zoneIris
+  })
   // Deduplicate
   const seen = new Set<string>()
   candidates = candidates.filter((z) => (seen.has(z.id) ? false : (seen.add(z.id), true)))

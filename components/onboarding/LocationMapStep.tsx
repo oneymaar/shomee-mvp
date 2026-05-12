@@ -86,15 +86,18 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, selectedIrisIds.length])
 
-  // Eager-load IRIS for transport_line constraints ("Paris 11 proche ligne 1").
-  // Unlike transport_station/semantic_neighborhood (hasFineConstraint→zoom 15),
-  // transport_line queries open at arrondissement zoom with the full arr pre-selected.
-  // Without this trigger the selection would only narrow when the user manually zooms
-  // to 15. With it, resolveConstraints runs immediately and shows the partial state.
+  // Eager-load IRIS for transport_line and directional constraints.
+  // "Paris 11 proche ligne 1" and "Paris 16 nord" both require IRIS to produce
+  // the correct partial selection — without eager loading the full arrondissement
+  // would appear selected until the user manually zoomed to 15.
   useEffect(() => {
     if (loading || irisLoading || iris.length > 0) return
     const geoC = locationIntent?.geoConstraints ?? []
-    if (!geoC.some(c => c.type === 'transport_line')) return
+    const needsIris = geoC.some(c =>
+      c.type === 'transport_line' ||
+      (c.type === 'administrative_area' && c.direction)
+    )
+    if (!needsIris) return
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading])

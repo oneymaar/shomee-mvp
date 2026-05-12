@@ -143,6 +143,31 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
       return
     }
 
+    if (analysis.status === 'contradictory') {
+      setUi({
+        kind: 'clarification',
+        analysis: {
+          ...analysis,
+          clarificationQuestion: analysis.clarificationQuestion
+            ?? "Ces contraintes semblent incompatibles. Que souhaitez-vous privilégier ?",
+        },
+      })
+      return
+    }
+
+    if (analysis.status === 'too_vague') {
+      setUi({
+        kind: 'clarification',
+        analysis: {
+          ...analysis,
+          clarificationQuestion: analysis.clarificationQuestion
+            ?? "Pouvez-vous préciser un secteur géographique de départ ?",
+        },
+      })
+      return
+    }
+
+    // ambiguous or unhandled
     setUi({ kind: 'clarification', analysis })
   }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery])
 
