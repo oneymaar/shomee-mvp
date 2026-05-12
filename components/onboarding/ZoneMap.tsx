@@ -377,7 +377,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickArr,
     visible: showTopLevel,
     styleKey: parisStyleKey,
-    showLabels: showTopLevel && zoom >= 11,
+    showLabels: false,
     clickable: true,
   })
 
@@ -389,7 +389,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickCommune,
     visible: showCommunes,
     styleKey: communeStyleKey,
-    showLabels: zoom >= 11,
+    showLabels: false,
     clickable: true,
   })
 
@@ -406,7 +406,7 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showQuartier,
     styleKey: quartierStyleKey,
     // Labels only in the natural quartier zoom range — not when force-shown by sticky selection
-    showLabels: zoom >= 13 && zoom <= 14,
+    showLabels: false,
     // Non-interactive when sticky-shown outside natural range (lets arr clicks through)
     clickable: quartierNatural,
   })
