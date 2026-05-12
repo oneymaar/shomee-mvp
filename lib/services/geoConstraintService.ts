@@ -318,10 +318,17 @@ export function resolveConstraints(
 
   // ── Step 2: build candidate IRIS pool from primary zones ──────────────────
   // Apply directional filter per zone if specified (e.g. "Paris 16 nord").
+  // Track whether any directional filter was applied so wasNarrowed is set
+  // correctly even when there are no secondary constraints.
+  let directionallyFiltered = false
   let candidates: GeoZone[] = primaryConstraints.flatMap((c) => {
     if (!c.zoneId) return []
     const zoneIris = getIrisInZone(c.zoneId, iris, quartiers)
-    return c.direction ? filterIrisByDirection(zoneIris, c.direction) : zoneIris
+    if (c.direction) {
+      directionallyFiltered = true
+      return filterIrisByDirection(zoneIris, c.direction)
+    }
+    return zoneIris
   })
   // Deduplicate
   const seen = new Set<string>()
@@ -373,7 +380,11 @@ export function resolveConstraints(
     }
   }
 
-  const wasNarrowed = narrowed.length > 0 && narrowed.length < candidates.length
+  // wasNarrowed is true when secondary constraints or directional filtering reduced
+  // the pool (directional applies to the primary pool so narrowed.length === candidates.length,
+  // but the selection is still narrower than the full zone).
+  const wasNarrowed = narrowed.length > 0 &&
+    (directionallyFiltered || narrowed.length < candidates.length)
 
   return {
     irisIds: narrowed.length > 0 ? narrowed.map((z) => z.id) : [],
