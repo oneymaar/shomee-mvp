@@ -177,6 +177,16 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     setLoading(true)
     setError(null)
 
+    // Always start fresh — any selections in the store belong to a previous query.
+    // Without this, initialStateRef would capture stale values and the reset button
+    // would restore to an older session's output instead of the current one.
+    useSearchStore.setState({
+      selectedArrIds: [],
+      selectedQuartierIds: [],
+      selectedIrisIds: [],
+      selectedCommuneIds: [],
+    })
+
     try {
       const intent = locationIntent ?? parseLocationIntent(locationQuery)
       // locationQuery = centerQuery from clarification (or original user query)
@@ -307,7 +317,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           }
         }
 
-        if (selectedArrIds.length === 0 && selectedCommuneIds.length === 0 && (newArrIds.length > 0 || newCommuneIds.length > 0)) {
+        if (newArrIds.length > 0 || newCommuneIds.length > 0) {
           useSearchStore.setState({
             selectedArrIds: newArrIds,
             selectedQuartierIds: newQuartierIds,
