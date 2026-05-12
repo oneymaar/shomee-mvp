@@ -105,6 +105,29 @@ interface GeoLayerConfig {
   clickable: boolean
 }
 
+/**
+ * Toggle pointer-events on a GeoJSON layer's SVG paths.
+ *
+ * L.Path.setStyle({ interactive:false }) only sets the SVG *attribute*
+ * pointer-events:none, but the CSS class `leaflet-interactive` remains,
+ * which overrides the attribute (CSS > SVG presentation attributes).
+ * We must remove the class AND set the attribute to really disable clicks.
+ */
+function applyInteractive(layer: L.GeoJSON, clickable: boolean) {
+  layer.eachLayer((l) => {
+    if (!(l instanceof L.Path)) return
+    const path = (l as unknown as { _path?: SVGElement })._path
+    if (!path) return
+    if (clickable) {
+      path.removeAttribute('pointer-events')
+      path.classList.add('leaflet-interactive')
+    } else {
+      path.setAttribute('pointer-events', 'none')
+      path.classList.remove('leaflet-interactive')
+    }
+  })
+}
+
 function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
   const layerRef = useRef<L.GeoJSON | null>(null)
   const labelsRef = useRef<L.Marker[]>([])
@@ -128,6 +151,9 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
         },
         onEachFeature: (f, l) => {
           l.on('click', (e) => {
+            // Guard: if this layer is not in its interactive zoom range, let
+            // the click fall through to the layer underneath.
+            if (!cfgRef.current.clickable) return
             L.DomEvent.stopPropagation(e)
             const zone = cfg.zones.find((z) => z.id === f.properties?._zoneId)
             if (zone) cfgRef.current.onClick(zone)
@@ -137,13 +163,9 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     )
     if (cfg.visible) {
       layer.addTo(map)
-      // Apply interactive state immediately — Effect 4 won't re-run if clickable
-      // didn't change since last render (same value, different layer instance).
-      if (!cfgRef.current.clickable) {
-        layer.eachLayer((l) => {
-          if (l instanceof L.Path) l.setStyle({ interactive: false })
-        })
-      }
+      // Immediately enforce interactive state — Effect 4 won't re-run when
+      // cfg.clickable didn't change in value (new layer, same zoom range).
+      applyInteractive(layer, cfgRef.current.clickable)
     }
     layerRef.current = layer
     rebuildLabels(layer, cfg.zones)
@@ -195,14 +217,13 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
   }, [cfg.visible, cfg.showLabels, map])
 
   // ── Effect 4: toggle pointer-events when clickable changes ────────────────
-  // L.Path.setStyle({ interactive }) propagates to SVG pointer-events attribute.
-  // false → pointer-events:none → clicks fall through to layers underneath.
+  // Uses applyInteractive() which removes the leaflet-interactive CSS class
+  // AND sets pointer-events:none — both are required because CSS overrides
+  // the SVG presentation attribute if the class is still present.
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
-    layer.eachLayer((l) => {
-      if (l instanceof L.Path) l.setStyle({ interactive: cfg.clickable })
-    })
+    applyInteractive(layer, cfg.clickable)
   }, [cfg.clickable])
 
   function rebuildLabels(layer: L.GeoJSON, zones: GeoZone[]) {
