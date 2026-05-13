@@ -405,6 +405,14 @@ function normalizeNearToInside(
 
   return constraints.map(c => {
     if (c.operator !== 'near') return c
+
+    // administrative_area "near" is semantically invalid (you can't be "near" an arrondissement).
+    // The LLM sometimes generates it when a station name is mapped to its arrondissement context.
+    // Always convert to "inside" so the zone contributes to the union pool.
+    if (c.type === 'administrative_area' && c.zoneId) {
+      return { ...c, operator: 'inside' as ConstraintOperator }
+    }
+
     const isNbhd = c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)
     const isStation = c.type === 'transport_station'
     if (!isNbhd && !isStation) return c  // transport_line: always a filter

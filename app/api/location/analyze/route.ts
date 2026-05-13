@@ -217,10 +217,14 @@ STRATÉGIES DE RÉSOLUTION
 DÉSAMBIGUÏSATION GÉOGRAPHIQUE CRITIQUE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "Neuilly" contexte ouest → Neuilly-sur-Seine (92050), JAMAIS Neuilly-Plaisance
-"Daumesnil" seul → TOUJOURS Paris 12 (station lignes 6/8), JAMAIS Vincennes
+"Daumesnil" → {type:"transport_station", stationName:"Daumesnil"} OU {type:"semantic_neighborhood", neighborhoodId:"daumesnil"} — JAMAIS {type:"administrative_area", zoneId:"arr-12"}. Le "Paris 12" sert uniquement à éviter la confusion avec Vincennes (banlieue).
 "Le Marais" → quartier Paris 3/4e, JAMAIS une rue
 "Saint-Denis" → Saint-Denis (93), JAMAIS Saint-Denis-de-la-Réunion
-Station seule → TOUJOURS arrondissement parisien, JAMAIS commune de banlieue
+Station → TOUJOURS dans un arrondissement parisien, JAMAIS commune de banlieue
+
+RÈGLE CRITIQUE — operator:"near" avec administrative_area est INTERDIT.
+Un administrative_area doit TOUJOURS avoir operator:"inside" ou operator:"exclude".
+Ne jamais écrire {type:"administrative_area", operator:"near"} — c'est sémantiquement invalide.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FORMAT DE SORTIE OBLIGATOIRE
@@ -232,11 +236,13 @@ Champs geoConstraints — opérateur selon intention :
 - "near"    → proximité transport/POI
 - "exclude" → zone exclue ("sauf", "mais pas")
 
-STATION SEULE avec direction comme "métro" ou "station" :
-  → TOUJOURS deux contraintes : administrative_area(arrondissement) + transport_station(nom)
+STATION SEULE (seule entité dans la requête, préfixe "métro"/"station") :
+  → DEUX contraintes : administrative_area(arrondissement, inside) + transport_station(nom, near)
+STATION EN ADDITION avec d'autres zones ("et", ",", "+") :
+  → UNIQUEMENT transport_station(nom, inside) — NE PAS ajouter l'administrative_area de son arrondissement
 
 ZONE + transport_line :
-  → administrative_area(zoneId) + transport_line(line)
+  → administrative_area(zoneId, inside) + transport_line(line, near)
 
 ZONE DIRECTIONNELLE :
   → administrative_area(zoneId, direction: "north"|"south"|...) seulement
