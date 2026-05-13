@@ -182,11 +182,19 @@ Exemples de vraies contradictions : two zones géographiquement opposées avec u
 En cas de doute → status "clear" avec les contraintes telles quelles.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CAS AMBIGUS : STATION VS QUARTIER
+STATION VS QUARTIER — RÈGLE DE PRIORITÉ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Nom seul pouvant être station ET quartier (Pigalle, Oberkampf, Nation, Gambetta…) → status "ambiguous", proposer 2 options.
-Préfixe "métro/RER/tram/station" → station sans ambiguïté.
-Préfixe "quartier/village" → quartier/semantic_neighborhood sans ambiguïté.
+Nom seul (sans préfixe) → TOUJOURS semantic_neighborhood, même si ce nom est aussi une station.
+→ "Pigalle" → semantic_neighborhood  → "Daumesnil" → semantic_neighborhood
+→ "Bastille" → semantic_neighborhood  → "Bercy" → semantic_neighborhood
+→ "Nation" → semantic_neighborhood    → "Ternes" → semantic_neighborhood
+→ Ne JAMAIS répondre status:"ambiguous" pour ces noms — choisir le quartier directement.
+
+Préfixe "métro" / "metro" / "station" → TOUJOURS transport_station, sans ambiguïté.
+→ "métro Pigalle" → transport_station  → "metro Daumesnil" → transport_station
+→ "station Nation" → transport_station
+
+Préfixe "quartier" / "village" → semantic_neighborhood sans ambiguïté.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LIFESTYLE / AMBIANCE

@@ -188,13 +188,13 @@ export function recognizeLocationEntity(
   }
 
   // 4. Direct normalized match in both DBs
+  // When both a station and a neighborhood match, prefer the neighborhood —
+  // the user can always specify "métro X" to get the station explicitly.
   const qNorm = norm(q)
   const stMatch = stationByNorm.get(qNorm)
   const nbMatch = neighborhoodByNorm.get(qNorm)
 
-  if (stMatch && nbMatch) {
-    return [buildStation(stMatch, 0.85), buildNeighborhood(nbMatch, 0.85)]
-  }
+  if (stMatch && nbMatch) return buildNeighborhood(nbMatch, 0.90)
   if (stMatch) return buildStation(stMatch, 0.9)
   if (nbMatch) return buildNeighborhood(nbMatch, 0.9)
 
