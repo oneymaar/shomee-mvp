@@ -357,39 +357,71 @@ function selectIntermediateArea(
 // ─── Operator normalization ────────────────────────────────────────────────
 
 /**
- * Convert semantic_neighborhood operator from "near" → "inside" when the
- * neighborhood doesn't spatially overlap with any "inside" admin area.
+ * Convert "near" → "inside" for neighborhoods AND transport stations when the
+ * entity doesn't spatially overlap with the pool built from all "inside" constraints.
  *
- * Why: the LLM sometimes generates operator:"near" for neighborhoods even in
- * addition context (e.g. "Batignolles et Paris 18e" → {batignolles, near}).
- * When the neighborhood is outside the admin area, treating it as a filter
- * yields zero intersection and silently drops it. Converting to "inside"
- * restores the intended union semantics.
+ * Why: the LLM often generates operator:"near" for neighborhoods and stations
+ * even in addition context. When the entity is geographically outside the existing
+ * union pool, treating it as a filter yields zero intersection and silently drops
+ * it. Converting to "inside" restores the intended union semantics.
  *
- * Transport constraints (transport_line, transport_station) are never
- * converted — they are always proximity anchors, not areas to live in.
+ * Examples that benefit:
+ *   "métro Nation et Batignolles"     → Nation (near) far from Batignolles → inside
+ *   "Batignolles et Paris 18e"        → Batignolles (near) outside arr-18 → inside
+ *   "Paris 12 proche métro Nation"    → Nation overlaps arr-12 → stays near (filter ✓)
+ *
+ * transport_line is never converted — lines are always proximity filters.
  */
-function normalizeNeighborhoodOps(
+function normalizeNearToInside(
   constraints: GeoConstraint[],
   iris: GeoZone[],
   quartiers: GeoZone[],
 ): GeoConstraint[] {
   if (!iris.length) return constraints
 
-  const adminIds = constraints
-    .filter(c => c.type === 'administrative_area' && c.operator === 'inside' && c.zoneId)
-    .map(c => c.zoneId as string)
-  if (adminIds.length === 0) return constraints
+  // Build reference pool from all "inside" constraints (admin + neighborhood + station)
+  const insideConstraints = constraints.filter(c => c.operator === 'inside')
+  if (insideConstraints.length === 0) return constraints // all "near" → standalone path handles union
 
-  const adminIris = adminIds.flatMap(id => getIrisInZone(id, iris, quartiers))
+  const refIds = new Set<string>()
+  const refIris: GeoZone[] = []
+
+  for (const c of insideConstraints) {
+    let zoneIris: GeoZone[] = []
+    if (c.type === 'administrative_area' && c.zoneId) {
+      zoneIris = getIrisInZone(c.zoneId, iris, quartiers)
+    } else if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
+      const n = resolveNeighborhoodCoords(c)
+      if (n) zoneIris = filterIrisByCoords(iris, n.lat, n.lng, c.radiusM ?? n.confidenceRadiusMeters)
+    } else if (c.type === 'transport_station') {
+      const name = c.stationName ?? c.label
+      const station = name ? findStation(name) : null
+      if (station) zoneIris = filterIrisByCoords(iris, station.lat, station.lng, c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M)
+    }
+    for (const z of zoneIris) if (!refIds.has(z.id)) { refIds.add(z.id); refIris.push(z) }
+  }
+
+  if (refIris.length === 0) return constraints
 
   return constraints.map(c => {
-    const isNeighborhood = c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)
-    if (!isNeighborhood || c.operator !== 'near') return c
-    const n = resolveNeighborhoodCoords(c)
-    if (!n) return c
-    const radius = c.radiusM ?? n.confidenceRadiusMeters
-    const overlaps = filterIrisByCoords(adminIris, n.lat, n.lng, radius).length > 0
+    if (c.operator !== 'near') return c
+    const isNbhd = c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)
+    const isStation = c.type === 'transport_station'
+    if (!isNbhd && !isStation) return c  // transport_line: always a filter
+
+    let entityLat: number, entityLng: number, entityRadius: number
+    if (isNbhd) {
+      const n = resolveNeighborhoodCoords(c)
+      if (!n) return c
+      entityLat = n.lat; entityLng = n.lng; entityRadius = c.radiusM ?? n.confidenceRadiusMeters
+    } else {
+      const name = c.stationName ?? c.label
+      const station = name ? findStation(name) : null
+      if (!station) return c
+      entityLat = station.lat; entityLng = station.lng; entityRadius = c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
+    }
+
+    const overlaps = filterIrisByCoords(refIris, entityLat, entityLng, entityRadius).length > 0
     return overlaps ? c : { ...c, operator: 'inside' as ConstraintOperator }
   })
 }
@@ -427,9 +459,9 @@ export function resolveConstraints(
     if (result.wasNarrowed) return result
   }
 
-  // ── Normalize: "near" neighborhood outside admin area → "inside" ───────────
-  // Handles LLM defaulting to "near" for neighborhoods in addition context.
-  const normalized = normalizeNeighborhoodOps(constraints, iris, quartiers)
+  // ── Normalize: "near" entity outside the existing union pool → "inside" ────
+  // Handles LLM defaulting to "near" for neighborhoods/stations in addition context.
+  const normalized = normalizeNearToInside(constraints, iris, quartiers)
 
   // ── Partition by operation ─────────────────────────────────────────────────
   const includeConstraints = normalized.filter(c => c.operator === 'inside')
