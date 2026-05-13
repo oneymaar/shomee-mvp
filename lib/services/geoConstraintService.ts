@@ -206,8 +206,16 @@ function resolveNeighborhoodCoords(c: GeoConstraint): { lat: number; lng: number
   const n = c.neighborhoodId
     ? findNeighborhoodById(c.neighborhoodId)
     : c.label ? matchNeighborhood(c.label) : null
-  if (!n) return null
-  return { lat: n.center.lat, lng: n.center.lng, id: n.id, confidenceRadiusMeters: n.confidenceRadiusMeters, maxSelectedIris: n.maxSelectedIris, label: n.label }
+  if (n) return { lat: n.center.lat, lng: n.center.lng, id: n.id, confidenceRadiusMeters: n.confidenceRadiusMeters, maxSelectedIris: n.maxSelectedIris, label: n.label }
+
+  // Fallback: name might be in the station DB but absent from semanticNeighborhoods.json
+  // (e.g. Daumesnil, Bastille, Nation, République — listed in the prompt but not yet in the JSON).
+  const stationName = c.stationName ?? c.label
+  if (stationName) {
+    const station = findStation(stationName)
+    if (station) return { lat: station.lat, lng: station.lng, id: stationName, confidenceRadiusMeters: DEFAULT_TRANSPORT_RADIUS_M, label: station.name }
+  }
+  return null
 }
 
 /**
