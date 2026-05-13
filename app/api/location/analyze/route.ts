@@ -204,6 +204,43 @@ Expressions d'ambiance SANS zone géographique → status "too_vague".
 Expressions d'ambiance AVEC zone → status "clear" ou "ambiguous", conserver comme inferredConstraints.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIEUX D'INTÉRÊT, VOIES ET ÉQUIPEMENTS (type "poi")
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Utiliser type:"poi" pour tout lieu qui n'est pas un arrondissement, une commune, un quartier vécu ou une station de transport.
+TOUJOURS inclure le champ "poiType" pour calibrer le rayon de recherche côté résolveur.
+
+Valeurs de poiType :
+  park / garden    → parcs, jardins, squares, bois
+  landmark         → monuments, statues, places publiques, édifices emblématiques
+  avenue / boulevard / street → voies (avenue, boulevard, rue, allée)
+  museum           → musées, centres culturels
+  market           → marchés couverts ou en plein air
+  mairie           → mairies, hôtels de ville
+  school / hospital → équipements publics
+  poi              → fallback générique
+
+Exemples :
+"Parc Montsouris"    → {type:"poi", label:"Parc Montsouris", poiType:"park", operator:"inside", confidence:0.9}
+"Arc de Triomphe"    → {type:"poi", label:"Arc de Triomphe", poiType:"landmark", operator:"inside", confidence:0.9}
+"Champs-Élysées"     → {type:"poi", label:"Champs-Élysées", poiType:"avenue", operator:"inside", confidence:0.9}
+"Rue des Martyrs"    → {type:"poi", label:"Rue des Martyrs", poiType:"street", operator:"inside", confidence:0.9}
+"Marché d'Aligre"    → {type:"poi", label:"Marché d'Aligre", poiType:"market", operator:"inside", confidence:0.9}
+"Mairie du 12e"      → {type:"poi", label:"Mairie du 12e arrondissement", poiType:"mairie", operator:"inside", confidence:0.9}
+"Musée d'Orsay"      → {type:"poi", label:"Musée d'Orsay", poiType:"museum", operator:"inside", confidence:0.9}
+"Père Lachaise"      → {type:"poi", label:"Cimetière du Père Lachaise", poiType:"park", operator:"inside", confidence:0.9}
+
+Combinaisons avec d'autres zones → operator:"inside" pour chaque entité (union) :
+"Paris 14e proche Parc Montsouris"
+  → [{type:"administrative_area", zoneId:"arr-14", operator:"inside"},
+     {type:"poi", label:"Parc Montsouris", poiType:"park", operator:"near"}]
+"Canal Saint-Martin et Rue de la République"
+  → [{type:"semantic_neighborhood", neighborhoodId:"canal_saint_martin", operator:"inside"},
+     {type:"poi", label:"Rue de la République", poiType:"street", operator:"inside"}]
+
+resolutionStrategy : "point_radius_intersection" pour un POI seul.
+mapAction.centerQuery : le nom exact du lieu pour centrer la carte.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 LIGNE DE MÉTRO SEULE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "proche ligne 1" sans zone → trop large → status "ambiguous" avec options de secteur.
@@ -287,7 +324,8 @@ Retourne exactement ce JSON (sans markdown, sans commentaires) :
       "zoneId": string|null,
       "line": string|null,
       "stationName": string|null,
-      "direction": "north"|"south"|"east"|"west"|"central"|"not_too_peripheral"|null
+      "direction": "north"|"south"|"east"|"west"|"central"|"not_too_peripheral"|null,
+      "poiType": "park"|"garden"|"landmark"|"monument"|"avenue"|"boulevard"|"street"|"market"|"mairie"|"school"|"hospital"|"museum"|"poi"|null
     }
   ],
   "resolutionStrategy": "direct_area_selection"|"semantic_neighborhood_selection"|"point_radius_intersection"|"transport_line_intersection"|"directional_area_slice"|"exclude_from_area"|"between_entities"|"ask_clarification",

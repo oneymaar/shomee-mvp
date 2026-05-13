@@ -50,6 +50,20 @@ export interface GeoConstraint {
   poiType?: string
   radiusM?: number
   direction?: string
+  lat?: number    // geocoded coordinates — injected before resolver for type "poi"
+  lng?: number
+}
+
+// ─── POI radius defaults by sub-type ───────────────────────────────────────
+
+export const POI_TYPE_RADII: Record<string, number> = {
+  park: 700, garden: 600, landmark: 600, monument: 500,
+  street: 400, avenue: 500, boulevard: 600,
+  market: 400, mairie: 450, school: 400, hospital: 700, museum: 500,
+}
+
+export function poiRadius(poiType?: string | null): number {
+  return (poiType && POI_TYPE_RADII[poiType]) || 500
 }
 
 export interface ConstraintResolutionResult {
@@ -251,6 +265,10 @@ function resolveInsideToIris(
     return filterIrisByCoords(iris, station.lat, station.lng, radius)
   }
 
+  if (c.type === 'poi' && c.lat !== undefined && c.lng !== undefined) {
+    return filterIrisByCoords(iris, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
+  }
+
   return []
 }
 
@@ -405,6 +423,8 @@ function normalizeNearToInside(
       const name = c.stationName ?? c.label
       const station = name ? findStation(name) : null
       if (station) zoneIris = filterIrisByCoords(iris, station.lat, station.lng, c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M)
+    } else if (c.type === 'poi' && c.lat !== undefined && c.lng !== undefined) {
+      zoneIris = filterIrisByCoords(iris, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
     }
     for (const z of zoneIris) if (!refIds.has(z.id)) { refIds.add(z.id); refIris.push(z) }
   }
@@ -423,18 +443,23 @@ function normalizeNearToInside(
 
     const isNbhd = c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)
     const isStation = c.type === 'transport_station'
-    if (!isNbhd && !isStation) return c  // transport_line: always a filter
+    const isPoi = c.type === 'poi' && c.lat !== undefined && c.lng !== undefined
+    if (!isNbhd && !isStation && !isPoi) return c  // transport_line: always a filter
 
     let entityLat: number, entityLng: number, entityRadius: number
-    if (isNbhd) {
+    if (isPoi) {
+      entityLat = c.lat!; entityLng = c.lng!; entityRadius = c.radiusM ?? poiRadius(c.poiType)
+    } else if (isNbhd) {
       const n = resolveNeighborhoodCoords(c)
       if (!n) return c
       entityLat = n.lat; entityLng = n.lng; entityRadius = c.radiusM ?? n.confidenceRadiusMeters
-    } else {
+    } else if (isStation) {
       const name = c.stationName ?? c.label
       const station = name ? findStation(name) : null
       if (!station) return c
       entityLat = station.lat; entityLng = station.lng; entityRadius = c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
+    } else {
+      return c
     }
 
     const overlaps = filterIrisByCoords(refIris, entityLat, entityLng, entityRadius).length > 0
@@ -538,6 +563,13 @@ export function resolveConstraints(
           }
           standaloneLabels.push(name)
         }
+      }
+      if (c.type === 'poi' && c.lat !== undefined && c.lng !== undefined) {
+        const radius = c.radiusM ?? poiRadius(c.poiType)
+        for (const z of filterIrisByCoords(iris, c.lat, c.lng, radius)) {
+          if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
+        }
+        standaloneLabels.push(c.label)
       }
     }
 

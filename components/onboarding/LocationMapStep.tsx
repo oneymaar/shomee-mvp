@@ -9,7 +9,7 @@ import { findStation } from '@/lib/services/metroStationsDb'
 import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
 import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
-import { resolveConstraints } from '@/lib/services/geoConstraintService'
+import { resolveConstraints, poiRadius } from '@/lib/services/geoConstraintService'
 import { useSearchStore } from '@/lib/searchStore'
 
 const ZoneMap = dynamic(() => import('./ZoneMap'), {
@@ -277,9 +277,26 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         }
       }
 
-      const enrichedIntent = enrichedConstraints !== (intent.geoConstraints ?? [])
-        ? { ...intent, geoConstraints: enrichedConstraints }
-        : intent
+      // ── POI geocoding ─────────────────────────────────────────────────────
+      // For poi constraints without coordinates, geocode via BAN/Nominatim.
+      // Must happen before enrichedIntent is computed so the store gets lat/lng.
+      const poiCs = enrichedConstraints.filter(c => c.type === 'poi' && c.lat === undefined)
+      if (poiCs.length > 0) {
+        const geocodeResults = await Promise.allSettled(poiCs.map(c => geocodeBest(c.label)))
+        enrichedConstraints = enrichedConstraints.map(c => {
+          if (c.type !== 'poi' || c.lat !== undefined) return c
+          const idx = poiCs.findIndex(pc => pc.label === c.label && pc.operator === c.operator)
+          const r = geocodeResults[idx]
+          if (r.status === 'fulfilled' && r.value) {
+            const { lat, lng } = r.value
+            const inIdf = lat >= 48.1 && lat <= 49.2 && lng >= 1.4 && lng <= 3.7
+            if (inIdf) return { ...c, lat, lng, radiusM: c.radiusM ?? poiRadius(c.poiType) }
+          }
+          return c
+        })
+      }
+
+      const enrichedIntent = { ...intent, geoConstraints: enrichedConstraints }
 
       if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
         const geo = geocodeResult.value
@@ -302,9 +319,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       }
 
       // ── Fine constraint detection ─────────────────────────────────────────
-      // Station, semantic neighborhood, or between-entities → IRIS zoom, no arr pre-selection
+      // Station, semantic neighborhood, POI, or between-entities → IRIS zoom, no arr pre-selection
       const hasFineConstraint = enrichedConstraints.some(
-        (c) => (c.type === 'transport_station' || c.type === 'semantic_neighborhood') && c.confidence >= 0.75
+        (c) => (c.type === 'transport_station' || c.type === 'semantic_neighborhood' || c.type === 'poi') && c.confidence >= 0.75
       ) || enrichedConstraints.some(c => c.operator === 'between')
 
       if (hasFineConstraint) {
@@ -317,12 +334,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           selectedCommuneIds: [],
         })
 
-        // Safety net: for station queries, also pin the center on the station
+        // Center on station or POI when no neighborhood matched
         if (!neighborhoodMatch) {
           const stationC = enrichedConstraints.find((c) => c.type === 'transport_station' && c.stationName)
+          const poiC = enrichedConstraints.find(c => c.type === 'poi' && c.lat !== undefined)
           if (stationC?.stationName) {
             const station = findStation(stationC.stationName)
             if (station) setCenter([station.lat, station.lng])
+          } else if (poiC?.lat !== undefined && poiC?.lng !== undefined) {
+            setCenter([poiC.lat, poiC.lng])
           }
         }
 
