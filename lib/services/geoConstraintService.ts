@@ -224,7 +224,7 @@ function resolveInsideToIris(
     return c.direction ? filterIrisByDirection(zoneIris, c.direction) : zoneIris
   }
 
-  if (c.type === 'semantic_neighborhood') {
+  if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
     const n = resolveNeighborhoodCoords(c)
     if (!n) return []
     const radius = c.radiusM ?? n.confidenceRadiusMeters
@@ -384,7 +384,8 @@ function normalizeNeighborhoodOps(
   const adminIris = adminIds.flatMap(id => getIrisInZone(id, iris, quartiers))
 
   return constraints.map(c => {
-    if (c.type !== 'semantic_neighborhood' || c.operator !== 'near') return c
+    const isNeighborhood = c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)
+    if (!isNeighborhood || c.operator !== 'near') return c
     const n = resolveNeighborhoodCoords(c)
     if (!n) return c
     const radius = c.radiusM ?? n.confidenceRadiusMeters
@@ -469,7 +470,7 @@ export function resolveConstraints(
     const standaloneLabels: string[] = []
 
     for (const c of filterConstraints) {
-      if (c.type === 'semantic_neighborhood') {
+      if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
         const n = resolveNeighborhoodCoords(c)
         if (n) {
           const radius = c.radiusM ?? n.confidenceRadiusMeters
@@ -514,7 +515,7 @@ export function resolveConstraints(
         filtered = filterIrisByStation(narrowed, name, c.radiusM)
         if (filtered.length > 0) summary.push(`proche ${name}`)
       }
-    } else if (c.type === 'semantic_neighborhood') {
+    } else if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
       const n = resolveNeighborhoodCoords(c)
       if (n) {
         const radius = c.radiusM ?? n.confidenceRadiusMeters

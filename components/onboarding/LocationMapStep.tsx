@@ -255,10 +255,16 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // the LLM's geoConstraints. If a neighborhood is found, inject its constraints
       // so resolveConstraints can narrow to the relevant IRIS zone (not the full arr).
       const neighborhoodMatch = matchNeighborhood(locationQuery)
-      let enrichedConstraints = intent.geoConstraints ?? []
+      // Normalize any residual "neighborhood" type (LLM sometimes confuses explicitLocations
+      // type "neighborhood" with geoConstraints type "semantic_neighborhood").
+      let enrichedConstraints = (intent.geoConstraints ?? []).map(c =>
+        c.type === ('neighborhood' as typeof c.type) ? { ...c, type: 'semantic_neighborhood' as typeof c.type } : c
+      )
 
       if (neighborhoodMatch) {
-        const alreadyHasNeighborhood = enrichedConstraints.some((c) => c.type === 'semantic_neighborhood')
+        const alreadyHasNeighborhood = enrichedConstraints.some(
+          (c) => c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as typeof c.type)
+        )
         if (!alreadyHasNeighborhood) {
           // Drop any LLM-provided administrative_area: resolveConstraints will use the
           // no-primary-zone path and scan all loaded IRIS by radius from the neighborhood

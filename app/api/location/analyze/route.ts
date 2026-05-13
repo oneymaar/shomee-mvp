@@ -356,6 +356,13 @@ RÈGLES clarification (status ≠ "clear") :
     if (!match) return NextResponse.json({ error: 'no JSON in response' }, { status: 500 })
 
     const analysis = JSON.parse(match[0])
+    // Normalize: LLM sometimes generates type:"neighborhood" (explicitLocations convention)
+    // instead of type:"semantic_neighborhood" (geoConstraints convention). Fix at source.
+    if (Array.isArray(analysis.geoConstraints)) {
+      analysis.geoConstraints = analysis.geoConstraints.map((c: Record<string, unknown>) =>
+        c.type === 'neighborhood' ? { ...c, type: 'semantic_neighborhood' } : c
+      )
+    }
     return NextResponse.json(analysis)
   } catch (e) {
     console.error('Location analyze route error:', e)
