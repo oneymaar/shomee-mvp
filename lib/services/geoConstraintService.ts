@@ -354,6 +354,45 @@ function selectIntermediateArea(
   }
 }
 
+// ─── Operator normalization ────────────────────────────────────────────────
+
+/**
+ * Convert semantic_neighborhood operator from "near" → "inside" when the
+ * neighborhood doesn't spatially overlap with any "inside" admin area.
+ *
+ * Why: the LLM sometimes generates operator:"near" for neighborhoods even in
+ * addition context (e.g. "Batignolles et Paris 18e" → {batignolles, near}).
+ * When the neighborhood is outside the admin area, treating it as a filter
+ * yields zero intersection and silently drops it. Converting to "inside"
+ * restores the intended union semantics.
+ *
+ * Transport constraints (transport_line, transport_station) are never
+ * converted — they are always proximity anchors, not areas to live in.
+ */
+function normalizeNeighborhoodOps(
+  constraints: GeoConstraint[],
+  iris: GeoZone[],
+  quartiers: GeoZone[],
+): GeoConstraint[] {
+  if (!iris.length) return constraints
+
+  const adminIds = constraints
+    .filter(c => c.type === 'administrative_area' && c.operator === 'inside' && c.zoneId)
+    .map(c => c.zoneId as string)
+  if (adminIds.length === 0) return constraints
+
+  const adminIris = adminIds.flatMap(id => getIrisInZone(id, iris, quartiers))
+
+  return constraints.map(c => {
+    if (c.type !== 'semantic_neighborhood' || c.operator !== 'near') return c
+    const n = resolveNeighborhoodCoords(c)
+    if (!n) return c
+    const radius = c.radiusM ?? n.confidenceRadiusMeters
+    const overlaps = filterIrisByCoords(adminIris, n.lat, n.lng, radius).length > 0
+    return overlaps ? c : { ...c, operator: 'inside' as ConstraintOperator }
+  })
+}
+
 // ─── Main resolver ─────────────────────────────────────────────────────────
 
 /**
@@ -387,10 +426,14 @@ export function resolveConstraints(
     if (result.wasNarrowed) return result
   }
 
+  // ── Normalize: "near" neighborhood outside admin area → "inside" ───────────
+  // Handles LLM defaulting to "near" for neighborhoods in addition context.
+  const normalized = normalizeNeighborhoodOps(constraints, iris, quartiers)
+
   // ── Partition by operation ─────────────────────────────────────────────────
-  const includeConstraints = constraints.filter(c => c.operator === 'inside')
-  const filterConstraints  = constraints.filter(c => c.operator === 'near' || c.operator === 'around')
-  const excludeConstraints = constraints.filter(c => c.operator === 'exclude')
+  const includeConstraints = normalized.filter(c => c.operator === 'inside')
+  const filterConstraints  = normalized.filter(c => c.operator === 'near' || c.operator === 'around')
+  const excludeConstraints = normalized.filter(c => c.operator === 'exclude')
 
   // Fallback zone IDs for map centering / zoom (admin areas only)
   const fallbackZoneIds = includeConstraints
@@ -417,8 +460,14 @@ export function resolveConstraints(
     if (zoneIris.length > 0) summary.push(c.label)
   }
 
-  // No "inside" constraints: handle standalone "near" queries (station-only / neighborhood-only)
+  // No "inside" constraints: union ALL "near" neighborhoods and stations independently.
+  // Multiple entities (e.g. "Batignolles et Aligre" both with operator:"near") are
+  // all resolved and unioned — not returned on first match.
   if (unionIris.length === 0) {
+    const standaloneIds = new Set<string>()
+    const standaloneIris: GeoZone[] = []
+    const standaloneLabels: string[] = []
+
     for (const c of filterConstraints) {
       if (c.type === 'semantic_neighborhood') {
         const n = resolveNeighborhoodCoords(c)
@@ -426,9 +475,8 @@ export function resolveConstraints(
           const radius = c.radiusM ?? n.confidenceRadiusMeters
           let nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
           if (n.maxSelectedIris) nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
-          if (nearIris.length > 0) {
-            return { irisIds: nearIris.map(z => z.id), fallbackZoneIds: [], matchSummary: [n.label], wasNarrowed: true }
-          }
+          for (const z of nearIris) if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
+          if (nearIris.length > 0) standaloneLabels.push(n.label)
         }
       }
       if (c.type === 'transport_station') {
@@ -436,12 +484,16 @@ export function resolveConstraints(
         const station = name ? findStation(name) : null
         if (station) {
           const radius = c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
-          const nearIris = filterIrisByCoords(iris, station.lat, station.lng, radius)
-          if (nearIris.length > 0) {
-            return { irisIds: nearIris.map(z => z.id), fallbackZoneIds: [], matchSummary: [`proche ${name}`], wasNarrowed: true }
+          for (const z of filterIrisByCoords(iris, station.lat, station.lng, radius)) {
+            if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
           }
+          standaloneLabels.push(name)
         }
       }
+    }
+
+    if (standaloneIris.length > 0) {
+      return { irisIds: standaloneIris.map(z => z.id), fallbackZoneIds: [], matchSummary: standaloneLabels, wasNarrowed: true }
     }
     return { irisIds: [], fallbackZoneIds, matchSummary: [], wasNarrowed: false }
   }

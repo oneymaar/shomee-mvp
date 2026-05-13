@@ -323,12 +323,29 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         setZoom(15) // triggers loadIris via useEffect([zoom])
       } else {
         const loadedCommunes = communesResult.status === 'fulfilled' ? communesResult.value : []
-        const matchedArrs = matchArrondissements(intent.location_terms, arrs)
-        const matchedComms = matchCommunes(intent.location_terms, loadedCommunes)
 
-        let newArrIds = matchedArrs.map((z) => z.id)
-        let newQuartierIds = matchedArrs.flatMap((z) => getChildQuartiers(z.id, qus).map((q) => q.id))
-        let newCommuneIds = matchedComms.map((z) => z.id)
+        // Prefer geoConstraints for admin zone selection — they come directly from the LLM
+        // and are authoritative. location_terms from preselectQueries is a less reliable
+        // fallback (can be incomplete for compound queries like "Paris 11 et Paris 12").
+        const adminInsideConstraints = enrichedConstraints.filter(
+          c => c.type === 'administrative_area' && c.operator === 'inside' && c.zoneId
+        )
+
+        let newArrIds: string[]
+        let newQuartierIds: string[]
+        let newCommuneIds: string[]
+
+        if (adminInsideConstraints.length > 0) {
+          newArrIds = adminInsideConstraints.filter(c => c.zoneId!.startsWith('arr-')).map(c => c.zoneId!)
+          newCommuneIds = adminInsideConstraints.filter(c => c.zoneId!.startsWith('com-')).map(c => c.zoneId!)
+          newQuartierIds = newArrIds.flatMap(id => getChildQuartiers(id, qus).map(q => q.id))
+        } else {
+          const matchedArrs = matchArrondissements(intent.location_terms, arrs)
+          const matchedComms = matchCommunes(intent.location_terms, loadedCommunes)
+          newArrIds = matchedArrs.map(z => z.id)
+          newQuartierIds = matchedArrs.flatMap(z => getChildQuartiers(z.id, qus).map(q => q.id))
+          newCommuneIds = matchedComms.map(z => z.id)
+        }
 
         // Safety net: if term matching failed but we have a station constraint, derive zone
         // from station coordinates (e.g. LLM returned "Vincennes" for "Daumesnil").
