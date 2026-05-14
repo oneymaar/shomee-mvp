@@ -269,6 +269,7 @@ interface GeoLayersProps {
   onClickCommune: (z: GeoZone) => void
   onClickCommuneIris: (z: GeoZone) => void
   irisLoading: boolean
+  showIrisNames?: boolean
   onZoomChange: (z: number) => void
 }
 
@@ -441,6 +442,26 @@ function GeoLayers(props: GeoLayersProps) {
     clickable: irisZoomHi,
   })
 
+  // ── IRIS name labels (debug / temporaire) ─────────────────────────────────
+  // Couche invisible géométriquement, labels uniquement sur les IRIS sélectionnés.
+  const { showIrisNames } = props
+  const selectedParisIris = useMemo(
+    () => parisIris.filter(i => selectedIrisIds.includes(i.id)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedIrisIds, parisIris]
+  )
+  useGeoLayer(map, {
+    zones: selectedParisIris,
+    getPathStyle: () => ({ opacity: 0, fillOpacity: 0, weight: 0 }),
+    getLabelState: () => 'selected',
+    fontSize: 10,
+    onClick: () => {},
+    visible: !!(showIrisNames && selectedParisIris.length > 0),
+    styleKey: selectedIrisIds.join(','),
+    showLabels: !!(showIrisNames && selectedParisIris.length > 0),
+    clickable: false,
+  })
+
   return null
 }
 
@@ -500,6 +521,8 @@ export interface ZoneMapProps {
   selectedIrisIds: string[]
   selectedCommuneIds: string[]
   irisLoading: boolean
+  /** Affiche le nom de chaque IRIS sélectionné au centre de son polygone */
+  showIrisNames?: boolean
   onClickArr: (z: GeoZone) => void
   onClickQuartier: (z: GeoZone) => void
   onClickIris: (z: GeoZone) => void
@@ -508,7 +531,7 @@ export interface ZoneMapProps {
   onZoomChange: (z: number) => void
 }
 
-export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -541,6 +564,7 @@ export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quar
         onClickCommune={onClickCommune}
         onClickCommuneIris={onClickCommuneIris}
         irisLoading={irisLoading}
+        showIrisNames={showIrisNames}
         onZoomChange={onZoomChange}
       />
       <MapViewController center={center} fitBounds={fitBounds ?? null} />

@@ -770,6 +770,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             center={center}
             zoom={zoom}
             fitBounds={fitBounds}
+            showIrisNames={true}
             arrondissements={arrondissements}
             quartiers={quartiers}
             iris={iris}
