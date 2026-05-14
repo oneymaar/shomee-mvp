@@ -295,7 +295,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           })
           if (res.ok) {
             const { results } = await res.json() as {
-              results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; radius?: number }>
+              results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number, number, number, number] | null; radius?: number }>
             }
             enrichedConstraints = enrichedConstraints.map(c => {
               if (c.type !== 'poi' || c.geometry != null || c.lat !== undefined) return c
@@ -308,6 +308,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   lng: r.lng,
                   radiusM: c.radiusM ?? r.radius,
                   geometry: r.geometry ?? undefined,
+                  bbox: r.bbox ?? undefined,
                 }
               }
               return c

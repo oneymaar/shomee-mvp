@@ -15,6 +15,7 @@ interface GeocodedPlace {
   lat?: number
   lng?: number
   geometry?: GeoJSON.Geometry | null
+  bbox?: [number, number, number, number] | null  // [minLat, maxLat, minLng, maxLng]
   radius?: number
 }
 
@@ -70,12 +71,19 @@ export async function POST(req: NextRequest) {
           return { label, found: false }
         }
 
+        // Parse bounding box — always present in Nominatim response
+        // boundingbox: [minLat, maxLat, minLng, maxLng] (as strings)
+        const bb = Array.isArray(r.boundingbox) && r.boundingbox.length === 4
+          ? r.boundingbox.map(Number) as [number, number, number, number]
+          : null
+
         return {
           label,
           found: true,
           lat,
           lng,
           geometry: r.geojson ?? null,
+          bbox: bb,
           radius: POI_RADII[poiType ?? ''] ?? 500,
         }
       })
