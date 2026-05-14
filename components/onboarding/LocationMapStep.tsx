@@ -331,6 +331,27 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         }
       }
 
+      // ── Street-prefix override: semantic_neighborhood → poi ──────────────────
+      // The LLM may generate semantic_neighborhood for names that are also streets
+      // (e.g. "rue des Martyrs" → the neighborhood "rue_des_martyrs" with center+420m radius).
+      // A 420m radius around one point covers only ~⅓ of a 1.2km street.
+      // When the user typed an explicit street-type prefix, force poi type so the
+      // server-side geocoding returns the full bbox/geometry of the street.
+      if (hasStreetTypePrefix && !hasPoiConstraints) {
+        const hasNeighborhoodOnly = enrichedConstraints.some(c => c.type === 'semantic_neighborhood')
+        if (hasNeighborhoodOnly) {
+          enrichedConstraints = enrichedConstraints.map(c => {
+            if (c.type !== 'semantic_neighborhood') return c
+            return {
+              ...c,
+              type: 'poi' as typeof c.type,
+              poiType: 'street',
+              label: locationQuery.trim(),
+            }
+          })
+        }
+      }
+
       // ── POI geocoding — server-side (Nominatim with full geometry) ───────────
       // Must happen before enrichedIntent is computed so the store gets geometry/coords.
       const poiCs = enrichedConstraints.filter(c => c.type === 'poi' && c.geometry == null && c.lat === undefined)
