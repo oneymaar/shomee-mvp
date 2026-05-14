@@ -491,7 +491,11 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
         if (newArrIds.length > 0 || newCommuneIds.length > 0) {
           useSearchStore.setState({
-            selectedArrIds: newArrIds,
+            // When refining to specific QAs: don't put the parent arrondissements in
+            // selectedArrIds — it would show the ENTIRE arr as 'selected' (dark fill).
+            // Instead, leave selectedArrIds empty so computeArrState derives 'partial'
+            // from the child QA selection. Works correctly even across multiple arrondissements.
+            selectedArrIds: hasQuartierRefinement ? [] : newArrIds,
             selectedQuartierIds: newQuartierIds,
             selectedCommuneIds: newCommuneIds,
           })
