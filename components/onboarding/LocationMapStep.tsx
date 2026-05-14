@@ -686,40 +686,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     return result
   }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, iris, arrondissements, communes, quartiers])
 
-  // ── Semantic debug panel ──────────────────────────────────────────────────
-  const [debugOpen, setDebugOpen] = useState(false)
-
-  const debugData = useMemo(() => {
-    const geoC = locationIntent?.geoConstraints ?? []
-    const strategy = locationIntent?.resolutionStrategy ?? 'unknown'
-    const avgConf = geoC.length > 0
-      ? Math.round(geoC.reduce((s, c) => s + (c.confidence ?? 0.8), 0) / geoC.length * 100) / 100
-      : 0
-    return {
-      parsedEntities: geoC.map(c => ({
-        label: c.stationName ?? c.label,
-        type: c.type,
-        operator: c.operator,
-        ...(c.zoneId ? { zoneId: c.zoneId } : {}),
-        ...(c.line ? { line: c.line } : {}),
-        ...(c.direction ? { direction: c.direction } : {}),
-        ...(c.neighborhoodId ? { neighborhoodId: c.neighborhoodId } : {}),
-      })),
-      modifiers: geoC
-        .filter(c => c.direction)
-        .map(c => ({ direction: c.direction, target: c.label })),
-      strategy,
-      confidence: avgConf,
-      clarificationTriggered: constraintSummary.length > 0,
-      selectedIrisNames: iris
-        .filter(z => selectedIrisIds.includes(z.id))
-        .map(z => {
-          const q = quartiersRef.current.find(q => q.id === z.parentId)
-          const arr = q ? q.parentId : z.parentId
-          return `${z.name} [${arr ?? '?'}]`
-        }),
-    }
-  }, [locationIntent, constraintSummary, iris, selectedIrisIds])
+  // ── (debug panel supprimé) ───────────────────────────────────────────────
 
   const snap = initialStateRef.current
   const hasChangedFromInitial = snap !== null && (
@@ -790,28 +757,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         )}
       </div>
 
-      {/* Semantic debug panel */}
-      <div className="flex-shrink-0 px-4 pt-1">
-        <button
-          onClick={() => setDebugOpen(o => !o)}
-          className="text-[10px] font-mono text-neutral-400 active:text-neutral-600 flex items-center gap-1"
-        >
-          <span style={{ fontSize: 9 }}>{debugOpen ? '▼' : '▶'}</span>
-          debug sémantique
-        </button>
-        {debugOpen && (
-          <pre
-            className="mt-1 rounded-lg text-[10px] leading-relaxed overflow-auto max-h-52"
-            style={{
-              background: 'rgba(0,0,0,0.82)',
-              color: '#a8ff78',
-              padding: '8px 10px',
-              fontFamily: 'monospace',
-              whiteSpace: 'pre',
-            }}
-          >
-            {JSON.stringify(debugData, null, 2)}
-          </pre>
+      {/* IRIS sélectionnés — panel debug temporaire */}
+      <div className="flex-shrink-0 px-4 pt-1 min-h-[18px]">
+        {selectedIrisIds.length > 0 && iris.length > 0 && (
+          <p className="text-[10px] font-mono text-neutral-400 leading-snug">
+            {iris
+              .filter(z => selectedIrisIds.includes(z.id))
+              .map(z => z.shortName)
+              .join(', ')}
+          </p>
         )}
       </div>
 
