@@ -9,6 +9,14 @@ const POI_RADII: Record<string, number> = {
   market: 400, mairie: 450, school: 400, hospital: 700, museum: 500,
 }
 
+// Nominatim highway subtypes that represent actual roads
+const HIGHWAY_TYPES = new Set([
+  'motorway', 'trunk', 'primary', 'secondary', 'tertiary', 'residential',
+  'living_street', 'pedestrian', 'path', 'footway', 'unclassified', 'road', 'street',
+])
+
+const STREET_POI_TYPES = new Set(['street', 'avenue', 'boulevard', 'rue', 'quai', 'passage', 'impasse', 'voie', 'route'])
+
 interface GeocodedPlace {
   label: string
   found: boolean
@@ -21,18 +29,20 @@ interface GeocodedPlace {
 
 interface NominatimResult {
   lat: string; lon: string
+  class?: string; type?: string; osm_type?: string
   geojson?: GeoJSON.Geometry
   boundingbox?: string[]
 }
 
 /**
  * Server-side geocoding with full geometry from Nominatim (polygon_geojson=1).
- * Running server-side allows proper User-Agent header, and returns geometry.
  *
- * Key design: fetch limit=5 results and UNION their bounding boxes.
- * Streets in OSM are often split into multiple ways (one per arrondissement).
- * With limit=1, only one segment is returned → bbox covers only part of the street.
- * Unioning all results' bboxes covers the complete spatial extent of the street.
+ * For streets: appends ", Paris" to the query, fetches limit=5 results,
+ * keeps only highway-class ways, combines their LineStrings into a MultiLineString.
+ * This handles streets split across arrondissements (e.g. "Rue des Martyrs"
+ * has separate OSM ways in the 9e and 18e).
+ *
+ * For other POIs: keeps highest-ranked in-IDF result.
  *
  * POST body: { places: [{ label: string, poiType?: string }] }
  * Response:  { results: GeocodedPlace[] }
@@ -46,10 +56,15 @@ export async function POST(req: NextRequest) {
 
     const results = await Promise.allSettled(
       places.map(async ({ label, poiType }): Promise<GeocodedPlace> => {
+        const isStreet = STREET_POI_TYPES.has(poiType ?? '')
+
+        // For streets, append "Paris" to disambiguate from suburbs
+        const q = isStreet && !/\bparis\b/i.test(label) ? `${label}, Paris` : label
+
         const params = new URLSearchParams({
-          q: label,
+          q,
           format: 'json',
-          limit: '5',              // fetch multiple segments of split streets
+          limit: isStreet ? '5' : '1',  // more results for streets (split ways)
           countrycodes: 'fr',
           bounded: '1',
           viewbox: `${IDF.minLng},${IDF.maxLat},${IDF.maxLng},${IDF.minLat}`,
@@ -69,7 +84,7 @@ export async function POST(req: NextRequest) {
         const data: NominatimResult[] = await res.json()
         if (!Array.isArray(data) || !data.length) return { label, found: false }
 
-        // Keep only results within IDF
+        // Keep only in-IDF results
         const inIdf = data.filter(r => {
           const lat = parseFloat(r.lat), lng = parseFloat(r.lon)
           return isFinite(lat) && isFinite(lng)
@@ -78,40 +93,66 @@ export async function POST(req: NextRequest) {
         })
         if (!inIdf.length) return { label, found: false }
 
-        // Primary lat/lng from the first (highest-ranked) result
-        const first = inIdf[0]
+        let finalResults = inIdf
+
+        if (isStreet) {
+          // For streets: keep only highway-class ways (the actual road segments)
+          const highways = inIdf.filter(
+            r => r.class === 'highway' || (r.osm_type === 'way' && r.type && HIGHWAY_TYPES.has(r.type))
+          )
+          // Fall back to all in-IDF if no highway match
+          finalResults = highways.length ? highways : inIdf.slice(0, 1)
+        } else {
+          finalResults = inIdf.slice(0, 1)
+        }
+
+        // Primary lat/lng from first (highest-ranked) result
+        const first = finalResults[0]
         const lat = parseFloat(first.lat)
         const lng = parseFloat(first.lon)
 
-        // Union bounding boxes of ALL in-IDF results.
-        // This is the key fix: "Rue des Martyrs" has two OSM ways (9e and 18e),
-        // each returned as a separate result. Unioning both bboxes covers the
-        // complete street from bottom of 9e to top of 18e.
-        const bboxes = inIdf
+        // Union bounding boxes of all selected results
+        const bboxes = finalResults
           .map(r => r.boundingbox?.map(Number))
           .filter((bb): bb is number[] => Array.isArray(bb) && bb.length === 4)
 
         const unionBbox: [number, number, number, number] | null = bboxes.length
           ? [
-            Math.min(...bboxes.map(b => b[0])),  // minLat
-            Math.max(...bboxes.map(b => b[1])),  // maxLat
-            Math.min(...bboxes.map(b => b[2])),  // minLng
-            Math.max(...bboxes.map(b => b[3])),  // maxLng
+            Math.min(...bboxes.map(b => b[0])),  // minLat (south)
+            Math.max(...bboxes.map(b => b[1])),  // maxLat (north)
+            Math.min(...bboxes.map(b => b[2])),  // minLng (west)
+            Math.max(...bboxes.map(b => b[3])),  // maxLng (east)
           ]
           : null
 
-        // Best geometry: prefer LineString/MultiLineString over Point
-        const bestGeometry =
-          inIdf.find(r => r.geojson && r.geojson.type !== 'Point')?.geojson
-          ?? first.geojson
-          ?? null
+        // Combine LineString geometries into MultiLineString for split streets
+        const lineGeoms = finalResults
+          .map(r => r.geojson)
+          .filter((g): g is GeoJSON.LineString | GeoJSON.MultiLineString =>
+            g != null && (g.type === 'LineString' || g.type === 'MultiLineString')
+          )
+
+        let geometry: GeoJSON.Geometry | null = null
+        if (lineGeoms.length === 1) {
+          geometry = lineGeoms[0]
+        } else if (lineGeoms.length > 1) {
+          const allCoords: GeoJSON.Position[][] = []
+          for (const g of lineGeoms) {
+            if (g.type === 'LineString') allCoords.push(g.coordinates)
+            else allCoords.push(...g.coordinates)
+          }
+          geometry = { type: 'MultiLineString', coordinates: allCoords }
+        } else {
+          // No LineString: try any geometry, then null
+          geometry = finalResults.find(r => r.geojson)?.geojson ?? null
+        }
 
         return {
           label,
           found: true,
           lat,
           lng,
-          geometry: bestGeometry,
+          geometry,
           bbox: unionBbox,
           radius: POI_RADII[poiType ?? ''] ?? 500,
         }

@@ -182,17 +182,18 @@ function filterIrisByGeometry(
     const [lng, lat] = geometry.coordinates as [number, number]
     return filterIrisByCoords(candidates, lat, lng, fallbackRadius)
   }
-  const pts = sampleGeometryPoints(geometry, 40)  // 40m step for higher fidelity
+  // 25m step: fine enough to catch narrow IRIS along the street
+  const pts = sampleGeometryPoints(geometry, 25)
   if (!pts.length) return []
 
   const selected = new Set<string>()
   for (const [lat, lng] of pts) {
-    // Strict containment
+    // polygonContainsPoint is the primary and correct selector: an IRIS is selected
+    // if and only if a point ON the street falls inside its polygon.
+    // No centroid buffer here — it caused non-adjacent IRIS to be incorrectly selected.
     for (const z of candidates) {
       if (polygonContainsPoint(z.feature.geometry, lng, lat)) selected.add(z.id)
     }
-    // 60m centroid buffer — catches adjacent IRIS at zone boundaries
-    for (const z of filterIrisByCoords(candidates, lat, lng, 60)) selected.add(z.id)
   }
   return candidates.filter(z => selected.has(z.id))
 }
