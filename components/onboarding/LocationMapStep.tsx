@@ -711,8 +711,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       strategy,
       confidence: avgConf,
       clarificationTriggered: constraintSummary.length > 0,
+      selectedIrisNames: iris
+        .filter(z => selectedIrisIds.includes(z.id))
+        .map(z => {
+          const q = quartiersRef.current.find(q => q.id === z.parentId)
+          const arr = q ? q.parentId : z.parentId
+          return `${z.name} [${arr ?? '?'}]`
+        }),
     }
-  }, [locationIntent, constraintSummary])
+  }, [locationIntent, constraintSummary, iris, selectedIrisIds])
 
   const snap = initialStateRef.current
   const hasChangedFromInitial = snap !== null && (
