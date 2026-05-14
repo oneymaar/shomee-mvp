@@ -145,9 +145,11 @@ function neighborhoodBySubstring(q: string): RawNeighborhood | null {
 // ─── Public API ────────────────────────────────────────────────────────────
 
 // Patterns that indicate the query contains multiple geographic entities.
-// These queries must go to the LLM — matching a single entity by substring
-// would silently drop all the others ("Batignolles et Paris 18e" → only Batignolles).
 const COMPOUND_RE = /\b(et|ou|sauf|sans|hors|mais|entre)\b|[,+\/]/i
+
+// Street/way type prefix — when present the query names a specific way, not a neighborhood.
+// Must go to the LLM to generate a poi constraint with full OSM geometry.
+const STREET_TYPE_RE = /^(avenue|av\.|rue|boulevard|bd\.|place|pl\.|square|all[eé]e|chemin|impasse|passage|cour|quai|voie|route|promenade|villa|cit[eé]|r[eé]sidence|esplanade|parvis|terrasse|galerie|venelle|sentier|ruelle|port|pont)\s+/i
 
 /**
  * Recognize a location entity from raw user text.
@@ -163,8 +165,11 @@ export function recognizeLocationEntity(
   const q = query.trim()
   if (q.length < 2) return null
 
-  // Compound queries contain multiple zones — always send to LLM so no zone is dropped
+  // Compound queries → LLM
   if (COMPOUND_RE.test(q)) return null
+
+  // Street/way type prefix → always POI/LLM even if a same-named neighborhood exists
+  if (STREET_TYPE_RE.test(q)) return null
 
   // 1. Explicit transport prefix
   const pre = q.match(PREFIX_RE)

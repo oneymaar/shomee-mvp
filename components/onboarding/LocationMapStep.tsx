@@ -261,7 +261,13 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         c.type === ('neighborhood' as typeof c.type) ? { ...c, type: 'semantic_neighborhood' as typeof c.type } : c
       )
 
-      if (neighborhoodMatch) {
+      // Skip neighborhood enrichment when:
+      // - query starts with a street/way type prefix ("avenue des Ternes" → poi, not Ternes neighborhood)
+      // - LLM already returned poi constraints (geometry-based selection must not be overridden)
+      const hasStreetTypePrefix = /^(avenue|av\.|rue|boulevard|bd\.|place|pl\.|square|all[eé]e|chemin|impasse|passage|cour|quai|voie|route|promenade|villa|cit[eé]|r[eé]sidence|esplanade|parvis|sentier|ruelle|port|pont)\s+/i.test(locationQuery.trim())
+      const hasPoiConstraints = enrichedConstraints.some(c => c.type === 'poi')
+
+      if (neighborhoodMatch && !hasStreetTypePrefix && !hasPoiConstraints) {
         const alreadyHasNeighborhood = enrichedConstraints.some(
           (c) => c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as typeof c.type)
         )

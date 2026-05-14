@@ -311,7 +311,12 @@ function normalizeGeoName(s: string): string {
  * Usage: call after fetchParisGeoData() so quartiers are loaded.
  * Works for queries like "Saint-Thomas d'Aquin", "Gros-Caillou", "Épinettes".
  */
+const STREET_TYPE_RE_GEO = /^(avenue|av\.|rue|boulevard|bd\.|place|pl\.|square|all[eé]e|chemin|impasse|passage|cour|quai|voie|route|promenade|villa|cit[eé]|r[eé]sidence|esplanade|parvis|sentier|ruelle|port|pont)\s+/i
+
 export function matchQuartiersByName(query: string, quartiers: GeoZone[]): GeoZone[] {
+  // Street/way type prefix → this is a voie, not a quartier name
+  if (STREET_TYPE_RE_GEO.test(query.trim())) return []
+
   const q = normalizeGeoName(query)
   if (q.length < 4) return []
   return quartiers.filter(z => {

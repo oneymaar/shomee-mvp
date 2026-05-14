@@ -230,12 +230,21 @@ TOUJOURS inclure le champ "poiType" pour calibrer le rayon de recherche côté r
 Valeurs de poiType :
   park / garden    → parcs, jardins, squares, bois
   landmark         → monuments, statues, places publiques, édifices emblématiques
-  avenue / boulevard / street → voies (avenue, boulevard, rue, allée)
+  avenue / boulevard / street → voies (avenue, boulevard, rue, allée, quai, passage, impasse…)
   museum           → musées, centres culturels
   market           → marchés couverts ou en plein air
   mairie           → mairies, hôtels de ville
   school / hospital → équipements publics
   poi              → fallback générique
+
+RÈGLE CRITIQUE — Type de voie en préfixe :
+Si la requête commence par un type de voie (avenue, rue, boulevard, place, square, allée,
+chemin, impasse, quai, passage, voie, route, parvis, esplanade, venelle…) :
+→ TOUJOURS type:"poi" avec poiType approprié
+→ NE JAMAIS utiliser type:"semantic_neighborhood" ou type:"administrative_area" à la place
+→ Exemples : "avenue des Ternes" → poi(avenue), NON semantic_neighborhood(ternes)
+             "rue des Martyrs"   → poi(street), NON semantic_neighborhood(rue_des_martyrs)
+             "boulevard Haussmann" → poi(boulevard)
 
 Exemples :
 "Parc Montsouris"    → {type:"poi", label:"Parc Montsouris", poiType:"park", operator:"inside", confidence:0.9}
