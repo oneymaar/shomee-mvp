@@ -14,7 +14,7 @@
  */
 
 import type { GeoZone } from './geoDataService'
-import { polygonCentroid } from './geoDataService'
+import { polygonCentroid, polygonContainsPoint } from './geoDataService'
 import { getStationsByLine, findStation, normalizeLineId } from './metroStationsDb'
 import { findNeighborhoodById, matchNeighborhood } from './semanticNeighborhoodService'
 
@@ -52,6 +52,7 @@ export interface GeoConstraint {
   direction?: string
   lat?: number    // geocoded coordinates — injected before resolver for type "poi"
   lng?: number
+  geometry?: GeoJSON.Geometry  // full OSM geometry (LineString, Polygon…) for geometry-based IRIS intersection
 }
 
 // ─── POI radius defaults by sub-type ───────────────────────────────────────
@@ -84,6 +85,77 @@ function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): num
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+// ─── Geometry sampling & intersection ─────────────────────────────────────
+
+/**
+ * Sample points along a GeoJSON geometry at ~stepM metre intervals.
+ * Returns [lat, lng] pairs (note: GeoJSON coords are [lng, lat]).
+ * Used to find which IRIS zones a street, avenue or polygon intersects.
+ */
+function sampleGeometryPoints(geometry: GeoJSON.Geometry, stepM = 80): [number, number][] {
+  type Pos = [number, number]
+  const lines: Pos[][] = []
+
+  if (geometry.type === 'LineString') {
+    lines.push(geometry.coordinates as Pos[])
+  } else if (geometry.type === 'MultiLineString') {
+    for (const line of geometry.coordinates as Pos[][]) lines.push(line)
+  } else if (geometry.type === 'Polygon') {
+    lines.push(geometry.coordinates[0] as Pos[])
+  } else if (geometry.type === 'MultiPolygon') {
+    for (const poly of geometry.coordinates as Pos[][][]) lines.push(poly[0])
+  } else if (geometry.type === 'Point') {
+    const [lng, lat] = geometry.coordinates as [number, number]
+    return [[lat, lng]]
+  } else {
+    return []
+  }
+
+  const points: [number, number][] = []
+
+  for (const line of lines) {
+    if (!line.length) continue
+    points.push([line[0][1], line[0][0]])
+    let leftover = 0
+    for (let i = 0; i < line.length - 1; i++) {
+      const [lng1, lat1] = line[i]
+      const [lng2, lat2] = line[i + 1]
+      const seg = haversineM(lat1, lng1, lat2, lng2)
+      let d = stepM - leftover
+      while (d <= seg) {
+        const t = d / seg
+        points.push([lat1 + t * (lat2 - lat1), lng1 + t * (lng2 - lng1)])
+        d += stepM
+      }
+      leftover = (leftover + seg) % stepM
+    }
+    const last = line[line.length - 1]
+    points.push([last[1], last[0]])
+  }
+
+  return points
+}
+
+/**
+ * Return IRIS zones whose polygon contains at least one sampled point of the geometry.
+ * Falls back to radius-based selection for Point geometries.
+ */
+function filterIrisByGeometry(
+  candidates: GeoZone[],
+  geometry: GeoJSON.Geometry,
+  fallbackRadius = 500,
+): GeoZone[] {
+  if (geometry.type === 'Point') {
+    const [lng, lat] = geometry.coordinates as [number, number]
+    return filterIrisByCoords(candidates, lat, lng, fallbackRadius)
+  }
+  const pts = sampleGeometryPoints(geometry)
+  if (!pts.length) return []
+  return candidates.filter(zone =>
+    pts.some(([lat, lng]) => polygonContainsPoint(zone.feature.geometry, lng, lat))
+  )
 }
 
 // ─── IRIS hierarchy helpers ─────────────────────────────────────────────────
@@ -265,8 +337,11 @@ function resolveInsideToIris(
     return filterIrisByCoords(iris, station.lat, station.lng, radius)
   }
 
-  if (c.type === 'poi' && c.lat !== undefined && c.lng !== undefined) {
-    return filterIrisByCoords(iris, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
+  if (c.type === 'poi') {
+    if (c.geometry) return filterIrisByGeometry(iris, c.geometry, c.radiusM ?? poiRadius(c.poiType))
+    if (c.lat !== undefined && c.lng !== undefined) {
+      return filterIrisByCoords(iris, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
+    }
   }
 
   return []
@@ -423,8 +498,12 @@ function normalizeNearToInside(
       const name = c.stationName ?? c.label
       const station = name ? findStation(name) : null
       if (station) zoneIris = filterIrisByCoords(iris, station.lat, station.lng, c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M)
-    } else if (c.type === 'poi' && c.lat !== undefined && c.lng !== undefined) {
-      zoneIris = filterIrisByCoords(iris, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
+    } else if (c.type === 'poi') {
+      zoneIris = c.geometry
+        ? filterIrisByGeometry(iris, c.geometry, c.radiusM ?? poiRadius(c.poiType))
+        : (c.lat !== undefined && c.lng !== undefined)
+          ? filterIrisByCoords(iris, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
+          : []
     }
     for (const z of zoneIris) if (!refIds.has(z.id)) { refIds.add(z.id); refIris.push(z) }
   }
@@ -443,8 +522,14 @@ function normalizeNearToInside(
 
     const isNbhd = c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)
     const isStation = c.type === 'transport_station'
-    const isPoi = c.type === 'poi' && c.lat !== undefined && c.lng !== undefined
+    const isPoi = c.type === 'poi' && (c.geometry != null || c.lat !== undefined)
     if (!isNbhd && !isStation && !isPoi) return c  // transport_line: always a filter
+
+    // For poi: use geometry-based overlap check when geometry is available
+    if (isPoi && c.geometry) {
+      const poiIris = filterIrisByGeometry(refIris, c.geometry, c.radiusM ?? poiRadius(c.poiType))
+      return poiIris.length > 0 ? c : { ...c, operator: 'inside' as ConstraintOperator }
+    }
 
     let entityLat: number, entityLng: number, entityRadius: number
     if (isPoi) {
@@ -564,12 +649,14 @@ export function resolveConstraints(
           standaloneLabels.push(name)
         }
       }
-      if (c.type === 'poi' && c.lat !== undefined && c.lng !== undefined) {
-        const radius = c.radiusM ?? poiRadius(c.poiType)
-        for (const z of filterIrisByCoords(iris, c.lat, c.lng, radius)) {
+      if (c.type === 'poi' && (c.geometry || c.lat !== undefined)) {
+        const poiZones = c.geometry
+          ? filterIrisByGeometry(iris, c.geometry, c.radiusM ?? poiRadius(c.poiType))
+          : filterIrisByCoords(iris, c.lat!, c.lng!, c.radiusM ?? poiRadius(c.poiType))
+        for (const z of poiZones) {
           if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
         }
-        standaloneLabels.push(c.label)
+        if (poiZones.length > 0) standaloneLabels.push(c.label)
       }
     }
 
@@ -604,6 +691,14 @@ export function resolveConstraints(
         filtered = nbFiltered
         if (filtered.length > 0) summary.push(n.label)
       }
+    } else if (c.type === 'poi') {
+      // poi "near" = filter the existing union by geometry or radius
+      if (c.geometry) {
+        filtered = filterIrisByGeometry(narrowed, c.geometry, c.radiusM ?? poiRadius(c.poiType))
+      } else if (c.lat !== undefined && c.lng !== undefined) {
+        filtered = filterIrisByCoords(narrowed, c.lat, c.lng, c.radiusM ?? poiRadius(c.poiType))
+      }
+      if (filtered.length > 0) summary.push(c.label)
     }
 
     if (filtered.length > 0) narrowed = filtered

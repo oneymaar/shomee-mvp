@@ -277,27 +277,42 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         }
       }
 
-      // ── POI geocoding ─────────────────────────────────────────────────────
-      // For poi constraints without coordinates, geocode via BAN/Nominatim.
-      // Must happen before enrichedIntent is computed so the store gets lat/lng.
-      const poiCs = enrichedConstraints.filter(c => c.type === 'poi' && c.lat === undefined)
+      // ── POI geocoding — server-side (Nominatim with full geometry) ───────────
+      // Must happen before enrichedIntent is computed so the store gets geometry/coords.
+      const poiCs = enrichedConstraints.filter(c => c.type === 'poi' && c.geometry == null && c.lat === undefined)
       if (poiCs.length > 0) {
-        const geocodeResults = await Promise.allSettled(poiCs.map(c => geocodeBest(c.label)))
-        enrichedConstraints = enrichedConstraints.map(c => {
-          if (c.type !== 'poi' || c.lat !== undefined) return c
-          const idx = poiCs.findIndex(pc => pc.label === c.label && pc.operator === c.operator)
-          const r = geocodeResults[idx]
-          if (r.status === 'fulfilled' && r.value) {
-            const { lat, lng } = r.value
-            const inIdf = lat >= 48.1 && lat <= 49.2 && lng >= 1.4 && lng <= 3.7
-            if (inIdf) return { ...c, lat, lng, radiusM: c.radiusM ?? poiRadius(c.poiType) }
+        try {
+          const res = await fetch('/api/location/geocode', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ places: poiCs.map(c => ({ label: c.label, poiType: c.poiType })) }),
+          })
+          if (res.ok) {
+            const { results } = await res.json() as {
+              results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; radius?: number }>
+            }
+            enrichedConstraints = enrichedConstraints.map(c => {
+              if (c.type !== 'poi' || c.geometry != null || c.lat !== undefined) return c
+              const idx = poiCs.findIndex(pc => pc.label === c.label && pc.operator === c.operator)
+              const r = results[idx]
+              if (r?.found && r.lat !== undefined && r.lng !== undefined) {
+                return {
+                  ...c,
+                  lat: r.lat,
+                  lng: r.lng,
+                  radiusM: c.radiusM ?? r.radius,
+                  geometry: r.geometry ?? undefined,
+                }
+              }
+              return c
+            })
           }
-          return c
-        })
+        } catch { /* silent fail — resolver falls back to no-coord behavior */ }
       }
 
       const enrichedIntent = { ...intent, geoConstraints: enrichedConstraints }
 
+      // Always persist enrichedIntent so POI geometry/coords reach the store via loadIris
       if (geocodeResult.status === 'fulfilled' && geocodeResult.value) {
         const geo = geocodeResult.value
         // Reject results outside Île-de-France (lat 48.1–49.2, lng 1.4–3.7)
@@ -307,10 +322,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           setCenter(newCenter)
           setLocationLabel(geo.label)
           setLocation({ query: locationQuery, label: geo.label, lat: geo.lat, lng: geo.lng, intent: enrichedIntent })
+        } else {
+          setLocation({ query: locationQuery, label: locationQuery, lat: 0, lng: 0, intent: enrichedIntent })
         }
       } else if (neighborhoodMatch) {
         // No geocoding result but neighborhood matched: center on neighborhood
         setLocation({ query: locationQuery, label: neighborhoodMatch.label, lat: neighborhoodMatch.center.lat, lng: neighborhoodMatch.center.lng, intent: enrichedIntent })
+      } else {
+        // No geocoding, no neighborhood — still persist enrichedIntent (POI coords/geometry)
+        setLocation({ query: locationQuery, label: locationQuery, lat: 0, lng: 0, intent: enrichedIntent })
       }
 
       // Always center on the neighborhood's exact center (overrides geocoding if needed)
