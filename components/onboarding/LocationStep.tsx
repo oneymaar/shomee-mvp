@@ -138,14 +138,15 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     }
 
     if (analysis.status === 'not_found') {
-      setUi({
-        kind: 'clarification',
-        analysis: {
-          ...analysis,
-          clarificationQuestion: analysis.clarificationQuestion ?? "Je ne reconnais pas ce lieu. Essayez avec un arrondissement ou une commune.",
-          clarificationOptions: null,
-        },
-      })
+      // Open the map anyway — the client-side quartier/IRIS matching may resolve it
+      // (e.g. "Saint-Thomas d'Aquin" is a QA not known to the LLM but in the GeoJSON DB).
+      openMapWithQuery(
+        analysis?.mapAction?.centerQuery ?? q,
+        analysis?.mapAction?.preselectQueries,
+        analysis?.geoConstraints,
+        analysis?.resolutionStrategy,
+        q,
+      )
       return
     }
 

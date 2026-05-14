@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
-import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
+import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, matchQuartiersByName, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
 import { findStation } from '@/lib/services/metroStationsDb'
 import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
 import { geocodeBest } from '@/lib/services/geocodingService'
@@ -394,23 +394,45 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           }
         }
 
+        // Quartier administratif name matching — refine to a specific quartier when the
+        // raw user query names one (e.g. "Saint-Thomas d'Aquin", "Gros-Caillou", "Épinettes").
+        // Search within already-matched arrondissements first; fall back to all Paris quartiers.
+        {
+          const searchPool = newArrIds.length > 0
+            ? qus.filter(q => newArrIds.includes(q.parentId ?? ''))
+            : qus
+          const matchedQs = matchQuartiersByName(locationQuery, searchPool)
+          if (matchedQs.length > 0 && matchedQs.length <= 4) {
+            newQuartierIds = matchedQs.map(q => q.id)
+            if (newArrIds.length === 0) {
+              newArrIds = [...new Set(matchedQs.map(q => q.parentId).filter(Boolean) as string[])]
+            }
+          }
+        }
+
+        const hasQuartierRefinement = newQuartierIds.length > 0 && newQuartierIds.length <= 4
+          && newQuartierIds.length < (newArrIds.flatMap(id => getChildQuartiers(id, qus)).length)
+
         if (newArrIds.length > 0 || newCommuneIds.length > 0) {
           useSearchStore.setState({
             selectedArrIds: newArrIds,
             selectedQuartierIds: newQuartierIds,
             selectedCommuneIds: newCommuneIds,
           })
-          // Fit the map view to encompass all selected administrative zones
-          const selectedZones = [
-            ...arrs.filter(z => newArrIds.includes(z.id)),
-            ...loadedCommunes.filter(z => newCommuneIds.includes(z.id)),
-          ]
-          const bounds = zonesToBounds(selectedZones)
+          // For quartier-refined selections, fitBounds on the quartier polygons (more specific)
+          const quartiersForBounds = qus.filter(z => newQuartierIds.includes(z.id))
+          const zonesForBounds = hasQuartierRefinement && quartiersForBounds.length > 0
+            ? quartiersForBounds
+            : [
+              ...arrs.filter(z => newArrIds.includes(z.id)),
+              ...loadedCommunes.filter(z => newCommuneIds.includes(z.id)),
+            ]
+          const bounds = zonesToBounds(zonesForBounds)
           if (bounds) setFitBounds(bounds)
         }
 
         const matchedCount = newArrIds.length + newCommuneIds.length
-        setZoom(matchedCount <= 2 ? 13 : 12)
+        setZoom(hasQuartierRefinement ? 13 : matchedCount <= 2 ? 13 : 12)
       }
     } catch (e) {
       console.error(e)

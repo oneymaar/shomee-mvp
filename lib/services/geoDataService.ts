@@ -290,3 +290,35 @@ export function getChildZones(parentId: string, zones: GeoZone[]): GeoZone[] {
 }
 // Backward-compat aliases
 export const getChildQuartiers = (arrId: string, q: GeoZone[]) => getChildZones(arrId, q)
+
+// ─── Quartier administratif name matching ──────────────────────────────────
+
+/** Normalize a geographic name: strip accents, merge apostrophes/hyphens to space */
+function normalizeGeoName(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/['’\-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Match a raw user query against quartier administratif names.
+ * Covers exact match and substring containment (min 5 chars to avoid noise).
+ *
+ * Usage: call after fetchParisGeoData() so quartiers are loaded.
+ * Works for queries like "Saint-Thomas d'Aquin", "Gros-Caillou", "Épinettes".
+ */
+export function matchQuartiersByName(query: string, quartiers: GeoZone[]): GeoZone[] {
+  const q = normalizeGeoName(query)
+  if (q.length < 4) return []
+  return quartiers.filter(z => {
+    const n = normalizeGeoName(z.name)
+    // Exact match, or query contains the full quartier name, or quartier name contains the query
+    return n === q
+      || (n.length >= 5 && q.includes(n))
+      || (q.length >= 5 && n.includes(q))
+  })
+}

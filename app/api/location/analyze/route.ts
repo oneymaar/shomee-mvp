@@ -47,13 +47,31 @@ RER D : Melun/Malesherbes ↔ Goussainville (arr-12, 13 + banlieue)
 RER E : Haussmann ↔ Chelles/Tournan (arr-9, 10 + banlieue est)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUARTIERS ADMINISTRATIFS PARISIENS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Chaque arrondissement contient 4 quartiers administratifs (QA). Exemples :
+  7e  : Saint-Thomas-d'Aquin, Invalides, École-Militaire, Gros-Caillou
+  17e : Ternes, Plaine-de-Monceaux, Batignolles, Épinettes
+  18e : Grandes-Carrières, Clignancourt, Goutte-d'Or, La Chapelle
+  15e : Saint-Lambert, Necker, Grenelle, Javel
+  12e : Bel-Air, Picpus, Bercy, Quinze-Vingts
+
+Si la requête nomme un QA → status:"clear", arrondissement parent dans preselectQueries.
+Le système cliente résout le QA précis par correspondance de nom depuis la base GeoJSON.
+
+Exemples :
+"Saint-Thomas d'Aquin"  → preselectQueries:["Paris 7"], geoConstraints:[{arr-7, inside}]
+"Épinettes"             → preselectQueries:["Paris 17"], geoConstraints:[{arr-17, inside}]
+"Gros-Caillou"          → preselectQueries:["Paris 7"], geoConstraints:[{arr-7, inside}]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STATUTS POSSIBLES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 "clear"           → zones identifiées avec confiance, ouvrir la carte
 "ambiguous"       → plusieurs interprétations plausibles (ex: station vs quartier)
 "contradictory"   → les contraintes sont incompatibles entre elles
 "too_vague"       → pas de zone géographique identifiable, demander précision
-"not_found"       → lieu inconnu ou hors zone couverte
+"not_found"       → lieu inconnu ou hors zone couverte (utiliser avec parcimonie — privilégier "clear" avec l'arrondissement parent pour les QA et lieux parisiens connus)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 MODIFICATEURS DIRECTIONNELS
