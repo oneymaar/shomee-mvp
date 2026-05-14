@@ -83,6 +83,12 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
 
+  // Cache geocoded POI data (label → {lat,lng,bbox,geometry,radiusM}).
+  // Written by initMap after /api/location/geocode; read by loadIris to enrich
+  // constraints without relying on Zustand store timing.
+  type PoiGeoData = { lat: number; lng: number; bbox?: [number,number,number,number]; geometry?: GeoJSON.Geometry; radiusM?: number }
+  const poiGeocodedRef = useRef<Map<string, PoiGeoData>>(new Map())
+
   // Snapshot of the engine's initial selection — captured once, used to distinguish
   // engine-origin tags (terracotta) from user-added tags (blue) and for reset.
   const initialStateRef = useRef<{
@@ -150,9 +156,51 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
       const { locationIntent: intent, selectedQuartierIds: selQu, selectedCommuneIds: selCom, selectedIrisIds, selectedArrIds } = useSearchStore.getState()
 
+      // ── POI coordinate injection ─────────────────────────────────────────
+      // poi constraints may be in the store without coordinates if the initMap
+      // geocoding failed or the Zustand update raced with loadIris.
+      // Enrich from the ref cache, then geocode server-side for anything still missing.
+      let resolveConstraintsInput = intent?.geoConstraints ?? []
+      const poiMissing = resolveConstraintsInput.filter(
+        c => c.type === 'poi' && !c.lat && !c.bbox && !c.geometry
+      )
+      if (poiMissing.length > 0) {
+        const stillNeedsGeocode = poiMissing.filter(c => !poiGeocodedRef.current.has(c.label))
+        if (stillNeedsGeocode.length > 0) {
+          try {
+            const gr = await fetch('/api/location/geocode', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ places: stillNeedsGeocode.map(c => ({ label: c.label, poiType: c.poiType })) }),
+            })
+            if (gr.ok) {
+              const { results } = await gr.json() as {
+                results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number,number,number,number] | null; radius?: number }>
+              }
+              for (const r of results) {
+                if (r.found && r.lat !== undefined && r.lng !== undefined) {
+                  poiGeocodedRef.current.set(r.label, {
+                    lat: r.lat, lng: r.lng,
+                    bbox: r.bbox ?? undefined,
+                    geometry: r.geometry ?? undefined,
+                    radiusM: r.radius,
+                  })
+                }
+              }
+            }
+          } catch { /* silent fail — resolver will return empty, map shows nothing */ }
+        }
+        // Apply cached data to constraints
+        resolveConstraintsInput = resolveConstraintsInput.map(c => {
+          if (c.type !== 'poi' || c.lat || c.bbox || c.geometry) return c
+          const data = poiGeocodedRef.current.get(c.label)
+          return data ? { ...c, ...data } : c
+        })
+      }
+
       // Try geo-constraint intersection first
-      if (intent?.geoConstraints?.length) {
-        const result = resolveConstraints(intent.geoConstraints, zones, quartiersRef.current, communesRef.current)
+      if (resolveConstraintsInput.length) {
+        const result = resolveConstraints(resolveConstraintsInput, zones, quartiersRef.current, communesRef.current)
         if (result.wasNarrowed && result.irisIds.length > 0) {
           // Precise IRIS selected: clear any pre-selected arrondissements / quartiers that
           // belong to the narrowed zones so the map shows partial (not full) highlights.
@@ -297,20 +345,21 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             const { results } = await res.json() as {
               results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number, number, number, number] | null; radius?: number }>
             }
+            // Populate the ref cache so loadIris can use it even if store update is delayed
+            for (const r of results) {
+              if (r.found && r.lat !== undefined && r.lng !== undefined) {
+                poiGeocodedRef.current.set(r.label, {
+                  lat: r.lat, lng: r.lng,
+                  bbox: r.bbox ?? undefined,
+                  geometry: r.geometry ?? undefined,
+                  radiusM: r.radius,
+                })
+              }
+            }
             enrichedConstraints = enrichedConstraints.map(c => {
               if (c.type !== 'poi' || c.geometry != null || c.lat !== undefined) return c
-              const idx = poiCs.findIndex(pc => pc.label === c.label && pc.operator === c.operator)
-              const r = results[idx]
-              if (r?.found && r.lat !== undefined && r.lng !== undefined) {
-                return {
-                  ...c,
-                  lat: r.lat,
-                  lng: r.lng,
-                  radiusM: c.radiusM ?? r.radius,
-                  geometry: r.geometry ?? undefined,
-                  bbox: r.bbox ?? undefined,
-                }
-              }
+              const data = poiGeocodedRef.current.get(c.label)
+              if (data) return { ...c, ...data }
               return c
             })
           }
