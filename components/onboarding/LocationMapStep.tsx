@@ -759,14 +759,20 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
       {/* IRIS sélectionnés — panel debug temporaire */}
       <div className="flex-shrink-0 px-4 pt-1 min-h-[18px]">
-        {selectedIrisIds.length > 0 && iris.length > 0 && (
-          <p className="text-[10px] font-mono text-neutral-400 leading-snug">
-            {iris
-              .filter(z => selectedIrisIds.includes(z.id))
-              .map(z => z.shortName)
-              .join(', ')}
-          </p>
-        )}
+        {selectedIrisIds.length > 0 && iris.length > 0 && (() => {
+          const names = iris.filter(z => selectedIrisIds.includes(z.id)).map(z => z.shortName).join(', ')
+          return (
+            <div className="flex items-start gap-2">
+              <p className="text-[10px] font-mono text-neutral-400 leading-snug flex-1 select-all">{names}</p>
+              <button
+                onClick={() => navigator.clipboard.writeText(names)}
+                className="text-[9px] font-medium text-neutral-400 active:text-neutral-700 flex-shrink-0 mt-0.5"
+              >
+                copier
+              </button>
+            </div>
+          )
+        })()}
       </div>
 
       {/* Tag system — 3 rows under the map */}
