@@ -167,15 +167,19 @@ const STREET_POI_TYPES = new Set(['street', 'avenue', 'boulevard', 'rue', 'quai'
  * Select IRIS that intersect a given GeoJSON geometry.
  *
  * Strategy for linear features (LineString, MultiLineString):
- *   1. Sample points every 20m along the geometry
- *   2. For each sample: test the centerline point AND 4 perpendicular offsets (±8m N/S/E/W)
+ *   For each segment between consecutive nodes, sample every 20m and apply
+ *   two offsets at ±8m perpendicular to the segment's actual travel direction.
  *
- * Why perpendicular offsets are necessary:
- *   In Paris, IRIS boundaries often coincide with street centerlines.
- *   A sample point ON the centerline falls ON the boundary of two adjacent IRIS —
- *   polygonContainsPoint (ray-casting) may return false for both, causing missed IRIS.
- *   An 8m lateral offset (~half a Parisian street width) places the point clearly
- *   inside the adjacent IRIS polygon, reliably capturing IRIS on both sides of the street.
+ * Why segment-perpendicular offsets instead of 4 cardinal offsets:
+ *   Cardinal offsets (N/S/E/W) applied at every sample point — including the first
+ *   and last nodes of each OSM way — generate "escape" points in the street's own
+ *   travel direction. For a N-S street the ±S offsets at the southern terminus land
+ *   8m beyond the street end, inside an IRIS the street does not border (false positive).
+ *   Perpendicular offsets are geometrically correct: they stay on the sides of the
+ *   street at every point, including endpoints.
+ *
+ * Strategy for area features (Polygon, MultiPolygon):
+ *   Sample the boundary every 20m with 4 cardinal offsets (any orientation).
  *
  * Falls back to radius-based selection for Point geometries.
  */
@@ -188,21 +192,68 @@ function filterIrisByGeometry(
     const [lng, lat] = geometry.coordinates as [number, number]
     return filterIrisByCoords(candidates, lat, lng, fallbackRadius)
   }
+
+  type Pos = [number, number]
+
+  if (geometry.type === 'LineString' || geometry.type === 'MultiLineString') {
+    const lines: Pos[][] = geometry.type === 'LineString'
+      ? [geometry.coordinates as Pos[]]
+      : geometry.coordinates as Pos[][]
+
+    const STEP_M = 20
+    const OFFSET_M = 8
+    const selected = new Set<string>()
+
+    const checkPoint = (la: number, lo: number) => {
+      for (const z of candidates) {
+        if (polygonContainsPoint(z.feature.geometry, lo, la)) selected.add(z.id)
+      }
+    }
+
+    for (const line of lines) {
+      for (let i = 0; i < line.length - 1; i++) {
+        const [lng1, lat1] = line[i]
+        const [lng2, lat2] = line[i + 1]
+        const segLen = haversineM(lat1, lng1, lat2, lng2)
+        if (segLen < 0.01) continue
+
+        const dLat = lat2 - lat1
+        const dLng = lng2 - lng1
+        const cosLat = Math.cos(((lat1 + lat2) / 2) * Math.PI / 180)
+
+        // Right-perpendicular offset (90° CW from travel direction), in degrees,
+        // scaled to OFFSET_M metres. Derived by rotating (dLng*cosLat, dLat) 90° CW
+        // in metric space then converting back to geographic degrees.
+        // Left perpendicular is the negation of both components.
+        const pLat = -dLng * cosLat * OFFSET_M / segLen
+        const pLng =  dLat          * OFFSET_M / (segLen * cosLat)
+
+        for (let d = 0; d <= segLen; d += STEP_M) {
+          const t = Math.min(d / segLen, 1)
+          const lat = lat1 + t * dLat
+          const lng = lng1 + t * dLng
+          checkPoint(lat, lng)
+          checkPoint(lat + pLat, lng + pLng)  // right of street
+          checkPoint(lat - pLat, lng - pLng)  // left of street
+        }
+      }
+    }
+
+    return candidates.filter(z => selected.has(z.id))
+  }
+
+  // Polygon / MultiPolygon: sample boundary with 4 cardinal offsets
   const pts = sampleGeometryPoints(geometry, 20)
   if (!pts.length) return []
 
   const selected = new Set<string>()
   for (const [lat, lng] of pts) {
-    // Perpendicular offsets: ~8m in all 4 cardinal directions.
-    // Works for streets in any orientation (N-S, E-W, diagonal).
     const dLat = 8 / 111_000
     const dLng = 8 / (111_000 * Math.cos(lat * Math.PI / 180))
     const toCheck: [number, number][] = [
-      [lat, lng],             // centerline
-      [lat + dLat, lng],      // north
-      [lat - dLat, lng],      // south
-      [lat, lng + dLng],      // east
-      [lat, lng - dLng],      // west
+      [lat, lng],
+      [lat + dLat, lng], [lat - dLat, lng],
+      [lat, lng + dLng], [lat, lng - dLng],
     ]
     for (const [la, lo] of toCheck) {
       for (const z of candidates) {
