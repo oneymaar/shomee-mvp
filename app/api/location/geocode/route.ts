@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 // Île-de-France bounding box
 const IDF = { minLat: 48.1, maxLat: 49.2, minLng: 1.4, maxLng: 3.7 }
 
-// Overpass bbox: south,west,north,east (IDF)
-const IDF_OVERPASS_BBOX = `${IDF.minLat},${IDF.minLng},${IDF.maxLat},${IDF.maxLng}`
+// Overpass bbox: south,west,north,east — Paris + inner suburbs (92/93/94)
+// Tighter than IDF so Overpass completes the name search in < 3s.
+const SEARCH_OVERPASS_BBOX = '48.77,2.18,48.96,2.55'
 
 const POI_RADII: Record<string, number> = {
   park: 700, garden: 600, landmark: 600, monument: 500,
@@ -69,16 +70,18 @@ function normalizeStreetName(s: string): string {
 async function fetchStreetWaysOverpass(streetName: string): Promise<GeoJSON.LineString[]> {
   // Escape regex metacharacters in the street name
   const escaped = streetName.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
-  // Case-insensitive exact match on the OSM `name` tag, any highway type
-  const query = `[out:json][timeout:10];way["name"~"^${escaped}$","i"]["highway"](${IDF_OVERPASS_BBOX});out geom;`
+  // Case-insensitive exact match on the OSM `name` tag, any highway type.
+  // GET request: simpler encoding, User-Agent required by overpass-api.de.
+  const query = `[out:json][timeout:20];way["name"~"^${escaped}$","i"]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
 
   try {
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(12000),
-    })
+    const res = await fetch(
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      {
+        headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' },
+        signal: AbortSignal.timeout(15000),
+      }
+    )
     if (!res.ok) return []
     const data: { elements?: OverpassElement[] } = await res.json()
 
