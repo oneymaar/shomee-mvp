@@ -32,15 +32,30 @@ interface NominatimResult {
   class?: string; type?: string; osm_type?: string
   geojson?: GeoJSON.Geometry
   boundingbox?: string[]
+  display_name?: string
+}
+
+/**
+ * Normalize a street name for fuzzy comparison:
+ * lowercase, remove diacritics, collapse non-alphanumeric to spaces.
+ */
+function normalizeStreetName(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
 }
 
 /**
  * Server-side geocoding with full geometry from Nominatim (polygon_geojson=1).
  *
- * For streets: appends ", Paris" to the query, fetches limit=5 results,
- * keeps only highway-class ways, combines their LineStrings into a MultiLineString.
+ * For streets: appends ", Paris" to the query, fetches limit=10 results,
+ * keeps only highway-class ways whose OSM name matches the queried label,
+ * then combines their LineStrings into a MultiLineString.
  * This handles streets split across arrondissements (e.g. "Rue des Martyrs"
- * has separate OSM ways in the 9e and 18e).
+ * has separate OSM ways in the 9e and 18e) while filtering out adjacent roads
+ * that Nominatim may return (e.g. connecting streets at roundabouts/junctions).
  *
  * For other POIs: keeps highest-ranked in-IDF result.
  *
@@ -64,7 +79,7 @@ export async function POST(req: NextRequest) {
         const params = new URLSearchParams({
           q,
           format: 'json',
-          limit: isStreet ? '5' : '1',  // more results for streets (split ways)
+          limit: isStreet ? '10' : '1',  // more results for streets (split ways)
           countrycodes: 'fr',
           bounded: '1',
           viewbox: `${IDF.minLng},${IDF.maxLat},${IDF.maxLng},${IDF.minLat}`,
@@ -100,8 +115,18 @@ export async function POST(req: NextRequest) {
           const highways = inIdf.filter(
             r => r.class === 'highway' || (r.osm_type === 'way' && r.type && HIGHWAY_TYPES.has(r.type))
           )
-          // Fall back to all in-IDF if no highway match
-          finalResults = highways.length ? highways : inIdf.slice(0, 1)
+
+          // Filter by name match: Nominatim may return adjacent roads ranked higher than
+          // the actual queried street (e.g. connecting roads at junctions, roundabouts).
+          // extract the first comma-separated component of display_name = OSM street name.
+          const queryNorm = normalizeStreetName(label)
+          const nameMatched = highways.filter(r => {
+            const osmName = (r.display_name ?? '').split(',')[0].trim()
+            return normalizeStreetName(osmName) === queryNorm
+          })
+
+          // Fall back to all highways if nothing matches (atypical names, OSM variants, etc.)
+          finalResults = nameMatched.length ? nameMatched : (highways.length ? highways : inIdf.slice(0, 1))
         } else {
           finalResults = inIdf.slice(0, 1)
         }
