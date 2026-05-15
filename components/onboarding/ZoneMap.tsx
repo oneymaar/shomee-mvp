@@ -414,7 +414,6 @@ function GeoLayers(props: GeoLayersProps) {
 
   useGeoLayer(map, {
     zones: communeIris,
-    // Low zoom: merged style (no borders, unselected invisible) — high zoom: detail style
     getPathStyle: (z) => irisZoomHi
       ? irisStyle(selectedIrisIds.includes(z.id))
       : irisStyleLowZoom(selectedIrisIds.includes(z.id)),
@@ -423,13 +422,12 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickCommuneIris,
     visible: showCommuneIris,
     styleKey: irisStyleKey,
-    showLabels: false,
+    showLabels: irisZoomHi,
     clickable: irisZoomHi,
   })
 
   useGeoLayer(map, {
     zones: parisIris,
-    // Low zoom: merged style (no borders, unselected invisible) — high zoom: detail style
     getPathStyle: (z) => irisZoomHi
       ? irisStyle(selectedIrisIds.includes(z.id))
       : irisStyleLowZoom(selectedIrisIds.includes(z.id)),
@@ -438,7 +436,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickIris,
     visible: showParisIris,
     styleKey: irisStyleKey,
-    showLabels: false,
+    showLabels: irisZoomHi,
     clickable: irisZoomHi,
   })
 
