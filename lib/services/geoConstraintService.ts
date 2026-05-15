@@ -54,6 +54,7 @@ export interface GeoConstraint {
   lng?: number
   geometry?: GeoJSON.Geometry  // full OSM geometry (LineString, Polygon…) for geometry-based IRIS intersection
   bbox?: [number, number, number, number]  // [minLat, maxLat, minLng, maxLng] from Nominatim — always reliable
+  parentArrIds?: string[]  // arr-N IDs the POI belongs to — restricts IRIS selection to those arrondissements
 }
 
 // ─── POI radius defaults by sub-type ───────────────────────────────────────
@@ -456,20 +457,37 @@ function resolveInsideToIris(
 
   if (c.type === 'poi') {
     const r = c.radiusM ?? poiRadius(c.poiType)
+
+    // When parentArrIds is set, restrict results to those arrondissements.
+    // Prevents endpoint-overshoot false positives when a street runs along
+    // an arr boundary (e.g. Avenue des Ternes / Faubourg du Roule at 17e/8e).
+    const filterByArr = (zones: GeoZone[]): GeoZone[] => {
+      if (!c.parentArrIds?.length) return zones
+      const allowed = new Set(c.parentArrIds)
+      return zones.filter(z => {
+        if (z.parentId?.startsWith('arr-')) return allowed.has(z.parentId)
+        if (z.parentId?.startsWith('qu-')) {
+          const q = quartiers.find(q => q.id === z.parentId)
+          return q?.parentId ? allowed.has(q.parentId) : false
+        }
+        return false
+      })
+    }
+
     // 1. Geometry: precise coverage (LineString/Polygon) — preferred for non-point features
     if (c.geometry && c.geometry.type !== 'Point') {
-      const g = filterIrisByGeometry(iris, c.geometry, r)
+      const g = filterByArr(filterIrisByGeometry(iris, c.geometry, r))
       if (g.length > 0) return g
     }
     // 2. Bounding box: reliable coverage of the full spatial extent of a street/POI
     if (c.bbox) {
       const buf = STREET_POI_TYPES.has(c.poiType ?? '') ? 120 : 80
-      const b = filterIrisByBbox(iris, c.bbox, buf)
+      const b = filterByArr(filterIrisByBbox(iris, c.bbox, buf))
       if (b.length > 0) return b
     }
     // 3. Point + radius fallback
     if (c.lat !== undefined && c.lng !== undefined) {
-      return filterIrisByCoords(iris, c.lat, c.lng, r)
+      return filterByArr(filterIrisByCoords(iris, c.lat, c.lng, r))
     }
   }
 

@@ -29,6 +29,7 @@ interface GeocodedPlace {
   geometry?: GeoJSON.Geometry | null
   bbox?: [number, number, number, number] | null  // [minLat, maxLat, minLng, maxLng]
   radius?: number
+  arrondissements?: string[]  // arr-N IDs extracted from Nominatim display_name
 }
 
 interface NominatimResult {
@@ -72,7 +73,7 @@ async function fetchStreetWaysOverpass(streetName: string): Promise<GeoJSON.Line
   const escaped = streetName.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
   // Case-insensitive exact match on the OSM `name` tag, any highway type.
   // GET request: simpler encoding, User-Agent required by overpass-api.de.
-  const query = `[out:json][timeout:20];way["name"~"^${escaped}$","i"]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
+  const query = `[out:json][timeout:20];way["name"~"^${escaped}$",i]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
 
   try {
     const res = await fetch(
@@ -233,6 +234,20 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // Extract arrondissement IDs from Nominatim display_names.
+        // Used to restrict IRIS selection to the arrondissement(s) the street belongs to,
+        // preventing false positives from perpendicular offsets crossing arr boundaries.
+        const arrondissements = isStreet
+          ? [...new Set(
+              finalResults
+                .map(r => {
+                  const m = (r.display_name ?? '').match(/Paris\s+(\d+)e?r?\s+Arrondissement/i)
+                  return m ? `arr-${parseInt(m[1])}` : null
+                })
+                .filter((id): id is string => id !== null)
+            )]
+          : undefined
+
         return {
           label,
           found: true,
@@ -241,6 +256,7 @@ export async function POST(req: NextRequest) {
           geometry,
           bbox: unionBbox,
           radius: POI_RADII[poiType ?? ''] ?? 500,
+          arrondissements: arrondissements?.length ? arrondissements : undefined,
         }
       })
     )

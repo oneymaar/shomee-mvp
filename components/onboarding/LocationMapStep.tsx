@@ -86,7 +86,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   // Cache geocoded POI data (label → {lat,lng,bbox,geometry,radiusM}).
   // Written by initMap after /api/location/geocode; read by loadIris to enrich
   // constraints without relying on Zustand store timing.
-  type PoiGeoData = { lat: number; lng: number; bbox?: [number,number,number,number]; geometry?: GeoJSON.Geometry; radiusM?: number }
+  type PoiGeoData = { lat: number; lng: number; bbox?: [number,number,number,number]; geometry?: GeoJSON.Geometry; radiusM?: number; parentArrIds?: string[] }
   const poiGeocodedRef = useRef<Map<string, PoiGeoData>>(new Map())
 
   // Snapshot of the engine's initial selection — captured once, used to distinguish
@@ -175,7 +175,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             })
             if (gr.ok) {
               const { results } = await gr.json() as {
-                results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number,number,number,number] | null; radius?: number }>
+                results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number,number,number,number] | null; radius?: number; arrondissements?: string[] }>
               }
               for (const r of results) {
                 if (r.found && r.lat !== undefined && r.lng !== undefined) {
@@ -184,6 +184,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                     bbox: r.bbox ?? undefined,
                     geometry: r.geometry ?? undefined,
                     radiusM: r.radius,
+                    parentArrIds: r.arrondissements,
                   })
                 }
               }
@@ -364,7 +365,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           })
           if (res.ok) {
             const { results } = await res.json() as {
-              results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number, number, number, number] | null; radius?: number }>
+              results: Array<{ label: string; found: boolean; lat?: number; lng?: number; geometry?: GeoJSON.Geometry | null; bbox?: [number, number, number, number] | null; radius?: number; arrondissements?: string[] }>
             }
             // Populate the ref cache so loadIris can use it even if store update is delayed
             for (const r of results) {
@@ -374,6 +375,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   bbox: r.bbox ?? undefined,
                   geometry: r.geometry ?? undefined,
                   radiusM: r.radius,
+                  parentArrIds: r.arrondissements,
                 })
               }
             }
