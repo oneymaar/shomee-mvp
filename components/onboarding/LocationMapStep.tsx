@@ -27,7 +27,18 @@ const ZoneMap = dynamic(() => import('./ZoneMap'), {
 const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
 /** Compute a [SW, NE] bounding box from an array of GeoZone polygons. */
-function zonesToBounds(zones: GeoZone[]): [[number, number], [number, number]] | null {
+/**
+ * Compute Leaflet fitBounds corners from a set of zones.
+ *
+ * coverage (default 0.8): fraction of the full extent to show on open.
+ *   1.0 = show 100% (all zones fully in view, may dezoom a lot).
+ *   0.8 = trim 10% from each side → one zoom level tighter; edge zones
+ *         remain reachable by panning.
+ *
+ * Important: only pass the zones that are actually selected (IRIS, not their
+ * parent arrondissement) so the bounds don't include the full arr polygon.
+ */
+function zonesToBounds(zones: GeoZone[], coverage = 0.8): [[number, number], [number, number]] | null {
   let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity
   let found = false
   for (const zone of zones) {
@@ -48,7 +59,17 @@ function zonesToBounds(zones: GeoZone[]): [[number, number], [number, number]] |
       }
     }
   }
-  return found ? [[minLat, minLng], [maxLat, maxLng]] : null
+  if (!found) return null
+
+  if (coverage < 1) {
+    const trim = (1 - coverage) / 2
+    const dLat = maxLat - minLat
+    const dLng = maxLng - minLng
+    minLat += dLat * trim;  maxLat -= dLat * trim
+    minLng += dLng * trim;  maxLng -= dLng * trim
+  }
+
+  return [[minLat, minLng], [maxLat, maxLng]]
 }
 
 interface LocationMapStepProps {
