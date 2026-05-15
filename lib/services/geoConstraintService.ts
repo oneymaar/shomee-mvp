@@ -166,10 +166,16 @@ const STREET_POI_TYPES = new Set(['street', 'avenue', 'boulevard', 'rue', 'quai'
 /**
  * Select IRIS that intersect a given GeoJSON geometry.
  *
- * Strategy:
- *   1. Sample points along the geometry every 40m
- *   2. For each sample: strict point-in-polygon + 60m centroid buffer
- *      (the buffer catches IRIS on the other side of a boundary line)
+ * Strategy for linear features (LineString, MultiLineString):
+ *   1. Sample points every 20m along the geometry
+ *   2. For each sample: test the centerline point AND 4 perpendicular offsets (±8m N/S/E/W)
+ *
+ * Why perpendicular offsets are necessary:
+ *   In Paris, IRIS boundaries often coincide with street centerlines.
+ *   A sample point ON the centerline falls ON the boundary of two adjacent IRIS —
+ *   polygonContainsPoint (ray-casting) may return false for both, causing missed IRIS.
+ *   An 8m lateral offset (~half a Parisian street width) places the point clearly
+ *   inside the adjacent IRIS polygon, reliably capturing IRIS on both sides of the street.
  *
  * Falls back to radius-based selection for Point geometries.
  */
@@ -182,17 +188,26 @@ function filterIrisByGeometry(
     const [lng, lat] = geometry.coordinates as [number, number]
     return filterIrisByCoords(candidates, lat, lng, fallbackRadius)
   }
-  // 25m step: fine enough to catch narrow IRIS along the street
-  const pts = sampleGeometryPoints(geometry, 25)
+  const pts = sampleGeometryPoints(geometry, 20)
   if (!pts.length) return []
 
   const selected = new Set<string>()
   for (const [lat, lng] of pts) {
-    // polygonContainsPoint is the primary and correct selector: an IRIS is selected
-    // if and only if a point ON the street falls inside its polygon.
-    // No centroid buffer here — it caused non-adjacent IRIS to be incorrectly selected.
-    for (const z of candidates) {
-      if (polygonContainsPoint(z.feature.geometry, lng, lat)) selected.add(z.id)
+    // Perpendicular offsets: ~8m in all 4 cardinal directions.
+    // Works for streets in any orientation (N-S, E-W, diagonal).
+    const dLat = 8 / 111_000
+    const dLng = 8 / (111_000 * Math.cos(lat * Math.PI / 180))
+    const toCheck: [number, number][] = [
+      [lat, lng],             // centerline
+      [lat + dLat, lng],      // north
+      [lat - dLat, lng],      // south
+      [lat, lng + dLng],      // east
+      [lat, lng - dLng],      // west
+    ]
+    for (const [la, lo] of toCheck) {
+      for (const z of candidates) {
+        if (polygonContainsPoint(z.feature.geometry, lo, la)) selected.add(z.id)
+      }
     }
   }
   return candidates.filter(z => selected.has(z.id))
