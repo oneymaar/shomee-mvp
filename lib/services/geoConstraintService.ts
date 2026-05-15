@@ -14,7 +14,7 @@
  */
 
 import type { GeoZone } from './geoDataService'
-import { polygonCentroid, polygonContainsPoint } from './geoDataService'
+import { polygonCentroid, polygonContainsPoint, matchQuartiersByName } from './geoDataService'
 import { getStationsByLine, findStation, normalizeLineId } from './metroStationsDb'
 import { findNeighborhoodById, matchNeighborhood } from './semanticNeighborhoodService'
 
@@ -360,13 +360,24 @@ function resolveInsideToIris(
 
   if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
     const n = resolveNeighborhoodCoords(c)
-    if (!n) return []
-    const radius = c.radiusM ?? n.confidenceRadiusMeters
-    let nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
-    if (n.maxSelectedIris) {
-      nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
+    if (n) {
+      const radius = c.radiusM ?? n.confidenceRadiusMeters
+      let nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
+      if (n.maxSelectedIris) {
+        nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
+      }
+      return nearIris
     }
-    return nearIris
+    // Fallback: match against quartiers administratifs (GeoJSON).
+    // Covers names absent from semanticNeighborhoods.json: Épinettes, Gros-Caillou,
+    // Plaine-de-Monceaux, Folie-Méricourt, Saint-Fargeau, Javel, etc.
+    const qaLabel = c.stationName ?? c.label
+    const matchedQAs = matchQuartiersByName(qaLabel, quartiers)
+    if (matchedQAs.length > 0 && matchedQAs.length <= 4) {
+      const qaIds = new Set(matchedQAs.map(q => q.id))
+      return iris.filter(z => z.parentId && qaIds.has(z.parentId))
+    }
+    return []
   }
 
   if (c.type === 'transport_station') {
@@ -414,11 +425,24 @@ function resolveExcludeToIris(
     return getIrisInZone(c.zoneId, allIris, quartiers)
   }
 
-  if (c.type === 'semantic_neighborhood') {
+  if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
     const n = resolveNeighborhoodCoords(c)
-    if (!n) return []
-    const radius = c.radiusM ?? n.confidenceRadiusMeters
-    return filterIrisByCoords(candidates, n.lat, n.lng, radius)
+    if (n) {
+      const radius = c.radiusM ?? n.confidenceRadiusMeters
+      return filterIrisByCoords(candidates, n.lat, n.lng, radius)
+    }
+    // Fallback: match against quartiers administratifs.
+    // Critical for exclusions like "Paris 17 mais pas les Épinettes":
+    // Épinettes is a QA of arr-17, not in semanticNeighborhoods.json.
+    // Radius-based exclusion would be imprecise; parentId-based is exact.
+    const qaLabel = c.stationName ?? c.label
+    const matchedQAs = matchQuartiersByName(qaLabel, quartiers)
+    if (matchedQAs.length > 0 && matchedQAs.length <= 4) {
+      const qaIds = new Set(matchedQAs.map(q => q.id))
+      // Exclude IRIS by exact parentId — not by radius, which would be imprecise
+      return allIris.filter(z => z.parentId && qaIds.has(z.parentId))
+    }
+    return []
   }
 
   if (c.type === 'transport_station') {
