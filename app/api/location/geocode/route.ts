@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 // Île-de-France bounding box
 const IDF = { minLat: 48.1, maxLat: 49.2, minLng: 1.4, maxLng: 3.7 }
 
+// Overpass bbox: south,west,north,east (IDF)
+const IDF_OVERPASS_BBOX = `${IDF.minLat},${IDF.minLng},${IDF.maxLat},${IDF.maxLng}`
+
 const POI_RADII: Record<string, number> = {
   park: 700, garden: 600, landmark: 600, monument: 500,
   street: 400, avenue: 500, boulevard: 600,
@@ -35,6 +38,11 @@ interface NominatimResult {
   display_name?: string
 }
 
+interface OverpassElement {
+  type: string
+  geometry?: Array<{ lat: number; lon: number }>
+}
+
 /**
  * Normalize a street name for fuzzy comparison:
  * lowercase, remove diacritics, collapse non-alphanumeric to spaces.
@@ -48,16 +56,52 @@ function normalizeStreetName(s: string): string {
 }
 
 /**
- * Server-side geocoding with full geometry from Nominatim (polygon_geojson=1).
+ * Fetch ALL highway ways with the given name from Overpass API.
  *
- * For streets: appends ", Paris" to the query, fetches limit=10 results,
- * keeps only highway-class ways whose OSM name matches the queried label,
- * then combines their LineStrings into a MultiLineString.
- * This handles streets split across arrondissements (e.g. "Rue des Martyrs"
- * has separate OSM ways in the 9e and 18e) while filtering out adjacent roads
- * that Nominatim may return (e.g. connecting streets at roundabouts/junctions).
+ * Nominatim returns results ranked by relevance — for long streets split into
+ * many OSM ways, this means only the most "prominent" segments near major
+ * intersections are returned, leaving out the middle and far sections.
+ * Overpass enumerates every way with the exact name, regardless of ranking,
+ * giving complete spatial coverage of the entire street.
  *
- * For other POIs: keeps highest-ranked in-IDF result.
+ * Returns GeoJSON LineStrings (one per OSM way), or [] on failure.
+ */
+async function fetchStreetWaysOverpass(streetName: string): Promise<GeoJSON.LineString[]> {
+  // Escape regex metacharacters in the street name
+  const escaped = streetName.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
+  // Case-insensitive exact match on the OSM `name` tag, any highway type
+  const query = `[out:json][timeout:10];way["name"~"^${escaped}$","i"]["highway"](${IDF_OVERPASS_BBOX});out geom;`
+
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `data=${encodeURIComponent(query)}`,
+      signal: AbortSignal.timeout(12000),
+    })
+    if (!res.ok) return []
+    const data: { elements?: OverpassElement[] } = await res.json()
+
+    return (data.elements ?? [])
+      .filter(e => e.type === 'way' && Array.isArray(e.geometry) && (e.geometry?.length ?? 0) >= 2)
+      .map(e => ({
+        type: 'LineString' as const,
+        coordinates: e.geometry!.map(p => [p.lon, p.lat] as [number, number]),
+      }))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Server-side geocoding with full geometry.
+ *
+ * For streets: Nominatim (for lat/lng reference) runs in parallel with Overpass
+ * (for complete geometry). Overpass returns ALL OSM ways with the queried name,
+ * ensuring the full spatial extent of the street is covered. Falls back to
+ * Nominatim geometry if Overpass is unavailable.
+ *
+ * For other POIs: keeps highest-ranked in-IDF Nominatim result.
  *
  * POST body: { places: [{ label: string, poiType?: string }] }
  * Response:  { results: GeocodedPlace[] }
@@ -79,13 +123,17 @@ export async function POST(req: NextRequest) {
         const params = new URLSearchParams({
           q,
           format: 'json',
-          limit: isStreet ? '10' : '1',  // more results for streets (split ways)
+          limit: isStreet ? '5' : '1',
           countrycodes: 'fr',
           bounded: '1',
           viewbox: `${IDF.minLng},${IDF.maxLat},${IDF.maxLng},${IDF.minLat}`,
           polygon_geojson: '1',
           'accept-language': 'fr',
         })
+
+        // For streets: start Overpass in parallel with Nominatim so both run concurrently.
+        // Overpass gives complete geometry; Nominatim gives the lat/lng reference point.
+        const overpassPromise = isStreet ? fetchStreetWaysOverpass(label) : Promise.resolve([])
 
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?${params}`,
@@ -111,37 +159,31 @@ export async function POST(req: NextRequest) {
         let finalResults = inIdf
 
         if (isStreet) {
-          // For streets: keep only highway-class ways (the actual road segments)
+          // For streets (Nominatim fallback): keep only highway-class ways with matching name
           const highways = inIdf.filter(
             r => r.class === 'highway' || (r.osm_type === 'way' && r.type && HIGHWAY_TYPES.has(r.type))
           )
-
-          // Filter by name match: Nominatim may return adjacent roads ranked higher than
-          // the actual queried street (e.g. connecting roads at junctions, roundabouts).
-          // extract the first comma-separated component of display_name = OSM street name.
           const queryNorm = normalizeStreetName(label)
           const nameMatched = highways.filter(r => {
             const osmName = (r.display_name ?? '').split(',')[0].trim()
             return normalizeStreetName(osmName) === queryNorm
           })
-
-          // Fall back to all highways if nothing matches (atypical names, OSM variants, etc.)
           finalResults = nameMatched.length ? nameMatched : (highways.length ? highways : inIdf.slice(0, 1))
         } else {
           finalResults = inIdf.slice(0, 1)
         }
 
-        // Primary lat/lng from first (highest-ranked) result
+        // Primary lat/lng from first (highest-ranked) Nominatim result
         const first = finalResults[0]
         const lat = parseFloat(first.lat)
         const lng = parseFloat(first.lon)
 
-        // Union bounding boxes of all selected results
+        // Union bounding boxes of all Nominatim results (fallback bbox)
         const bboxes = finalResults
           .map(r => r.boundingbox?.map(Number))
           .filter((bb): bb is number[] => Array.isArray(bb) && bb.length === 4)
 
-        const unionBbox: [number, number, number, number] | null = bboxes.length
+        let unionBbox: [number, number, number, number] | null = bboxes.length
           ? [
             Math.min(...bboxes.map(b => b[0])),  // minLat (south)
             Math.max(...bboxes.map(b => b[1])),  // maxLat (north)
@@ -150,7 +192,7 @@ export async function POST(req: NextRequest) {
           ]
           : null
 
-        // Combine LineString geometries into MultiLineString for split streets
+        // Nominatim geometry (fallback if Overpass is unavailable)
         const lineGeoms = finalResults
           .map(r => r.geojson)
           .filter((g): g is GeoJSON.LineString | GeoJSON.MultiLineString =>
@@ -168,8 +210,24 @@ export async function POST(req: NextRequest) {
           }
           geometry = { type: 'MultiLineString', coordinates: allCoords }
         } else {
-          // No LineString: try any geometry, then null
           geometry = finalResults.find(r => r.geojson)?.geojson ?? null
+        }
+
+        // Override with Overpass geometry if available (complete coverage of all street segments)
+        if (isStreet) {
+          const overpassWays = await overpassPromise
+          if (overpassWays.length > 0) {
+            const allCoords = overpassWays.map(w => w.coordinates)
+            geometry = allCoords.length === 1
+              ? { type: 'LineString', coordinates: allCoords[0] }
+              : { type: 'MultiLineString', coordinates: allCoords }
+
+            // Recompute bbox from the complete Overpass geometry
+            const allPoints = allCoords.flat()
+            const lats = allPoints.map(p => p[1])
+            const lngs = allPoints.map(p => p[0])
+            unionBbox = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)]
+          }
         }
 
         return {
