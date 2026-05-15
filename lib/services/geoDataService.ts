@@ -125,10 +125,11 @@ function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[], communes: GeoZone[]
     }
     if (!parentId) parentId = `arr-${arrNum}`
 
+    const name = irisName.charAt(0).toUpperCase() + irisName.slice(1).toLowerCase()
     return {
       id,
-      name: irisName.charAt(0).toUpperCase() + irisName.slice(1).toLowerCase(),
-      shortName: irisName.split(' ').slice(0, 2).join(' '),
+      name,
+      shortName: name,
       type: 'iris',
       parentId,
       feature: { ...f, properties: { ...p, _zoneId: id, _parentId: parentId } },
@@ -140,10 +141,11 @@ function parseIris(f: GeoJSON.Feature, quartiers: GeoZone[], communes: GeoZone[]
   const commune = communes.find((c) => c.id === `com-${communeCode}`)
   if (!commune) return null
 
+  const name = irisName.charAt(0).toUpperCase() + irisName.slice(1).toLowerCase()
   return {
     id,
-    name: irisName.charAt(0).toUpperCase() + irisName.slice(1).toLowerCase(),
-    shortName: irisName.split(' ').slice(0, 2).join(' '),
+    name,
+    shortName: name,
     type: 'iris',
     parentId: commune.id,
     feature: { ...f, properties: { ...p, _zoneId: id, _parentId: commune.id } },
