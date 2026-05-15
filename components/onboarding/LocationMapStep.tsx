@@ -75,13 +75,17 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const [irisLoading, setIrisLoading] = useState(false)
   const [fitBounds, setFitBounds] = useState<[[number, number], [number, number]] | null>(null)
   const [constraintSummary, setConstraintSummary] = useState<string[]>([])
-  const [briefDismissed, setBriefDismissed] = useState(false)
+  // briefDismissed removed — brief tag visibility is now controlled by
+  // locationIntent.geoConstraints (stripped on individual removal).
   const [error, setError] = useState<string | null>(null)
   const [locationLabel, setLocationLabel] = useState(
     locationLat && locationLng ? locationQuery : ''
   )
   const initialized = useRef(false)
   const quartiersRef = useRef<GeoZone[]>([])
+  // Fully enriched constraints (with geometry/lat/lng) used in the last resolveConstraints call.
+  // Required to re-run the resolver when a brief tag is removed individually.
+  const enrichedConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[]>([])
   quartiersRef.current = quartiers
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
@@ -201,6 +205,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           return data ? { ...c, ...data } : c
         })
       }
+
+      // Snapshot enriched constraints for brief-tag individual removal
+      enrichedConstraintsRef.current = resolveConstraintsInput
 
       // Try geo-constraint intersection first
       if (resolveConstraintsInput.length) {
@@ -630,8 +637,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   type BriefTag = { id: string; label: string; icon: 'station' | 'pin' }
 
   const briefTags = useMemo((): BriefTag[] => {
-    // Hidden once the user explicitly dismissed the brief, even if new selections appear
-    if (briefDismissed) return []
+    // Brief tags disappear when their constraint is stripped from locationIntent.geoConstraints
+    // (handleRemoveBrief updates the store). No separate dismissed flag needed.
     const geoC = locationIntent?.geoConstraints ?? []
     const nonAdmin = geoC.filter(c => c.type !== 'administrative_area')
     if (nonAdmin.length === 0) return []
@@ -650,15 +657,42 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       result.push({ id: `${c.type}_${label}`, label, icon: isStation ? 'station' : 'pin' })
     }
     return result
-  }, [briefDismissed, locationIntent?.geoConstraints])
+  }, [locationIntent?.geoConstraints])
 
-  const handleRemoveBrief = useCallback(() => {
-    // Dismiss the brief label only — zones remain selected.
-    // The brief tag is a summary of the intent (what the engine understood),
-    // not a zone selector; its removal must not deselect other zones.
-    setBriefDismissed(true)
+  // Returns the display label for a constraint — mirrors the briefTags computation.
+  const briefLabelOf = (c: import('@/lib/services/geoConstraintService').GeoConstraint): string =>
+    c.type === 'transport_station' ? (c.stationName ?? c.label) :
+    c.type === 'transport_line'    ? `Ligne ${c.line ?? c.label}` :
+    c.label
+
+  const handleRemoveBrief = useCallback((tag: BriefTag) => {
+    // Re-run the resolver without the constraints that produced this brief tag,
+    // so only the zones contributed by it are removed — other zones stay intact.
+    const remaining = enrichedConstraintsRef.current.filter(c => {
+      if (c.type === 'administrative_area') return true
+      return `${c.type}_${briefLabelOf(c)}` !== tag.id
+    })
+    const newIrisIds = remaining.length > 0
+      ? resolveConstraints(remaining, iris, quartiersRef.current, communesRef.current).irisIds
+      : []
+
+    // Strip the constraint from the store's locationIntent so briefTags recomputes.
+    const intent = useSearchStore.getState().locationIntent
+    useSearchStore.setState({
+      selectedIrisIds: newIrisIds,
+      locationIntent: intent ? {
+        ...intent,
+        geoConstraints: (intent.geoConstraints ?? []).filter(c => {
+          if (c.type === 'administrative_area') return true
+          return `${c.type}_${briefLabelOf(c)}` !== tag.id
+        }),
+      } : null,
+    })
+
+    enrichedConstraintsRef.current = remaining
     initialStateRef.current = null
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [iris])
 
   // ── Tag computation ───────────────────────────────────────────────────────
 
@@ -800,7 +834,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                   {briefTags.map((tag) => (
                     <button
                       key={tag.id}
-                      onClick={handleRemoveBrief}
+                      onClick={() => handleRemoveBrief(tag)}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border border-[rgba(145,78,60,0.35)]"
                       style={{ backgroundColor: 'rgba(145,78,60,0.1)', color: '#914E3C' }}
                     >
