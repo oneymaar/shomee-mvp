@@ -653,10 +653,11 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   }, [briefDismissed, locationIntent?.geoConstraints])
 
   const handleRemoveBrief = useCallback(() => {
-    // Mark brief as dismissed (prevents re-appearance if user later adds zones manually)
+    // Dismiss the brief label only — zones remain selected.
+    // The brief tag is a summary of the intent (what the engine understood),
+    // not a zone selector; its removal must not deselect other zones.
     setBriefDismissed(true)
     initialStateRef.current = null
-    useSearchStore.setState({ selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [] })
   }, [])
 
   // ── Tag computation ───────────────────────────────────────────────────────
