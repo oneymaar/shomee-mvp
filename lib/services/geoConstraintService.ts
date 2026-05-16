@@ -297,12 +297,38 @@ function irisCentroid(zone: GeoZone): [number, number] | null {
 
 const DEFAULT_TRANSPORT_RADIUS_M = 650
 
+// All metro line IDs (used when line:"metro" = any metro station)
+const METRO_LINE_IDS = ['1','2','3','3b','4','5','6','7','7b','8','9','10','11','12','13','14']
+const RER_LINE_IDS   = ['A','B','C','D','E']
+
 function filterIrisByTransportLine(
   candidates: GeoZone[],
   line: string,
   radiusM = DEFAULT_TRANSPORT_RADIUS_M
 ): GeoZone[] {
   const normalizedLine = normalizeLineId(line)
+
+  // Special values: "metro" or "rer" = any station on that network.
+  // Emitted by the LLM for "proche du métro" / "à moins de Xmin du métro"
+  // without a specific line number.
+  if (normalizedLine === 'metro' || normalizedLine === 'rer') {
+    const lineIds = normalizedLine === 'metro' ? METRO_LINE_IDS : RER_LINE_IDS
+    // Collect unique stations (dedup by name)
+    const seen = new Map<string, { lat: number; lng: number }>()
+    for (const l of lineIds) {
+      for (const s of getStationsByLine(l)) {
+        if (!seen.has(s.name)) seen.set(s.name, { lat: s.lat, lng: s.lng })
+      }
+    }
+    const allStations = [...seen.values()]
+    return candidates.filter((zone) => {
+      const centroid = irisCentroid(zone)
+      if (!centroid) return false
+      const [lat, lng] = centroid
+      return allStations.some((s) => haversineM(lat, lng, s.lat, s.lng) <= radiusM)
+    })
+  }
+
   const stations = getStationsByLine(normalizedLine)
   if (!stations.length) return candidates
 

@@ -493,7 +493,19 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
         if (adminInsideConstraints.length > 0) {
           newArrIds = adminInsideConstraints.filter(c => c.zoneId!.startsWith('arr-')).map(c => c.zoneId!)
-          newCommuneIds = adminInsideConstraints.filter(c => c.zoneId!.startsWith('com-')).map(c => c.zoneId!)
+
+          // Validate commune zoneIds — the LLM can hallucinate wrong INSEE codes
+          // (e.g. "Vincennes" → com-94089 Villeneuve-Saint-Georges instead of com-94080).
+          // Keep only IDs that exist in the loaded communes; for the rest, match by label.
+          const rawCommIds = adminInsideConstraints.filter(c => c.zoneId!.startsWith('com-'))
+          newCommuneIds = rawCommIds
+            .map(c => {
+              if (loadedCommunes.some(lc => lc.id === c.zoneId)) return c.zoneId!
+              // Wrong ID: find the commune by label name
+              const matched = matchCommunes([c.label], loadedCommunes)
+              return matched.length > 0 ? matched[0].id : null
+            })
+            .filter((id): id is string => id !== null)
           newQuartierIds = newArrIds.flatMap(id => getChildQuartiers(id, qus).map(q => q.id))
         } else {
           const matchedArrs = matchArrondissements(intent.location_terms, arrs)

@@ -136,15 +136,27 @@ INTERSECTION — zone + contrainte de proximité transport :
 → La zone obtient operator:"inside"
 → La contrainte transport obtient operator:"near"
 → resolutionStrategy:"transport_line_intersection"
-→ NE JAMAIS afficher tout l'arrondissement — seulement les IRIS proches de la ligne
+→ NE JAMAIS afficher tout l'arrondissement — seulement les IRIS proches de la ligne/réseau
+
+Proximité transport sans ligne précise :
+  "proche du métro" / "à moins de Xmin du métro" → line:"metro", radiusM selon temps de marche
+  "proche du RER"   / "à moins de Xmin du RER"   → line:"rer",   radiusM selon temps de marche
+  Correspondance temps de marche → radiusM :
+    ≤5min → 400  |  ≤8min → 650  |  ≤10min → 800  |  ≤15min → 1200
 
 Exemples :
 "Paris 12 proche ligne 1"
   → [{type:"administrative_area", zoneId:"arr-12", operator:"inside"},
      {type:"transport_line", line:"1", operator:"near"}]
+"Paris 13 à moins de 5mn du métro"
+  → [{type:"administrative_area", zoneId:"arr-13", operator:"inside"},
+     {type:"transport_line", line:"metro", operator:"near", radiusM:400}]
 "Batignolles proche ligne 13"
   → [{type:"semantic_neighborhood", neighborhoodId:"batignolles", operator:"inside"},
      {type:"transport_line", line:"13", operator:"near"}]
+"Paris 11 à 10min max du RER"
+  → [{type:"administrative_area", zoneId:"arr-11", operator:"inside"},
+     {type:"transport_line", line:"rer", operator:"near", radiusM:800}]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STRUCTURE "ENTRE X ET Y" — PRIORITÉ HAUTE
