@@ -163,10 +163,23 @@ OBLIGATOIRE pour "between" — chaque contrainte DOIT avoir l'un de ces champs r
   • zoneId (arrondissement ou commune)
 Si une entité n'est pas reconnue, status:"ambiguous" plutôt que de l'omettre.
 
-IDs quartiers reconnus pour between : passy, trocadero, batignolles, le_marais, oberkampf,
-canal_saint_martin, belleville, montmartre, pigalle, nation (→ faubourg_saint_antoine),
-bastille (→ faubourg_saint_antoine), republique (→ oberkampf), daumesnil, reuilly_diderot,
-aligre, saint_germain_des_pres, quartier_latin, mouffetard, butte_aux_cailles, alesia
+IDs quartiers reconnus (à utiliser comme neighborhoodId) :
+chatelet, beaubourg, louvre, sentier, haut-marais, etienne-marcel, le-marais, ile-saint-louis,
+place-des-vosges, hotel-de-ville, mouffetard, jussieu, jardin-des-plantes, monge, val-de-grace,
+port-royal, sorbonne, quartier-latin, saint-germain-des-pres, odeon, luxembourg, saint-michel,
+ile-de-la-cite, notre-dame-des-champs, raspail, invalides, champs-de-mars, ecole-militaire,
+necker, tour-eiffel, europe, madeleine, triangle-d-or, champs-elysees, saint-lazare, opera,
+parc-monceau, ternes, martyrs, saint-georges, sopi, trudaine, pigalle, canal-saint-martin,
+hopital-saint-louis, gare-de-l-est, oberkampf, voltaire, ledru-rollin, faubourg-saint-antoine,
+faidherbe, bastille, aligre, quinze-vingt, gare-de-lyon, reuilly-diderot, picpus, bel-air,
+daumesnil, bercy, butte-aux-cailles, gobelins, place-d-italie, tolbiac, bnf, parc-montsouris,
+denfert-rochereau, montparnasse, alesia, plaisance, beaugrenelle, commerce, vaugirard,
+porte-de-versailles, convention, la-motte-piquet, passy, auteuil, trocadero, victor-hugo,
+foch, ranelagh, porte-maillot, porte-dauphine, batignolles, epinettes, montmartre, abbesses,
+grandes-carrieres, guy-moquet, jules-joffrin, la-mouzaia, buttes-chaumont, la-villette,
+canal-de-l-ourcq, jourdain, belleville, gambetta, pere-lachaise, reunion, pyrenees, charonne,
+martin-luther-king, saint-ferdinand, villiers, pereire, bercy-village, jeanne-d-arc,
+maurice-gardette, ile-de-la-cite
 
 Exemples OBLIGATOIRES à traiter comme between :
 "entre Passy et Trocadéro"

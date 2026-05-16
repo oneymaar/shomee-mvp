@@ -10,6 +10,7 @@
 
 import type { GeoConstraint } from './geoConstraintService'
 import rawNeighborhoods from '@/src/data/semanticNeighborhoods.json'
+import { matchQuartier, findQuartierById } from './quartierMatchingService'
 
 export interface SemanticNeighborhood {
   id: string
@@ -44,6 +45,7 @@ function normalize(s: string): string {
 
 /**
  * Match a user query against the neighborhood database.
+ * Tries semanticNeighborhoods.json first (richer metadata), then quartiers.json (larger coverage).
  * Returns the best match or null if nothing found.
  */
 export function matchNeighborhood(query: string): SemanticNeighborhood | null {
@@ -66,6 +68,26 @@ export function matchNeighborhood(query: string): SemanticNeighborhood | null {
     })) return n
   }
 
+  // Pass 3: fuzzy match in quartiers.json (handles typos, new quartiers)
+  const qtMatch = matchQuartier(query)
+  if (qtMatch && qtMatch.confidence >= 0.65) {
+    // Wrap the quartier as a synthetic SemanticNeighborhood so existing callers work unchanged.
+    return {
+      id: qtMatch.quartier.id,
+      label: qtMatch.quartier.name,
+      aliases: qtMatch.quartier.aliases,
+      city: qtMatch.quartier.city,
+      arrondissement: '',
+      type: 'semantic_neighborhood',
+      // Placeholder center — geoConstraintService will use irisNames instead when available
+      center: { lat: 48.8566, lng: 2.3522 },
+      relatedStations: [],
+      confidenceRadiusMeters: 500,
+      vibeTags: [],
+      description: qtMatch.quartier.name,
+    }
+  }
+
   return null
 }
 
@@ -83,6 +105,9 @@ export function findNeighborhoodById(id: string): SemanticNeighborhood | null {
  * span multiple arrondissements (e.g. Le Marais: Paris 3 / Paris 4).
  */
 export function neighborhoodToConstraints(n: SemanticNeighborhood): GeoConstraint[] {
+  // Include irisNames from quartiers.json when available — enables direct IRIS lookup
+  // in resolveInsideToIris instead of falling back to radius-based selection.
+  const qtData = findQuartierById(n.id)
   return [{
     type: 'semantic_neighborhood',
     label: n.label,
@@ -90,5 +115,6 @@ export function neighborhoodToConstraints(n: SemanticNeighborhood): GeoConstrain
     confidence: 0.95,
     neighborhoodId: n.id,
     radiusM: n.confidenceRadiusMeters,
+    irisNames: qtData?.irisNames,
   }]
 }

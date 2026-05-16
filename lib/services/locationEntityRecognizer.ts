@@ -19,6 +19,7 @@
 import rawStations from '@/src/data/transportStations.json'
 import rawNeighborhoods from '@/src/data/semanticNeighborhoods.json'
 import type { LocationIntent } from '@/lib/searchStore'
+import { matchQuartier, normalizeQ, type Quartier } from './quartierMatchingService'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -142,6 +143,17 @@ function neighborhoodBySubstring(q: string): RawNeighborhood | null {
   return null
 }
 
+function buildQuartierEntity(q: Quartier, confidence: number): RecognizedLocationEntity {
+  return {
+    id: q.id,
+    label: q.name,
+    type: 'semantic_neighborhood',
+    displayLabel: `${q.name} · ${q.city}`,
+    emoji: '🏘',
+    confidence,
+  }
+}
+
 // ─── Public API ────────────────────────────────────────────────────────────
 
 // Patterns that indicate the query contains multiple geographic entities.
@@ -192,20 +204,32 @@ export function recognizeLocationEntity(
     if (n) return buildNeighborhood(n, 0.99)
   }
 
-  // 4. Direct normalized match in both DBs
-  // When both a station and a neighborhood match, prefer the neighborhood —
-  // the user can always specify "métro X" to get the station explicitly.
+  // 4. Direct normalized match — quartiers DB (fuzzy-capable), then legacy neighborhoods, then stations.
+  //    Quartiers always beat stations for bare name queries — user can say "métro X" for the station.
   const qNorm = norm(q)
   const stMatch = stationByNorm.get(qNorm)
   const nbMatch = neighborhoodByNorm.get(qNorm)
 
-  if (stMatch && nbMatch) return buildNeighborhood(nbMatch, 0.90)
-  if (stMatch) return buildStation(stMatch, 0.9)
-  if (nbMatch) return buildNeighborhood(nbMatch, 0.9)
+  // 4a. Exact match in quartiers DB
+  const qtExact = matchQuartier(q)
+  if (qtExact && qtExact.method === 'exact') {
+    return buildQuartierEntity(qtExact.quartier, 0.95)
+  }
 
-  // 5. Substring match in neighborhoods
+  // 4b. Exact match in legacy semanticNeighborhoods (richer metadata: center, vibeTags…)
+  if (nbMatch) return buildNeighborhood(nbMatch, 0.90)
+
+  // 4c. Station exact match (only if no neighborhood matched)
+  if (stMatch && !nbMatch) return buildStation(stMatch, 0.9)
+
+  // 5. Substring / contains match in neighborhoods, then quartiers
   const nbSub = neighborhoodBySubstring(q)
   if (nbSub) return buildNeighborhood(nbSub, 0.75)
+
+  // 6. Fuzzy match in quartiers (contains / Levenshtein) — handles typos like "picpu", "belair"
+  if (qtExact && qtExact.confidence >= 0.65) {
+    return buildQuartierEntity(qtExact.quartier, qtExact.confidence * 0.9)
+  }
 
   return null
 }

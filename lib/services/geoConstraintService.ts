@@ -17,6 +17,7 @@ import type { GeoZone } from './geoDataService'
 import { polygonCentroid, polygonContainsPoint, matchQuartiersByName } from './geoDataService'
 import { getStationsByLine, findStation, normalizeLineId } from './metroStationsDb'
 import { findNeighborhoodById, matchNeighborhood } from './semanticNeighborhoodService'
+import { findQuartierById, normalizeIrisName } from './quartierMatchingService'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ export interface GeoConstraint {
   geometry?: GeoJSON.Geometry  // full OSM geometry (LineString, Polygon…) for geometry-based IRIS intersection
   bbox?: [number, number, number, number]  // [minLat, maxLat, minLng, maxLng] from Nominatim — always reliable
   parentArrIds?: string[]  // arr-N IDs the POI belongs to — restricts IRIS selection to those arrondissements
+  irisNames?: string[]     // explicit IRIS names from quartiers.json — used for direct name-based lookup
 }
 
 // ─── POI radius defaults by sub-type ───────────────────────────────────────
@@ -426,6 +428,21 @@ function resolveInsideToIris(
   }
 
   if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
+    // 1. Explicit IRIS name list from quartiers.json — most precise resolution
+    //    Try irisNames on the constraint first, then look up by neighborhoodId.
+    const irisNamesToResolve = c.irisNames
+      ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+    if (irisNamesToResolve?.length) {
+      const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
+      const matched = iris.filter(z =>
+        nameSet.has(normalizeIrisName(z.name)) ||
+        nameSet.has(normalizeIrisName(z.shortName))
+      )
+      if (matched.length > 0) return matched
+      // Fall through if no IRIS found by name (data mismatch) — try radius below
+    }
+
+    // 2. Radius-based resolution from semanticNeighborhoods.json
     const n = resolveNeighborhoodCoords(c)
     if (n) {
       const radius = c.radiusM ?? n.confidenceRadiusMeters
@@ -435,9 +452,8 @@ function resolveInsideToIris(
       }
       return nearIris
     }
-    // Fallback: match against quartiers administratifs (GeoJSON).
-    // Covers names absent from semanticNeighborhoods.json: Épinettes, Gros-Caillou,
-    // Plaine-de-Monceaux, Folie-Méricourt, Saint-Fargeau, Javel, etc.
+
+    // 3. Fallback: match against quartiers administratifs (GeoJSON names).
     const qaLabel = c.stationName ?? c.label
     const matchedQAs = matchQuartiersByName(qaLabel, quartiers)
     if (matchedQAs.length > 0 && matchedQAs.length <= 4) {
