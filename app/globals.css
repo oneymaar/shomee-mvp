@@ -55,7 +55,7 @@ body {
   box-shadow: 0 2px 12px rgba(0,0,0,.18);
 }
 .station-popup .leaflet-popup-content {
-  margin: 10px 12px;
+  margin: 12px 14px 10px;
 }
 .station-popup .leaflet-popup-tip-container {
   display: none;

@@ -24,13 +24,33 @@ const RATP_LINE: Record<string, { bg: string; fg: string }> = {
 function stationPopupHTML(name: string, lines: string[]): string {
   const circles = lines.map(l => {
     const c = RATP_LINE[l] ?? { bg: '#888', fg: '#fff' }
-    return `<div style="width:26px;height:26px;border-radius:50%;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <span style="font-size:${l.length > 2 ? 8 : 10}px;font-weight:900;color:${c.fg};font-family:system-ui,sans-serif;line-height:1">${l}</span>
+    // font-size: 3-char labels (RER lines) get 7px, 1-2 char labels get 9px
+    const fs = l.length >= 3 ? 7 : 9
+    return `<div style="width:20px;height:20px;border-radius:50%;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <span style="font-size:${fs}px;font-weight:900;color:${c.fg};font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.3px">${l}</span>
     </div>`
   }).join('')
   return `<div style="font-family:system-ui,sans-serif">
-    <div style="font-weight:700;font-size:13px;color:#111;margin-bottom:8px">${name}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:5px">${circles}</div>
+    <div style="font-weight:700;font-size:13px;color:#111;margin-bottom:5px">${name}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">${circles}</div>
+  </div>`
+}
+
+/** Build the map icon HTML for a station marker.
+ *  Mixed metro+RER → two circles side by side. */
+function stationIconHTML(name: string, isMet: boolean, isRer: boolean): string {
+  const circle = (label: string) => {
+    const fs = label === 'RER' ? '4.5px' : '8px'
+    return `<div style="width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #003189;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.22)">
+      <span style="color:#003189;font-size:${fs};font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.3px">${label}</span>
+    </div>`
+  }
+  const badges = (isMet && isRer)
+    ? `<div style="display:flex;gap:2px">${circle('M')}${circle('RER')}</div>`
+    : circle(isRer ? 'RER' : 'M')
+  return `<div style="user-select:none;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-40%);cursor:pointer">
+    ${badges}
+    <span style="margin-top:2px;font-size:9px;color:#111;font-family:system-ui,sans-serif;font-weight:600;white-space:nowrap;line-height:1.2;max-width:80px;overflow:hidden;text-overflow:ellipsis;text-align:center;text-shadow:0 0 3px #fff,0 0 4px #fff,0 0 5px #fff">${name}</span>
   </div>`
 }
 
@@ -480,23 +500,19 @@ function GeoLayers(props: GeoLayersProps) {
     for (const s of METRO_STATIONS) {
       const isRer = s.lines.some(l => /^[A-E]$/.test(l))
       const isMet = s.lines.some(l => /^\d+$/.test(l))
-      const badge = (isRer && !isMet) ? 'RER' : 'M'
 
-      const html = `
-        <div style="user-select:none;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-40%);cursor:pointer">
-          <div style="width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #003189;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25)">
-            <span style="color:#003189;font-size:8px;font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.3px">${badge}</span>
-          </div>
-          <span style="margin-top:2px;font-size:9px;color:#111;font-family:system-ui,sans-serif;font-weight:600;white-space:nowrap;line-height:1.2;max-width:80px;overflow:hidden;text-overflow:ellipsis;text-align:center;text-shadow:0 0 3px #fff,0 0 4px #fff,0 0 5px #fff">${s.name}</span>
-        </div>`
-
-      const icon = L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
+      const icon = L.divIcon({
+        html: stationIconHTML(s.name, isMet, isRer),
+        className: '',
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+      })
       const marker = L.marker([s.lat, s.lng], { icon, keyboard: false })
       marker.bindPopup(stationPopupHTML(s.name, s.lines), {
         className: 'station-popup',
         closeButton: false,
         maxWidth: 220,
-        offset: [0, -14],
+        offset: [0, -4],
       })
       marker.addTo(map)
       stationMarkersRef.current.push(marker)
