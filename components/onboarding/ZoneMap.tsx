@@ -423,7 +423,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickCommuneIris,
     visible: showCommuneIris,
     styleKey: irisStyleKey,
-    showLabels: irisZoomHi,
+    showLabels: false,
     clickable: irisZoomHi,
   })
 
@@ -437,7 +437,7 @@ function GeoLayers(props: GeoLayersProps) {
     onClick: onClickIris,
     visible: showParisIris,
     styleKey: irisStyleKey,
-    showLabels: irisZoomHi,
+    showLabels: false,
     clickable: irisZoomHi,
   })
 
@@ -452,16 +452,15 @@ function GeoLayers(props: GeoLayersProps) {
     for (const s of METRO_STATIONS) {
       const isRer = s.lines.some(l => /^[A-E]$/.test(l))
       const isMet = s.lines.some(l => /^\d+$/.test(l))
-      // RER-only → blue badge; Metro (possibly mixed) → dark badge
-      const bg    = (isRer && !isMet) ? '#2255a8' : '#383838'
       const badge = (isRer && !isMet) ? 'RER' : 'M'
 
+      // Blanc avec contour bleu foncé + lettre bleu foncé (style panneau métro)
       const html = `
         <div style="pointer-events:none;user-select:none;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-40%)">
-          <div style="width:11px;height:11px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.35)">
-            <span style="color:#fff;font-size:5px;font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.2px">${badge}</span>
+          <div style="width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #003189;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25)">
+            <span style="color:#003189;font-size:8px;font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.3px">${badge}</span>
           </div>
-          <span style="margin-top:1px;font-size:6px;color:#1a1a1a;font-family:system-ui,sans-serif;font-weight:500;white-space:nowrap;line-height:1.1;max-width:58px;overflow:hidden;text-overflow:ellipsis;text-align:center;text-shadow:0 0 2px #fff,0 0 3px #fff">${s.name}</span>
+          <span style="margin-top:2px;font-size:9px;color:#111;font-family:system-ui,sans-serif;font-weight:600;white-space:nowrap;line-height:1.2;max-width:80px;overflow:hidden;text-overflow:ellipsis;text-align:center;text-shadow:0 0 3px #fff,0 0 4px #fff,0 0 5px #fff">${s.name}</span>
         </div>`
 
       const icon = L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
