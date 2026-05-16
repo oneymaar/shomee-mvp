@@ -4,7 +4,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { GeoZone } from '@/lib/services/geoDataService'
-import { METRO_STATIONS } from '@/lib/services/metroStationsDb'
+import rawStations from '@/src/data/transportStations.json'
+
+// Only metro + RER stations on the map (no tram, no Transilien)
+const MAP_STATIONS = (rawStations as Array<{
+  label: string
+  type: string
+  lines: string[]
+  coordinates: { lat: number; lng: number }
+}>).filter(s => s.type === 'metro_station' || s.type === 'rer_station')
 
 // ─── RATP line colors ───────────────────────────────────────────────────────
 const RATP_LINE: Record<string, { bg: string; fg: string }> = {
@@ -503,18 +511,18 @@ function GeoLayers(props: GeoLayersProps) {
     stationMarkersRef.current = []
     if (!irisZoomHi) return
 
-    for (const s of METRO_STATIONS) {
-      const isRer = s.lines.some(l => /^[A-E]$/.test(l))
-      const isMet = s.lines.some(l => /^\d+$/.test(l))
+    for (const s of MAP_STATIONS) {
+      const isRer = s.type === 'rer_station' || s.lines.some(l => /^[A-E]$/.test(l))
+      const isMet = s.type === 'metro_station' || s.lines.some(l => /^\d+$/.test(l))
 
       const icon = L.divIcon({
-        html: stationIconHTML(s.name, isMet, isRer),
+        html: stationIconHTML(s.label, isMet, isRer),
         className: '',
         iconSize: [0, 0],
         iconAnchor: [0, 0],
       })
-      const marker = L.marker([s.lat, s.lng], { icon, keyboard: false })
-      marker.bindPopup(stationPopupHTML(s.name, s.lines), {
+      const marker = L.marker([s.coordinates.lat, s.coordinates.lng], { icon, keyboard: false })
+      marker.bindPopup(stationPopupHTML(s.label, s.lines), {
         className: 'station-popup',
         closeButton: false,
         maxWidth: 220,
