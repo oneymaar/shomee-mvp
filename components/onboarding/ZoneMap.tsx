@@ -6,13 +6,42 @@ import L from 'leaflet'
 import type { GeoZone } from '@/lib/services/geoDataService'
 import rawStations from '@/src/data/transportStations.json'
 
-// Only metro + RER stations on the map (no tram, no Transilien)
-const MAP_STATIONS = (rawStations as Array<{
-  label: string
-  type: string
-  lines: string[]
-  coordinates: { lat: number; lng: number }
-}>).filter(s => s.type === 'metro_station' || s.type === 'rer_station')
+type RawStation = { label: string; type: string; lines: string[]; coordinates: { lat: number; lng: number } }
+
+// Only metro + RER stations (no tram, no Transilien)
+const MAP_STATIONS_RAW = (rawStations as RawStation[])
+  .filter(s => s.type === 'metro_station' || s.type === 'rer_station')
+
+/**
+ * IDFM records each physical entrance separately (e.g. Concorde M1/M12 and M8
+ * are 300m apart → separate entries). Merge entries with the same label that
+ * are within 800m of each other: running-average centroid + union of lines.
+ */
+function mergeNearbyStations(stations: RawStation[]): RawStation[] {
+  type M = RawStation & { _count: number }
+  const result: M[] = []
+  for (const s of stations) {
+    const match = result.find(r => {
+      if (r.label !== s.label) return false
+      const dLat = (r.coordinates.lat - s.coordinates.lat) * 111_000
+      const dLng = (r.coordinates.lng - s.coordinates.lng) * 111_000 * Math.cos(r.coordinates.lat * Math.PI / 180)
+      return Math.sqrt(dLat * dLat + dLng * dLng) < 800
+    })
+    if (match) {
+      const n = match._count
+      match.coordinates.lat = (match.coordinates.lat * n + s.coordinates.lat) / (n + 1)
+      match.coordinates.lng = (match.coordinates.lng * n + s.coordinates.lng) / (n + 1)
+      match._count = n + 1
+      for (const l of s.lines) if (!match.lines.includes(l)) match.lines.push(l)
+      if (s.type === 'metro_station') match.type = 'metro_station' // metro takes priority
+    } else {
+      result.push({ ...s, lines: [...s.lines], _count: 1 })
+    }
+  }
+  return result
+}
+
+const MAP_STATIONS = mergeNearbyStations(MAP_STATIONS_RAW)
 
 // ─── RATP line colors ───────────────────────────────────────────────────────
 const RATP_LINE: Record<string, { bg: string; fg: string }> = {
