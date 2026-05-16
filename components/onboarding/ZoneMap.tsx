@@ -6,6 +6,34 @@ import L from 'leaflet'
 import type { GeoZone } from '@/lib/services/geoDataService'
 import { METRO_STATIONS } from '@/lib/services/metroStationsDb'
 
+// ─── RATP line colors ───────────────────────────────────────────────────────
+const RATP_LINE: Record<string, { bg: string; fg: string }> = {
+  '1':  { bg: '#FFCD00', fg: '#000' }, '2':  { bg: '#003CA6', fg: '#fff' },
+  '3':  { bg: '#837902', fg: '#fff' }, '3b': { bg: '#6EC4E8', fg: '#000' },
+  '4':  { bg: '#CF009E', fg: '#fff' }, '5':  { bg: '#FF7E2E', fg: '#fff' },
+  '6':  { bg: '#6ECA97', fg: '#000' }, '7':  { bg: '#FA9ABA', fg: '#000' },
+  '7b': { bg: '#6ECA97', fg: '#000' }, '8':  { bg: '#E19BDF', fg: '#000' },
+  '9':  { bg: '#B6BD00', fg: '#000' }, '10': { bg: '#C9910D', fg: '#fff' },
+  '11': { bg: '#704B1C', fg: '#fff' }, '12': { bg: '#007852', fg: '#fff' },
+  '13': { bg: '#98D4E2', fg: '#000' }, '14': { bg: '#62259D', fg: '#fff' },
+  'A':  { bg: '#FF0000', fg: '#fff' }, 'B':  { bg: '#5191CD', fg: '#fff' },
+  'C':  { bg: '#FFDD00', fg: '#000' }, 'D':  { bg: '#009900', fg: '#fff' },
+  'E':  { bg: '#C04191', fg: '#fff' },
+}
+
+function stationPopupHTML(name: string, lines: string[]): string {
+  const circles = lines.map(l => {
+    const c = RATP_LINE[l] ?? { bg: '#888', fg: '#fff' }
+    return `<div style="width:26px;height:26px;border-radius:50%;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <span style="font-size:${l.length > 2 ? 8 : 10}px;font-weight:900;color:${c.fg};font-family:system-ui,sans-serif;line-height:1">${l}</span>
+    </div>`
+  }).join('')
+  return `<div style="font-family:system-ui,sans-serif">
+    <div style="font-weight:700;font-size:13px;color:#111;margin-bottom:8px">${name}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">${circles}</div>
+  </div>`
+}
+
 // ─── Visual styles ─────────────────────────────────────────────────────────
 
 type ZoneState = 'unselected' | 'selected' | 'partial'
@@ -454,9 +482,8 @@ function GeoLayers(props: GeoLayersProps) {
       const isMet = s.lines.some(l => /^\d+$/.test(l))
       const badge = (isRer && !isMet) ? 'RER' : 'M'
 
-      // Blanc avec contour bleu foncé + lettre bleu foncé (style panneau métro)
       const html = `
-        <div style="pointer-events:none;user-select:none;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-40%)">
+        <div style="user-select:none;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-40%);cursor:pointer">
           <div style="width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #003189;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.25)">
             <span style="color:#003189;font-size:8px;font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.3px">${badge}</span>
           </div>
@@ -464,7 +491,13 @@ function GeoLayers(props: GeoLayersProps) {
         </div>`
 
       const icon = L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
-      const marker = L.marker([s.lat, s.lng], { icon, interactive: false, keyboard: false })
+      const marker = L.marker([s.lat, s.lng], { icon, keyboard: false })
+      marker.bindPopup(stationPopupHTML(s.name, s.lines), {
+        className: 'station-popup',
+        closeButton: false,
+        maxWidth: 220,
+        offset: [0, -14],
+      })
       marker.addTo(map)
       stationMarkersRef.current.push(marker)
     }
