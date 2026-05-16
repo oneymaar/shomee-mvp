@@ -40,9 +40,15 @@ function stationPopupHTML(name: string, lines: string[]): string {
  *  Mixed metro+RER → two circles side by side. */
 function stationIconHTML(name: string, isMet: boolean, isRer: boolean): string {
   const circle = (label: string) => {
-    const fs = label === 'RER' ? '4.5px' : '8px'
-    return `<div style="width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #003189;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.22)">
-      <span style="color:#003189;font-size:${fs};font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.3px">${label}</span>
+    const isRerLabel = label === 'RER'
+    // M : fond blanc, contour bleu, texte bleu
+    // RER : fond bleu, texte blanc (plus lisible à petite taille)
+    const bg     = isRerLabel ? '#003189' : '#fff'
+    const border = isRerLabel ? 'none'    : '2px solid #003189'
+    const color  = isRerLabel ? '#fff'    : '#003189'
+    const fs     = isRerLabel ? '6.5px'   : '8px'
+    return `<div style="width:16px;height:16px;border-radius:50%;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.22)">
+      <span style="color:${color};font-size:${fs};font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.4px">${label}</span>
     </div>`
   }
   const badges = (isMet && isRer)
