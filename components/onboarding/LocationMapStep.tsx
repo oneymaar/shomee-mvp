@@ -334,7 +334,14 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // Match the raw query against semanticNeighborhoods.json before processing
       // the LLM's geoConstraints. If a neighborhood is found, inject its constraints
       // so resolveConstraints can narrow to the relevant IRIS zone (not the full arr).
-      const neighborhoodMatch = matchNeighborhood(locationQuery)
+      //
+      // IMPORTANT: skip enrichment for compound queries ("A et B", "A sauf B"…).
+      // matchNeighborhood strips spaces before matching, so "bellevilleetmenilmontant"
+      // contains "belleville" and returns only Belleville — silently ignoring Ménilmontant.
+      // For compound queries the LLM already generates all the necessary constraints;
+      // a single-neighborhood override here can only make things worse.
+      const isCompoundLocationQuery = /\b(et|ou|sauf|sans|hors|mais|entre)\b|[,+\/]/i.test(locationQuery.trim())
+      const neighborhoodMatch = isCompoundLocationQuery ? null : matchNeighborhood(locationQuery)
       // Normalize any residual "neighborhood" type (LLM sometimes confuses explicitLocations
       // type "neighborhood" with geoConstraints type "semantic_neighborhood").
       let enrichedConstraints = (intent.geoConstraints ?? []).map(c =>

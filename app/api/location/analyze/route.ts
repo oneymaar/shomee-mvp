@@ -189,7 +189,7 @@ denfert-rochereau, montparnasse, alesia, plaisance, beaugrenelle, commerce, vaug
 porte-de-versailles, convention, la-motte-piquet, passy, auteuil, trocadero, victor-hugo,
 foch, ranelagh, porte-maillot, porte-dauphine, batignolles, epinettes, montmartre, abbesses,
 grandes-carrieres, guy-moquet, jules-joffrin, la-mouzaia, buttes-chaumont, la-villette,
-canal-de-l-ourcq, jourdain, belleville, gambetta, pere-lachaise, reunion, pyrenees, charonne,
+canal-de-l-ourcq, jourdain, belleville, menilmontant, gambetta, pere-lachaise, reunion, pyrenees, charonne,
 martin-luther-king, saint-ferdinand, villiers, pereire, bercy-village, jeanne-d-arc,
 maurice-gardette, ile-de-la-cite
 

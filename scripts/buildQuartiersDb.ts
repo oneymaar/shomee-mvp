@@ -1667,6 +1667,27 @@ const RAW: Quartier[] = [
     ],
   },
   {
+    // Ménilmontant = quartier administratif 20-2, autour de la rue de Ménilmontant.
+    // IRIS : ceux du QA Ménilmontant non couverts par gambetta/pere-lachaise.
+    id: "menilmontant",
+    name: "Ménilmontant",
+    aliases: ["Menilmontant"],
+    city: "Paris",
+    irisNames: [
+      "Père lachaise 6",
+      "Père lachaise 7",
+      "Père lachaise 8",
+      "Père lachaise 11",
+      "Père lachaise 12",
+      "Père lachaise 15",
+      "Père lachaise 16",
+      "Belleville 1",
+      "Belleville 2",
+      "Belleville 3",
+      "Belleville 4",
+    ],
+  },
+  {
     id: "gambetta",
     name: "Gambetta",
     aliases: [],
