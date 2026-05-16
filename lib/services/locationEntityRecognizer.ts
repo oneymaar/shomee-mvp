@@ -18,6 +18,7 @@
 
 import rawStations from '@/src/data/transportStations.json'
 import rawNeighborhoods from '@/src/data/semanticNeighborhoods.json'
+import rawCommuneNames from '@/src/data/communeNames.json'
 import type { LocationIntent } from '@/lib/searchStore'
 import { matchQuartier, normalizeQ, type Quartier } from './quartierMatchingService'
 
@@ -60,6 +61,11 @@ function norm(s: string): string {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[‘’ʼ'\-\s]+/g, '')
 }
+
+// Normalized set of IDF suburb commune names (92/93/94).
+// When a query matches a commune name, the commune takes priority over any station
+// with the same label — e.g. "Vincennes" → commune, not RER A station.
+const COMMUNE_NORMS = new Set((rawCommuneNames as string[]).map(norm))
 
 // Build at module init — O(1) lookups at runtime
 const stationByNorm = new Map<string, RawStation>()
@@ -210,16 +216,21 @@ export function recognizeLocationEntity(
   const stMatch = stationByNorm.get(qNorm)
   const nbMatch = neighborhoodByNorm.get(qNorm)
 
-  // 4a. Exact match in quartiers DB
+  // 4a. Commune name → always takes priority over any station with the same label.
+  //     "Vincennes" → commune (administrative_area via LLM), not RER A station.
+  //     The LLM handles commune queries and generates the correct zoneId.
+  if (stMatch && COMMUNE_NORMS.has(qNorm)) return null
+
+  // 4b. Exact match in quartiers DB
   const qtExact = matchQuartier(q)
   if (qtExact && qtExact.method === 'exact') {
     return buildQuartierEntity(qtExact.quartier, 0.95)
   }
 
-  // 4b. Exact match in legacy semanticNeighborhoods (richer metadata: center, vibeTags…)
+  // 4c. Exact match in legacy semanticNeighborhoods (richer metadata: center, vibeTags…)
   if (nbMatch) return buildNeighborhood(nbMatch, 0.90)
 
-  // 4c. Station exact match (only if no neighborhood matched)
+  // 4d. Station exact match (only if no neighborhood matched and not a commune)
   if (stMatch && !nbMatch) return buildStation(stMatch, 0.9)
 
   // 5. Substring / contains match in neighborhoods, then quartiers
