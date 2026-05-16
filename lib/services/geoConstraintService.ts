@@ -311,8 +311,9 @@ function filterIrisByTransportLine(
   // Special values: "metro" or "rer" = any station on that network.
   // Emitted by the LLM for "proche du métro" / "à moins de Xmin du métro"
   // without a specific line number.
-  if (normalizedLine === 'metro' || normalizedLine === 'rer') {
-    const lineIds = normalizedLine === 'metro' ? METRO_LINE_IDS : RER_LINE_IDS
+  // normalizeLineId returns uppercase ("METRO", "RER") for bare network names
+  if (normalizedLine === 'METRO' || normalizedLine === 'RER') {
+    const lineIds = normalizedLine === 'METRO' ? METRO_LINE_IDS : RER_LINE_IDS
     // Collect unique stations (dedup by name)
     const seen = new Map<string, { lat: number; lng: number }>()
     for (const l of lineIds) {
