@@ -518,7 +518,7 @@ function GeoLayers(props: GeoLayersProps) {
         className: 'station-popup',
         closeButton: false,
         maxWidth: 220,
-        offset: [0, -4],
+        offset: [0, 12],
       })
       marker.addTo(map)
       stationMarkersRef.current.push(marker)

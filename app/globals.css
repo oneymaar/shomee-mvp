@@ -48,14 +48,16 @@ body {
   box-shadow: none !important;
 }
 
-/* Station popup — compact padding, rounded, no arrow */
+/* Station popup — padding géré sur le wrapper, margin content à 0 */
 .station-popup .leaflet-popup-content-wrapper {
   border-radius: 10px;
-  padding: 0;
+  padding: 12px 14px !important;
   box-shadow: 0 2px 12px rgba(0,0,0,.18);
 }
 .station-popup .leaflet-popup-content {
-  margin: 12px 14px;
+  margin: 0 !important;
+  line-height: normal !important;
+  font-size: inherit !important;
 }
 .station-popup .leaflet-popup-tip-container {
   display: none;
