@@ -301,6 +301,48 @@ const DEFAULT_TRANSPORT_RADIUS_M = 650
 const METRO_LINE_IDS = ['1','2','3','3b','4','5','6','7','7b','8','9','10','11','12','13','14']
 const RER_LINE_IDS   = ['A','B','C','D','E']
 
+/**
+ * Minimum distance (metres) from a station point to the nearest point ON an IRIS polygon.
+ *
+ * Rules:
+ *   • Station inside the IRIS polygon → distance 0 (always select).
+ *   • Otherwise → nearest point on any polygon edge (flat-earth projection, valid < 5 km).
+ *
+ * Using polygon-edge distance rather than centroid distance ensures that IRIS zones
+ * which contain a station entrance are always selected, and that the threshold applies
+ * to the actual boundary rather than a potentially-far centroid.
+ */
+function distanceStationToIris(sLat: number, sLng: number, zone: GeoZone): number {
+  const geom = zone.feature.geometry
+  // Station inside → always zero distance
+  if (polygonContainsPoint(geom, sLng, sLat)) return 0
+
+  const rings: GeoJSON.Position[][] =
+    geom.type === 'Polygon' ? (geom as GeoJSON.Polygon).coordinates :
+    geom.type === 'MultiPolygon' ? (geom as GeoJSON.MultiPolygon).coordinates.flat() : []
+
+  const cosLat = Math.cos(sLat * Math.PI / 180)
+  let minDist = Infinity
+
+  for (const ring of rings) {
+    for (let i = 0; i < ring.length - 1; i++) {
+      // Segment endpoints in metres relative to station (flat-earth)
+      const ax = (ring[i][0] - sLng) * 111_320 * cosLat
+      const ay = (ring[i][1] - sLat) * 111_320
+      const bx = (ring[i + 1][0] - sLng) * 111_320 * cosLat
+      const by = (ring[i + 1][1] - sLat) * 111_320
+      const dx = bx - ax, dy = by - ay
+      const lenSq = dx * dx + dy * dy
+      const t = lenSq < 1e-6 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / lenSq))
+      const nx = ax + t * dx, ny = ay + t * dy
+      const d = Math.sqrt(nx * nx + ny * ny)
+      if (d < minDist) minDist = d
+      if (minDist === 0) return 0  // can't improve
+    }
+  }
+  return minDist
+}
+
 function filterIrisByTransportLine(
   candidates: GeoZone[],
   line: string,
@@ -309,12 +351,11 @@ function filterIrisByTransportLine(
   const normalizedLine = normalizeLineId(line)
 
   // Special values: "metro" or "rer" = any station on that network.
-  // Emitted by the LLM for "proche du métro" / "à moins de Xmin du métro"
-  // without a specific line number.
-  // normalizeLineId returns uppercase ("METRO", "RER") for bare network names
+  // normalizeLineId returns uppercase ("METRO", "RER") for bare network names.
+  // Uses polygon-edge distance: IRIS containing a station → always selected;
+  // IRIS outside → selected if nearest polygon point is within radiusM.
   if (normalizedLine === 'METRO' || normalizedLine === 'RER') {
     const lineIds = normalizedLine === 'METRO' ? METRO_LINE_IDS : RER_LINE_IDS
-    // Collect unique stations (dedup by name)
     const seen = new Map<string, { lat: number; lng: number }>()
     for (const l of lineIds) {
       for (const s of getStationsByLine(l)) {
@@ -322,12 +363,9 @@ function filterIrisByTransportLine(
       }
     }
     const allStations = [...seen.values()]
-    return candidates.filter((zone) => {
-      const centroid = irisCentroid(zone)
-      if (!centroid) return false
-      const [lat, lng] = centroid
-      return allStations.some((s) => haversineM(lat, lng, s.lat, s.lng) <= radiusM)
-    })
+    return candidates.filter((zone) =>
+      allStations.some((s) => distanceStationToIris(s.lat, s.lng, zone) <= radiusM)
+    )
   }
 
   const stations = getStationsByLine(normalizedLine)

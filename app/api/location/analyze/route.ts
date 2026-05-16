@@ -141,8 +141,8 @@ INTERSECTION — zone + contrainte de proximité transport :
 Proximité transport sans ligne précise :
   "proche du métro" / "à moins de Xmin du métro" → line:"metro", radiusM selon temps de marche
   "proche du RER"   / "à moins de Xmin du RER"   → line:"rer",   radiusM selon temps de marche
-  Correspondance temps de marche → radiusM :
-    ≤5min → 400  |  ≤8min → 650  |  ≤10min → 800  |  ≤15min → 1200
+  Correspondance temps de marche → radiusM (distance au contour du polygon IRIS, pas au centroïde) :
+    ≤5min → 200  |  ≤8min → 350  |  ≤10min → 400  |  ≤15min → 700
 
 Exemples :
 "Paris 12 proche ligne 1"
