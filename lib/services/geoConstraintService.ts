@@ -809,14 +809,27 @@ export function resolveConstraints(
 
     for (const c of filterConstraints) {
       if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
-        const n = resolveNeighborhoodCoords(c)
-        if (n) {
-          const radius = c.radiusM ?? n.confidenceRadiusMeters
-          let nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
-          if (n.maxSelectedIris) nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
-          for (const z of nearIris) if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
-          if (nearIris.length > 0) standaloneLabels.push(n.label)
+        // Try irisNames lookup first (explicit quartiers.json names — precise)
+        const irisNamesToResolve = c.irisNames
+          ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+        let nearIris: GeoZone[] = []
+        if (irisNamesToResolve?.length) {
+          const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
+          nearIris = iris.filter(z =>
+            nameSet.has(normalizeIrisName(z.name)) || nameSet.has(normalizeIrisName(z.shortName))
+          )
         }
+        // Fallback: radius-based from semanticNeighborhoods.json
+        if (!nearIris.length) {
+          const n = resolveNeighborhoodCoords(c)
+          if (n) {
+            const radius = c.radiusM ?? n.confidenceRadiusMeters
+            nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
+            if (n.maxSelectedIris) nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
+          }
+        }
+        for (const z of nearIris) if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
+        if (nearIris.length > 0) standaloneLabels.push(c.label)
       }
       if (c.type === 'transport_station') {
         const name = c.stationName ?? c.label

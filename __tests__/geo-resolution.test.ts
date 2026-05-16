@@ -13,6 +13,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest'
+import { findQuartierById } from '../lib/services/quartierMatchingService'
 import {
   fetchParisQuartiers,
   fetchParisIris,
@@ -123,6 +124,15 @@ function selectedNames(result: ReturnType<typeof resolveConstraints>): string[] 
   return iris.filter(z => result.irisIds.includes(z.id)).map(z => z.name)
 }
 
+/** Build a semantic_neighborhood constraint from quartiers.json irisNames (no network). */
+function quartierConstraint(id: string, label: string): GeoConstraint {
+  const qt = findQuartierById(id)
+  return {
+    type: 'semantic_neighborhood', label, operator: 'near', confidence: 0.95,
+    neighborhoodId: id, radiusM: 500, irisNames: qt?.irisNames,
+  }
+}
+
 // ─── Test cases ──────────────────────────────────────────────────────────────
 
 describe('geo-resolution pipeline', () => {
@@ -160,5 +170,41 @@ describe('geo-resolution pipeline', () => {
     for (const exp of expected) {
       expect(ternesSelected, `Missing: ${exp}`).toContain(exp)
     }
+  })
+
+  /**
+   * Pigalle — quartier from quartiers.json with explicit irisNames.
+   * Regression: irisNames lookup only worked for operator:'inside', not the standalone
+   * operator:'near' path used by neighborhoodToConstraints.
+   */
+  it('Pigalle → IRIS from irisNames (Saint-georges, Rochechouart, Clignancourt)', () => {
+    const constraint = quartierConstraint('pigalle', 'Pigalle')
+    expect(constraint.irisNames?.length, 'Pigalle must have irisNames').toBeGreaterThan(0)
+    console.log(`\n[test] Pigalle irisNames: ${constraint.irisNames?.join(', ')}`)
+
+    const result = resolveConstraints([constraint], iris, quartiers, communes)
+    const names = selectedNames(result)
+    console.log(`  [result] IRIS selected: ${names.join(', ')}`)
+
+    expect(result.irisIds.length, 'Must select at least 5 IRIS').toBeGreaterThanOrEqual(5)
+    const hasSaintGeorges = names.some(n => n.toLowerCase().includes('saint-georges'))
+    expect(hasSaintGeorges, 'Must include Saint-Georges IRIS').toBe(true)
+  })
+
+  /**
+   * Châtelet — new quartier NOT in semanticNeighborhoods.json (only in quartiers.json).
+   * Tests the standalone path that was previously broken.
+   */
+  it('Châtelet → Les Halles IRIS (new quartier, irisNames only)', () => {
+    const constraint = quartierConstraint('chatelet', 'Châtelet')
+    expect(constraint.irisNames?.length, 'Châtelet must have irisNames').toBeGreaterThan(0)
+
+    const result = resolveConstraints([constraint], iris, quartiers, communes)
+    const names = selectedNames(result)
+    console.log(`\n[test] Châtelet → ${names.join(', ')}`)
+
+    expect(result.irisIds.length, 'Must select at least 1 IRIS').toBeGreaterThanOrEqual(1)
+    const hasHalles = names.some(n => n.toLowerCase().includes('halles'))
+    expect(hasHalles, 'Must include Les Halles IRIS').toBe(true)
   })
 })
