@@ -201,10 +201,13 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
 
         {/* Examples — plain text, rotating, no bubbles */}
         <div className="text-center mb-4">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-2">
+            Exemples
+          </p>
           {examples.map((ex, i) => (
             <p
               key={i}
-              className="text-[13px] text-neutral-400 leading-relaxed cursor-pointer active:text-neutral-600 transition-colors"
+              className="text-[13px] italic text-neutral-400 leading-relaxed cursor-pointer active:text-neutral-600 transition-colors"
               onClick={() => setQuery(ex)}
             >
               {ex}
