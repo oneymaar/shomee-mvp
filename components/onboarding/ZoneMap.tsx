@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { GeoZone } from '@/lib/services/geoDataService'
+import { METRO_STATIONS } from '@/lib/services/metroStationsDb'
 
 // ─── Visual styles ─────────────────────────────────────────────────────────
 
@@ -439,6 +440,41 @@ function GeoLayers(props: GeoLayersProps) {
     showLabels: irisZoomHi,
     clickable: irisZoomHi,
   })
+
+  // ── Metro / RER station markers ────────────────────────────────────────────
+  const stationMarkersRef = useRef<L.Marker[]>([])
+
+  useEffect(() => {
+    stationMarkersRef.current.forEach(m => m.remove())
+    stationMarkersRef.current = []
+    if (!irisZoomHi) return
+
+    for (const s of METRO_STATIONS) {
+      const isRer = s.lines.some(l => /^[A-E]$/.test(l))
+      const isMet = s.lines.some(l => /^\d+$/.test(l))
+      // RER-only → blue badge; Metro (possibly mixed) → dark badge
+      const bg    = (isRer && !isMet) ? '#2255a8' : '#383838'
+      const badge = (isRer && !isMet) ? 'RER' : 'M'
+
+      const html = `
+        <div style="pointer-events:none;user-select:none;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-40%)">
+          <div style="width:11px;height:11px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.35)">
+            <span style="color:#fff;font-size:5px;font-weight:900;font-family:system-ui,sans-serif;line-height:1;letter-spacing:-0.2px">${badge}</span>
+          </div>
+          <span style="margin-top:1px;font-size:6px;color:#1a1a1a;font-family:system-ui,sans-serif;font-weight:500;white-space:nowrap;line-height:1.1;max-width:58px;overflow:hidden;text-overflow:ellipsis;text-align:center;text-shadow:0 0 2px #fff,0 0 3px #fff">${s.name}</span>
+        </div>`
+
+      const icon = L.divIcon({ html, className: '', iconSize: [0, 0], iconAnchor: [0, 0] })
+      const marker = L.marker([s.lat, s.lng], { icon, interactive: false, keyboard: false })
+      marker.addTo(map)
+      stationMarkersRef.current.push(marker)
+    }
+
+    return () => {
+      stationMarkersRef.current.forEach(m => m.remove())
+      stationMarkersRef.current = []
+    }
+  }, [map, irisZoomHi])
 
   // ── IRIS name labels (debug / temporaire) ─────────────────────────────────
   // Couche invisible géométriquement, labels uniquement sur les IRIS sélectionnés.
