@@ -291,6 +291,57 @@ describe('lifestyle queries require LLM', () => {
   })
 })
 
+// ─── Inline proximity "X proche/près Y" ──────────────────────────────────────
+
+describe('inline proximity: "X proche Y" with known geographic reference', () => {
+  it('"neuilly proche bois" → edge_of Bois de Boulogne, requiresLLM=false', () => {
+    const r = parseSpatialIntent('neuilly proche bois')
+    expect(entity(r).type).toBe('city')
+    expect(entity(r).resolvedId).toBe('com-92050')
+    expect(relation(r).type).toBe('edge_of')
+    expect(relation(r).targetText).toBe('Bois de Boulogne')
+    expect(r.requiresLLM).toBe(false)
+  })
+
+  it('"neuilly proche seine" → edge_of Seine', () => {
+    const r = parseSpatialIntent('neuilly proche seine')
+    expect(entity(r).resolvedId).toBe('com-92050')
+    expect(relation(r).type).toBe('edge_of')
+    expect(relation(r).targetText).toBe('Seine')
+    expect(r.requiresLLM).toBe(false)
+  })
+
+  it('"16e proche bois" → edge_of Bois de Boulogne, arr-16', () => {
+    const r = parseSpatialIntent('16e proche bois')
+    expect(entity(r).type).toBe('district')
+    expect(entity(r).resolvedId).toBe('arr-16')
+    expect(relation(r).targetText).toBe('Bois de Boulogne')
+    expect(r.requiresLLM).toBe(false)
+  })
+
+  it('"Boulogne proche bois" → edge_of Bois de Boulogne, com-92012', () => {
+    const r = parseSpatialIntent('Boulogne proche bois')
+    expect(entity(r).resolvedId).toBe('com-92012')
+    expect(relation(r).targetText).toBe('Bois de Boulogne')
+    expect(r.requiresLLM).toBe(false)
+  })
+
+  it('"neuilly proche metro" → unknown ref → requiresLLM=true', () => {
+    const r = parseSpatialIntent('neuilly proche metro')
+    expect(r.requiresLLM).toBe(true)
+  })
+
+  it('"neuilly proche centre" → unknown ref → requiresLLM=true', () => {
+    const r = parseSpatialIntent('neuilly proche centre')
+    expect(r.requiresLLM).toBe(true)
+  })
+
+  it('does NOT emit a cardinal direction for inline proximity', () => {
+    const r = parseSpatialIntent('neuilly proche bois')
+    expect(relation(r).direction).toBeUndefined()
+  })
+})
+
 // ─── Known cities / arrondissements ──────────────────────────────────────────
 
 describe('city and district resolution', () => {

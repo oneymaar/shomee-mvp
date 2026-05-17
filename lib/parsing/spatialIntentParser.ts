@@ -106,15 +106,18 @@ const COMMUNE_ID_MAP: Record<string, { id: string; label: string }> = {
 // NEVER produces a cardinal direction — always edge_of.
 
 const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiusM: number }> = {
-  bois:          { label: 'Bois de Boulogne', targetType: 'poi', radiusM: 300 },
-  seine:         { label: 'Seine',             targetType: 'poi', radiusM: 200 },
-  canal:         { label: 'Canal Saint-Martin',targetType: 'poi', radiusM: 250 },
-  parc:          { label: 'parc',              targetType: 'poi', radiusM: 300 },
-  foret:         { label: 'forêt',             targetType: 'poi', radiusM: 400 },
-  marne:         { label: 'Marne',             targetType: 'poi', radiusM: 200 },
-  periph:        { label: 'Boulevard Périphérique', targetType: 'poi', radiusM: 200 },
-  peripherique:  { label: 'Boulevard Périphérique', targetType: 'poi', radiusM: 200 },
-  lac:           { label: 'lac',               targetType: 'poi', radiusM: 300 },
+  bois:              { label: 'Bois de Boulogne',      targetType: 'poi', radiusM: 300 },
+  boisdeboulogne:    { label: 'Bois de Boulogne',      targetType: 'poi', radiusM: 300 },
+  boisdevincennes:   { label: 'Bois de Vincennes',     targetType: 'poi', radiusM: 300 },
+  seine:             { label: 'Seine',                 targetType: 'poi', radiusM: 200 },
+  canal:             { label: 'Canal Saint-Martin',    targetType: 'poi', radiusM: 250 },
+  canalsaintmartin:  { label: 'Canal Saint-Martin',    targetType: 'poi', radiusM: 250 },
+  parc:              { label: 'parc',                  targetType: 'poi', radiusM: 300 },
+  foret:             { label: 'forêt',                 targetType: 'poi', radiusM: 400 },
+  marne:             { label: 'Marne',                 targetType: 'poi', radiusM: 200 },
+  periph:            { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
+  peripherique:      { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
+  lac:               { label: 'lac',                   targetType: 'poi', radiusM: 300 },
 }
 
 // ─── Street/way prefix ────────────────────────────────────────────────────────
@@ -285,6 +288,36 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
       exclusions,
       requiresLLM: primaryEntity.type === 'unknown',
       confidence: primaryEntity.confidence * relation.confidence,
+    }
+  }
+
+  // ── 3b. INLINE PROXIMITY: "[entity] proche/près [reference]" ─────────────────
+  // Handles "neuilly proche bois", "16e proche bois", "boulogne proche canal"…
+  // Only auto-resolves when the reference is in COTE_EXPANSIONS (known geographic
+  // anchors). All other targets (metro, station, centre…) fall through to the LLM.
+  // Uses edge_of semantics so the adapter emits the correct primary(inside) + poi(near).
+  const INLINE_PROX_RE = /^(.+?)\s+(?:proche|pres)\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?(.+)$/
+  const inlineProxMatch = workingQuery.match(INLINE_PROX_RE)
+  if (inlineProxMatch) {
+    const refKey = normKey(inlineProxMatch[2].trim())
+    const expansion = COTE_EXPANSIONS[refKey]
+    if (expansion) {
+      const primaryEntity = resolveEntity(inlineProxMatch[1].trim())
+      const relation: SpatialRelation = {
+        type: 'edge_of',
+        targetText: expansion.label,
+        targetType: expansion.targetType,
+        radiusM: expansion.radiusM,
+        confidence: 0.88,
+      }
+      return {
+        rawQuery, normalizedQuery,
+        primaryEntities: [primaryEntity],
+        spatialRelations: [relation],
+        exclusions,
+        requiresLLM: primaryEntity.type === 'unknown',
+        confidence: primaryEntity.confidence * relation.confidence,
+      }
     }
   }
 

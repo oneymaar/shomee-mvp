@@ -169,10 +169,27 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     setUi({ kind: 'clarification', analysis })
   }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery])
 
-  const handleSelectOption = useCallback((opt: { preselectZones: string[]; centerQuery: string; label: string; query: string }) => {
-    setLocation({ query: query.trim(), label: opt.label, lat: 0, lng: 0, intent: { location_terms: opt.preselectZones ?? [], lifestyle_terms: [], transport_constraints: [], confidence: 0.95 } })
-    onOpenMap()
-  }, [query, setLocation, onOpenMap])
+  // Re-analyse the option's specific query so geoConstraints are preserved.
+  // Old behavior only passed preselectZones, silently dropping poi/transport constraints.
+  const handleSelectOption = useCallback(async (opt: { preselectZones: string[]; centerQuery: string; label: string; query: string }) => {
+    const effectiveQuery = opt.query?.trim() || query.trim()
+    setUi({ kind: 'analyzing' })
+    const reanalysis = await analyzeLocationIntent(effectiveQuery)
+    const src = reanalysis?.parserSource // DEBUG
+    if (!reanalysis || reanalysis.status === 'clear' || reanalysis.mapAction?.type === 'open_map') {
+      openMapWithQuery(
+        reanalysis?.mapAction?.centerQuery ?? opt.centerQuery ?? effectiveQuery,
+        reanalysis?.mapAction?.preselectQueries ?? opt.preselectZones,
+        reanalysis?.geoConstraints,
+        reanalysis?.resolutionStrategy,
+        effectiveQuery,
+        src,
+      )
+      return
+    }
+    // Re-analysis still ambiguous — open map with at least the zone info
+    openMapWithQuery(opt.centerQuery ?? effectiveQuery, opt.preselectZones, undefined, undefined, effectiveQuery)
+  }, [query, openMapWithQuery])
 
   const handleBackToTyping = useCallback(() => {
     setUi({ kind: 'typing' })

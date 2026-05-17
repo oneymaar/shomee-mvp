@@ -195,6 +195,36 @@ describe('adapter: Neuilly côté Seine', () => {
   })
 })
 
+// ─── "neuilly proche bois" — inline proximity → same GeoConstraints as côté ──
+
+describe('adapter: neuilly proche bois', () => {
+  const gc = adapt('neuilly proche bois')
+
+  it('produces exactly 2 constraints', () => {
+    expect(gc).toHaveLength(2)
+  })
+
+  it('first constraint: administrative_area inside com-92050', () => {
+    expect(gc[0].type).toBe('administrative_area')
+    expect(gc[0].operator).toBe('inside')
+    expect(gc[0].zoneId).toBe('com-92050')
+  })
+
+  it('second constraint: poi near Bois de Boulogne', () => {
+    expect(gc[1].type).toBe('poi')
+    expect(gc[1].operator).toBe('near')
+    expect(gc[1].label).toBe('Bois de Boulogne')
+    expect(gc[1].radiusM).toBe(300)
+  })
+
+  it('same output as "Neuilly côté bois"', () => {
+    const gcCote = adapt('Neuilly côté bois')
+    expect(gc[0].zoneId).toBe(gcCote[0].zoneId)
+    expect(gc[1].label).toBe(gcCote[1].label)
+    expect(gc[1].operator).toBe(gcCote[1].operator)
+  })
+})
+
 // ─── Full response shape ──────────────────────────────────────────────────────
 
 describe('intentToAnalysisResponse shape', () => {
