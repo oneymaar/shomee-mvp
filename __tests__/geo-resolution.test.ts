@@ -300,7 +300,7 @@ describe('geo-resolution pipeline', () => {
 
   it('proche Place de la République → IRIS from arr-3, arr-10, arr-11', async () => {
     console.log('\n[test] "proche Place de la République" (radius=100m)')
-    const constraint = await geocodePoi('Place de la République', 'landmark', 100)
+    const constraint = await geocodePoi('Place de la République', 'landmark', 150)
 
     expect(constraint.geometry, 'Must have Overpass geometry').toBeDefined()
     expect(constraint.geometry?.type).toMatch(/LineString|MultiLineString/)
@@ -328,7 +328,7 @@ describe('geo-resolution pipeline', () => {
 
   it('proche Place de la Nation → IRIS around Nation', async () => {
     console.log('\n[test] "proche Place de la Nation" (radius=100m)')
-    const constraint = await geocodePoi('Place de la Nation', 'landmark', 100)
+    const constraint = await geocodePoi('Place de la Nation', 'landmark', 150)
 
     expect(constraint.geometry, 'Must have geometry').toBeDefined()
 
@@ -341,7 +341,7 @@ describe('geo-resolution pipeline', () => {
 
   it('à deux pas de Bastille → IRIS around Bastille', async () => {
     console.log('\n[test] "à deux pas de Bastille" (radius=100m)')
-    const constraint = await geocodePoi('Place de la Bastille', 'landmark', 100)
+    const constraint = await geocodePoi('Place de la Bastille', 'landmark', 150)
 
     expect(constraint.geometry, 'Must have geometry').toBeDefined()
 
@@ -354,7 +354,7 @@ describe('geo-resolution pipeline', () => {
 
   it('à côté du Parc Monceau → IRIS around Parc Monceau', async () => {
     console.log('\n[test] "à côté du Parc Monceau" (radius=100m)')
-    const constraint = await geocodePoi('Parc Monceau', 'park', 100)
+    const constraint = await geocodePoi('Parc Monceau', 'park', 150)
 
     expect(constraint.geometry, 'Must have geometry').toBeDefined()
 

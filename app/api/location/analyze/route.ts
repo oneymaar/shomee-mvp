@@ -273,7 +273,7 @@ chemin, impasse, quai, passage, voie, route, parvis, esplanade, venelle…) :
 
 Rayon POI (radiusM) — distance au contour du polygon IRIS, non au centroïde :
   Voie / rue / avenue → déterminé par la géométrie OSM (pas de radiusM)
-  "proche de X" / "à deux pas de X" / "autour de X" (point POI) → radiusM: 100
+  "proche de X" / "à deux pas de X" / "autour de X" (point POI) → radiusM: 150
   "à 5mn à pied de X" → radiusM: 400
   "à 10mn à pied de X" → radiusM: 800
   Sans précision → laisser le résolveur utiliser le rayon par défaut du poiType
