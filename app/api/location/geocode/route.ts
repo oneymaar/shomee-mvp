@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
         const params = new URLSearchParams({
           q,
           format: 'json',
-          limit: isStreet ? '5' : '1',
+          limit: isStreet ? '5' : '3',  // non-streets: 3 results to increase chance of getting polygon geometry
           countrycodes: 'fr',
           bounded: '1',
           viewbox: `${IDF.minLng},${IDF.maxLat},${IDF.maxLng},${IDF.minLat}`,
@@ -197,24 +197,55 @@ export async function POST(req: NextRequest) {
           : null
 
         // Nominatim geometry (fallback if Overpass is unavailable)
-        const lineGeoms = finalResults
-          .map(r => r.geojson)
-          .filter((g): g is GeoJSON.LineString | GeoJSON.MultiLineString =>
-            g != null && (g.type === 'LineString' || g.type === 'MultiLineString')
-          )
-
+        // Build geometry from all available Nominatim results.
+        // For non-street POIs (landmarks, squares, parks…) a single place like
+        // "Place de la République" can be split into multiple OSM Ways — one per
+        // arrondissement side — each returned as a separate result.  Combining all
+        // edges (LineString ways + Polygon outer rings) into a MultiLineString ensures
+        // filterIrisByGeometry captures IRIS adjacent to every side of the place.
         let geometry: GeoJSON.Geometry | null = null
-        if (lineGeoms.length === 1) {
-          geometry = lineGeoms[0]
-        } else if (lineGeoms.length > 1) {
-          const allCoords: GeoJSON.Position[][] = []
-          for (const g of lineGeoms) {
-            if (g.type === 'LineString') allCoords.push(g.coordinates)
-            else allCoords.push(...g.coordinates)
+
+        if (isStreet) {
+          // Streets: only LineString ways
+          const lineGeoms = finalResults
+            .map(r => r.geojson)
+            .filter((g): g is GeoJSON.LineString | GeoJSON.MultiLineString =>
+              g != null && (g.type === 'LineString' || g.type === 'MultiLineString')
+            )
+          if (lineGeoms.length === 1) {
+            geometry = lineGeoms[0]
+          } else if (lineGeoms.length > 1) {
+            const allCoords: GeoJSON.Position[][] = []
+            for (const g of lineGeoms) {
+              if (g.type === 'LineString') allCoords.push(g.coordinates)
+              else allCoords.push(...g.coordinates)
+            }
+            geometry = { type: 'MultiLineString', coordinates: allCoords }
+          } else {
+            geometry = finalResults.find(r => r.geojson)?.geojson ?? null
           }
-          geometry = { type: 'MultiLineString', coordinates: allCoords }
         } else {
-          geometry = finalResults.find(r => r.geojson)?.geojson ?? null
+          // Non-street POIs: combine all linear + polygon-boundary edges
+          const edgeCoords: GeoJSON.Position[][] = []
+          for (const g of finalResults.map(r => r.geojson).filter(Boolean)) {
+            if (g!.type === 'LineString') {
+              edgeCoords.push((g as GeoJSON.LineString).coordinates)
+            } else if (g!.type === 'MultiLineString') {
+              edgeCoords.push(...(g as GeoJSON.MultiLineString).coordinates)
+            } else if (g!.type === 'Polygon') {
+              edgeCoords.push((g as GeoJSON.Polygon).coordinates[0])
+            } else if (g!.type === 'MultiPolygon') {
+              edgeCoords.push(...(g as GeoJSON.MultiPolygon).coordinates.map(p => p[0]))
+            }
+            // Point: skip — will fall through to lat/lng fallback
+          }
+          if (edgeCoords.length === 1) {
+            geometry = { type: 'LineString', coordinates: edgeCoords[0] }
+          } else if (edgeCoords.length > 1) {
+            geometry = { type: 'MultiLineString', coordinates: edgeCoords }
+          } else {
+            geometry = finalResults.find(r => r.geojson)?.geojson ?? null
+          }
         }
 
         // Override with Overpass geometry if available (complete coverage of all street segments)
