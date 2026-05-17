@@ -566,8 +566,15 @@ function resolveInsideToIris(
       const b = filterByArr(filterIrisByBbox(iris, c.bbox, buf))
       if (b.length > 0) return b
     }
-    // 3. Point + radius fallback
+    // 3. Point POI: polygon-edge distance (nearest polygon point, not centroid).
+    // Selects IRIS that contain the POI (distance 0) OR whose nearest boundary
+    // point is within radiusM — same algorithm as metro station proximity.
     if (c.lat !== undefined && c.lng !== undefined) {
+      const byEdge = filterByArr(
+        iris.filter(z => distanceStationToIris(c.lat!, c.lng!, z) <= r)
+      )
+      // Fallback to centroid if polygon-edge returns nothing (geometry edge case)
+      if (byEdge.length > 0) return byEdge
       return filterByArr(filterIrisByCoords(iris, c.lat, c.lng, r))
     }
   }

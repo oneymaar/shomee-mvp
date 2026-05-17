@@ -271,6 +271,13 @@ chemin, impasse, quai, passage, voie, route, parvis, esplanade, venelle…) :
              "rue des Martyrs"   → poi(street), NON semantic_neighborhood(rue_des_martyrs)
              "boulevard Haussmann" → poi(boulevard)
 
+Rayon POI (radiusM) — distance au contour du polygon IRIS, non au centroïde :
+  Voie / rue / avenue → déterminé par la géométrie OSM (pas de radiusM)
+  "proche de X" / "à deux pas de X" / "autour de X" (point POI) → radiusM: 100
+  "à 5mn à pied de X" → radiusM: 400
+  "à 10mn à pied de X" → radiusM: 800
+  Sans précision → laisser le résolveur utiliser le rayon par défaut du poiType
+
 Exemples :
 "Parc Montsouris"    → {type:"poi", label:"Parc Montsouris", poiType:"park", operator:"inside", confidence:0.9}
 "Arc de Triomphe"    → {type:"poi", label:"Arc de Triomphe", poiType:"landmark", operator:"inside", confidence:0.9}
@@ -280,6 +287,8 @@ Exemples :
 "Mairie du 12e"      → {type:"poi", label:"Mairie du 12e arrondissement", poiType:"mairie", operator:"inside", confidence:0.9}
 "Musée d'Orsay"      → {type:"poi", label:"Musée d'Orsay", poiType:"museum", operator:"inside", confidence:0.9}
 "Père Lachaise"      → {type:"poi", label:"Cimetière du Père Lachaise", poiType:"park", operator:"inside", confidence:0.9}
+"proche République"  → {type:"poi", label:"Place de la République", poiType:"landmark", operator:"inside", radiusM:100, confidence:0.9}
+"à deux pas de République" → {type:"poi", label:"Place de la République", poiType:"landmark", operator:"inside", radiusM:100, confidence:0.9}
 
 Combinaisons avec d'autres zones → operator:"inside" pour chaque entité (union) :
 "Paris 14e proche Parc Montsouris"
