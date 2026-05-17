@@ -820,24 +820,20 @@ function normalizeNearToInside(
     const isPoi = c.type === 'poi' && (c.geometry != null || c.lat !== undefined)
     if (!isNbhd && !isStation && !isPoi) return c  // transport_line: always a filter
 
-    // For poi: check overlap using geometry then bbox.
-    // Streets use filterIrisByGeometry (8m side-offsets — correct for linear features).
-    // Non-street POIs (parks, places, landmarks) use filterIrisByGeometryProximity with
-    // the actual radiusM: filterIrisByGeometry only does 8m offsets for Polygon geometry,
-    // which is far too small to detect adjacency when OSM boundaries have gaps > 8m
-    // (e.g. the Bois de Boulogne polygon vs Neuilly IRIS boundaries — always > 8m apart).
-    if (isPoi) {
-      const r = c.radiusM ?? poiRadius(c.poiType)
-      let overlap = 0
-      if (c.geometry && c.geometry.type !== 'Point') {
-        overlap = STREET_POI_TYPES.has(c.poiType ?? '')
-          ? filterIrisByGeometry(refIris, c.geometry, r).length
-          : filterIrisByGeometryProximity(refIris, c.geometry, r).length
-      }
-      else if (c.bbox) overlap = filterIrisByBbox(refIris, c.bbox, 120).length
-      else if (c.lat !== undefined && c.lng !== undefined) overlap = filterIrisByCoords(refIris, c.lat, c.lng, r).length
-      return overlap > 0 ? c : { ...c, operator: 'inside' as ConstraintOperator }
-    }
+    // POI 'near' constraints must always remain as filters when an 'inside' constraint
+    // already defines the pool. Promoting a poi to 'inside' would add all IRIS near the
+    // poi (from any commune or arrondissement) to the result — the opposite of the
+    // intended "inside A AND near B" semantics.
+    //
+    // Example: "Neuilly proche Bois de Boulogne"
+    //   Pool = Neuilly IRIS. Bois boundary is 700-1000m from Neuilly (Paris 16e is between).
+    //   overlap check → 0 (no Neuilly IRIS within radiusM of Bois boundary).
+    //   OLD: poi promoted to 'inside' → adds Paris 16, Boulogne, Suresnes IRIS.
+    //   NEW: poi stays 'near' → filter returns 0 → pool unchanged = Neuilly IRIS only. ✓
+    //
+    // If the proximity filter returns 0 results, resolveConstraints correctly falls back
+    // to the full pool (all Neuilly IRIS) — better than polluting with unrelated zones.
+    if (isPoi) return c
 
     let entityLat: number, entityLng: number, entityRadius: number
     if (isPoi) {
@@ -896,6 +892,13 @@ export function resolveConstraints(
   // ── Normalize: "near" entity outside the existing union pool → "inside" ────
   // Handles LLM defaulting to "near" for neighborhoods/stations in addition context.
   const normalized = normalizeNearToInside(constraints, iris, quartiers)
+
+  // DEBUG — log normalization promotions. Remove after validation.
+  if (typeof window !== 'undefined') {
+    const promoted = normalized.filter((n, i) => constraints[i]?.operator === 'near' && n.operator === 'inside')
+    if (promoted.length) console.warn('[resolveConstraints] near→inside promoted:', promoted.map(c => c.label))
+    else console.log('[resolveConstraints] no near→inside promotion (correct for inside+near queries)')
+  }
 
   // ── Partition by operation ─────────────────────────────────────────────────
   const includeConstraints = normalized.filter(c => c.operator === 'inside')
