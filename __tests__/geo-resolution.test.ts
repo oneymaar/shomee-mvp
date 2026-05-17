@@ -388,4 +388,116 @@ describe('geo-resolution pipeline', () => {
 
     expect(result.irisIds.length, 'Must select at least 1 IRIS').toBeGreaterThanOrEqual(1)
   }, 60_000)
+
+  // ─── Transport line filter — polygon-edge distance regression ──────────────
+  //
+  // Fix: filterIrisByTransportLine for specific lines was using centroid→station
+  // haversineM() instead of polygon-edge distanceStationToIris().
+  // This caused false positives (centroid close but edge far) and false negatives
+  // (edge close but centroid beyond the threshold).
+  //
+  // Tests verify three invariants:
+  //   1. All selected IRIS belong to the specified arrondissements (no false positives)
+  //   2. wasNarrowed = true (filtering actually happened — not the full arr)
+  //   3. Selection count > 0 and < total IRIS count for those arrondissements
+
+  /** Resolve IRIS parentId up to the arrondissement level (through quartier if needed). */
+  function resolvedArrId(irisId: string): string {
+    const zone = iris.find(z => z.id === irisId)
+    if (!zone) return ''
+    const pid = zone.parentId ?? ''
+    if (pid.startsWith('arr-') || pid.startsWith('com-')) return pid
+    if (pid.startsWith('qu-')) return quartiers.find(q => q.id === pid)?.parentId ?? ''
+    return pid
+  }
+
+  it('Paris 13 + 14, proche ligne 6 (radiusM=400): no false positives, wasNarrowed', () => {
+    const constraints: GeoConstraint[] = [
+      { type: 'administrative_area', label: 'Paris 13', zoneId: 'arr-13', operator: 'inside', confidence: 1 },
+      { type: 'administrative_area', label: 'Paris 14', zoneId: 'arr-14', operator: 'inside', confidence: 1 },
+      { type: 'transport_line',      label: 'ligne 6',  line: '6',        operator: 'near',   confidence: 1, radiusM: 400 },
+    ]
+
+    const result = resolveConstraints(constraints, iris, quartiers, communes)
+    const names = selectedNames(result)
+    const arrIds = result.irisIds.map(resolvedArrId)
+    const falsePositives = arrIds.filter(id => id !== 'arr-13' && id !== 'arr-14')
+
+    console.log(`\n[test] Paris 13+14 ∩ ligne 6 (r=400) → ${names.length} IRIS`)
+    console.log(`  arr-13: ${names.filter((_, i) => arrIds[i] === 'arr-13').join(', ')}`)
+    console.log(`  arr-14: ${names.filter((_, i) => arrIds[i] === 'arr-14').join(', ')}`)
+    if (falsePositives.length) console.warn(`  FALSE POSITIVES in: ${falsePositives.join(', ')}`)
+
+    expect(falsePositives, `No IRIS outside arr-13/14: ${falsePositives.join(', ')}`).toHaveLength(0)
+    expect(result.wasNarrowed, 'Filtering must have happened').toBe(true)
+    expect(result.irisIds.length, 'Must select at least 3 IRIS').toBeGreaterThanOrEqual(3)
+
+    // Total arr-13 + arr-14 IRIS > selected (the filter actually reduced the pool)
+    const total13 = iris.filter(z => resolvedArrId(z.id) === 'arr-13').length
+    const total14 = iris.filter(z => resolvedArrId(z.id) === 'arr-14').length
+    expect(result.irisIds.length, `Filtered count must be less than total arr-13+14 (${total13 + total14})`
+    ).toBeLessThan(total13 + total14)
+  })
+
+  it('Paris 15, proche ligne 8 (radiusM=400): no false positives, wasNarrowed', () => {
+    const constraints: GeoConstraint[] = [
+      { type: 'administrative_area', label: 'Paris 15', zoneId: 'arr-15', operator: 'inside', confidence: 1 },
+      { type: 'transport_line',      label: 'ligne 8',  line: '8',        operator: 'near',   confidence: 1, radiusM: 400 },
+    ]
+
+    const result = resolveConstraints(constraints, iris, quartiers, communes)
+    const names = selectedNames(result)
+    const arrIds = result.irisIds.map(resolvedArrId)
+    const falsePositives = arrIds.filter(id => id !== 'arr-15')
+
+    console.log(`\n[test] Paris 15 ∩ ligne 8 (r=400) → ${names.length} IRIS: ${names.join(', ')}`)
+    if (falsePositives.length) console.warn(`  FALSE POSITIVES: ${falsePositives.join(', ')}`)
+
+    expect(falsePositives, `No IRIS outside arr-15: ${falsePositives.join(', ')}`).toHaveLength(0)
+    expect(result.wasNarrowed).toBe(true)
+    expect(result.irisIds.length).toBeGreaterThanOrEqual(2)
+    const total15 = iris.filter(z => resolvedArrId(z.id) === 'arr-15').length
+    expect(result.irisIds.length).toBeLessThan(total15)
+  })
+
+  it('Paris 11, proche ligne 9 (radiusM=350): no false positives, wasNarrowed', () => {
+    const constraints: GeoConstraint[] = [
+      { type: 'administrative_area', label: 'Paris 11', zoneId: 'arr-11', operator: 'inside', confidence: 1 },
+      { type: 'transport_line',      label: 'ligne 9',  line: '9',        operator: 'near',   confidence: 1, radiusM: 350 },
+    ]
+
+    const result = resolveConstraints(constraints, iris, quartiers, communes)
+    const names = selectedNames(result)
+    const arrIds = result.irisIds.map(resolvedArrId)
+    const falsePositives = arrIds.filter(id => id !== 'arr-11')
+
+    console.log(`\n[test] Paris 11 ∩ ligne 9 (r=350) → ${names.length} IRIS: ${names.join(', ')}`)
+    if (falsePositives.length) console.warn(`  FALSE POSITIVES: ${falsePositives.join(', ')}`)
+
+    expect(falsePositives, `No IRIS outside arr-11: ${falsePositives.join(', ')}`).toHaveLength(0)
+    expect(result.wasNarrowed).toBe(true)
+    expect(result.irisIds.length).toBeGreaterThanOrEqual(2)
+    const total11 = iris.filter(z => resolvedArrId(z.id) === 'arr-11').length
+    expect(result.irisIds.length).toBeLessThan(total11)
+  })
+
+  it('Paris 16, proche ligne 9 (radiusM=350): no false positives, wasNarrowed', () => {
+    const constraints: GeoConstraint[] = [
+      { type: 'administrative_area', label: 'Paris 16', zoneId: 'arr-16', operator: 'inside', confidence: 1 },
+      { type: 'transport_line',      label: 'ligne 9',  line: '9',        operator: 'near',   confidence: 1, radiusM: 350 },
+    ]
+
+    const result = resolveConstraints(constraints, iris, quartiers, communes)
+    const names = selectedNames(result)
+    const arrIds = result.irisIds.map(resolvedArrId)
+    const falsePositives = arrIds.filter(id => id !== 'arr-16')
+
+    console.log(`\n[test] Paris 16 ∩ ligne 9 (r=350) → ${names.length} IRIS: ${names.join(', ')}`)
+    if (falsePositives.length) console.warn(`  FALSE POSITIVES: ${falsePositives.join(', ')}`)
+
+    expect(falsePositives, `No IRIS outside arr-16: ${falsePositives.join(', ')}`).toHaveLength(0)
+    expect(result.wasNarrowed).toBe(true)
+    const total16 = iris.filter(z => resolvedArrId(z.id) === 'arr-16').length
+    expect(result.irisIds.length).toBeLessThan(total16)
+  })
 })

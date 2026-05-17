@@ -411,12 +411,13 @@ function filterIrisByTransportLine(
   const stations = getStationsByLine(normalizedLine)
   if (!stations.length) return candidates
 
-  return candidates.filter((zone) => {
-    const centroid = irisCentroid(zone)
-    if (!centroid) return false
-    const [lat, lng] = centroid
-    return stations.some((s) => haversineM(lat, lng, s.lat, s.lng) <= radiusM)
-  })
+  // Use polygon-edge distance (distanceStationToIris) — same method as the generic
+  // METRO/RER path above. Centroid-to-point (haversineM) was used before and caused
+  // both false positives (centroid close but edge far) and false negatives (edge close
+  // but centroid beyond the threshold).
+  return candidates.filter((zone) =>
+    stations.some((s) => distanceStationToIris(s.lat, s.lng, zone) <= radiusM)
+  )
 }
 
 function filterIrisByStation(
@@ -427,12 +428,12 @@ function filterIrisByStation(
   const station = findStation(stationName)
   if (!station) return candidates
 
-  return candidates.filter((zone) => {
-    const centroid = irisCentroid(zone)
-    if (!centroid) return false
-    const [lat, lng] = centroid
-    return haversineM(lat, lng, station.lat, station.lng) <= radiusM
-  })
+  // Polygon-edge distance: selects IRIS whose nearest boundary point is within radiusM.
+  // Previously used haversineM(centroid, station) which missed IRIS where the edge is
+  // close but the centroid is beyond the threshold.
+  return candidates.filter((zone) =>
+    distanceStationToIris(station.lat, station.lng, zone) <= radiusM
+  )
 }
 
 function filterIrisByDirection(candidates: GeoZone[], direction: string): GeoZone[] {
