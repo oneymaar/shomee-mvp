@@ -31,6 +31,8 @@ export interface LocationIntentAnalysis {
     | 'point_radius_intersection' | 'transport_line_intersection'
     | 'directional_area_slice' | 'exclude_from_area' | 'between_entities'
     | 'ask_clarification'
+  /** DEBUG — which path resolved this query. Remove after validation. */
+  parserSource?: 'spatial_intent_parser' | 'llm_fallback'
   mapAction: {
     type: 'open_map' | 'ask_clarification'
     centerQuery: string | null
@@ -46,7 +48,16 @@ export async function analyzeLocationIntent(input: string): Promise<LocationInte
       body: JSON.stringify({ input }),
     })
     if (!res.ok) return null
-    return await res.json() as LocationIntentAnalysis
+    const analysis = await res.json() as LocationIntentAnalysis
+    // DEBUG — log raw analyze response. Remove after validation.
+    const src = analysis.parserSource ?? 'unknown'
+    const icon = src === 'spatial_intent_parser' ? '⚡' : '🤖'
+    console.group(`${icon} GEO [${src}] "${input}"`)
+    console.log('strategy :', analysis.resolutionStrategy)
+    console.log('constraints:', analysis.geoConstraints ?? [])
+    console.log('mapAction :', analysis.mapAction)
+    console.groupEnd()
+    return analysis
   } catch {
     return null
   }
