@@ -15,6 +15,8 @@ export interface LocationIntent {
   confidence: number
   geoConstraints?: import('./services/geoConstraintService').GeoConstraint[]
   resolutionStrategy?: string
+  /** DEBUG — remove after parser validation */
+  parserSource?: 'spatial_intent_parser' | 'llm_fallback'
 }
 
 export type PropertyType = 'appartement' | 'maison' | 'studio' | 'loft' | 'duplex'

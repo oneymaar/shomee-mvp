@@ -69,8 +69,6 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   const [query, setQuery] = useState(locationQuery)
   const [recognizedEntity, setRecognizedEntity] = useState<RecognizedLocationEntity | [RecognizedLocationEntity, RecognizedLocationEntity] | null>(null)
   const [ui, setUi] = useState<UIState>({ kind: 'typing' })
-  // DEBUG — tracks last analyze source. Remove after validation.
-  const [debugSource, setDebugSource] = useState<'spatial_intent_parser' | 'llm_fallback' | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const suggestDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -94,7 +92,6 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
 
   useEffect(() => {
     if (ui.kind === 'clarification' || ui.kind === 'disambiguation') setUi({ kind: 'typing' })
-    setDebugSource(null) // DEBUG — clear on new input
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
@@ -112,12 +109,14 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     geoConstraints?: import('@/lib/services/geoConstraintService').GeoConstraint[],
     resolutionStrategy?: string,
     rawInput?: string,
+    parserSource?: 'spatial_intent_parser' | 'llm_fallback', // DEBUG
   ) => {
     const parsed = parseLocationIntent(centerQuery.trim())
     const intent = {
       ...(preselectZones?.length ? { ...parsed, location_terms: preselectZones } : parsed),
       ...(geoConstraints?.length ? { geoConstraints } : {}),
       ...(resolutionStrategy ? { resolutionStrategy } : {}),
+      ...(parserSource ? { parserSource } : {}), // DEBUG
     }
     setLocation({ query: (rawInput ?? centerQuery).trim(), label: centerQuery.trim(), lat: 0, lng: 0, intent })
     onOpenMap()
@@ -149,14 +148,14 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
 
     setUi({ kind: 'analyzing' })
     const analysis = await analyzeLocationIntent(q)
-    if (analysis?.parserSource) setDebugSource(analysis.parserSource) // DEBUG
+    const src = analysis?.parserSource // DEBUG
 
     if (!analysis || analysis.status === 'clear' || analysis.mapAction?.type === 'open_map') {
-      openMapWithQuery(analysis?.mapAction?.centerQuery ?? q, analysis?.mapAction?.preselectQueries, analysis?.geoConstraints, analysis?.resolutionStrategy, q)
+      openMapWithQuery(analysis?.mapAction?.centerQuery ?? q, analysis?.mapAction?.preselectQueries, analysis?.geoConstraints, analysis?.resolutionStrategy, q, src) // DEBUG: src
       return
     }
     if (analysis.status === 'not_found') {
-      openMapWithQuery(analysis?.mapAction?.centerQuery ?? q, analysis?.mapAction?.preselectQueries, analysis?.geoConstraints, analysis?.resolutionStrategy, q)
+      openMapWithQuery(analysis?.mapAction?.centerQuery ?? q, analysis?.mapAction?.preselectQueries, analysis?.geoConstraints, analysis?.resolutionStrategy, q, src) // DEBUG: src
       return
     }
     if (analysis.status === 'contradictory') {
@@ -239,26 +238,6 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             spellCheck={false}
           />
         </div>
-
-        {/* DEBUG badge — remove after validation */}
-        <AnimatePresence>
-          {debugSource && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex justify-center mb-2"
-            >
-              <span
-                className="text-[10px] font-mono px-2 py-0.5 rounded-full"
-                style={debugSource === 'spatial_intent_parser'
-                  ? { background: 'rgba(34,197,94,0.12)', color: '#16a34a' }
-                  : { background: 'rgba(245,158,11,0.12)', color: '#d97706' }}
-              >
-                {debugSource === 'spatial_intent_parser' ? '⚡ parser' : '🤖 llm'}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Disambiguation modal */}
         <AnimatePresence>

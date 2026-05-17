@@ -837,7 +837,19 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         )}
       </div>
 
-      {/* IRIS sélectionnés — liste sous la carte (désactivée) */}
+      {/* DEBUG badge — remove after parser validation */}
+      {locationIntent?.parserSource && (
+        <div className="flex-shrink-0 flex justify-center pt-1.5">
+          <span
+            className="text-[10px] font-mono px-2 py-0.5 rounded-full"
+            style={locationIntent.parserSource === 'spatial_intent_parser'
+              ? { background: 'rgba(34,197,94,0.12)', color: '#16a34a' }
+              : { background: 'rgba(245,158,11,0.12)', color: '#d97706' }}
+          >
+            {locationIntent.parserSource === 'spatial_intent_parser' ? '⚡ parser' : '🤖 llm'}{' · '}{locationIntent.resolutionStrategy ?? ''}
+          </span>
+        </div>
+      )}
 
       {/* Tag system — 3 rows under the map */}
       <div className="flex-shrink-0 px-4 pt-2 min-h-[36px]">
