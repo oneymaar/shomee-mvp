@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseSpatialIntent } from '@/lib/parsing/spatialIntentParser'
+import { intentToAnalysisResponse } from '@/lib/parsing/spatialIntentToGeoConstraints'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // System prompt — Moteur sémantique de localisation immobilière
@@ -362,6 +364,16 @@ export async function POST(req: NextRequest) {
     const { input } = await req.json()
     if (!input?.trim()) return NextResponse.json({ error: 'input required' }, { status: 400 })
 
+    // ── Fast-path: deterministic parser (no LLM, no latency) ──────────────────
+    // Handles clear structural patterns: city, district, quartier, station,
+    // proximity, côté/edge_of, exclusion, between.
+    // Falls back to LLM for lifestyle/subjective vocabulary and unknown entities.
+    const intent = parseSpatialIntent(input.trim())
+    if (!intent.requiresLLM && intent.confidence >= 0.75) {
+      return NextResponse.json({ ...intentToAnalysisResponse(intent), parserSource: 'spatial_intent_parser' })
+    }
+    // ── LLM fallback ───────────────────────────────────────────────────────────
+
     const key = process.env.ANTHROPIC_API_KEY
     if (!key) return NextResponse.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
 
@@ -476,7 +488,7 @@ RÈGLES clarification (status ≠ "clear") :
         c.type === 'neighborhood' ? { ...c, type: 'semantic_neighborhood' } : c
       )
     }
-    return NextResponse.json(analysis)
+    return NextResponse.json({ ...analysis, parserSource: 'llm_fallback' })
   } catch (e) {
     console.error('Location analyze route error:', e)
     return NextResponse.json({ error: 'internal error' }, { status: 500 })
