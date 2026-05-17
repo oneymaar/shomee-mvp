@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server'
 const IDF = { minLat: 48.1, maxLat: 49.2, minLng: 1.4, maxLng: 3.7 }
 
 // Overpass bbox: south,west,north,east — Paris + inner suburbs (92/93/94)
-// Tighter than IDF so Overpass completes the name search in < 3s.
 const SEARCH_OVERPASS_BBOX = '48.77,2.18,48.96,2.55'
 
 const POI_RADII: Record<string, number> = {
@@ -43,6 +42,7 @@ interface NominatimResult {
 interface OverpassElement {
   type: string
   geometry?: Array<{ lat: number; lon: number }>
+  members?: Array<{ type: string; role?: string; geometry?: Array<{ lat: number; lon: number }> }>
 }
 
 /**
@@ -58,54 +58,77 @@ function normalizeStreetName(s: string): string {
 }
 
 /**
- * Fetch ALL highway ways with the given name from Overpass API.
- *
- * Nominatim returns results ranked by relevance — for long streets split into
- * many OSM ways, this means only the most "prominent" segments near major
- * intersections are returned, leaving out the middle and far sections.
- * Overpass enumerates every way with the exact name, regardless of ranking,
- * giving complete spatial coverage of the entire street.
- *
- * Returns GeoJSON LineStrings (one per OSM way), or [] on failure.
+ * Fetch ALL highway ways with the given name from Overpass API (for streets).
+ * Returns complete LineString geometries for each OSM way.
  */
 async function fetchStreetWaysOverpass(streetName: string): Promise<GeoJSON.LineString[]> {
-  // Escape regex metacharacters in the street name
   const escaped = streetName.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
-  // Case-insensitive exact match on the OSM `name` tag, any highway type.
-  // GET request: simpler encoding, User-Agent required by overpass-api.de.
   const query = `[out:json][timeout:20];way["name"~"^${escaped}$",i]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
-
   try {
     const res = await fetch(
       `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-      {
-        headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' },
-        signal: AbortSignal.timeout(15000),
-      }
+      { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(15000) }
     )
     if (!res.ok) return []
     const data: { elements?: OverpassElement[] } = await res.json()
-
     return (data.elements ?? [])
       .filter(e => e.type === 'way' && Array.isArray(e.geometry) && (e.geometry?.length ?? 0) >= 2)
-      .map(e => ({
-        type: 'LineString' as const,
-        coordinates: e.geometry!.map(p => [p.lon, p.lat] as [number, number]),
-      }))
-  } catch {
-    return []
-  }
+      .map(e => ({ type: 'LineString' as const, coordinates: e.geometry!.map(p => [p.lon, p.lat] as [number, number]) }))
+  } catch { return [] }
+}
+
+/**
+ * Fetch ALL ways named exactly like the POI in a small bbox around (lat, lng).
+ * Used for non-street POIs: places, parks, squares, landmarks.
+ *
+ * Unlike streets (which use a fixed IDF bbox), POI ways are queried in a small
+ * radius around the Nominatim-geocoded center to avoid false positives from
+ * identically-named places elsewhere in IDF.
+ *
+ * Returns combined LineString geometries representing the POI boundary.
+ * Multiple ways are expected for large places (Place de la République has 18 ways,
+ * one per road segment of the roundabout).
+ */
+async function fetchPoiWaysOverpass(
+  name: string,
+  lat: number,
+  lng: number,
+): Promise<GeoJSON.LineString[]> {
+  const delta = 0.015  // ≈1.5 km — enough for any Paris place/park
+  const bbox = `${(lat - delta).toFixed(4)},${(lng - delta).toFixed(4)},${(lat + delta).toFixed(4)},${(lng + delta).toFixed(4)}`
+  const escaped = name.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
+  // Query both ways AND relations (parks, large squares like Parc Monceau are OSM relations)
+  const query = `[out:json][timeout:10];(way["name"~"^${escaped}$",i](${bbox});relation["name"~"^${escaped}$",i](${bbox}););out geom;`
+  try {
+    const res = await fetch(
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(12000) }
+    )
+    if (!res.ok) return []
+    const data: { elements?: OverpassElement[] } = await res.json()
+    const lines: GeoJSON.LineString[] = []
+    for (const e of data.elements ?? []) {
+      if (e.type === 'way' && Array.isArray(e.geometry) && (e.geometry?.length ?? 0) >= 2) {
+        lines.push({ type: 'LineString', coordinates: e.geometry!.map(p => [p.lon, p.lat] as [number, number]) })
+      } else if (e.type === 'relation' && Array.isArray(e.members)) {
+        for (const m of e.members) {
+          if (m.type === 'way' && Array.isArray(m.geometry) && (m.geometry?.length ?? 0) >= 2) {
+            lines.push({ type: 'LineString', coordinates: m.geometry!.map(p => [p.lon, p.lat] as [number, number]) })
+          }
+        }
+      }
+    }
+    return lines
+  } catch { return [] }
 }
 
 /**
  * Server-side geocoding with full geometry.
  *
- * For streets: Nominatim (for lat/lng reference) runs in parallel with Overpass
- * (for complete geometry). Overpass returns ALL OSM ways with the queried name,
- * ensuring the full spatial extent of the street is covered. Falls back to
- * Nominatim geometry if Overpass is unavailable.
- *
- * For other POIs: keeps highest-ranked in-IDF Nominatim result.
+ * Streets: Nominatim (for lat/lng) + Overpass (complete multi-way geometry).
+ * Non-street POIs: Nominatim (for lat/lng) + Overpass in small bbox around result
+ *   (returns all ways named like the POI → complete boundary MultiLineString).
+ * Falls back to Nominatim geometry in both cases.
  *
  * POST body: { places: [{ label: string, poiType?: string }] }
  * Response:  { results: GeocodedPlace[] }
@@ -127,7 +150,7 @@ export async function POST(req: NextRequest) {
         const params = new URLSearchParams({
           q,
           format: 'json',
-          limit: isStreet ? '5' : '3',  // non-streets: 3 results to increase chance of getting polygon geometry
+          limit: '1',  // just for lat/lng reference; Overpass handles complete geometry
           countrycodes: 'fr',
           bounded: '1',
           viewbox: `${IDF.minLng},${IDF.maxLat},${IDF.maxLng},${IDF.minLat}`,
@@ -135,16 +158,12 @@ export async function POST(req: NextRequest) {
           'accept-language': 'fr',
         })
 
-        // For streets: start Overpass in parallel with Nominatim so both run concurrently.
-        // Overpass gives complete geometry; Nominatim gives the lat/lng reference point.
-        const overpassPromise = isStreet ? fetchStreetWaysOverpass(label) : Promise.resolve([])
+        // For streets: start Overpass in parallel with Nominatim
+        const overpassStreetPromise = isStreet ? fetchStreetWaysOverpass(label) : Promise.resolve([])
 
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?${params}`,
-          {
-            headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' },
-            signal: AbortSignal.timeout(8000),
-          }
+          { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(8000) }
         )
 
         if (!res.ok) return { label, found: false }
@@ -160,10 +179,24 @@ export async function POST(req: NextRequest) {
         })
         if (!inIdf.length) return { label, found: false }
 
-        let finalResults = inIdf
+        // Primary lat/lng from first Nominatim result
+        const first = inIdf[0]
+        const lat = parseFloat(first.lat)
+        const lng = parseFloat(first.lon)
+
+        // Fallback Nominatim geometry (single result, any type)
+        const nominatimGeom = first.geojson ?? null
+
+        // Fallback bbox from Nominatim
+        const bb = first.boundingbox?.map(Number)
+        let unionBbox: [number, number, number, number] | null = (bb && bb.length === 4)
+          ? [bb[0], bb[1], bb[2], bb[3]]
+          : null
+
+        let geometry: GeoJSON.Geometry | null = nominatimGeom
 
         if (isStreet) {
-          // For streets (Nominatim fallback): keep only highway-class ways with matching name
+          // Streets: Nominatim for streets (name-filtered highways) + Overpass for complete geometry
           const highways = inIdf.filter(
             r => r.class === 'highway' || (r.osm_type === 'way' && r.type && HIGHWAY_TYPES.has(r.type))
           )
@@ -172,46 +205,16 @@ export async function POST(req: NextRequest) {
             const osmName = (r.display_name ?? '').split(',')[0].trim()
             return normalizeStreetName(osmName) === queryNorm
           })
-          finalResults = nameMatched.length ? nameMatched : (highways.length ? highways : inIdf.slice(0, 1))
-        } else {
-          finalResults = inIdf.slice(0, 1)
-        }
+          const streetResults = nameMatched.length ? nameMatched : (highways.length ? highways : inIdf.slice(0, 1))
 
-        // Primary lat/lng from first (highest-ranked) Nominatim result
-        const first = finalResults[0]
-        const lat = parseFloat(first.lat)
-        const lng = parseFloat(first.lon)
+          // Nominatim bbox union for streets
+          const bboxes = streetResults.map(r => r.boundingbox?.map(Number)).filter((bb): bb is number[] => Array.isArray(bb) && bb.length === 4)
+          if (bboxes.length) {
+            unionBbox = [Math.min(...bboxes.map(b => b[0])), Math.max(...bboxes.map(b => b[1])), Math.min(...bboxes.map(b => b[2])), Math.max(...bboxes.map(b => b[3]))]
+          }
 
-        // Union bounding boxes of all Nominatim results (fallback bbox)
-        const bboxes = finalResults
-          .map(r => r.boundingbox?.map(Number))
-          .filter((bb): bb is number[] => Array.isArray(bb) && bb.length === 4)
-
-        let unionBbox: [number, number, number, number] | null = bboxes.length
-          ? [
-            Math.min(...bboxes.map(b => b[0])),  // minLat (south)
-            Math.max(...bboxes.map(b => b[1])),  // maxLat (north)
-            Math.min(...bboxes.map(b => b[2])),  // minLng (west)
-            Math.max(...bboxes.map(b => b[3])),  // maxLng (east)
-          ]
-          : null
-
-        // Nominatim geometry (fallback if Overpass is unavailable)
-        // Build geometry from all available Nominatim results.
-        // For non-street POIs (landmarks, squares, parks…) a single place like
-        // "Place de la République" can be split into multiple OSM Ways — one per
-        // arrondissement side — each returned as a separate result.  Combining all
-        // edges (LineString ways + Polygon outer rings) into a MultiLineString ensures
-        // filterIrisByGeometry captures IRIS adjacent to every side of the place.
-        let geometry: GeoJSON.Geometry | null = null
-
-        if (isStreet) {
-          // Streets: only LineString ways
-          const lineGeoms = finalResults
-            .map(r => r.geojson)
-            .filter((g): g is GeoJSON.LineString | GeoJSON.MultiLineString =>
-              g != null && (g.type === 'LineString' || g.type === 'MultiLineString')
-            )
+          // Nominatim street geometry (LineStrings)
+          const lineGeoms = streetResults.map(r => r.geojson).filter((g): g is GeoJSON.LineString | GeoJSON.MultiLineString => g != null && (g.type === 'LineString' || g.type === 'MultiLineString'))
           if (lineGeoms.length === 1) {
             geometry = lineGeoms[0]
           } else if (lineGeoms.length > 1) {
@@ -221,69 +224,49 @@ export async function POST(req: NextRequest) {
               else allCoords.push(...g.coordinates)
             }
             geometry = { type: 'MultiLineString', coordinates: allCoords }
-          } else {
-            geometry = finalResults.find(r => r.geojson)?.geojson ?? null
           }
-        } else {
-          // Non-street POIs: combine all linear + polygon-boundary edges
-          const edgeCoords: GeoJSON.Position[][] = []
-          for (const g of finalResults.map(r => r.geojson).filter(Boolean)) {
-            if (g!.type === 'LineString') {
-              edgeCoords.push((g as GeoJSON.LineString).coordinates)
-            } else if (g!.type === 'MultiLineString') {
-              edgeCoords.push(...(g as GeoJSON.MultiLineString).coordinates)
-            } else if (g!.type === 'Polygon') {
-              edgeCoords.push((g as GeoJSON.Polygon).coordinates[0])
-            } else if (g!.type === 'MultiPolygon') {
-              edgeCoords.push(...(g as GeoJSON.MultiPolygon).coordinates.map(p => p[0]))
-            }
-            // Point: skip — will fall through to lat/lng fallback
-          }
-          if (edgeCoords.length === 1) {
-            geometry = { type: 'LineString', coordinates: edgeCoords[0] }
-          } else if (edgeCoords.length > 1) {
-            geometry = { type: 'MultiLineString', coordinates: edgeCoords }
-          } else {
-            geometry = finalResults.find(r => r.geojson)?.geojson ?? null
-          }
-        }
 
-        // Override with Overpass geometry if available (complete coverage of all street segments)
-        if (isStreet) {
-          const overpassWays = await overpassPromise
+          // Override with Overpass (complete street coverage)
+          const overpassWays = await overpassStreetPromise
           if (overpassWays.length > 0) {
             const allCoords = overpassWays.map(w => w.coordinates)
             geometry = allCoords.length === 1
               ? { type: 'LineString', coordinates: allCoords[0] }
               : { type: 'MultiLineString', coordinates: allCoords }
-
-            // Recompute bbox from the complete Overpass geometry
             const allPoints = allCoords.flat()
-            const lats = allPoints.map(p => p[1])
-            const lngs = allPoints.map(p => p[0])
+            const lats = allPoints.map(p => p[1]), lngs = allPoints.map(p => p[0])
             unionBbox = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)]
           }
+        } else {
+          // Non-street POIs: use Overpass in a small bbox to get the complete boundary.
+          // POIs like Place de la République, Parc Monceau, Place de la Bastille are made
+          // of multiple OSM ways (one per side/segment) — Overpass returns all of them,
+          // which are combined into a comprehensive MultiLineString for proximity checks.
+          const poiWays = await fetchPoiWaysOverpass(label, lat, lng)
+          if (poiWays.length > 0) {
+            const allCoords = poiWays.map(w => w.coordinates)
+            geometry = allCoords.length === 1
+              ? { type: 'LineString', coordinates: allCoords[0] }
+              : { type: 'MultiLineString', coordinates: allCoords }
+            const allPoints = allCoords.flat()
+            const lats = allPoints.map(p => p[1]), lngs = allPoints.map(p => p[0])
+            unionBbox = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)]
+          }
+          // else: falls back to nominatimGeom set above
         }
 
-        // Extract arrondissement IDs from Nominatim display_names.
-        // Used to restrict IRIS selection to the arrondissement(s) the street belongs to,
-        // preventing false positives from perpendicular offsets crossing arr boundaries.
+        // Extract arrondissement IDs from Nominatim display_name (streets only).
         const arrondissements = isStreet
           ? [...new Set(
-              finalResults
-                .map(r => {
-                  const m = (r.display_name ?? '').match(/Paris\s+(\d+)e?r?\s+Arrondissement/i)
-                  return m ? `arr-${parseInt(m[1])}` : null
-                })
-                .filter((id): id is string => id !== null)
+              inIdf.map(r => {
+                const m = (r.display_name ?? '').match(/Paris\s+(\d+)e?r?\s+Arrondissement/i)
+                return m ? `arr-${parseInt(m[1])}` : null
+              }).filter((id): id is string => id !== null)
             )]
           : undefined
 
         return {
-          label,
-          found: true,
-          lat,
-          lng,
+          label, found: true, lat, lng,
           geometry,
           bbox: unionBbox,
           radius: POI_RADII[poiType ?? ''] ?? 500,

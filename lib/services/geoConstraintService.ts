@@ -167,6 +167,46 @@ function filterIrisByBbox(
 const STREET_POI_TYPES = new Set(['street', 'avenue', 'boulevard', 'rue', 'quai', 'passage', 'impasse', 'voie', 'route'])
 
 /**
+ * Select IRIS whose polygon is within radiusM of the given POI geometry.
+ *
+ * Algorithm:
+ *   1. Sample the POI geometry boundary every 20m.
+ *   2. For each sample point P, compute the minimum distance from P to each
+ *      IRIS polygon (using distanceStationToIris — polygon-edge distance).
+ *   3. Select IRIS where any sample point is within radiusM.
+ *
+ * Differences from filterIrisByGeometry:
+ *   filterIrisByGeometry: finds IRIS whose polygon CONTAINS a sample±8m offset.
+ *     → only selects IRIS immediately adjacent (≤8m). Correct for streets.
+ *   filterIrisByGeometryProximity: finds IRIS within radiusM of the boundary.
+ *     → selects all IRIS within radiusM. Correct for "proche de X" POI queries.
+ */
+function filterIrisByGeometryProximity(
+  candidates: GeoZone[],
+  geometry: GeoJSON.Geometry,
+  radiusM: number,
+): GeoZone[] {
+  if (geometry.type === 'Point') {
+    const [lng, lat] = geometry.coordinates as [number, number]
+    return candidates.filter(z => distanceStationToIris(lat, lng, z) <= radiusM)
+  }
+
+  const samples = sampleGeometryPoints(geometry, 20)
+  if (!samples.length) return []
+
+  const selected = new Set<string>()
+  for (const [sLat, sLng] of samples) {
+    for (const zone of candidates) {
+      if (!selected.has(zone.id) && distanceStationToIris(sLat, sLng, zone) <= radiusM) {
+        selected.add(zone.id)
+      }
+    }
+    if (selected.size === candidates.length) break  // all selected — early exit
+  }
+  return candidates.filter(z => selected.has(z.id))
+}
+
+/**
  * Select IRIS that intersect a given GeoJSON geometry.
  *
  * Strategy for linear features (LineString, MultiLineString):
@@ -555,25 +595,31 @@ function resolveInsideToIris(
       })
     }
 
-    // 1. Geometry: precise coverage (LineString/Polygon) — preferred for non-point features
+    // 1. Non-point geometry — two strategies depending on POI type:
+    //    • Streets (rue, avenue, boulevard…): filterIrisByGeometry captures IRIS on
+    //      both sides of the centerline via perpendicular ±8m offsets.
+    //    • Place/landmark POIs: filterIrisByGeometryProximity selects all IRIS whose
+    //      polygon is within radiusM of any sampled point on the POI boundary.
+    //      This correctly handles "proche République" (radius=100m): IRIS that
+    //      border the place are at distance 0; IRIS 50-100m away are also included.
     if (c.geometry && c.geometry.type !== 'Point') {
-      const g = filterByArr(filterIrisByGeometry(iris, c.geometry, r))
-      if (g.length > 0) return g
+      if (STREET_POI_TYPES.has(c.poiType ?? '')) {
+        const g = filterByArr(filterIrisByGeometry(iris, c.geometry, r))
+        if (g.length > 0) return g
+      } else {
+        const g = filterByArr(filterIrisByGeometryProximity(iris, c.geometry, r))
+        if (g.length > 0) return g
+      }
     }
-    // 2. Bounding box: reliable coverage of the full spatial extent of a street/POI
+    // 2. Bounding box: centroid-based fallback for when only bbox is available
     if (c.bbox) {
       const buf = STREET_POI_TYPES.has(c.poiType ?? '') ? 120 : 80
       const b = filterByArr(filterIrisByBbox(iris, c.bbox, buf))
       if (b.length > 0) return b
     }
-    // 3. Point POI: polygon-edge distance (nearest polygon point, not centroid).
-    // Selects IRIS that contain the POI (distance 0) OR whose nearest boundary
-    // point is within radiusM — same algorithm as metro station proximity.
+    // 3. Point POI: polygon-edge distance from the geocoded center point
     if (c.lat !== undefined && c.lng !== undefined) {
-      const byEdge = filterByArr(
-        iris.filter(z => distanceStationToIris(c.lat!, c.lng!, z) <= r)
-      )
-      // Fallback to centroid if polygon-edge returns nothing (geometry edge case)
+      const byEdge = filterByArr(iris.filter(z => distanceStationToIris(c.lat!, c.lng!, z) <= r))
       if (byEdge.length > 0) return byEdge
       return filterByArr(filterIrisByCoords(iris, c.lat, c.lng, r))
     }
