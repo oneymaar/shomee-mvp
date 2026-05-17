@@ -233,6 +233,14 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // Try geo-constraint intersection first
       if (resolveConstraintsInput.length) {
         const result = resolveConstraints(resolveConstraintsInput, zones, quartiersRef.current, communesRef.current)
+        // DEBUG — trace resolution result. Remove after validation.
+        const dbgSrc = useSearchStore.getState().locationIntent?.parserSource ?? 'unknown'
+        console.group(`🗺️ IRIS RESOLUTION [${dbgSrc}]`)
+        console.log('constraints:', resolveConstraintsInput.map(c => `${c.type}/${c.operator}/${c.zoneId ?? c.label}`))
+        console.log('wasNarrowed:', result.wasNarrowed, '| irisCount:', result.irisIds.length)
+        console.log('summary:', result.matchSummary)
+        console.log('finalSelectionSource:', result.wasNarrowed && result.irisIds.length > 0 ? 'geoConstraints' : 'fallback')
+        console.groupEnd()
         if (result.wasNarrowed && result.irisIds.length > 0) {
           // Precise IRIS selected: clear any pre-selected arrondissements / quartiers that
           // belong to the narrowed zones so the map shows partial (not full) highlights.

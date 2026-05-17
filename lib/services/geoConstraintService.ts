@@ -819,11 +819,20 @@ function normalizeNearToInside(
     const isPoi = c.type === 'poi' && (c.geometry != null || c.lat !== undefined)
     if (!isNbhd && !isStation && !isPoi) return c  // transport_line: always a filter
 
-    // For poi: check overlap using geometry then bbox
+    // For poi: check overlap using geometry then bbox.
+    // Streets use filterIrisByGeometry (8m side-offsets — correct for linear features).
+    // Non-street POIs (parks, places, landmarks) use filterIrisByGeometryProximity with
+    // the actual radiusM: filterIrisByGeometry only does 8m offsets for Polygon geometry,
+    // which is far too small to detect adjacency when OSM boundaries have gaps > 8m
+    // (e.g. the Bois de Boulogne polygon vs Neuilly IRIS boundaries — always > 8m apart).
     if (isPoi) {
       const r = c.radiusM ?? poiRadius(c.poiType)
       let overlap = 0
-      if (c.geometry && c.geometry.type !== 'Point') overlap = filterIrisByGeometry(refIris, c.geometry, r).length
+      if (c.geometry && c.geometry.type !== 'Point') {
+        overlap = STREET_POI_TYPES.has(c.poiType ?? '')
+          ? filterIrisByGeometry(refIris, c.geometry, r).length
+          : filterIrisByGeometryProximity(refIris, c.geometry, r).length
+      }
       else if (c.bbox) overlap = filterIrisByBbox(refIris, c.bbox, 120).length
       else if (c.lat !== undefined && c.lng !== undefined) overlap = filterIrisByCoords(refIris, c.lat, c.lng, r).length
       return overlap > 0 ? c : { ...c, operator: 'inside' as ConstraintOperator }
@@ -1006,7 +1015,13 @@ export function resolveConstraints(
       }
     } else if (c.type === 'poi') {
       const r = c.radiusM ?? poiRadius(c.poiType)
-      if (c.geometry && c.geometry.type !== 'Point') filtered = filterIrisByGeometry(narrowed, c.geometry, r)
+      if (c.geometry && c.geometry.type !== 'Point') {
+        // Mirror resolveInsideToIris: streets use side-offset geometry check,
+        // non-street POIs use proximity-based check that respects radiusM.
+        filtered = STREET_POI_TYPES.has(c.poiType ?? '')
+          ? filterIrisByGeometry(narrowed, c.geometry, r)
+          : filterIrisByGeometryProximity(narrowed, c.geometry, r)
+      }
       else if (c.bbox) filtered = filterIrisByBbox(narrowed, c.bbox, STREET_POI_TYPES.has(c.poiType ?? '') ? 120 : 80)
       else if (c.lat !== undefined && c.lng !== undefined) filtered = filterIrisByCoords(narrowed, c.lat, c.lng, r)
       if (filtered.length > 0) summary.push(c.label)
