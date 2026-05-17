@@ -122,32 +122,35 @@ async function geocodeStreet(label: string, poiType: string): Promise<GeoConstra
 
 type OverpassElem = { type: string; geometry?: Array<{lat:number;lon:number}>; members?: Array<{type:string;geometry?:Array<{lat:number;lon:number}>}> }
 
-/** Fetch all OSM ways/relations named exactly `name` within 1.5km of (lat,lng). */
+/** Fetch all OSM ways/relations named exactly `name` within 1.5km of (lat,lng).
+ *  Returns [] on error or timeout (graceful degradation to Nominatim fallback). */
 async function fetchPoiWaysOverpass(name: string, lat: number, lng: number): Promise<GeoJSON.LineString[]> {
   const delta = 0.015
   const bbox = `${(lat - delta).toFixed(4)},${(lng - delta).toFixed(4)},${(lat + delta).toFixed(4)},${(lng + delta).toFixed(4)}`
   const escaped = name.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
   // Query ways AND relations (parks like Parc Monceau are OSM relations)
-  const query = `[out:json][timeout:10];(way["name"~"^${escaped}$",i](${bbox});relation["name"~"^${escaped}$",i](${bbox}););out geom;`
-  const res = await fetch(
-    `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-    { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(12_000) }
-  )
-  if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`)
-  const data: { elements?: OverpassElem[] } = await res.json()
-  const lines: GeoJSON.LineString[] = []
-  for (const e of data.elements ?? []) {
-    if (e.type === 'way' && Array.isArray(e.geometry) && (e.geometry?.length ?? 0) >= 2) {
-      lines.push({ type: 'LineString', coordinates: e.geometry!.map(p => [p.lon, p.lat] as [number, number]) })
-    } else if (e.type === 'relation' && Array.isArray(e.members)) {
-      for (const m of e.members) {
-        if (m.type === 'way' && Array.isArray(m.geometry) && (m.geometry?.length ?? 0) >= 2) {
-          lines.push({ type: 'LineString', coordinates: m.geometry!.map(p => [p.lon, p.lat] as [number, number]) })
+  const query = `[out:json][timeout:20];(way["name"~"^${escaped}$",i](${bbox});relation["name"~"^${escaped}$",i](${bbox}););out geom;`
+  try {
+    const res = await fetch(
+      `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+      { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(25_000) }
+    )
+    if (!res.ok) return []
+    const data: { elements?: OverpassElem[] } = await res.json()
+    const lines: GeoJSON.LineString[] = []
+    for (const e of data.elements ?? []) {
+      if (e.type === 'way' && Array.isArray(e.geometry) && (e.geometry?.length ?? 0) >= 2) {
+        lines.push({ type: 'LineString', coordinates: e.geometry!.map(p => [p.lon, p.lat] as [number, number]) })
+      } else if (e.type === 'relation' && Array.isArray(e.members)) {
+        for (const m of e.members) {
+          if (m.type === 'way' && Array.isArray(m.geometry) && (m.geometry?.length ?? 0) >= 2) {
+            lines.push({ type: 'LineString', coordinates: m.geometry!.map(p => [p.lon, p.lat] as [number, number]) })
+          }
         }
       }
     }
-  }
-  return lines
+    return lines
+  } catch { return [] }
 }
 
 /** Geocode a point/area POI: Nominatim for lat/lng + Overpass for complete boundary geometry.
@@ -298,8 +301,29 @@ describe('geo-resolution pipeline', () => {
   //   [overpass POI] → number of OSM ways, combined bbox
   //   [result] → selected IRIS names
 
+  it('label court "République" → doit résoudre via display_name Nominatim', async () => {
+    // Régression critique : quand le LLM émet label:"République" (forme courte),
+    // Nominatim retourne des nœuds railway (class=railway, geom=Point).
+    // La route geocode doit extraire "Place de la République" depuis display_name
+    // pour récupérer la vraie géométrie OSM de la place.
+    console.log('\n[test] label="République" court — résolution via display_name')
+    const constraint = await geocodePoi('République', 'landmark', 150, 'République, Paris')
+    expect(constraint.geometry, 'Must have polygon geometry even with short label').toBeDefined()
+    expect(constraint.geometry?.type).toMatch(/LineString|MultiLineString/)
+    const result = resolveConstraints([constraint], iris, quartiers, communes)
+    const names = selectedNames(result)
+    const parentArr = new Set(
+      result.irisIds.map(id => iris.find(z => z.id === id)?.parentId ?? '')
+        .map(pid => pid.startsWith('qu-') ? (quartiers.find(q => q.id === pid)?.parentId ?? '') : pid)
+    )
+    console.log(`  [result] ${names.length} IRIS: ${names.join(', ')}`)
+    console.log(`  [arrondissements] ${[...parentArr].join(', ')}`)
+    expect([...parentArr].includes('arr-3'), 'Must include arr-3 IRIS').toBe(true)
+    expect(result.irisIds.length).toBeGreaterThanOrEqual(5)
+  }, 60_000)
+
   it('proche Place de la République → IRIS from arr-3, arr-10, arr-11', async () => {
-    console.log('\n[test] "proche Place de la République" (radius=100m)')
+    console.log('\n[test] "proche Place de la République" (radius=150m)')
     const constraint = await geocodePoi('Place de la République', 'landmark', 150)
 
     expect(constraint.geometry, 'Must have Overpass geometry').toBeDefined()

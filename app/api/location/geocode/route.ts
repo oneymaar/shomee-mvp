@@ -242,7 +242,23 @@ export async function POST(req: NextRequest) {
           // POIs like Place de la République, Parc Monceau, Place de la Bastille are made
           // of multiple OSM ways (one per side/segment) — Overpass returns all of them,
           // which are combined into a comprehensive MultiLineString for proximity checks.
-          const poiWays = await fetchPoiWaysOverpass(label, lat, lng)
+          //
+          // Critical: when the LLM emits a short/colloquial label (e.g. "République"),
+          // Nominatim may return railway stop nodes (class=railway, type=stop) whose
+          // display_name is "République, Place de la République, …". The actual place
+          // name is then the SECOND comma-separated component. Using the raw label for
+          // Overpass would return only metro station nodes (no polygon), so we derive
+          // the canonical OSM name from Nominatim's display_name instead.
+          const displayParts = (first.display_name ?? '').split(',').map(s => s.trim())
+          // A node (osm_type=node) is always a point feature (station, bus stop, etc.).
+          // For those, the actual place name is the 2nd component of display_name.
+          const isTransportNode = first.osm_type === 'node'
+          // For transport nodes: use 2nd display_name component (the actual place name).
+          // For area/place results: use 1st component (the result's own name).
+          const canonicalName = (isTransportNode && displayParts.length > 1)
+            ? displayParts[1]
+            : (displayParts[0] || label)
+          const poiWays = await fetchPoiWaysOverpass(canonicalName, lat, lng)
           if (poiWays.length > 0) {
             const allCoords = poiWays.map(w => w.coordinates)
             geometry = allCoords.length === 1
