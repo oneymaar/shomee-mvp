@@ -335,7 +335,11 @@ function irisCentroid(zone: GeoZone): [number, number] | null {
 
 // ─── Proximity and direction filters ───────────────────────────────────────
 
-const DEFAULT_TRANSPORT_RADIUS_M = 650
+// Polygon-edge distance from station to IRIS boundary.
+// 350m ≈ 4-5 min walk — matches transportStations.json defaultRadiusMeters.
+// Was 650 when coordinates were hand-entered (~200-1000m off); now that coords
+// are GPS-accurate from transportStations.json, 350 gives a tight correct selection.
+const DEFAULT_TRANSPORT_RADIUS_M = 350
 
 // All metro line IDs (used when line:"metro" = any metro station)
 const METRO_LINE_IDS = ['1','2','3','3b','4','5','6','7','7b','8','9','10','11','12','13','14']

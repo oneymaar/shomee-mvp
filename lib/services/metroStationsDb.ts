@@ -1,8 +1,11 @@
 /**
  * Paris metro + RER station database.
- * Coordinates are approximate centroid of each station entrance (~20–80m accuracy).
+ * Line memberships come from the RAW array below.
+ * Coordinates are overridden at build time from transportStations.json (GPS-accurate).
  * Lines: '1'–'14' for metro, 'A'–'E' for RER.
  */
+
+import rawJsonStations from '@/src/data/transportStations.json'
 
 export interface MetroStation {
   name: string
@@ -328,6 +331,22 @@ for (const [name, lat, lng, ...lines] of RAW) {
     MERGED[name] = { lat, lng, lines: new Set(lines) }
   } else {
     lines.forEach((l) => MERGED[name].lines.add(l))
+  }
+}
+
+// Override MERGED coordinates with GPS-accurate data from transportStations.json.
+// The RAW array above has correct line assignments but manually entered approximate
+// coordinates (often 200-1000m off). transportStations.json is the source of truth.
+{
+  type JsonStation = { label: string; coordinates: { lat: number; lng: number } }
+  const jsonByLabel = new Map<string, { lat: number; lng: number }>()
+  for (const s of rawJsonStations as JsonStation[]) {
+    const key = s.label.toLowerCase()
+    if (!jsonByLabel.has(key)) jsonByLabel.set(key, s.coordinates)
+  }
+  for (const [name, data] of Object.entries(MERGED)) {
+    const coords = jsonByLabel.get(name.toLowerCase())
+    if (coords) { data.lat = coords.lat; data.lng = coords.lng }
   }
 }
 
