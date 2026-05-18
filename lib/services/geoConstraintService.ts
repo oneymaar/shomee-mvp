@@ -341,6 +341,10 @@ function irisCentroid(zone: GeoZone): [number, number] | null {
 // are GPS-accurate from transportStations.json, 350 gives a tight correct selection.
 const DEFAULT_TRANSPORT_RADIUS_M = 350
 
+// Smaller radius for exclusions: targets the immediate micro-sector around a
+// station/place (e.g. "Boulogne sauf Marcel Sembat"), not the full inclusion zone.
+const EXCLUDE_STATION_RADIUS_M = 200
+
 // All metro line IDs (used when line:"metro" = any metro station)
 const METRO_LINE_IDS = ['1','2','3','3b','4','5','6','7','7b','8','9','10','11','12','13','14']
 const RER_LINE_IDS   = ['A','B','C','D','E']
@@ -635,8 +639,20 @@ function resolveInsideToIris(
 
 /**
  * Resolve an "exclude" constraint to the IRIS zones that should be removed.
- * Searches within `candidates` for neighborhood/station excludes (to avoid
- * removing IRIS from a different zone entirely).
+ *
+ * Resolution hierarchy (mirrors resolveInsideToIris for semantic neighborhoods):
+ *   1. explicit irisNames from quartiers.json        — most precise, polygon-free
+ *   2. radius from semanticNeighborhoods.json        — center + confidenceRadius
+ *   3. quartier administratif (parentId)             — exact administrative boundary
+ *   4. transport station with EXCLUDE_STATION_RADIUS  — micro-sector only
+ *   5. POI geometry or point (supports poi type)      — previously silently ignored
+ *
+ * Logs a warning to console when an exclusion cannot be resolved, so missing
+ * database entries are visible rather than silently dropping the constraint.
+ *
+ * Searches within `candidates` (current narrowed pool) for proximity-based excludes
+ * to avoid removing IRIS from a different zone. Uses `allIris` for irisNames lookups
+ * (consistent with resolveInsideToIris).
  */
 function resolveExcludeToIris(
   c: GeoConstraint,
@@ -644,38 +660,86 @@ function resolveExcludeToIris(
   allIris: GeoZone[],
   quartiers: GeoZone[],
 ): GeoZone[] {
+  const warn = (reason: string) => {
+    if (typeof window !== 'undefined') {
+      console.warn('[geo] exclusion unresolved — label:', c.label, '| type:', c.type, '| reason:', reason)
+    }
+  }
+
   if (c.type === 'administrative_area' && c.zoneId) {
     return getIrisInZone(c.zoneId, allIris, quartiers)
   }
 
   if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
+    // 1. Explicit IRIS name list from quartiers.json — most precise.
+    //    Fixes "Paris 12 mais pas Bercy", "Paris 9 hors Pigalle" etc. where the
+    //    excluded entity has a known IRIS list. Previously skipped, causing the
+    //    fallback to use a radial zone that excluded too few or too many IRIS.
+    const irisNamesToResolve = c.irisNames
+      ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+    if (irisNamesToResolve?.length) {
+      const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
+      const matched = allIris.filter(z =>
+        nameSet.has(normalizeIrisName(z.name)) ||
+        nameSet.has(normalizeIrisName(z.shortName))
+      )
+      if (matched.length > 0) return matched
+      // Fall through: irisNames present but no IRIS found (data mismatch) — try radius
+    }
+
+    // 2. Radius-based from semanticNeighborhoods.json
     const n = resolveNeighborhoodCoords(c)
     if (n) {
       const radius = c.radiusM ?? n.confidenceRadiusMeters
       return filterIrisByCoords(candidates, n.lat, n.lng, radius)
     }
-    // Fallback: match against quartiers administratifs.
-    // Critical for exclusions like "Paris 17 mais pas les Épinettes":
-    // Épinettes is a QA of arr-17, not in semanticNeighborhoods.json.
-    // Radius-based exclusion would be imprecise; parentId-based is exact.
+
+    // 3. Quartier administratif — exact parentId boundary (most precise for QA exclusions)
+    //    e.g. "17e sauf Épinettes": Épinettes is a QA of arr-17, not in semanticNeighborhoods.
     const qaLabel = c.stationName ?? c.label
     const matchedQAs = matchQuartiersByName(qaLabel, quartiers)
     if (matchedQAs.length > 0 && matchedQAs.length <= 4) {
       const qaIds = new Set(matchedQAs.map(q => q.id))
-      // Exclude IRIS by exact parentId — not by radius, which would be imprecise
       return allIris.filter(z => z.parentId && qaIds.has(z.parentId))
     }
+
+    warn('no irisNames, no semanticNeighborhood coords, no QA match')
     return []
   }
 
   if (c.type === 'transport_station') {
     const name = c.stationName ?? c.label
     const station = name ? findStation(name) : null
-    if (!station) return []
-    const radius = c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
+    if (!station) {
+      warn('station not found in DB')
+      return []
+    }
+    // Use EXCLUDE_STATION_RADIUS_M (200m) instead of DEFAULT_TRANSPORT_RADIUS_M (350m):
+    // exclusions target the micro-sector around the station, not the full inclusion zone.
+    const radius = c.radiusM ?? EXCLUDE_STATION_RADIUS_M
     return filterIrisByCoords(candidates, station.lat, station.lng, radius)
   }
 
+  if (c.type === 'poi') {
+    // POI exclusions were previously silently ignored (no poi branch existed).
+    // Supports geometry-based exclusion (polygon/line) and point-based.
+    // Uses a reduced default radius: exclusions target the local area, not the
+    // full POI influence zone used for inclusions.
+    const r = c.radiusM ?? EXCLUDE_STATION_RADIUS_M
+    if (c.geometry && c.geometry.type !== 'Point') {
+      const g = STREET_POI_TYPES.has(c.poiType ?? '')
+        ? filterIrisByGeometry(candidates, c.geometry, r)
+        : filterIrisByGeometryProximity(candidates, c.geometry, r)
+      if (g.length > 0) return g
+    }
+    if (c.lat !== undefined && c.lng !== undefined) {
+      return filterIrisByCoords(candidates, c.lat, c.lng, r)
+    }
+    warn('poi has no geometry and no lat/lng — geocoding may not have run or failed')
+    return []
+  }
+
+  warn('unhandled constraint type')
   return []
 }
 
@@ -1041,9 +1105,15 @@ export function resolveConstraints(
   // ── Step 3: Apply exclude constraints (subtraction) ───────────────────────
   for (const c of excludeConstraints) {
     const toExclude = resolveExcludeToIris(c, narrowed, iris, quartiers)
+    if (toExclude.length === 0 && typeof window !== 'undefined') {
+      console.warn('[geo] exclusion returned 0 IRIS — label:', c.label, '| type:', c.type, '| poolSize:', narrowed.length)
+    }
     if (toExclude.length > 0) {
       const excludedIds = new Set(toExclude.map(z => z.id))
       narrowed = narrowed.filter(z => !excludedIds.has(z.id))
+      if (typeof window !== 'undefined') {
+        console.log('[geo] exclusion applied — label:', c.label, '| excluded:', toExclude.length, '| remaining:', narrowed.length)
+      }
     }
   }
 
