@@ -118,6 +118,9 @@ const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiu
   periph:            { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
   peripherique:      { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
   lac:               { label: 'lac',                   targetType: 'poi', radiusM: 300 },
+  // Reference points for directional exclusions ("pas côté Défense", "hors côté Défense")
+  defense:           { label: 'La Défense',            targetType: 'poi', radiusM: 500 },
+  ladefense:         { label: 'La Défense',            targetType: 'poi', radiusM: 500 },
 }
 
 // ─── Street/way prefix ────────────────────────────────────────────────────────
@@ -231,6 +234,55 @@ function resolveEntity(rawText: string): SpatialEntity {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
+ * Resolve an exclusion target text to a SpatialEntity, with special handling for
+ * known geographic references (COTE_EXPANSIONS) and "côté X" patterns.
+ *
+ * This is the exclusion-side mirror of the inline proximity / CÔTÉ patterns:
+ *   "sauf périph"             → poi(exclude, "Boulevard Périphérique")
+ *   "mais pas côté Défense"   → poi(exclude, "La Défense")
+ *   "hors bois"               → poi(exclude, "Bois de Boulogne")
+ *   "sauf Marcel Sembat"      → resolveEntity normally (station)
+ *   "hors Belleville"         → resolveEntity normally (quartier)
+ *
+ * When the exclusion target IS in COTE_EXPANSIONS (possibly with "côté" prefix),
+ * it produces a poi entity whose label will be geocoded in LocationMapStep,
+ * allowing resolveExcludeToIris to apply a geometry-based exclusion.
+ */
+function resolveExclusionTarget(rawText: string): SpatialEntity {
+  const norm = normalizeForParsing(rawText.trim())
+  const key = normKey(rawText.trim())
+
+  // Direct COTE_EXPANSIONS match: "sauf périph", "hors bois", "hors seine"
+  const direct = COTE_EXPANSIONS[key]
+  if (direct) {
+    return {
+      rawText, normalizedText: norm, type: 'poi',
+      label: direct.label, confidence: 0.85,
+    }
+  }
+
+  // "côté X" / "cote X" in exclusion context: "mais pas côté Défense"
+  // After normalizeForParsing, "côté" → "cote"
+  const coteMatch = norm.match(/^cote\s+(.+)$/)
+  if (coteMatch) {
+    const innerKey = normKey(coteMatch[1])
+    const expansion = COTE_EXPANSIONS[innerKey]
+    if (expansion) {
+      return {
+        rawText, normalizedText: norm, type: 'poi',
+        label: expansion.label, confidence: 0.82,
+      }
+    }
+    // "côté [entity]" where entity is a known place → resolve the inner entity
+    const inner = resolveEntity(coteMatch[1].trim())
+    if (inner.type !== 'unknown') return { ...inner, rawText }
+  }
+
+  // Default: resolve normally (handles stations, quartiers, communes…)
+  return resolveEntity(rawText.trim())
+}
+
+/**
  * Parse a raw user query into a structured SpatialIntent without any LLM call.
  *
  * Sets requiresLLM=true if:
@@ -264,7 +316,7 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
   const EXCL_RE = /\s+(?:sauf|mais\s+pas|hors)\s+(.+)$/
   const exclMatch = workingQuery.match(EXCL_RE)
   if (exclMatch) {
-    exclusions.push(resolveEntity(exclMatch[1].trim()))
+    exclusions.push(resolveExclusionTarget(exclMatch[1].trim()))
     workingQuery = workingQuery.slice(0, exclMatch.index!).trim()
   }
 

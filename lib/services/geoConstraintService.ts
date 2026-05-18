@@ -687,10 +687,14 @@ function resolveExcludeToIris(
       // Fall through: irisNames present but no IRIS found (data mismatch) — try radius
     }
 
-    // 2. Radius-based from semanticNeighborhoods.json
+    // 2. Radius-based from semanticNeighborhoods.json (or station fallback via resolveNeighborhoodCoords).
+    //    When resolveNeighborhoodCoords falls back to a station (e.g. "Marcel Sembat" resolved via
+    //    the station DB), use EXCLUDE_STATION_RADIUS_M instead of confidenceRadiusMeters (350m) to
+    //    target only the micro-sector around the station.
     const n = resolveNeighborhoodCoords(c)
     if (n) {
-      const radius = c.radiusM ?? n.confidenceRadiusMeters
+      const resolvedViaStation = !c.neighborhoodId && !!findStation(c.label)
+      const radius = c.radiusM ?? (resolvedViaStation ? EXCLUDE_STATION_RADIUS_M : n.confidenceRadiusMeters)
       return filterIrisByCoords(candidates, n.lat, n.lng, radius)
     }
 
@@ -710,14 +714,19 @@ function resolveExcludeToIris(
   if (c.type === 'transport_station') {
     const name = c.stationName ?? c.label
     const station = name ? findStation(name) : null
-    if (!station) {
-      warn('station not found in DB')
-      return []
-    }
-    // Use EXCLUDE_STATION_RADIUS_M (200m) instead of DEFAULT_TRANSPORT_RADIUS_M (350m):
-    // exclusions target the micro-sector around the station, not the full inclusion zone.
+    // Use EXCLUDE_STATION_RADIUS_M (200m): exclusions target the micro-sector around the
+    // station, not the full inclusion zone.
     const radius = c.radiusM ?? EXCLUDE_STATION_RADIUS_M
-    return filterIrisByCoords(candidates, station.lat, station.lng, radius)
+    if (station) {
+      return filterIrisByCoords(candidates, station.lat, station.lng, radius)
+    }
+    // Station not in DB (e.g. Transilien, tram, lesser-known stops) — fall back to
+    // geocoded coordinates if injected by the front-end pipeline.
+    if (c.lat !== undefined && c.lng !== undefined) {
+      return filterIrisByCoords(candidates, c.lat, c.lng, radius)
+    }
+    warn('station not found in DB and no coordinates — geocoding may not have run')
+    return []
   }
 
   if (c.type === 'poi') {

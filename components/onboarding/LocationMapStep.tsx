@@ -400,6 +400,35 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         }
       }
 
+      // ── Geocode excluded transport_stations not in the metro/RER DB ────────────
+      // Handles Transilien gares, lesser-known stops (e.g. "gare Clichy-Levallois",
+      // "Porte de la Chapelle" if not found). Injects lat/lng so resolveExcludeToIris
+      // can use the lat/lng fallback path instead of silently dropping the exclusion.
+      const unknownExcludedStations = enrichedConstraints.filter(c =>
+        c.operator === 'exclude' &&
+        c.type === 'transport_station' &&
+        c.lat === undefined &&
+        !findStation(c.stationName ?? c.label)
+      )
+      if (unknownExcludedStations.length > 0) {
+        try {
+          const gRes = await fetch('/api/location/geocode', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ places: unknownExcludedStations.map(c => ({ label: c.label, poiType: 'poi' })) }),
+          })
+          if (gRes.ok) {
+            const { results } = await gRes.json() as { results: Array<{ label: string; found: boolean; lat?: number; lng?: number }> }
+            enrichedConstraints = enrichedConstraints.map(c => {
+              if (c.operator !== 'exclude' || c.type !== 'transport_station') return c
+              const r = results.find(res => res.label === c.label)
+              if (r?.found && r.lat !== undefined && r.lng !== undefined) return { ...c, lat: r.lat, lng: r.lng }
+              return c
+            })
+          }
+        } catch { /* silent — exclusion will log warning at resolve time */ }
+      }
+
       // ── POI geocoding — server-side (Nominatim with full geometry) ───────────
       // Must happen before enrichedIntent is computed so the store gets geometry/coords.
       const poiCs = enrichedConstraints.filter(c => c.type === 'poi' && c.geometry == null && c.lat === undefined)

@@ -342,6 +342,53 @@ describe('inline proximity: "X proche Y" with known geographic reference', () =>
   })
 })
 
+// ─── Exclusion target resolution — COTE_EXPANSIONS + "côté X" ───────────────
+
+describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
+  it('"Saint-Ouen sauf périph" → poi(exclude) "Boulevard Périphérique", requiresLLM=false', () => {
+    const r = parseSpatialIntent('Saint-Ouen sauf périph')
+    expect(r.requiresLLM).toBe(false)
+    expect(r.primaryEntities[0].type).toBe('city')
+    expect(r.primaryEntities[0].resolvedId).toBe('com-93070')
+    expect(r.exclusions).toHaveLength(1)
+    expect(r.exclusions[0].type).toBe('poi')
+    expect(r.exclusions[0].label).toBe('Boulevard Périphérique')
+  })
+
+  it('"Vincennes hors bois" → poi(exclude) "Bois de Boulogne", requiresLLM=false', () => {
+    const r = parseSpatialIntent('Vincennes hors bois')
+    expect(r.requiresLLM).toBe(false)
+    expect(r.primaryEntities[0].resolvedId).toBe('com-94078')
+    expect(r.exclusions[0].type).toBe('poi')
+    expect(r.exclusions[0].label).toBe('Bois de Boulogne')
+  })
+
+  it('"Neuilly mais pas côté Défense" → poi(exclude) "La Défense", requiresLLM=false', () => {
+    const r = parseSpatialIntent('Neuilly mais pas côté Défense')
+    expect(r.requiresLLM).toBe(false)
+    expect(r.primaryEntities[0].resolvedId).toBe('com-92050')
+    expect(r.exclusions[0].type).toBe('poi')
+    expect(r.exclusions[0].label).toBe('La Défense')
+  })
+
+  it('"Neuilly sauf côté bois" → poi(exclude) "Bois de Boulogne"', () => {
+    const r = parseSpatialIntent('Neuilly sauf côté bois')
+    expect(r.exclusions[0].label).toBe('Bois de Boulogne')
+  })
+
+  it('"Charonne mais pas rue de Charonne" unaffected (street exclusion unchanged)', () => {
+    const r = parseSpatialIntent('Charonne mais pas rue de Charonne')
+    expect(r.exclusions[0].type).toBe('street')
+  })
+
+  it('"Paris 11 mais pas Belleville" unaffected (quartier vécu exclusion unchanged)', () => {
+    const r = parseSpatialIntent('Paris 11 mais pas Belleville')
+    // Belleville is not a COTE_EXPANSIONS key → resolves as quartier normally
+    expect(r.exclusions[0].type).not.toBe('poi')  // keeps its natural type
+    expect(r.requiresLLM).toBe(false)
+  })
+})
+
 // ─── Known cities / arrondissements ──────────────────────────────────────────
 
 describe('city and district resolution', () => {
