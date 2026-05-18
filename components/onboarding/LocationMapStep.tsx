@@ -6,7 +6,7 @@ const SHOW_IRIS_DEBUG = false
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
-import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle, Copy, Check } from 'lucide-react'
 import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, matchQuartiersByName, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
 import { findStation } from '@/lib/services/metroStationsDb'
 import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
@@ -94,6 +94,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const [zoom, setZoom] = useState(12)
   const [loading, setLoading] = useState(true)
   const [irisLoading, setIrisLoading] = useState(false)
+  const [irisCopied, setIrisCopied] = useState(false)
   const [fitBounds, setFitBounds] = useState<[[number, number], [number, number]] | null>(null)
   const [constraintSummary, setConstraintSummary] = useState<string[]>([])
   // briefDismissed removed — brief tag visibility is now controlled by
@@ -927,20 +928,35 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       </div>
 
       {/* IRIS sélectionnés — liste sous la carte */}
-      {iris.length > 0 && selectedIrisIds.length > 0 && (
-        <div className="flex-shrink-0 px-4 pt-0.5 pb-1 max-h-16 overflow-y-auto">
-          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(0,0,0,0.38)' }}>
-            <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>
-              {selectedIrisIds.length} IRIS —{' '}
-            </span>
-            {iris
-              .filter(z => selectedIrisIds.includes(z.id))
-              .map(z => z.shortName || z.name)
-              .sort()
-              .join(' · ')}
-          </p>
-        </div>
-      )}
+      {iris.length > 0 && selectedIrisIds.length > 0 && (() => {
+        const names = iris
+          .filter(z => selectedIrisIds.includes(z.id))
+          .map(z => z.shortName || z.name)
+          .sort()
+        return (
+          <div className="flex-shrink-0 px-4 pt-0.5 pb-1 flex items-start gap-2">
+            <p className="text-[10px] leading-relaxed flex-1 max-h-16 overflow-y-auto" style={{ color: 'rgba(0,0,0,0.38)' }}>
+              <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>
+                {selectedIrisIds.length} IRIS —{' '}
+              </span>
+              {names.join(' · ')}
+            </p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(names.join('\n')).then(() => {
+                  setIrisCopied(true)
+                  setTimeout(() => setIrisCopied(false), 2000)
+                })
+              }}
+              className="flex-shrink-0 mt-0.5 active:opacity-60 transition-opacity"
+              style={{ color: irisCopied ? '#16a34a' : 'rgba(0,0,0,0.3)' }}
+              title="Copier la liste"
+            >
+              {irisCopied ? <Check size={12} /> : <Copy size={12} />}
+            </button>
+          </div>
+        )
+      })()}
 
       {/* Reset button — only visible when user has diverged from engine's initial selection */}
       <AnimatePresence>
