@@ -345,6 +345,10 @@ const DEFAULT_TRANSPORT_RADIUS_M = 350
 // station/place (e.g. "Boulogne sauf Marcel Sembat"), not the full inclusion zone.
 const EXCLUDE_STATION_RADIUS_M = 200
 
+// Radius used when selecting/excluding IRIS around a GPS point via polygon-edge
+// distance. An IRIS whose boundary intersects a circle of this radius is included.
+const GPS_POINT_RADIUS_M = 150
+
 // All metro line IDs (used when line:"metro" = any metro station)
 const METRO_LINE_IDS = ['1','2','3','3b','4','5','6','7','7b','8','9','10','11','12','13','14']
 const RER_LINE_IDS   = ['A','B','C','D','E']
@@ -389,6 +393,23 @@ function distanceStationToIris(sLat: number, sLng: number, zone: GeoZone): numbe
     }
   }
   return minDist
+}
+
+/**
+ * Select IRIS whose polygon boundary intersects a circle of radiusM around a GPS point.
+ * An IRIS that contains the point has distance 0 — always selected.
+ *
+ * More precise than filterIrisByCoords (centroid-based): a large IRIS polygon may have
+ * its centroid far from the point while its edge is very close, and vice-versa.
+ * This matches the user expectation: "IRIS touching a 150m circle around Marcel Sembat."
+ */
+function filterIrisByPoint(
+  candidates: GeoZone[],
+  lat: number,
+  lng: number,
+  radiusM: number,
+): GeoZone[] {
+  return candidates.filter(z => distanceStationToIris(lat, lng, z) <= radiusM)
 }
 
 function filterIrisByTransportLine(
@@ -560,7 +581,7 @@ function resolveInsideToIris(
     const n = resolveNeighborhoodCoords(c)
     if (n) {
       const radius = c.radiusM ?? n.confidenceRadiusMeters
-      let nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
+      let nearIris = filterIrisByPoint(iris, n.lat, n.lng, radius)
       if (n.maxSelectedIris) {
         nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
       }
@@ -581,8 +602,8 @@ function resolveInsideToIris(
     const name = c.stationName ?? c.label
     const station = name ? findStation(name) : null
     if (!station) return []
-    const radius = c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
-    return filterIrisByCoords(iris, station.lat, station.lng, radius)
+    const radius = c.radiusM ?? GPS_POINT_RADIUS_M
+    return filterIrisByPoint(iris, station.lat, station.lng, radius)
   }
 
   if (c.type === 'poi') {
@@ -694,8 +715,8 @@ function resolveExcludeToIris(
     const n = resolveNeighborhoodCoords(c)
     if (n) {
       const resolvedViaStation = !c.neighborhoodId && !!findStation(c.label)
-      const radius = c.radiusM ?? (resolvedViaStation ? EXCLUDE_STATION_RADIUS_M : n.confidenceRadiusMeters)
-      return filterIrisByCoords(candidates, n.lat, n.lng, radius)
+      const radius = c.radiusM ?? (resolvedViaStation ? GPS_POINT_RADIUS_M : n.confidenceRadiusMeters)
+      return filterIrisByPoint(candidates, n.lat, n.lng, radius)
     }
 
     // 3. Quartier administratif — exact parentId boundary (most precise for QA exclusions)
@@ -716,14 +737,14 @@ function resolveExcludeToIris(
     const station = name ? findStation(name) : null
     // Use EXCLUDE_STATION_RADIUS_M (200m): exclusions target the micro-sector around the
     // station, not the full inclusion zone.
-    const radius = c.radiusM ?? EXCLUDE_STATION_RADIUS_M
+    const radius = c.radiusM ?? GPS_POINT_RADIUS_M
     if (station) {
-      return filterIrisByCoords(candidates, station.lat, station.lng, radius)
+      return filterIrisByPoint(candidates, station.lat, station.lng, radius)
     }
     // Station not in DB (e.g. Transilien, tram, lesser-known stops) — fall back to
     // geocoded coordinates if injected by the front-end pipeline.
     if (c.lat !== undefined && c.lng !== undefined) {
-      return filterIrisByCoords(candidates, c.lat, c.lng, radius)
+      return filterIrisByPoint(candidates, c.lat, c.lng, radius)
     }
     warn('station not found in DB and no coordinates — geocoding may not have run')
     return []
@@ -734,7 +755,7 @@ function resolveExcludeToIris(
     // Supports geometry-based exclusion (polygon/line) and point-based.
     // Uses a reduced default radius: exclusions target the local area, not the
     // full POI influence zone used for inclusions.
-    const r = c.radiusM ?? EXCLUDE_STATION_RADIUS_M
+    const r = c.radiusM ?? GPS_POINT_RADIUS_M
     if (c.geometry && c.geometry.type !== 'Point') {
       const g = STREET_POI_TYPES.has(c.poiType ?? '')
         ? filterIrisByGeometry(candidates, c.geometry, r)
@@ -742,7 +763,7 @@ function resolveExcludeToIris(
       if (g.length > 0) return g
     }
     if (c.lat !== undefined && c.lng !== undefined) {
-      return filterIrisByCoords(candidates, c.lat, c.lng, r)
+      return filterIrisByPoint(candidates, c.lat, c.lng, r)
     }
     warn('poi has no geometry and no lat/lng — geocoding may not have run or failed')
     return []
@@ -1025,7 +1046,7 @@ export function resolveConstraints(
           const n = resolveNeighborhoodCoords(c)
           if (n) {
             const radius = c.radiusM ?? n.confidenceRadiusMeters
-            nearIris = filterIrisByCoords(iris, n.lat, n.lng, radius)
+            nearIris = filterIrisByPoint(iris, n.lat, n.lng, radius)
             if (n.maxSelectedIris) nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
           }
         }
@@ -1036,8 +1057,8 @@ export function resolveConstraints(
         const name = c.stationName ?? c.label
         const station = name ? findStation(name) : null
         if (station) {
-          const radius = c.radiusM ?? DEFAULT_TRANSPORT_RADIUS_M
-          for (const z of filterIrisByCoords(iris, station.lat, station.lng, radius)) {
+          const radius = c.radiusM ?? GPS_POINT_RADIUS_M
+          for (const z of filterIrisByPoint(iris, station.lat, station.lng, radius)) {
             if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
           }
           standaloneLabels.push(name)
