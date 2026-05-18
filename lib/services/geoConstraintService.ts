@@ -347,7 +347,7 @@ const EXCLUDE_STATION_RADIUS_M = 200
 
 // Radius used when selecting/excluding IRIS around a GPS point via polygon-edge
 // distance. An IRIS whose boundary intersects a circle of this radius is included.
-const GPS_POINT_RADIUS_M = 150
+const GPS_POINT_RADIUS_M = 200
 
 // All metro line IDs (used when line:"metro" = any metro station)
 const METRO_LINE_IDS = ['1','2','3','3b','4','5','6','7','7b','8','9','10','11','12','13','14']
