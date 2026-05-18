@@ -4,10 +4,6 @@ export interface SpatialEntity {
   type: 'city' | 'district' | 'quartier' | 'transport_station' | 'poi' | 'street' | 'unknown'
   resolvedId?: string
   label?: string
-  /** For poi entities derived from COTE_EXPANSIONS: geocode route poiType (e.g. 'boulevard', 'park').
-   *  'boulevard' → fetchStreetWaysOverpass (full IDF bbox, complete geometry).
-   *  'poi' → fetchPoiWaysOverpass (1.5km bbox — correct for parks, wrong for long infrastructure). */
-  poiType?: string
   confidence: number
 }
 

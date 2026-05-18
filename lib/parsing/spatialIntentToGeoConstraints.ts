@@ -73,9 +73,7 @@ function entityToConstraint(
         label: entityLabel(e),
         operator,
         confidence: e.confidence,
-        // Use poiType from SpatialEntity if set (e.g. 'boulevard' for périph from COTE_EXPANSIONS)
-        // so the geocode route uses the correct strategy (full IDF bbox vs 1.5km bbox).
-        poiType: e.poiType ?? poiTypeFromEntity(e),
+        poiType: poiTypeFromEntity(e),
       }
 
     default:
@@ -225,8 +223,7 @@ export function intentToGeoConstraints(intent: SpatialIntent): GeoConstraint[] {
         label: relation.targetText,
         operator: 'near',
         confidence: relation.confidence,
-        // Pass targetType directly: 'boulevard' → full IDF bbox geocoding, 'poi'/'park' → small bbox.
-        poiType: relation.targetType || 'poi',
+        poiType: relation.targetType === 'poi' ? 'park' : 'poi',
         radiusM: relation.radiusM,
       })
     }

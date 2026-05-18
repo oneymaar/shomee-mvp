@@ -757,13 +757,9 @@ function resolveExcludeToIris(
     // full POI influence zone used for inclusions.
     const r = c.radiusM ?? GPS_POINT_RADIUS_M
     if (c.geometry && c.geometry.type !== 'Point') {
-      // For exclusions, always use proximity-based distance (polygon edge → geometry).
-      // filterIrisByGeometry (perpendicular ±8m offsets) only selects IRIS the geometry
-      // physically passes through — wrong for infrastructure like the périph that runs
-      // along the Paris boundary but doesn't enter Saint-Ouen or other suburbs.
-      // filterIrisByGeometryProximity correctly finds IRIS that BORDER the geometry
-      // within radiusM, regardless of which side of the boundary they're on.
-      const g = filterIrisByGeometryProximity(candidates, c.geometry, r)
+      const g = STREET_POI_TYPES.has(c.poiType ?? '')
+        ? filterIrisByGeometry(candidates, c.geometry, r)
+        : filterIrisByGeometryProximity(candidates, c.geometry, r)
       if (g.length > 0) return g
     }
     if (c.lat !== undefined && c.lng !== undefined) {
@@ -1115,19 +1111,11 @@ export function resolveConstraints(
     } else if (c.type === 'poi') {
       const r = c.radiusM ?? poiRadius(c.poiType)
       if (c.geometry && c.geometry.type !== 'Point') {
-        // Always use proximity-based filtering (distance bord-polygon ≤ radiusM).
-        //
-        // filterIrisByGeometry (perpendicular ±8m offsets + polygonContainsPoint) is
-        // designed for INCLUSION of IRIS a street physically passes through — it only
-        // works when the geometry runs INSIDE the IRIS polygon. For near/proximity
-        // queries ("Paris 18 proche périph"), the geometry runs along a boundary; the
-        // 8m offset points fall outside the pool, so 0 IRIS are filtered and the full
-        // pool is returned unchanged — or worse, 1 isolated IRIS is returned when the
-        // offset happens to land inside it (observed behaviour for Paris 13 / Gare 31).
-        //
-        // filterIrisByGeometryProximity correctly handles both cases: it selects IRIS
-        // within radiusM of any sampled point on the geometry, regardless of side.
-        filtered = filterIrisByGeometryProximity(narrowed, c.geometry, r)
+        // Mirror resolveInsideToIris: streets use side-offset geometry check,
+        // non-street POIs use proximity-based check that respects radiusM.
+        filtered = STREET_POI_TYPES.has(c.poiType ?? '')
+          ? filterIrisByGeometry(narrowed, c.geometry, r)
+          : filterIrisByGeometryProximity(narrowed, c.geometry, r)
       }
       else if (c.bbox) filtered = filterIrisByBbox(narrowed, c.bbox, STREET_POI_TYPES.has(c.poiType ?? '') ? 120 : 80)
       else if (c.lat !== undefined && c.lng !== undefined) filtered = filterIrisByCoords(narrowed, c.lat, c.lng, r)

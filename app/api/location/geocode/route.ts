@@ -63,10 +63,7 @@ function normalizeStreetName(s: string): string {
  */
 async function fetchStreetWaysOverpass(streetName: string): Promise<GeoJSON.LineString[]> {
   const escaped = streetName.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
-  // Prefix match — captures "Boulevard Périphérique Intérieur/Extérieur" variants.
-  // Note: sections near motorway junctions (arr-14/17/20) may still be missing
-  // if OSM names them differently; this is a known limitation.
-  const query = `[out:json][timeout:20];way["name"~"^${escaped}","i"]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
+  const query = `[out:json][timeout:20];way["name"~"^${escaped}$",i]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
   try {
     const res = await fetch(
       `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,

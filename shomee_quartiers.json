@@ -1,0 +1,2864 @@
+[
+  {
+    "id": "chatelet",
+    "name": "Châtelet",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "chatelet"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Les halles 1",
+      "Les halles 2",
+      "Les halles 3",
+      "Les halles 4",
+      "Les halles 5",
+      "Les halles 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "beaubourg",
+    "name": "Beaubourg",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "beaubourg"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Sainte-avoye 2",
+      "Sainte-avoye 3",
+      "Saint-merri 2",
+      "Saint-merri 3"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "louvre",
+    "name": "Louvre",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "louvre"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-germain l'auxerrois 4",
+      "Tuileries",
+      "Seine et berges",
+      "Palais royal 1",
+      "Palais royal 3",
+      "Place vendôme 1",
+      "Place vendôme 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "sentier",
+    "name": "Sentier",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "sentier"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Tuileries",
+      "Mail 1",
+      "Mail 2",
+      "Mail 3",
+      "Mail 4",
+      "Bonne nouvelle 1",
+      "Bonne nouvelle 2",
+      "Bonne nouvelle 3",
+      "Bonne nouvelle 4",
+      "Bonne nouvelle 5"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "haut-marais",
+    "name": "Haut-Marais",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "haut-marais"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Arts et métiers 3",
+      "Arts et métiers 4",
+      "Enfants rouges 2",
+      "Enfants rouges 3",
+      "Enfants rouges 4",
+      "Les archives 1",
+      "Les archives 3",
+      "Les archives 4",
+      "Sainte-avoye 1",
+      "Sainte-avoye 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "etienne-marcel",
+    "name": "Etienne Marcel",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "etienne-marcel"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Les halles 4",
+      "Les halles 6",
+      "Mail 1",
+      "Mail 2",
+      "Bonne nouvelle 2",
+      "Bonne nouvelle 3"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "le-marais",
+    "name": "Le Marais",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "le-marais"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Enfants rouges 2",
+      "Enfants rouges 3",
+      "Enfants rouges 4",
+      "Les archives 1",
+      "Les archives 2",
+      "Les archives 3",
+      "Les archives 4",
+      "Sainte-avoye 1",
+      "Sainte-avoye 2",
+      "Saint-merri 1",
+      "Saint-gervais 2",
+      "Saint-gervais 3",
+      "Saint-gervais 4",
+      "Arsenal 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "ile-saint-louis",
+    "name": "Île Saint-Louis",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "ile-saint-louis"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Notre-dame 1",
+      "Seine et berges 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "place-des-vosges",
+    "name": "Place des Vosges",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "place-des-vosges"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Les archives 2",
+      "Arsenal 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "hotel-de-ville",
+    "name": "Hôtel de Ville",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "hotel-de-ville"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-merri 1",
+      "Saint-merri 2",
+      "Saint-merri 4",
+      "Saint-merri 5",
+      "Seine et berges 1",
+      "Saint-gervais 1",
+      "Saint-gervais 2",
+      "Seine et berges 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "mouffetard",
+    "name": "Mouffetard",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "mouffetard"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Jardin des plantes 3",
+      "Jardin des plantes 7",
+      "Val de grâce 8"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "jussieu",
+    "name": "Jussieu",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "jussieu"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-victor 1",
+      "Saint-victor 2",
+      "Saint-victor 3",
+      "Saint-victor 4",
+      "Saint-victor 6",
+      "Jardin des plantes 7",
+      "Jardin des plantes 8"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "jardin-des-plantes",
+    "name": "Jardin des Plantes",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "jardin-des-plantes"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-victor 1",
+      "Saint-victor 2",
+      "Saint-victor 6",
+      "Jardin des plantes 1",
+      "Jardin des plantes 2",
+      "Jardin des plantes 4",
+      "Jardin des plantes 5",
+      "Jardin des plantes 6",
+      "Jardin des plantes 8",
+      "Jardin des plantes",
+      "Seine et berges 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "monge",
+    "name": "Monge",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "monge"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-victor 2",
+      "Saint-victor 3",
+      "Jardin des plantes 3",
+      "Jardin des plantes 4",
+      "Jardin des plantes 6",
+      "Jardin des plantes 7",
+      "Jardin des plantes 8"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "val-de-grace",
+    "name": "Val de Grâce",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "val-de-grace"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Val de grâce 1",
+      "Val de grâce 2",
+      "Val de grâce 3",
+      "Val de grâce 4",
+      "Val de grâce 5",
+      "Val de grâce 6",
+      "Val de grâce 7",
+      "Val de grâce 8"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "port-royal",
+    "name": "Port Royal",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "port-royal"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Val de grâce 2",
+      "Val de grâce 3",
+      "Notre-dame des champs 1",
+      "Croulebarbe 6",
+      "Montparnasse 2",
+      "Montparnasse 9",
+      "Montparnasse 10",
+      "Montparnasse 11"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "sorbonne",
+    "name": "Sorbonne",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "sorbonne"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Sorbonne 1",
+      "Sorbonne 2",
+      "Sorbonne 3",
+      "Sorbonne 4",
+      "Sorbonne 5"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "quartier-latin",
+    "name": "Quartier Latin",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "quartier-latin"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Val de grâce 5",
+      "Val de grâce 6",
+      "Val de grâce 7",
+      "Sorbonne 1",
+      "Sorbonne 2",
+      "Sorbonne 3",
+      "Sorbonne 4",
+      "Sorbonne 5",
+      "Monnaie 1",
+      "Odéon 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "saint-germain-des-pres",
+    "name": "Saint-Germain-des-Prés",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [
+      "Saint-Germain"
+    ],
+    "normalized_aliases": [
+      "saint-germain",
+      "saint-germain-des-pres"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Monnaie 1",
+      "Monnaie 2",
+      "Monnaie 3",
+      "Seine et berges 1",
+      "Odéon 3",
+      "Odéon 4",
+      "Saint-germain des prés 1",
+      "Saint-germain des prés 2",
+      "Seine et berges 2",
+      "Saint-thomas d'aquin 1",
+      "Saint-thomas d'aquin 6",
+      "Seine et berges 1"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "odeon",
+    "name": "Odéon",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "odeon"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Odéon 2",
+      "Odéon 3",
+      "Odéon 4",
+      "Jardin du luxembourg",
+      "Notre-dame des champs 4",
+      "Notre-dame des champs 10",
+      "Notre-dame des champs 11"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "luxembourg",
+    "name": "Luxembourg",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "luxembourg"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Val de grâce 4",
+      "Val de grâce 5",
+      "Odéon 1",
+      "Odéon 2",
+      "Odéon 4",
+      "Jardin du luxembourg",
+      "Notre-dame des champs 2",
+      "Notre-dame des champs 3",
+      "Notre-dame des champs 4",
+      "Notre-dame des champs 11"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "saint-michel",
+    "name": "Saint-Michel",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "saint-michel"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Sorbonne 3",
+      "Seine et berges 3",
+      "Monnaie 1",
+      "Monnaie 3",
+      "Seine et berges 1"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "ile-de-la-cite",
+    "name": "Ile de la Cité",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "ile-de-la-cite"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-germain l'auxerrois 2",
+      "Seine et berges",
+      "Notre-dame 2",
+      "Notre-dame 3",
+      "Seine et berges 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "notre-dame-des-champs",
+    "name": "Notre-Dame-des-Champs",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "notre-dame-des-champs"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Notre-dame des champs 1",
+      "Notre-dame des champs 2",
+      "Notre-dame des champs 3",
+      "Notre-dame des champs 4",
+      "Notre-dame des champs 5",
+      "Notre-dame des champs 6",
+      "Notre-dame des champs 7",
+      "Notre-dame des champs 8",
+      "Notre-dame des champs 9",
+      "Notre-dame des champs 10",
+      "Notre-dame des champs 11"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "raspail",
+    "name": "Raspail",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "raspail"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Notre-dame des champs 3",
+      "Notre-dame des champs 4",
+      "Notre-dame des champs 5",
+      "Notre-dame des champs 7",
+      "Notre-dame des champs 9",
+      "Notre-dame des champs 10",
+      "Notre-dame des champs 11",
+      "Saint-thomas d'aquin 1",
+      "Saint-thomas d'aquin 2",
+      "Saint-thomas d'aquin 7"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "invalides",
+    "name": "Invalides",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "invalides"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Invalides 1",
+      "Invalides 2",
+      "Invalides 3",
+      "Invalides 4",
+      "Invalides 5",
+      "Invalides 6",
+      "Seine et berges 2",
+      "École militaire 5",
+      "Gros caillou 1",
+      "Gros caillou 2",
+      "Gros caillou 3",
+      "Gros caillou 4",
+      "Gros caillou 10",
+      "Gros caillou 11"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "champs-de-mars",
+    "name": "Champs de Mars",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "champs-de-mars"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Gros caillou 5",
+      "Gros caillou 6",
+      "Gros caillou 7",
+      "Gros caillou 8",
+      "Gros caillou 9",
+      "Champ de mars",
+      "Grenelle 13",
+      "Grenelle 14",
+      "Grenelle 15",
+      "Grenelle 16",
+      "Grenelle 17",
+      "Grenelle 18"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "ecole-militaire",
+    "name": "École Militaire",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "ecole-militaire"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "École militaire 3",
+      "École militaire 4",
+      "École militaire 5",
+      "École militaire 7",
+      "Gros caillou 1",
+      "Necker 12",
+      "Necker 13",
+      "Grenelle 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "necker",
+    "name": "Necker",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "necker"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Necker 3",
+      "Necker 4",
+      "Necker 5",
+      "Necker 6",
+      "Necker 7",
+      "Necker 8",
+      "Necker 9",
+      "Necker 11",
+      "Necker 12",
+      "Necker 13",
+      "Necker 14",
+      "Necker 15",
+      "Necker 16",
+      "Necker 17"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "tour-eiffel",
+    "name": "Tour Eiffel",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "tour-eiffel"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Gros caillou 6",
+      "Gros caillou 7",
+      "Gros caillou 8",
+      "Gros caillou 9",
+      "Champ de mars",
+      "Seine et berges 3",
+      "Grenelle 18",
+      "Seine et berges"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "europe",
+    "name": "Europe",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "europe"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Madeleine 8",
+      "Europe 1",
+      "Europe 5",
+      "Europe 6",
+      "Europe 7",
+      "Europe 8",
+      "Saint-georges 5",
+      "Saint-georges 11"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "madeleine",
+    "name": "Madeleine",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "madeleine"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Place vendôme 1",
+      "Place vendôme 2",
+      "Madeleine 1",
+      "Madeleine 5",
+      "Madeleine 6",
+      "Madeleine 7",
+      "Madeleine 8",
+      "Chaussée d'antin 3"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "triangle-d-or",
+    "name": "Triangle d’or",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "triangle-d-or"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Champs élysées 1",
+      "Champs élysées 2",
+      "Champs élysées 3",
+      "Champs élysées 4",
+      "Champs élysées 5",
+      "Champs élysées 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "champs-elysees",
+    "name": "Champs-Élysées",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "champs-elysees"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Champs élysées 3",
+      "Champs élysées 5",
+      "Champs élysées 6",
+      "Concorde jardin champs élysées",
+      "Faubourg du roule 3",
+      "Faubourg du roule 4",
+      "Faubourg du roule 5",
+      "Madeleine 1",
+      "Madeleine 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "saint-lazare",
+    "name": "Saint-Lazare",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "saint-lazare"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Madeleine 7",
+      "Madeleine 8",
+      "Europe 1",
+      "Europe 8",
+      "Saint-georges 11",
+      "Chaussée d'antin 4",
+      "Chaussée d'antin 9"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "opera",
+    "name": "Opéra",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "opera"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Palais royal 1",
+      "Place vendôme 2",
+      "Gaillon 1",
+      "Gaillon 2",
+      "Gaillon 3",
+      "Chaussée d'antin 1",
+      "Chaussée d'antin 2",
+      "Chaussée d'antin 3",
+      "Chaussée d'antin 4",
+      "Chaussée d'antin 5",
+      "Chaussée d'antin 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "parc-monceau",
+    "name": "Parc Monceau",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "parc-monceau"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Europe 3",
+      "Plaine monceau 3",
+      "Plaine monceau 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "ternes",
+    "name": "Ternes",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "ternes"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Faubourg du roule 1",
+      "Faubourg du roule 2",
+      "Ternes 1",
+      "Ternes 2",
+      "Ternes 3",
+      "Ternes 4",
+      "Ternes 8",
+      "Ternes 9",
+      "Ternes 10",
+      "Plaine monceau 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "martyrs",
+    "name": "Martyrs",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "martyrs"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-georges 1",
+      "Saint-georges 10",
+      "Rochechouart 4",
+      "Rochechouart 5",
+      "Rochechouart 8",
+      "Rochechouart 9",
+      "Clignancourt 3",
+      "Clignancourt 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "saint-georges",
+    "name": "Saint-Georges",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "saint-georges"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-georges 1",
+      "Saint-georges 2",
+      "Saint-georges 3",
+      "Saint-georges 7",
+      "Saint-georges 9",
+      "Saint-georges 10",
+      "Chaussée d'antin 7",
+      "Chaussée d'antin 8",
+      "Faubourg montmartre 2",
+      "Rochechouart 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "sopi",
+    "name": "SoPi",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "sopi"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-georges 1",
+      "Saint-georges 2",
+      "Saint-georges 3",
+      "Saint-georges 7",
+      "Saint-georges 8",
+      "Saint-georges 9",
+      "Saint-georges 10",
+      "Rochechouart 3",
+      "Rochechouart 4",
+      "Rochechouart 5",
+      "Rochechouart 8",
+      "Rochechouart 9"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "trudaine",
+    "name": "Trudaine",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "trudaine"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Rochechouart 8",
+      "Rochechouart 9"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "pigalle",
+    "name": "Pigalle",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "pigalle"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-georges 7",
+      "Saint-georges 8",
+      "Saint-georges 9",
+      "Saint-georges 10",
+      "Rochechouart 5",
+      "Rochechouart 8",
+      "Rochechouart 9",
+      "Grandes carrières 1",
+      "Grandes carrières 2",
+      "Clignancourt 3"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "canal-saint-martin",
+    "name": "Canal Saint-Martin",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "canal-saint-martin"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Porte saint-martin 1",
+      "Porte saint-martin 2",
+      "Porte saint-martin 8",
+      "Porte saint-martin 9",
+      "Porte saint-martin 10",
+      "Canal saint-martin 1",
+      "Hôpital saint-louis 7",
+      "Hôpital saint-louis 8",
+      "Hôpital saint-louis 9",
+      "Hôpital saint-louis 10",
+      "Hôpital saint-louis 11",
+      "Canal saint-martin 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "hopital-saint-louis",
+    "name": "Hôpital Saint-Louis",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "hopital-saint-louis"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Porte saint-martin 1",
+      "Porte saint-martin 9",
+      "Hôpital saint-louis 1",
+      "Hôpital saint-louis 2",
+      "Hôpital saint-louis 3",
+      "Hôpital saint-louis 4",
+      "Hôpital saint-louis 5",
+      "Hôpital saint-louis 6",
+      "Hôpital saint-louis 7",
+      "Hôpital saint-louis 12"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "gare-de-l-est",
+    "name": "Gare de l'Est",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "gare-de-l-est"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-vincent de paul 3",
+      "Saint-vincent de paul 10",
+      "Porte saint-denis 1",
+      "Porte saint-martin 10",
+      "Hôpital saint-louis 8"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "oberkampf",
+    "name": "Oberkampf",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "oberkampf"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Folie méricourt 1",
+      "Folie méricourt 2",
+      "Folie méricourt 3",
+      "Folie méricourt 4",
+      "Folie méricourt 8",
+      "Saint-ambroise 1",
+      "Saint-ambroise 10",
+      "Saint-ambroise 12",
+      "Saint-ambroise 13",
+      "Saint-ambroise 14"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "voltaire",
+    "name": "Voltaire",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "voltaire"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Roquette 5",
+      "Roquette 6",
+      "Roquette 7",
+      "Roquette 8",
+      "Roquette 16",
+      "Roquette 17",
+      "Roquette 18"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "ledru-rollin",
+    "name": "Ledru-Rollin",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "ledru-rollin"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Roquette 7",
+      "Roquette 8",
+      "Roquette 9",
+      "Roquette 10",
+      "Roquette 11",
+      "Sainte-marguerite 4",
+      "Sainte-marguerite 5",
+      "Sainte-marguerite 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "maurice-gardette",
+    "name": "Maurice Gardette",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "maurice-gardette"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-ambroise 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "faubourg-saint-antoine",
+    "name": "Faubourg Saint-Antoine",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "faubourg-saint-antoine"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Roquette 11",
+      "Sainte-marguerite 2",
+      "Sainte-marguerite 3",
+      "Sainte-marguerite 4",
+      "Sainte-marguerite 5",
+      "Sainte-marguerite 6",
+      "Picpus 21",
+      "Picpus 22",
+      "Picpus 23",
+      "Quinze-vingts 7",
+      "Quinze-vingts 9",
+      "Quinze-vingts 10",
+      "Quinze-vingts 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "faidherbe",
+    "name": "Faidherbe",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "faidherbe"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Sainte-marguerite 3",
+      "Sainte-marguerite 6",
+      "Sainte-marguerite 7",
+      "Sainte-marguerite 8",
+      "Sainte-marguerite 13",
+      "Picpus 21",
+      "Quinze-vingts 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "bastille",
+    "name": "Bastille",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "bastille"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Les archives 2",
+      "Arsenal 1",
+      "Arsenal 3",
+      "Arsenal 4",
+      "Bassin de l'arsenal",
+      "Roquette 10",
+      "Roquette 11",
+      "Roquette 12",
+      "Roquette 13",
+      "Roquette 14",
+      "Quinze-vingts 4",
+      "Quinze-vingts 5",
+      "Quinze-vingts 7",
+      "Bassin de l'arsenal"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "aligre",
+    "name": "Aligre",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "aligre"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Quinze-vingts 6",
+      "Quinze-vingts 7",
+      "Quinze-vingts 8",
+      "Quinze-vingts 9",
+      "Quinze-vingts 10"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "quinze-vingt",
+    "name": "Quinze-Vingt",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "quinze-vingt"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Quinze-vingts 2",
+      "Quinze-vingts 3",
+      "Quinze-vingts 4",
+      "Quinze-vingts 5",
+      "Quinze-vingts 6",
+      "Quinze-vingts 7",
+      "Quinze-vingts 8",
+      "Quinze-vingts 9",
+      "Quinze-vingts 11",
+      "Quinze-vingts 12",
+      "Bassin de l'arsenal"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "gare-de-lyon",
+    "name": "Gare de Lyon",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "gare-de-lyon"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Quinze-vingts 2",
+      "Quinze-vingts 3",
+      "Quinze-vingts 4",
+      "Quinze-vingts 5",
+      "Quinze-vingts 6",
+      "Quinze-vingts 8",
+      "Quinze-vingts 11",
+      "Quinze-vingts 12"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "reuilly-diderot",
+    "name": "Reuilly-Diderot",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "reuilly-diderot"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Picpus 18",
+      "Picpus 19",
+      "Picpus 20",
+      "Picpus 21",
+      "Picpus 22",
+      "Quinze-vingts 1",
+      "Quinze-vingts 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "picpus",
+    "name": "Picpus",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "picpus"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Picpus 14",
+      "Picpus 15",
+      "Picpus 16",
+      "Picpus 17",
+      "Picpus 18",
+      "Picpus 23",
+      "Picpus 24"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "bel-air",
+    "name": "Bel-Air",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "bel-air"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Bel-air 1",
+      "Bel-air 2",
+      "Bel-air 3",
+      "Bel-air 4",
+      "Bel-air 5",
+      "Bel-air 6",
+      "Bel-air 7",
+      "Bel-air 8",
+      "Bel-air 9",
+      "Bel-air 10",
+      "Bel-air 11",
+      "Bel-air 12",
+      "Bel-air 13",
+      "Bel-air 14",
+      "Picpus 8"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "daumesnil",
+    "name": "Daumesnil",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "daumesnil"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Picpus 6",
+      "Picpus 8",
+      "Picpus 9",
+      "Picpus 10",
+      "Picpus 11",
+      "Picpus 12",
+      "Picpus 13",
+      "Picpus 14",
+      "Picpus 16"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "bercy-village",
+    "name": "Bercy Village",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "bercy-village"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Bercy 1",
+      "Bercy 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "bercy",
+    "name": "Bercy",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "bercy"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Bercy 1",
+      "Bercy 2",
+      "Bercy 3",
+      "Bercy 6",
+      "Bercy 7",
+      "Jardin de bercy"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "butte-aux-cailles",
+    "name": "Butte-aux-Cailles",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "butte-aux-cailles"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Maison blanche 20",
+      "Maison blanche 21",
+      "Maison blanche 22",
+      "Maison blanche 23"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "gobelins",
+    "name": "Gobelins",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "gobelins"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Salpêtrière 4",
+      "Salpêtrière 5",
+      "Salpêtrière 6",
+      "Croulebarbe 1",
+      "Croulebarbe 2",
+      "Croulebarbe 3"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "place-d-italie",
+    "name": "Place d’Italie",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "place-d-italie"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Salpêtrière 3",
+      "Salpêtrière 4",
+      "Salpêtrière 5",
+      "Gare 28",
+      "Gare 29",
+      "Maison blanche 23",
+      "Maison blanche 24",
+      "Croulebarbe 1",
+      "Croulebarbe 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "tolbiac",
+    "name": "Tolbiac",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "tolbiac"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Maison blanche 6",
+      "Maison blanche 7",
+      "Maison blanche 9",
+      "Maison blanche 10",
+      "Maison blanche 11",
+      "Maison blanche 12",
+      "Maison blanche 13",
+      "Maison blanche 14",
+      "Maison blanche 15",
+      "Maison blanche 16"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "jeanne-d-arc",
+    "name": "Jeanne d'Arc",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "jeanne-d-arc"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Gare 19",
+      "Gare 20",
+      "Gare 21",
+      "Gare 23",
+      "Gare 24",
+      "Gare 25",
+      "Gare 30",
+      "Gare 31"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "bnf",
+    "name": "BNF",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [
+      "Bibliothèque François-Mitterrand"
+    ],
+    "normalized_aliases": [
+      "bibliotheque-fran-ois-mitterrand",
+      "bnf"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Gare 15",
+      "Gare 16",
+      "Gare 17",
+      "Gare 18",
+      "Seine et berges 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "parc-montsouris",
+    "name": "Parc Montsouris",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "parc-montsouris"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Parc de montsouris 1",
+      "Parc de montsouris 2"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "denfert-rochereau",
+    "name": "Denfert-Rochereau",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "denfert-rochereau"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Montparnasse 2",
+      "Montparnasse 3",
+      "Montparnasse 5",
+      "Montparnasse 10",
+      "Petit montrouge 15",
+      "Petit montrouge 16"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "montparnasse",
+    "name": "Montparnasse",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "montparnasse"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Notre-dame des champs 5",
+      "Notre-dame des champs 6",
+      "Montparnasse 5",
+      "Montparnasse 6",
+      "Montparnasse 7",
+      "Montparnasse 8",
+      "Montparnasse 9",
+      "Montparnasse 10",
+      "Plaisance 24",
+      "Necker 16",
+      "Necker 17",
+      "Necker 18",
+      "Necker 19"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "alesia",
+    "name": "Alésia",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "alesia"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Petit montrouge 5",
+      "Petit montrouge 6",
+      "Petit montrouge 7",
+      "Petit montrouge 8",
+      "Petit montrouge 9",
+      "Petit montrouge 10",
+      "Petit montrouge 11",
+      "Petit montrouge 12",
+      "Petit montrouge 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "plaisance",
+    "name": "Plaisance",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "plaisance"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Plaisance 8",
+      "Plaisance 9",
+      "Plaisance 10",
+      "Plaisance 11",
+      "Plaisance 14",
+      "Plaisance 15",
+      "Plaisance 16",
+      "Plaisance 19",
+      "Plaisance 25"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "beaugrenelle",
+    "name": "Beaugrenelle",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "beaugrenelle"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Javel 5",
+      "Javel 10",
+      "Javel 12",
+      "Javel 13",
+      "Javel 14",
+      "Javel 15",
+      "Javel 16",
+      "Javel 17",
+      "Javel 22"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "commerce",
+    "name": "Commerce",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "commerce"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Grenelle 1",
+      "Grenelle 2",
+      "Grenelle 3",
+      "Grenelle 5",
+      "Grenelle 11",
+      "Grenelle 12",
+      "Javel 19",
+      "Javel 20"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "vaugirard",
+    "name": "Vaugirard",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "vaugirard"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-lambert 23",
+      "Saint-lambert 24",
+      "Saint-lambert 29",
+      "Saint-lambert 30"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "porte-de-versailles",
+    "name": "Porte de Versailles",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "porte-de-versailles"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-lambert 6",
+      "Saint-lambert 7",
+      "Saint-lambert 8",
+      "Saint-lambert 9",
+      "Saint-lambert 32"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "convention",
+    "name": "Convention",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "convention"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Saint-lambert 12",
+      "Saint-lambert 13",
+      "Saint-lambert 14",
+      "Saint-lambert 15",
+      "Saint-lambert 23",
+      "Saint-lambert 25"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "la-motte-piquet",
+    "name": "La Motte Piquet",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "la-motte-piquet"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Grenelle 10",
+      "Grenelle 11",
+      "Grenelle 12",
+      "Grenelle 13",
+      "Grenelle 14",
+      "Grenelle 15"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "passy",
+    "name": "Passy",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "passy"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Muette 1",
+      "Muette 3",
+      "Muette 11",
+      "Muette 12",
+      "Muette 13",
+      "Muette 14",
+      "Muette 15",
+      "Muette 16",
+      "Muette 20",
+      "Muette 21"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "auteuil",
+    "name": "Auteuil",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "auteuil"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Auteuil 10",
+      "Auteuil 11",
+      "Auteuil 12",
+      "Auteuil 13",
+      "Auteuil 14",
+      "Auteuil 15",
+      "Auteuil 16",
+      "Auteuil 17",
+      "Auteuil 18",
+      "Auteuil 19",
+      "Auteuil 20",
+      "Auteuil 22",
+      "Auteuil 23",
+      "Auteuil 26",
+      "Auteuil 27",
+      "Auteuil 28",
+      "Auteuil 29"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "trocadero",
+    "name": "Trocadéro",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "trocadero"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Muette 19",
+      "Muette 20",
+      "Muette 21",
+      "Porte dauphine 1",
+      "Chaillot 3",
+      "Chaillot 4",
+      "Chaillot 10"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "victor-hugo",
+    "name": "Victor Hugo",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "victor-hugo"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Porte dauphine 7",
+      "Porte dauphine 8",
+      "Porte dauphine 9",
+      "Chaillot 5",
+      "Chaillot 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "foch",
+    "name": "Foch",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "foch"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Porte dauphine 9",
+      "Porte dauphine 10",
+      "Porte dauphine 11",
+      "Chaillot 6",
+      "Chaillot 7",
+      "Chaillot 9"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "ranelagh",
+    "name": "Ranelagh",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "ranelagh"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Auteuil 24",
+      "Muette 5",
+      "Muette 6",
+      "Muette 7",
+      "Muette 8",
+      "Muette 9",
+      "Muette 10",
+      "Muette 23"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "porte-maillot",
+    "name": "Porte Maillot",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "porte-maillot"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Porte dauphine 11",
+      "Chaillot 13",
+      "Ternes 2",
+      "Ternes 4",
+      "Ternes 16",
+      "Charles laffitte 2",
+      "Plaine des sablons 1"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "porte-dauphine",
+    "name": "Porte Dauphine",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "porte-dauphine"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Porte dauphine 5",
+      "Porte dauphine 6",
+      "Porte dauphine 9",
+      "Porte dauphine 10",
+      "Bois de boulogne 3"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "batignolles",
+    "name": "Batignolles",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "batignolles"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Batignolles 1",
+      "Batignolles 2",
+      "Batignolles 3",
+      "Batignolles 4",
+      "Batignolles 5",
+      "Batignolles 6",
+      "Batignolles 12",
+      "Batignolles 13",
+      "Batignolles 14",
+      "Épinettes 2",
+      "Épinettes 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "martin-luther-king",
+    "name": "Martin Luther King",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [
+      "MLK"
+    ],
+    "normalized_aliases": [
+      "mlk",
+      "martin-luther-king"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Batignolles 12",
+      "Batignolles 13",
+      "Batignolles 14",
+      "Épinettes 6"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "saint-ferdinand",
+    "name": "Saint-Ferdinand",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "saint-ferdinand"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Ternes 2",
+      "Ternes 3",
+      "Ternes 4"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "villiers",
+    "name": "Villiers",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "villiers"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Europe 4",
+      "Europe 5",
+      "Plaine monceau 1",
+      "Batignolles 7",
+      "Batignolles 8",
+      "Batignolles 9"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "pereire",
+    "name": "Pereire",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "pereire"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Ternes 7",
+      "Ternes 8",
+      "Ternes 12",
+      "Ternes 13",
+      "Ternes 14",
+      "Plaine monceau 7",
+      "Plaine monceau 8",
+      "Plaine monceau 9",
+      "Plaine monceau 10",
+      "Plaine monceau 11",
+      "Plaine monceau 12",
+      "Plaine monceau 13",
+      "Batignolles 15",
+      "Batignolles 16"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "epinettes",
+    "name": "Épinettes",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "epinettes"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Épinettes 1",
+      "Épinettes 3",
+      "Épinettes 4",
+      "Épinettes 5",
+      "Épinettes 7",
+      "Épinettes 8",
+      "Épinettes 9",
+      "Épinettes 10",
+      "Épinettes 11",
+      "Épinettes 12",
+      "Épinettes 13",
+      "Épinettes 14",
+      "Épinettes 15"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "montmartre",
+    "name": "Montmartre",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "montmartre"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Grandes carrières 8",
+      "Grandes carrières 9",
+      "Grandes carrières 10",
+      "Grandes carrières 11",
+      "Grandes carrières 12",
+      "Grandes carrières 13",
+      "Clignancourt 4",
+      "Clignancourt 5",
+      "Clignancourt 6",
+      "Clignancourt 7",
+      "Clignancourt 8",
+      "Clignancourt 9",
+      "Clignancourt 10",
+      "Clignancourt 11",
+      "Clignancourt 12"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "abbesses",
+    "name": "Abbesses",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "abbesses"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Grandes carrières 1",
+      "Grandes carrières 2",
+      "Grandes carrières 8",
+      "Grandes carrières 9",
+      "Clignancourt 3",
+      "Clignancourt 4",
+      "Clignancourt 5"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "grandes-carrieres",
+    "name": "Grandes Carrières",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "grandes-carrieres"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Grandes carrières 1",
+      "Grandes carrières 2",
+      "Grandes carrières 3",
+      "Grandes carrières 4",
+      "Grandes carrières 5",
+      "Grandes carrières 6",
+      "Grandes carrières 7",
+      "Grandes carrières 8",
+      "Grandes carrières 9",
+      "Grandes carrières 10",
+      "Grandes carrières 11",
+      "Grandes carrières 12",
+      "Grandes carrières 13",
+      "Grandes carrières 14",
+      "Grandes carrières 15"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "guy-moquet",
+    "name": "Guy Moquet",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "guy-moquet"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Épinettes 4",
+      "Épinettes 8",
+      "Épinettes 9",
+      "Épinettes 10",
+      "Grandes carrières 15",
+      "Grandes carrières 16",
+      "Grandes carrières 23"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "jules-joffrin",
+    "name": "Jules Joffrin",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "jules-joffrin"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Clignancourt 11",
+      "Clignancourt 12",
+      "Clignancourt 13",
+      "Clignancourt 15",
+      "Clignancourt 21",
+      "Clignancourt 22",
+      "Clignancourt 23",
+      "Clignancourt 24"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "la-mouzaia",
+    "name": "La Mouzaïa",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "la-mouzaia"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Amérique 10",
+      "Amérique 11",
+      "Amérique 13",
+      "Amérique 14",
+      "Amérique 16",
+      "Amérique 17"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "buttes-chaumont",
+    "name": "Buttes-Chaumont",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "buttes-chaumont"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Amérique 7",
+      "Amérique 15",
+      "Amérique 23",
+      "Combat 2",
+      "Combat 3",
+      "Combat 4",
+      "Combat 9",
+      "Combat 12",
+      "Combat 13",
+      "Combat 14",
+      "Combat 15",
+      "Combat 16",
+      "Buttes chaumont"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "la-villette",
+    "name": "La Villette",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "la-villette"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Pont de flandre 1",
+      "Pont de flandre 2",
+      "Pont de flandre 3",
+      "Pont de flandre 4",
+      "Pont de flandre 5",
+      "Pont de flandre 6",
+      "Pont de flandre 7",
+      "Pont de flandre 11",
+      "Pont de flandre 12",
+      "Pont de flandre 13",
+      "Canal saint-denis"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "canal-de-l-ourcq",
+    "name": "Canal de l'Ourcq",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "canal-de-l-ourcq"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Villette 3",
+      "Villette 4",
+      "Villette 5",
+      "Villette 11",
+      "Villette 12",
+      "Villette 13",
+      "Villette 14",
+      "Bassin de la villette",
+      "Pont de flandre 2",
+      "Pont de flandre 3",
+      "Pont de flandre 4",
+      "Pont de flandre 5",
+      "Pont de flandre 11",
+      "Canal saint-denis"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "jourdain",
+    "name": "Jourdain",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "jourdain"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Amérique 6",
+      "Combat 1",
+      "Belleville 2",
+      "Belleville 3",
+      "Belleville 4",
+      "Belleville 11",
+      "Belleville 12",
+      "Belleville 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "belleville",
+    "name": "Belleville",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "belleville"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Folie méricourt 1",
+      "Folie méricourt 10",
+      "Folie méricourt 11",
+      "Belleville 5",
+      "Belleville 6",
+      "Belleville 7",
+      "Belleville 8",
+      "Belleville 9",
+      "Belleville 10"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "gambetta",
+    "name": "Gambetta",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "gambetta"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Père lachaise 1",
+      "Père lachaise 3",
+      "Père lachaise 4",
+      "Père lachaise 13",
+      "Père lachaise 14",
+      "Père lachaise 17"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "pere-lachaise",
+    "name": "Père Lachaise",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "pere-lachaise"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Roquette 1",
+      "Père lachaise 2",
+      "Père lachaise 3",
+      "Père lachaise 4",
+      "Père lachaise 5",
+      "Père lachaise 9",
+      "Père lachaise 10",
+      "Père lachaise 13"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "reunion",
+    "name": "Réunion",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "reunion"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Charonne 15",
+      "Charonne 16",
+      "Charonne 17",
+      "Charonne 24",
+      "Charonne 25"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "pyrenees",
+    "name": "Pyrénées",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "pyrenees"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Combat 1",
+      "Combat 3",
+      "Combat 4",
+      "Belleville 11",
+      "Belleville 12"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  },
+  {
+    "id": "charonne",
+    "name": "Charonne",
+    "type": "quartier",
+    "city": "Paris",
+    "aliases": [],
+    "normalized_aliases": [
+      "charonne"
+    ],
+    "search_priority": 100,
+    "iris_codes": [
+      "Sainte-marguerite 10",
+      "Sainte-marguerite 11",
+      "Charonne 3",
+      "Charonne 4",
+      "Charonne 5",
+      "Charonne 6",
+      "Charonne 13",
+      "Charonne 14",
+      "Charonne 15",
+      "Charonne 16",
+      "Charonne 17",
+      "Charonne 24",
+      "Charonne 25",
+      "Charonne 26"
+    ],
+    "geo_type_priority": {
+      "quartier": 100,
+      "metro": 60,
+      "voie": 50
+    }
+  }
+]

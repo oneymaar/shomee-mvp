@@ -144,28 +144,22 @@ const COMMUNE_ID_MAP: Record<string, { id: string; label: string }> = {
 // Maps a short reference word to the canonical POI name + default proximity radius.
 // NEVER produces a cardinal direction — always edge_of.
 
-// targetType controls which geocoding strategy the /api/location/geocode route uses:
-//   'park'/'landmark'/'poi' → fetchPoiWaysOverpass (1.5km bbox — correct for compact features)
-//   'boulevard'/'avenue'/'street' → fetchStreetWaysOverpass (full IDF bbox — needed for linear
-//      infrastructure spanning many km, e.g. Boulevard Périphérique ≈ 35km)
 const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiusM: number }> = {
-  bois:              { label: 'Bois de Boulogne',      targetType: 'park',      radiusM: 300 },
-  boisdeboulogne:    { label: 'Bois de Boulogne',      targetType: 'park',      radiusM: 300 },
-  boisdevincennes:   { label: 'Bois de Vincennes',     targetType: 'park',      radiusM: 300 },
-  seine:             { label: 'Seine',                 targetType: 'poi',       radiusM: 200 },
-  canal:             { label: 'Canal Saint-Martin',    targetType: 'poi',       radiusM: 250 },
-  canalsaintmartin:  { label: 'Canal Saint-Martin',    targetType: 'poi',       radiusM: 250 },
-  parc:              { label: 'parc',                  targetType: 'park',      radiusM: 300 },
-  foret:             { label: 'forêt',                 targetType: 'park',      radiusM: 400 },
-  marne:             { label: 'Marne',                 targetType: 'poi',       radiusM: 200 },
-  // 'boulevard' → fetchStreetWaysOverpass (full IDF bbox) so the complete 35km periph
-  // LineString is returned, not just a 1.5km section near the Nominatim center.
-  periph:            { label: 'Boulevard Périphérique',targetType: 'boulevard', radiusM: 150 },
-  peripherique:      { label: 'Boulevard Périphérique',targetType: 'boulevard', radiusM: 150 },
-  lac:               { label: 'lac',                   targetType: 'poi',       radiusM: 300 },
+  bois:              { label: 'Bois de Boulogne',      targetType: 'poi', radiusM: 300 },
+  boisdeboulogne:    { label: 'Bois de Boulogne',      targetType: 'poi', radiusM: 300 },
+  boisdevincennes:   { label: 'Bois de Vincennes',     targetType: 'poi', radiusM: 300 },
+  seine:             { label: 'Seine',                 targetType: 'poi', radiusM: 200 },
+  canal:             { label: 'Canal Saint-Martin',    targetType: 'poi', radiusM: 250 },
+  canalsaintmartin:  { label: 'Canal Saint-Martin',    targetType: 'poi', radiusM: 250 },
+  parc:              { label: 'parc',                  targetType: 'poi', radiusM: 300 },
+  foret:             { label: 'forêt',                 targetType: 'poi', radiusM: 400 },
+  marne:             { label: 'Marne',                 targetType: 'poi', radiusM: 200 },
+  periph:            { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
+  peripherique:      { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
+  lac:               { label: 'lac',                   targetType: 'poi', radiusM: 300 },
   // Reference points for directional exclusions ("pas côté Défense", "hors côté Défense")
-  defense:           { label: 'La Défense',            targetType: 'landmark',  radiusM: 500 },
-  ladefense:         { label: 'La Défense',            targetType: 'landmark',  radiusM: 500 },
+  defense:           { label: 'La Défense',            targetType: 'poi', radiusM: 500 },
+  ladefense:         { label: 'La Défense',            targetType: 'poi', radiusM: 500 },
 }
 
 // ─── Street/way prefix ────────────────────────────────────────────────────────
@@ -302,7 +296,7 @@ function resolveExclusionTarget(rawText: string): SpatialEntity {
   if (direct) {
     return {
       rawText, normalizedText: norm, type: 'poi',
-      label: direct.label, poiType: direct.targetType, confidence: 0.85,
+      label: direct.label, confidence: 0.85,
     }
   }
 
@@ -315,7 +309,7 @@ function resolveExclusionTarget(rawText: string): SpatialEntity {
     if (expansion) {
       return {
         rawText, normalizedText: norm, type: 'poi',
-        label: expansion.label, poiType: expansion.targetType, confidence: 0.82,
+        label: expansion.label, confidence: 0.82,
       }
     }
     // "côté [entity]" where entity is a known place → resolve the inner entity
@@ -390,7 +384,6 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
           normalizedText: normalizeForParsing(coteMatch[2].trim()),
           type: 'poi',
           label: expansion.label,
-          poiType: expansion.targetType,
           confidence: 0.82,
         }],
         requiresLLM: primaryEntity.type === 'unknown',
@@ -443,7 +436,6 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
           normalizedText: normalizeForParsing(refRaw),
           type: 'poi',
           label: expansion.label,
-          poiType: expansion.targetType,
           confidence: 0.88,
         }],
         requiresLLM: primaryEntity.type === 'unknown',
