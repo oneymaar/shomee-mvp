@@ -362,12 +362,37 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
   // ── 3. CÔTÉ: "[entity] côté [reference]" ───────────────────────────────────
   // IMPORTANT: "côté" is NEVER converted to a cardinal direction.
   // After normalizeForParsing, "côté" → "cote".
+  //
+  // Also handles the negated form "[entity] pas côté [reference]" → exclusion.
+  // The "pas" ends up in the entity capture group; we strip it and produce a
+  // poi(exclude) instead of an edge_of relation.
   const coteMatch = workingQuery.match(/^(.+?)\s+cote\s+(.+)$/)
   if (coteMatch) {
-    const primaryEntity = resolveEntity(coteMatch[1].trim())
+    let primaryText = coteMatch[1].trim()
     const coteKey = normKey(coteMatch[2].trim())
     const expansion = COTE_EXPANSIONS[coteKey]
 
+    // "X pas côté Y" → negated: exclude IRIS bordering Y from X
+    if (primaryText.endsWith(' pas') && expansion) {
+      const primaryEntity = resolveEntity(primaryText.slice(0, -4).trim())
+      return {
+        rawQuery, normalizedQuery,
+        primaryEntities: [primaryEntity],
+        spatialRelations: [],
+        exclusions: [{
+          rawText: coteMatch[2].trim(),
+          normalizedText: normalizeForParsing(coteMatch[2].trim()),
+          type: 'poi',
+          label: expansion.label,
+          confidence: 0.82,
+        }],
+        requiresLLM: primaryEntity.type === 'unknown',
+        confidence: primaryEntity.confidence * 0.82,
+      }
+    }
+
+    // "X côté Y" → positive: select IRIS of X bordering Y
+    const primaryEntity = resolveEntity(primaryText)
     const relation: SpatialRelation = expansion
       ? { type: 'edge_of', targetText: expansion.label, targetType: expansion.targetType, radiusM: expansion.radiusM, confidence: 0.90 }
       : { type: 'edge_of', targetText: coteMatch[2].trim(), targetType: 'poi', radiusM: 300, confidence: 0.70 }
@@ -382,7 +407,44 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
     }
   }
 
-  // ── 3b. INLINE PROXIMITY: "[entity] proche/près [reference]" ─────────────────
+  // ── 3b. NEGATED PROXIMITY: "[entity] pas proche/côté/loin de [reference]" ──────
+  // "Saint-Ouen pas proche périph", "Neuilly loin du bois", "Boulogne pas côté bois"
+  // → inside(entity) + poi(exclude, reference)
+  //
+  // This is the structural mirror of the positive inline proximity (3c below).
+  // "pas proche X" / "loin de X" / "pas côté X" all mean:
+  //   "select entity, then remove IRIS that border X"
+  //
+  // Only resolves when reference is in COTE_EXPANSIONS (known geographic anchors).
+  // Unknown references (e.g. "pas proche métro") fall through to LLM.
+  const NEG_PROX_RE = /^(.+?)\s+(?:pas\s+(?:proche|pres|cote)|loin\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?)\s*(.+)$/
+  const negProxMatch = workingQuery.match(NEG_PROX_RE)
+  if (negProxMatch) {
+    // Strip leading French articles from reference before COTE_EXPANSIONS lookup
+    const refRaw = negProxMatch[2].trim()
+    const refStripped = refRaw.replace(/^(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)/, '')
+    const refKey = normKey(refStripped || refRaw)
+    const expansion = COTE_EXPANSIONS[refKey]
+    if (expansion) {
+      const primaryEntity = resolveEntity(negProxMatch[1].trim())
+      return {
+        rawQuery, normalizedQuery,
+        primaryEntities: [primaryEntity],
+        spatialRelations: [],
+        exclusions: [{
+          rawText: refRaw,
+          normalizedText: normalizeForParsing(refRaw),
+          type: 'poi',
+          label: expansion.label,
+          confidence: 0.88,
+        }],
+        requiresLLM: primaryEntity.type === 'unknown',
+        confidence: primaryEntity.confidence * 0.88,
+      }
+    }
+  }
+
+  // ── 3c. INLINE PROXIMITY: "[entity] proche/près [reference]" ─────────────────
   // Handles "neuilly proche bois", "16e proche bois", "boulogne proche canal"…
   // Only auto-resolves when the reference is in COTE_EXPANSIONS (known geographic
   // anchors). All other targets (metro, station, centre…) fall through to the LLM.

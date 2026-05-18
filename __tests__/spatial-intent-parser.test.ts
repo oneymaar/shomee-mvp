@@ -389,6 +389,57 @@ describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
   })
 })
 
+// ─── Negated proximity "X pas proche/loin Y" → exclusion ────────────────────
+
+describe('negated proximity: "X pas proche/loin Y" → poi(exclude)', () => {
+  it('"Saint-Ouen pas proche périph" → inside(com-93070) + poi(exclude, Boulevard Périphérique)', () => {
+    const r = parseSpatialIntent('Saint-Ouen pas proche périph')
+    expect(r.requiresLLM).toBe(false)
+    expect(entity(r).resolvedId).toBe('com-93070')
+    expect(r.spatialRelations).toHaveLength(0)  // no positive spatial relation
+    expect(r.exclusions).toHaveLength(1)
+    expect(r.exclusions[0].type).toBe('poi')
+    expect(r.exclusions[0].label).toBe('Boulevard Périphérique')
+  })
+
+  it('"Neuilly loin du bois" → inside(com-92051) + poi(exclude, Bois de Boulogne)', () => {
+    const r = parseSpatialIntent('Neuilly loin du bois')
+    expect(r.requiresLLM).toBe(false)
+    expect(entity(r).resolvedId).toBe('com-92051')
+    expect(r.exclusions[0].label).toBe('Bois de Boulogne')
+  })
+
+  it('"Boulogne pas côté bois" → inside(com-92012) + poi(exclude)', () => {
+    const r = parseSpatialIntent('Boulogne pas côté bois')
+    expect(r.requiresLLM).toBe(false)
+    expect(entity(r).resolvedId).toBe('com-92012')
+    expect(r.exclusions[0].label).toBe('Bois de Boulogne')
+  })
+
+  it('"Saint-Ouen pas proche canal" → unknwon ref → NOT matched (canal not direction of exclusion here)', () => {
+    // canal IS in COTE_EXPANSIONS so this resolves to exclusion
+    const r = parseSpatialIntent('Saint-Ouen pas proche canal')
+    expect(r.requiresLLM).toBe(false)
+    expect(r.exclusions[0].label).toBe('Canal Saint-Martin')
+  })
+
+  it('"Saint-Ouen pas proche metro" → unknown ref → requiresLLM=true', () => {
+    const r = parseSpatialIntent('Saint-Ouen pas proche metro')
+    expect(r.requiresLLM).toBe(true)
+  })
+
+  it('does NOT emit a spatial relation for negated proximity', () => {
+    const r = parseSpatialIntent('Neuilly loin du bois')
+    expect(r.spatialRelations).toHaveLength(0)
+  })
+
+  it('"neuilly loin de la seine" → poi(exclude, Seine)', () => {
+    const r = parseSpatialIntent('Neuilly loin de la Seine')
+    expect(r.requiresLLM).toBe(false)
+    expect(r.exclusions[0].label).toBe('Seine')
+  })
+})
+
 // ─── Known cities / arrondissements ──────────────────────────────────────────
 
 describe('city and district resolution', () => {
