@@ -63,18 +63,14 @@ function normalizeStreetName(s: string): string {
  */
 async function fetchStreetWaysOverpass(streetName: string): Promise<GeoJSON.LineString[]> {
   const escaped = streetName.replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&')
-  // Two-step query:
-  //   1. Named highway ways (substring match — captures "Intérieur", "Extérieur" variants).
-  //   2. Member ways of any matching route relation — captures sections that are part of
-  //      the route but carry no name in OSM (e.g. périph near motorway junctions:
-  //      Porte d'Orléans arr-14, Porte de Clichy arr-17, Porte de Vincennes arr-20).
-  //
-  // way(r.rels)["highway"] filters relation members to actual road ways.
-  const query = `[out:json][timeout:25];relation["name"~"${escaped}","i"](${SEARCH_OVERPASS_BBOX})->.rels;(way["name"~"${escaped}","i"]["highway"](${SEARCH_OVERPASS_BBOX});way(r.rels)["highway"];);out geom;`
+  // Prefix match — captures "Boulevard Périphérique Intérieur/Extérieur" variants.
+  // Note: sections near motorway junctions (arr-14/17/20) may still be missing
+  // if OSM names them differently; this is a known limitation.
+  const query = `[out:json][timeout:20];way["name"~"^${escaped}","i"]["highway"](${SEARCH_OVERPASS_BBOX});out geom;`
   try {
     const res = await fetch(
       `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-      { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(25000) }
+      { headers: { 'User-Agent': 'SHOMEE-MVP/1.0 (contact@shomee.fr)' }, signal: AbortSignal.timeout(15000) }
     )
     if (!res.ok) return []
     const data: { elements?: OverpassElement[] } = await res.json()
