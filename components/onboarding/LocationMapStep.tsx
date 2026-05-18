@@ -943,7 +943,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
             </p>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(names.join('\n')).then(() => {
+                navigator.clipboard.writeText(names.join(' · ')).then(() => {
                   setIrisCopied(true)
                   setTimeout(() => setIrisCopied(false), 2000)
                 })
