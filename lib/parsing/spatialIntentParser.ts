@@ -160,8 +160,8 @@ const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiu
   marne:             { label: 'Marne',                 targetType: 'poi',       radiusM: 200 },
   // 'boulevard' → fetchStreetWaysOverpass (full IDF bbox) so the complete 35km periph
   // LineString is returned, not just a 1.5km section near the Nominatim center.
-  periph:            { label: 'Boulevard Périphérique',targetType: 'boulevard', radiusM: 200 },
-  peripherique:      { label: 'Boulevard Périphérique',targetType: 'boulevard', radiusM: 200 },
+  periph:            { label: 'Boulevard Périphérique',targetType: 'boulevard', radiusM: 100 },
+  peripherique:      { label: 'Boulevard Périphérique',targetType: 'boulevard', radiusM: 100 },
   lac:               { label: 'lac',                   targetType: 'poi',       radiusM: 300 },
   // Reference points for directional exclusions ("pas côté Défense", "hors côté Défense")
   defense:           { label: 'La Défense',            targetType: 'landmark',  radiusM: 500 },
