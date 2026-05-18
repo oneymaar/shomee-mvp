@@ -926,6 +926,22 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
         </AnimatePresence>
       </div>
 
+      {/* IRIS sélectionnés — liste sous la carte */}
+      {iris.length > 0 && selectedIrisIds.length > 0 && (
+        <div className="flex-shrink-0 px-4 pt-0.5 pb-1 max-h-16 overflow-y-auto">
+          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(0,0,0,0.38)' }}>
+            <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>
+              {selectedIrisIds.length} IRIS —{' '}
+            </span>
+            {iris
+              .filter(z => selectedIrisIds.includes(z.id))
+              .map(z => z.shortName || z.name)
+              .sort()
+              .join(' · ')}
+          </p>
+        </div>
+      )}
+
       {/* Reset button — only visible when user has diverged from engine's initial selection */}
       <AnimatePresence>
         {hasChangedFromInitial && (
