@@ -683,11 +683,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   // These are NEVER duplicated in Ligne 2/3 because they represent intent labels,
   // not administrative zone names.
 
-  type BriefTag = { id: string; label: string; icon: 'station' | 'pin' }
+  type BriefTag = { id: string; label: string; icon: 'station' | 'pin'; excluded: boolean }
 
   const briefTags = useMemo((): BriefTag[] => {
-    // Brief tags disappear when their constraint is stripped from locationIntent.geoConstraints
-    // (handleRemoveBrief updates the store). No separate dismissed flag needed.
     const geoC = locationIntent?.geoConstraints ?? []
     const nonAdmin = geoC.filter(c => c.type !== 'administrative_area')
     if (nonAdmin.length === 0) return []
@@ -703,7 +701,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       if (!label || seen.has(label)) continue
       seen.add(label)
       const isStation = c.type === 'transport_station' || c.type === 'transport_line'
-      result.push({ id: `${c.type}_${label}`, label, icon: isStation ? 'station' : 'pin' })
+      result.push({ id: `${c.type}_${label}`, label, icon: isStation ? 'station' : 'pin', excluded: c.operator === 'exclude' })
     }
     return result
   }, [locationIntent?.geoConstraints])
@@ -874,7 +872,26 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
               {/* Ligne 1 — brief initial: station (M) or neighborhood (pin) */}
               {briefTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {briefTags.map((tag) => (
+                  {briefTags.map((tag) => tag.excluded ? (
+                    // Excluded zone — grey, strikethrough, "−" prefix
+                    <button
+                      key={tag.id}
+                      onClick={() => handleRemoveBrief(tag)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-60 transition-opacity border"
+                      style={{
+                        backgroundColor: 'rgba(0,0,0,0.04)',
+                        color: 'rgba(0,0,0,0.38)',
+                        borderColor: 'rgba(0,0,0,0.18)',
+                        borderStyle: 'dashed',
+                      }}
+                      title="Zone exclue — cliquer pour retirer l'exclusion"
+                    >
+                      <span className="font-bold text-[13px] leading-none" style={{ marginTop: -1 }}>−</span>
+                      <span style={{ textDecoration: 'line-through' }}>{tag.label}</span>
+                      <span className="opacity-40 text-[11px]">×</span>
+                    </button>
+                  ) : (
+                    // Included zone — terracotta
                     <button
                       key={tag.id}
                       onClick={() => handleRemoveBrief(tag)}
