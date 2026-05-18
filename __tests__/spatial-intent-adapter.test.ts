@@ -40,7 +40,7 @@ describe('adapter: Neuilly côté bois', () => {
     expect(gc[1].radiusM).toBe(300)
   })
 
-  it('second constraint poiType is park', () => {
+  it('second constraint poiType is park (from COTE_EXPANSIONS targetType)', () => {
     expect(gc[1].poiType).toBe('park')
   })
 

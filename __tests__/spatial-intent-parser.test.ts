@@ -35,7 +35,7 @@ describe('Neuilly côté bois', () => {
   it('produces edge_of relation targeting Bois de Boulogne', () => {
     expect(relation(result).type).toBe('edge_of')
     expect(relation(result).targetText).toBe('Bois de Boulogne')
-    expect(relation(result).targetType).toBe('poi')
+    expect(relation(result).targetType).toBe('park')
   })
 
   it('does NOT produce a cardinal direction', () => {

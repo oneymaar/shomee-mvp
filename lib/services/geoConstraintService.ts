@@ -757,9 +757,13 @@ function resolveExcludeToIris(
     // full POI influence zone used for inclusions.
     const r = c.radiusM ?? GPS_POINT_RADIUS_M
     if (c.geometry && c.geometry.type !== 'Point') {
-      const g = STREET_POI_TYPES.has(c.poiType ?? '')
-        ? filterIrisByGeometry(candidates, c.geometry, r)
-        : filterIrisByGeometryProximity(candidates, c.geometry, r)
+      // For exclusions, always use proximity-based distance (polygon edge → geometry).
+      // filterIrisByGeometry (perpendicular ±8m offsets) only selects IRIS the geometry
+      // physically passes through — wrong for infrastructure like the périph that runs
+      // along the Paris boundary but doesn't enter Saint-Ouen or other suburbs.
+      // filterIrisByGeometryProximity correctly finds IRIS that BORDER the geometry
+      // within radiusM, regardless of which side of the boundary they're on.
+      const g = filterIrisByGeometryProximity(candidates, c.geometry, r)
       if (g.length > 0) return g
     }
     if (c.lat !== undefined && c.lng !== undefined) {
