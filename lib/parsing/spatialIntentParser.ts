@@ -61,44 +61,83 @@ function normKey(s: string): string {
 }
 
 // ─── Commune ID map ───────────────────────────────────────────────────────────
-// Static from the LLM system prompt coverage list (analyze/route.ts lines 21-23).
+// INSEE codes verified against geo.api.gouv.fr (May 2026).
+// normKey(commune_name) → { id: "com-INSEE", label }
 
 const COMMUNE_ID_MAP: Record<string, { id: string; label: string }> = {
-  // Hauts-de-Seine (92)
-  neuilly:              { id: 'com-92050', label: 'Neuilly-sur-Seine' },
-  neuillysursteine:     { id: 'com-92050', label: 'Neuilly-sur-Seine' },
-  levallois:            { id: 'com-92044', label: 'Levallois-Perret' },
-  levalloisperret:      { id: 'com-92044', label: 'Levallois-Perret' },
+  // ── Hauts-de-Seine (92) ──────────────────────────────────────────────────
+  asnieres:             { id: 'com-92004', label: 'Asnières-sur-Seine' },
+  asnieresurseine:      { id: 'com-92004', label: 'Asnières-sur-Seine' },
   boulogne:             { id: 'com-92012', label: 'Boulogne-Billancourt' },
   boulognebillancourt:  { id: 'com-92012', label: 'Boulogne-Billancourt' },
-  puteaux:              { id: 'com-92062', label: 'Puteaux' },
+  clichy:               { id: 'com-92024', label: 'Clichy' },
+  colombes:             { id: 'com-92025', label: 'Colombes' },
   courbevoie:           { id: 'com-92026', label: 'Courbevoie' },
+  fontenayauxroses:     { id: 'com-92032', label: 'Fontenay-aux-Roses' },
+  gennevilliers:        { id: 'com-92036', label: 'Gennevilliers' },
   issy:                 { id: 'com-92040', label: 'Issy-les-Moulineaux' },
   issylesmoulineaux:    { id: 'com-92040', label: 'Issy-les-Moulineaux' },
-  montrouge:            { id: 'com-92049', label: 'Montrouge' },
-  clichy:               { id: 'com-92024', label: 'Clichy' },
+  levallois:            { id: 'com-92044', label: 'Levallois-Perret' },
+  levalloisperret:      { id: 'com-92044', label: 'Levallois-Perret' },
   malakoff:             { id: 'com-92046', label: 'Malakoff' },
-  vanves:               { id: 'com-92075', label: 'Vanves' },
   meudon:               { id: 'com-92048', label: 'Meudon' },
-  sevres:               { id: 'com-92071', label: 'Sèvres' },
-  // Seine-Saint-Denis (93)
+  montrouge:            { id: 'com-92049', label: 'Montrouge' },
+  // 92050 = Nanterre (NOT Neuilly — was wrong before this fix!)
+  nanterre:             { id: 'com-92050', label: 'Nanterre' },
+  // 92051 = Neuilly-sur-Seine (correct code)
+  neuilly:              { id: 'com-92051', label: 'Neuilly-sur-Seine' },
+  neuillysursteine:     { id: 'com-92051', label: 'Neuilly-sur-Seine' },
+  puteaux:              { id: 'com-92062', label: 'Puteaux' },
+  rueil:                { id: 'com-92063', label: 'Rueil-Malmaison' },
+  rueilmalmaison:       { id: 'com-92063', label: 'Rueil-Malmaison' },
+  saintcloud:           { id: 'com-92064', label: 'Saint-Cloud' },
+  suresnes:             { id: 'com-92073', label: 'Suresnes' },
+  vanves:               { id: 'com-92075', label: 'Vanves' },
+  // 92072 = Sèvres (92071 = Sceaux — was wrong before this fix!)
+  sevres:               { id: 'com-92072', label: 'Sèvres' },
+  // ── Seine-Saint-Denis (93) ───────────────────────────────────────────────
+  aubervilliers:        { id: 'com-93001', label: 'Aubervilliers' },
+  aulnay:               { id: 'com-93005', label: 'Aulnay-sous-Bois' },
+  aulnaysousbois:       { id: 'com-93005', label: 'Aulnay-sous-Bois' },
+  bagnolet:             { id: 'com-93006', label: 'Bagnolet' },
+  bobigny:              { id: 'com-93008', label: 'Bobigny' },
+  drancy:               { id: 'com-93029', label: 'Drancy' },
+  leslilas:             { id: 'com-93045', label: 'Les Lilas' },
+  montreuil:            { id: 'com-93048', label: 'Montreuil' },
+  pantin:               { id: 'com-93055', label: 'Pantin' },
   saintdenis:           { id: 'com-93066', label: 'Saint-Denis' },
   saintouen:            { id: 'com-93070', label: 'Saint-Ouen' },
-  aubervilliers:        { id: 'com-93001', label: 'Aubervilliers' },
-  pantin:               { id: 'com-93055', label: 'Pantin' },
-  montreuil:            { id: 'com-93048', label: 'Montreuil' },
-  bagnolet:             { id: 'com-93006', label: 'Bagnolet' },
-  leslilas:             { id: 'com-93045', label: 'Les Lilas' },
-  // Val-de-Marne (94)
-  vincennes:            { id: 'com-94078', label: 'Vincennes' },
-  saintmande:           { id: 'com-94067', label: 'Saint-Mandé' },
+  saintouensurseine:    { id: 'com-93070', label: 'Saint-Ouen' },
+  // ── Val-de-Marne (94) ───────────────────────────────────────────────────
+  alfortville:          { id: 'com-94002', label: 'Alfortville' },
   charenton:            { id: 'com-94018', label: 'Charenton-le-Pont' },
   charentonlepont:      { id: 'com-94018', label: 'Charenton-le-Pont' },
+  creteil:              { id: 'com-94028', label: 'Créteil' },
+  fontenaysousbois:     { id: 'com-94033', label: 'Fontenay-sous-Bois' },
+  gentilly:             { id: 'com-94037', label: 'Gentilly' },
   ivry:                 { id: 'com-94041', label: 'Ivry-sur-Seine' },
   ivrysursteine:        { id: 'com-94041', label: 'Ivry-sur-Seine' },
-  gentilly:             { id: 'com-94037', label: 'Gentilly' },
-  alfortville:          { id: 'com-94002', label: 'Alfortville' },
+  joinville:            { id: 'com-94042', label: 'Joinville-le-Pont' },
+  joinvillelepont:      { id: 'com-94042', label: 'Joinville-le-Pont' },
+  kremlin:              { id: 'com-94043', label: 'Le Kremlin-Bicêtre' },
+  lekremlim:            { id: 'com-94043', label: 'Le Kremlin-Bicêtre' },
+  kremlimbicetre:       { id: 'com-94043', label: 'Le Kremlin-Bicêtre' },
+  lekremlimbicetre:     { id: 'com-94043', label: 'Le Kremlin-Bicêtre' },
   maisonsalfort:        { id: 'com-94046', label: 'Maisons-Alfort' },
+  nogent:               { id: 'com-94052', label: 'Nogent-sur-Marne' },
+  nogentsurmarne:       { id: 'com-94052', label: 'Nogent-sur-Marne' },
+  laperreux:            { id: 'com-94058', label: 'Le Perreux-sur-Marne' },
+  leperreuxsurmarne:    { id: 'com-94058', label: 'Le Perreux-sur-Marne' },
+  saintmande:           { id: 'com-94067', label: 'Saint-Mandé' },
+  saintmandé:           { id: 'com-94067', label: 'Saint-Mandé' },
+  saintmaurdesposses:   { id: 'com-94068', label: 'Saint-Maur-des-Fossés' },
+  // 94078 = Villeneuve-Saint-Georges (NOT Vincennes — was wrong before this fix!)
+  villeneuve:           { id: 'com-94078', label: 'Villeneuve-Saint-Georges' },
+  villeneuvestgeorges:  { id: 'com-94078', label: 'Villeneuve-Saint-Georges' },
+  // 94080 = Vincennes (correct code)
+  vincennes:            { id: 'com-94080', label: 'Vincennes' },
+  vitrysurseine:        { id: 'com-94081', label: 'Vitry-sur-Seine' },
+  vitry:                { id: 'com-94081', label: 'Vitry-sur-Seine' },
 }
 
 // ─── "Côté" expansions ────────────────────────────────────────────────────────

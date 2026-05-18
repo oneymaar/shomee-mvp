@@ -26,10 +26,10 @@ describe('adapter: Neuilly côté bois', () => {
     expect(gc).toHaveLength(2)
   })
 
-  it('first constraint: administrative_area inside com-92050', () => {
+  it('first constraint: administrative_area inside com-92051', () => {
     expect(gc[0].type).toBe('administrative_area')
     expect(gc[0].operator).toBe('inside')
-    expect(gc[0].zoneId).toBe('com-92050')
+    expect(gc[0].zoneId).toBe('com-92051')
     expect(gc[0].label).toBe('Neuilly-sur-Seine')
   })
 
@@ -185,7 +185,7 @@ describe('adapter: Neuilly côté Seine', () => {
   const gc = adapt('Neuilly côté Seine')
 
   it('primary entity is Neuilly (inside)', () => {
-    expect(gc[0].zoneId).toBe('com-92050')
+    expect(gc[0].zoneId).toBe('com-92051')
     expect(gc[0].operator).toBe('inside')
   })
 
@@ -204,10 +204,10 @@ describe('adapter: neuilly proche bois', () => {
     expect(gc).toHaveLength(2)
   })
 
-  it('first constraint: administrative_area inside com-92050', () => {
+  it('first constraint: administrative_area inside com-92051', () => {
     expect(gc[0].type).toBe('administrative_area')
     expect(gc[0].operator).toBe('inside')
-    expect(gc[0].zoneId).toBe('com-92050')
+    expect(gc[0].zoneId).toBe('com-92051')
   })
 
   it('second constraint: poi near Bois de Boulogne', () => {

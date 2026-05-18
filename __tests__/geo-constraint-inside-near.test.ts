@@ -45,8 +45,8 @@ function makePolygon(minLng: number, maxLng: number, minLat: number, maxLat: num
 //
 // Neuilly–Bois gap: (2.280 - 2.268) * 73000 ≈ 876m — well above radiusM=300m.
 
-const neuillyIris1 = makeIris('neuilly-1', 'com-92050', 2.280, 2.288, 48.878, 48.886)
-const neuillyIris2 = makeIris('neuilly-2', 'com-92050', 2.288, 2.296, 48.878, 48.892)
+const neuillyIris1 = makeIris('neuilly-1', 'com-92051', 2.280, 2.288, 48.878, 48.886)
+const neuillyIris2 = makeIris('neuilly-2', 'com-92051', 2.288, 2.296, 48.878, 48.892)
 const paris16Iris  = makeIris('paris16-1', 'arr-16',    2.268, 2.280, 48.858, 48.878)
 const boulognIris  = makeIris('boulogne-1','com-92012', 2.224, 2.255, 48.832, 48.858)
 
@@ -60,7 +60,7 @@ const ALL_IRIS = [neuillyIris1, neuillyIris2, paris16Iris, boulognIris]
 describe('inside(A) AND near(B): result must always be ⊆ A', () => {
   it('inside(Neuilly) + near(Bois) → only Neuilly IRIS, never Paris 16 or Boulogne', () => {
     const constraints: GeoConstraint[] = [
-      { type: 'administrative_area', zoneId: 'com-92050', operator: 'inside', label: 'Neuilly', confidence: 1 },
+      { type: 'administrative_area', zoneId: 'com-92051', operator: 'inside', label: 'Neuilly', confidence: 1 },
       { type: 'poi', label: 'Bois de Boulogne', operator: 'near', poiType: 'park', radiusM: 300, confidence: 0.9,
         geometry: makePolygon(2.240, 2.268, 48.832, 48.878), lat: 48.860, lng: 2.254 },
     ]
@@ -70,7 +70,7 @@ describe('inside(A) AND near(B): result must always be ⊆ A', () => {
     // All selected IRIS must be Neuilly
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(zone?.parentId, `IRIS ${id} should be in Neuilly (com-92050)`).toBe('com-92050')
+      expect(zone?.parentId, `IRIS ${id} should be in Neuilly (com-92051)`).toBe('com-92051')
     }
 
     // Paris 16 and Boulogne must not appear
@@ -102,7 +102,7 @@ describe('inside(A) AND near(B): result must always be ⊆ A', () => {
   it('inside(Neuilly) + near(poi adjacent) → Neuilly IRIS filtered to those close to poi', () => {
     // Poi is ADJACENT to neuilly-1 (minLng 2.278) → neuilly-1 should be kept, neuilly-2 might be excluded
     const constraints: GeoConstraint[] = [
-      { type: 'administrative_area', zoneId: 'com-92050', operator: 'inside', label: 'Neuilly', confidence: 1 },
+      { type: 'administrative_area', zoneId: 'com-92051', operator: 'inside', label: 'Neuilly', confidence: 1 },
       // Poi is at lng 2.270–2.280, adjacent to neuilly-1's western border
       { type: 'poi', label: 'nearby-poi', operator: 'near', poiType: 'landmark', radiusM: 200, confidence: 0.9,
         // Poi is directly adjacent to neuilly-1's western border (lng 2.280)
@@ -114,7 +114,7 @@ describe('inside(A) AND near(B): result must always be ⊆ A', () => {
     // Must only include Neuilly IRIS — no Paris 16, no Boulogne
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(zone?.parentId).toBe('com-92050')
+      expect(zone?.parentId).toBe('com-92051')
     }
     expect(result.irisIds).not.toContain('paris16-1')
     expect(result.irisIds).not.toContain('boulogne-1')
@@ -124,7 +124,7 @@ describe('inside(A) AND near(B): result must always be ⊆ A', () => {
 
   it('inside(A) + inside(B) + near(poi) → result ⊆ A∪B', () => {
     const constraints: GeoConstraint[] = [
-      { type: 'administrative_area', zoneId: 'com-92050', operator: 'inside', label: 'Neuilly', confidence: 1 },
+      { type: 'administrative_area', zoneId: 'com-92051', operator: 'inside', label: 'Neuilly', confidence: 1 },
       { type: 'administrative_area', zoneId: 'arr-16', operator: 'inside', label: 'Paris 16', confidence: 1 },
       { type: 'poi', label: 'Bois de Boulogne', operator: 'near', poiType: 'park', radiusM: 300, confidence: 0.9,
         geometry: makePolygon(2.240, 2.268, 48.832, 48.878), lat: 48.860, lng: 2.254 },
@@ -134,7 +134,7 @@ describe('inside(A) AND near(B): result must always be ⊆ A', () => {
 
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(['com-92050', 'arr-16']).toContain(zone?.parentId)
+      expect(['com-92051', 'arr-16']).toContain(zone?.parentId)
     }
     // Boulogne must never appear
     expect(result.irisIds).not.toContain('boulogne-1')

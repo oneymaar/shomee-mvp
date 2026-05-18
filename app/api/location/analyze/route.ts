@@ -20,9 +20,9 @@ Ne jamais afficher une carte incohérente avec assurance.
 COUVERTURE GÉOGRAPHIQUE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Paris : arrondissements 1er–20e. Identifiants : arr-1 à arr-20.
-Hauts-de-Seine (92) : Neuilly-sur-Seine (com-92050), Levallois-Perret (com-92044), Boulogne-Billancourt (com-92012), Puteaux (com-92062), Courbevoie (com-92026), Issy-les-Moulineaux (com-92040), Montrouge (com-92049), Clichy (com-92024), Malakoff (com-92046), Vanves (com-92075), Meudon (com-92048), Sèvres (com-92071)
-Seine-Saint-Denis (93) : Saint-Denis (com-93066), Saint-Ouen (com-93070), Aubervilliers (com-93001), Pantin (com-93055), Montreuil (com-93048), Bagnolet (com-93006), Les Lilas (com-93045)
-Val-de-Marne (94) : Vincennes (com-94078), Saint-Mandé (com-94067), Charenton-le-Pont (com-94018), Ivry-sur-Seine (com-94041), Gentilly (com-94037), Alfortville (com-94002), Maisons-Alfort (com-94046)
+Hauts-de-Seine (92) : Neuilly-sur-Seine (com-92051), Levallois-Perret (com-92044), Boulogne-Billancourt (com-92012), Puteaux (com-92062), Courbevoie (com-92026), Issy-les-Moulineaux (com-92040), Montrouge (com-92049), Clichy (com-92024), Malakoff (com-92046), Vanves (com-92075), Meudon (com-92048), Sèvres (com-92072), Nanterre (com-92050), Asnières-sur-Seine (com-92004), Rueil-Malmaison (com-92063), Saint-Cloud (com-92064), Suresnes (com-92073), Colombes (com-92025), Gennevilliers (com-92036)
+Seine-Saint-Denis (93) : Saint-Denis (com-93066), Saint-Ouen (com-93070), Aubervilliers (com-93001), Pantin (com-93055), Montreuil (com-93048), Bagnolet (com-93006), Les Lilas (com-93045), Aulnay-sous-Bois (com-93005), Bobigny (com-93008), Drancy (com-93029)
+Val-de-Marne (94) : Vincennes (com-94080), Saint-Mandé (com-94067), Charenton-le-Pont (com-94018), Ivry-sur-Seine (com-94041), Gentilly (com-94037), Alfortville (com-94002), Maisons-Alfort (com-94046), Créteil (com-94028), Fontenay-sous-Bois (com-94033), Le Kremlin-Bicêtre (com-94043), Villeneuve-Saint-Georges (com-94078), Vitry-sur-Seine (com-94081), Nogent-sur-Marne (com-94052), Le Perreux-sur-Marne (com-94058), Joinville-le-Pont (com-94042)
 
 Quartiers vécus parisiens reconnus (utiliser semantic_neighborhood) :
 Butte-aux-Cailles (13e), Aligre (12e), Batignolles (17e), Le Marais (3/4e), Montorgueil (1/2e), Oberkampf (11e), Passy (16e), Auteuil (16e), Saint-Germain-des-Prés (6e), Pigalle (9/18e), Montmartre (18e), Gambetta (20e), Jourdain (19/20e), Belleville (19/20e), Canal Saint-Martin (10e), Sentier (2e), Bercy (12e), Daumesnil (12e), Nation (11/12e), Convention (15e), Mouffetard (5e), République (11e), Bastille (4/11/12e), Beaubourg (4e), Saint-Lazare (8/9e), Rue des Martyrs (9e), Europe (8e), Ternes (17e), Monceau (8/17e), Pereire (17e), Trocadéro (16e), Victor Hugo (16e), La Muette (16e), Beaugrenelle (15e), Commerce (15e), Vaugirard (15e), Denfert-Rochereau (14e), Alésia (14e), Pernety (14e), Quartier Latin (5/6e), Jussieu (5e), Île Saint-Louis (4e), Place des Vosges (4e), Faubourg Saint-Antoine (11/12e), Reuilly-Diderot (12e), Picpus (12e)
@@ -324,7 +324,7 @@ STRATÉGIES DE RÉSOLUTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DÉSAMBIGUÏSATION GÉOGRAPHIQUE CRITIQUE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-"Neuilly" contexte ouest → Neuilly-sur-Seine (92050), JAMAIS Neuilly-Plaisance
+"Neuilly" contexte ouest → Neuilly-sur-Seine (com-92051), JAMAIS Neuilly-Plaisance
 "Daumesnil" → {type:"transport_station", stationName:"Daumesnil"} OU {type:"semantic_neighborhood", neighborhoodId:"daumesnil"} — JAMAIS {type:"administrative_area", zoneId:"arr-12"}. Le "Paris 12" sert uniquement à éviter la confusion avec Vincennes (banlieue).
 "Le Marais" → quartier Paris 3/4e, JAMAIS une rue
 "Saint-Denis" → Saint-Denis (93), JAMAIS Saint-Denis-de-la-Réunion
@@ -421,7 +421,7 @@ Retourne exactement ce JSON (sans markdown, sans commentaires) :
 
 RÈGLES geoConstraints — CRITIQUE :
 - zoneId arrondissements : "arr-1" à "arr-20"
-- zoneId communes : "com-" + code INSEE (ex: Vincennes="com-94078", Neuilly-sur-Seine="com-92050")
+- zoneId communes : "com-" + code INSEE (ex: Vincennes="com-94080", Neuilly-sur-Seine="com-92051", Villeneuve-Saint-Georges="com-94078")
 - N'ajouter un administrative_area QUE pour les zones EXPLICITEMENT mentionnées par l'utilisateur
 - NE JAMAIS ajouter des arrondissements traversés par une ligne de transport
   → "Paris 11, Paris 12, proche ligne 1" = DEUX administrative_area (arr-11 et arr-12) seulement

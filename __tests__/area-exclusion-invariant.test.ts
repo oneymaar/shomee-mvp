@@ -43,10 +43,10 @@ function makePolygon(lat: number, lng: number, r = 0.01): GeoJSON.Polygon {
 // ─── Realistic mock IRIS layout ───────────────────────────────────────────────
 //
 // Real GPS centers (approximate):
-//   Neuilly-sur-Seine (com-92050)    : 48.884, 2.272
+//   Neuilly-sur-Seine (com-92051)    : 48.884, 2.272
 //   La Défense / Puteaux (com-92062) : 48.891, 2.238  (west of Neuilly)
-//   Nanterre (com-92050)             : 48.893, 2.207  (further west — should NEVER appear)
-//   Vincennes (com-94078)            : 48.848, 2.435
+//   Nanterre (com-92051)             : 48.893, 2.207  (further west — should NEVER appear)
+//   Vincennes (com-94080)            : 48.848, 2.435
 //   Bois de Vincennes center         : 48.828, 2.448  (south of Vincennes)
 //   Villeneuve-Saint-Georges         : 48.729, 2.449  (far south — should NEVER appear)
 //   Saint-Ouen (com-93070)           : 48.911, 2.336
@@ -58,12 +58,12 @@ function makePolygon(lat: number, lng: number, r = 0.01): GeoJSON.Polygon {
 
 // Neuilly IRIS
 const neuillyIris = [
-  makeIris('n-west-1', 'com-92050', 48.882, 2.270),   // western Neuilly (near Paris 16)
-  makeIris('n-west-2', 'com-92050', 48.884, 2.272),
-  makeIris('n-center-1', 'com-92050', 48.885, 2.283),
-  makeIris('n-center-2', 'com-92050', 48.887, 2.285),
-  makeIris('n-east-1', 'com-92050', 48.882, 2.296),
-  makeIris('n-east-2', 'com-92050', 48.884, 2.298),
+  makeIris('n-west-1', 'com-92051', 48.882, 2.270),   // western Neuilly (near Paris 16)
+  makeIris('n-west-2', 'com-92051', 48.884, 2.272),
+  makeIris('n-center-1', 'com-92051', 48.885, 2.283),
+  makeIris('n-center-2', 'com-92051', 48.887, 2.285),
+  makeIris('n-east-1', 'com-92051', 48.882, 2.296),
+  makeIris('n-east-2', 'com-92051', 48.884, 2.298),
 ]
 
 // La Défense / Puteaux IRIS — far from Neuilly
@@ -74,16 +74,16 @@ const defenseIris = [
 
 // Nanterre IRIS — should NEVER be selected for Neuilly queries
 const nanterreIris = [
-  makeIris('nant-1', 'com-92050-wrong', 48.893, 2.207),  // different parentId to simulate wrong selection
-  makeIris('nant-2', 'com-92050-wrong', 48.895, 2.210),
+  makeIris('nant-1', 'com-92051-wrong', 48.893, 2.207),  // different parentId to simulate wrong selection
+  makeIris('nant-2', 'com-92051-wrong', 48.895, 2.210),
 ]
 
 // Vincennes IRIS
 const vincennesIris = [
-  makeIris('vinc-north-1', 'com-94078', 48.850, 2.433),
-  makeIris('vinc-north-2', 'com-94078', 48.852, 2.436),
-  makeIris('vinc-south-1', 'com-94078', 48.843, 2.435),  // near Bois
-  makeIris('vinc-south-2', 'com-94078', 48.845, 2.438),  // near Bois
+  makeIris('vinc-north-1', 'com-94080', 48.850, 2.433),
+  makeIris('vinc-north-2', 'com-94080', 48.852, 2.436),
+  makeIris('vinc-south-1', 'com-94080', 48.843, 2.435),  // near Bois
+  makeIris('vinc-south-2', 'com-94080', 48.845, 2.438),  // near Bois
 ]
 
 // Villeneuve-Saint-Georges — should NEVER appear in Vincennes results
@@ -143,7 +143,7 @@ function runPipeline(query: string) {
 describe('AREA_EXCLUSION invariant: finalIris ⊆ primaryEntity', () => {
 
   // ── 1. Neuilly mais pas côté Défense ───────────────────────────────────────
-  it('Neuilly mais pas côté Défense → all IRIS in com-92050, no Nanterre', () => {
+  it('Neuilly mais pas côté Défense → all IRIS in com-92051, no Nanterre', () => {
     const { intent, constraints, result } = runPipeline('Neuilly mais pas côté Défense')
 
     console.log('[test] Neuilly/Défense — constraints:', JSON.stringify(constraints, null, 2))
@@ -151,17 +151,17 @@ describe('AREA_EXCLUSION invariant: finalIris ⊆ primaryEntity', () => {
 
     // Parser must handle this without LLM (requiresLLM=false since my fix)
     expect(intent.requiresLLM).toBe(false)
-    expect(intent.primaryEntities[0].resolvedId).toBe('com-92050')
+    expect(intent.primaryEntities[0].resolvedId).toBe('com-92051')
 
     // At minimum, inside constraint must target Neuilly
     const insideC = constraints.filter(c => c.operator === 'inside')
     expect(insideC.length).toBeGreaterThan(0)
-    expect(insideC[0].zoneId).toBe('com-92050')
+    expect(insideC[0].zoneId).toBe('com-92051')
 
     // KEY INVARIANT: all selected IRIS must be in Neuilly
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(zone?.parentId, `IRIS ${id} must be in com-92050, got ${zone?.parentId}`).toBe('com-92050')
+      expect(zone?.parentId, `IRIS ${id} must be in com-92051, got ${zone?.parentId}`).toBe('com-92051')
     }
 
     // Nanterre must not appear
@@ -169,21 +169,21 @@ describe('AREA_EXCLUSION invariant: finalIris ⊆ primaryEntity', () => {
   })
 
   // ── 2. Vincennes hors bois ────────────────────────────────────────────────
-  it('Vincennes hors bois → all IRIS in com-94078, no Villeneuve-Saint-Georges', () => {
+  it('Vincennes hors bois → all IRIS in com-94080, no Villeneuve-Saint-Georges', () => {
     const { intent, constraints, result } = runPipeline('Vincennes hors bois')
 
     console.log('[test] Vincennes/bois — constraints:', JSON.stringify(constraints, null, 2))
     console.log('[test] Vincennes/bois — result:', result.irisIds, 'wasNarrowed:', result.wasNarrowed)
 
     expect(intent.requiresLLM).toBe(false)
-    expect(intent.primaryEntities[0].resolvedId).toBe('com-94078')
+    expect(intent.primaryEntities[0].resolvedId).toBe('com-94080')
 
     const insideC = constraints.filter(c => c.operator === 'inside')
-    expect(insideC[0].zoneId).toBe('com-94078')
+    expect(insideC[0].zoneId).toBe('com-94080')
 
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(zone?.parentId, `IRIS ${id} must be in com-94078`).toBe('com-94078')
+      expect(zone?.parentId, `IRIS ${id} must be in com-94080`).toBe('com-94080')
     }
 
     // Villeneuve-Saint-Georges must not appear
@@ -278,7 +278,7 @@ describe('AREA_EXCLUSION invariant: geocoded poi(exclude) does not expand pool',
   it('inside(Neuilly) + poi(La Défense, exclude, with lat/lng) → result ⊆ Neuilly', () => {
     // Simulate what happens after geocoding: La Défense gets lat/lng
     const constraints = [
-      { type: 'administrative_area' as const, zoneId: 'com-92050', operator: 'inside' as const, label: 'Neuilly', confidence: 1 },
+      { type: 'administrative_area' as const, zoneId: 'com-92051', operator: 'inside' as const, label: 'Neuilly', confidence: 1 },
       {
         type: 'poi' as const, label: 'La Défense', operator: 'exclude' as const, confidence: 0.82,
         lat: 48.891, lng: 2.238,  // La Défense center (in defenseIris territory)
@@ -290,7 +290,7 @@ describe('AREA_EXCLUSION invariant: geocoded poi(exclude) does not expand pool',
 
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(zone?.parentId, `IRIS ${id} parent must be com-92050, got ${zone?.parentId}`).toBe('com-92050')
+      expect(zone?.parentId, `IRIS ${id} parent must be com-92051, got ${zone?.parentId}`).toBe('com-92051')
     }
 
     // La Défense IRIS must not appear (different parentId)
@@ -301,7 +301,7 @@ describe('AREA_EXCLUSION invariant: geocoded poi(exclude) does not expand pool',
 
   it('inside(Vincennes) + poi(Bois, exclude, with lat/lng) → result ⊆ Vincennes', () => {
     const constraints = [
-      { type: 'administrative_area' as const, zoneId: 'com-94078', operator: 'inside' as const, label: 'Vincennes', confidence: 1 },
+      { type: 'administrative_area' as const, zoneId: 'com-94080', operator: 'inside' as const, label: 'Vincennes', confidence: 1 },
       {
         type: 'poi' as const, label: 'Bois de Boulogne', operator: 'exclude' as const, confidence: 0.85,
         lat: 48.828, lng: 2.448,  // Bois de Vincennes area (near vinc-south IRIS)
@@ -313,7 +313,7 @@ describe('AREA_EXCLUSION invariant: geocoded poi(exclude) does not expand pool',
 
     for (const id of result.irisIds) {
       const zone = ALL_IRIS.find(z => z.id === id)
-      expect(zone?.parentId, `IRIS ${id} must be in com-94078`).toBe('com-94078')
+      expect(zone?.parentId, `IRIS ${id} must be in com-94080`).toBe('com-94080')
     }
 
     // Villeneuve-Saint-Georges must never appear

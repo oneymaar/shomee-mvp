@@ -26,9 +26,9 @@ function exclusion(result: ReturnType<typeof parseSpatialIntent>, index = 0) {
 describe('Neuilly côté bois', () => {
   const result = parseSpatialIntent('Neuilly côté bois')
 
-  it('resolves Neuilly as city com-92050', () => {
+  it('resolves Neuilly as city com-92051', () => {
     expect(entity(result).type).toBe('city')
-    expect(entity(result).resolvedId).toBe('com-92050')
+    expect(entity(result).resolvedId).toBe('com-92051')
     expect(entity(result).label).toBe('Neuilly-sur-Seine')
   })
 
@@ -191,9 +191,9 @@ describe('Pigalle (bare name)', () => {
 describe('Neuilly côté Seine', () => {
   const result = parseSpatialIntent('Neuilly côté Seine')
 
-  it('primary entity is Neuilly (city com-92050)', () => {
+  it('primary entity is Neuilly (city com-92051)', () => {
     expect(entity(result).type).toBe('city')
-    expect(entity(result).resolvedId).toBe('com-92050')
+    expect(entity(result).resolvedId).toBe('com-92051')
   })
 
   it('produces edge_of relation targeting Seine', () => {
@@ -297,7 +297,7 @@ describe('inline proximity: "X proche Y" with known geographic reference', () =>
   it('"neuilly proche bois" → edge_of Bois de Boulogne, requiresLLM=false', () => {
     const r = parseSpatialIntent('neuilly proche bois')
     expect(entity(r).type).toBe('city')
-    expect(entity(r).resolvedId).toBe('com-92050')
+    expect(entity(r).resolvedId).toBe('com-92051')
     expect(relation(r).type).toBe('edge_of')
     expect(relation(r).targetText).toBe('Bois de Boulogne')
     expect(r.requiresLLM).toBe(false)
@@ -305,7 +305,7 @@ describe('inline proximity: "X proche Y" with known geographic reference', () =>
 
   it('"neuilly proche seine" → edge_of Seine', () => {
     const r = parseSpatialIntent('neuilly proche seine')
-    expect(entity(r).resolvedId).toBe('com-92050')
+    expect(entity(r).resolvedId).toBe('com-92051')
     expect(relation(r).type).toBe('edge_of')
     expect(relation(r).targetText).toBe('Seine')
     expect(r.requiresLLM).toBe(false)
@@ -358,7 +358,7 @@ describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
   it('"Vincennes hors bois" → poi(exclude) "Bois de Boulogne", requiresLLM=false', () => {
     const r = parseSpatialIntent('Vincennes hors bois')
     expect(r.requiresLLM).toBe(false)
-    expect(r.primaryEntities[0].resolvedId).toBe('com-94078')
+    expect(r.primaryEntities[0].resolvedId).toBe('com-94080')
     expect(r.exclusions[0].type).toBe('poi')
     expect(r.exclusions[0].label).toBe('Bois de Boulogne')
   })
@@ -366,7 +366,7 @@ describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
   it('"Neuilly mais pas côté Défense" → poi(exclude) "La Défense", requiresLLM=false', () => {
     const r = parseSpatialIntent('Neuilly mais pas côté Défense')
     expect(r.requiresLLM).toBe(false)
-    expect(r.primaryEntities[0].resolvedId).toBe('com-92050')
+    expect(r.primaryEntities[0].resolvedId).toBe('com-92051')
     expect(r.exclusions[0].type).toBe('poi')
     expect(r.exclusions[0].label).toBe('La Défense')
   })
@@ -392,10 +392,10 @@ describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
 // ─── Known cities / arrondissements ──────────────────────────────────────────
 
 describe('city and district resolution', () => {
-  it('Vincennes → city com-94078', () => {
+  it('Vincennes → city com-94080', () => {
     const r = parseSpatialIntent('Vincennes')
     expect(entity(r).type).toBe('city')
-    expect(entity(r).resolvedId).toBe('com-94078')
+    expect(entity(r).resolvedId).toBe('com-94080')
   })
 
   it('Paris 11 → district arr-11', () => {

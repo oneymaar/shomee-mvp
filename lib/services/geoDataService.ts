@@ -159,7 +159,7 @@ function parseCommune(f: GeoJSON.Feature): GeoZone | null {
   if (!code || !name) return null
   const id = `com-${code}`
   // Short name: up to 2 hyphen-separated parts, max 16 chars
-  const shortName = name.length > 16 ? name.split('-').slice(0, 2).join('-') : name
+  const shortName = name  // always use full name — truncation caused "Neuilly-sur" / "Villeneuve-Saint" display bugs
   return {
     id, name, shortName,
     type: 'commune',
