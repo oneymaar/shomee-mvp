@@ -869,7 +869,32 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-1.5"
             >
-              {/* Ligne 1 — brief initial: station (M) or neighborhood (pin) */}
+              {/* Ligne 1 — zones admin concernées (moteur + ajouts manuels, tout en terracotta) */}
+              {allTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {allTags.map((tag) => {
+                    const isFull = tag.state === 'full'
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => handleRemoveTag(tag)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border"
+                        style={{
+                          backgroundColor: isFull ? 'rgba(145,78,60,0.14)' : 'rgba(145,78,60,0.07)',
+                          color: '#914E3C',
+                          borderColor: isFull ? '#914E3C' : 'rgba(145,78,60,0.45)',
+                          borderStyle: isFull ? 'solid' : 'dashed',
+                        }}
+                      >
+                        {tag.label}
+                        {!isFull && <span className="opacity-55 text-[9px]">~</span>}
+                        <span className="opacity-40 ml-0.5 text-[11px]">×</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+              {/* Ligne 2 — brief: station (M) or neighborhood (pin) */}
               {briefTags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {briefTags.map((tag) => tag.excluded ? (
@@ -912,31 +937,6 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
                       <span className="opacity-40 text-[11px]">×</span>
                     </button>
                   ))}
-                </div>
-              )}
-              {/* Ligne 2 — zones admin concernées (moteur + ajouts manuels, tout en terracotta) */}
-              {allTags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {allTags.map((tag) => {
-                    const isFull = tag.state === 'full'
-                    return (
-                      <button
-                        key={tag.id}
-                        onClick={() => handleRemoveTag(tag)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border"
-                        style={{
-                          backgroundColor: isFull ? 'rgba(145,78,60,0.14)' : 'rgba(145,78,60,0.07)',
-                          color: '#914E3C',
-                          borderColor: isFull ? '#914E3C' : 'rgba(145,78,60,0.45)',
-                          borderStyle: isFull ? 'solid' : 'dashed',
-                        }}
-                      >
-                        {tag.label}
-                        {!isFull && <span className="opacity-55 text-[9px]">~</span>}
-                        <span className="opacity-40 ml-0.5 text-[11px]">×</span>
-                      </button>
-                    )
-                  })}
                 </div>
               )}
             </motion.div>
