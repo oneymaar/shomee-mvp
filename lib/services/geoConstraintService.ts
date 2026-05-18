@@ -1024,6 +1024,15 @@ export function resolveConstraints(
   // No "inside" constraints: union ALL "near" neighborhoods and stations independently.
   // Multiple entities (e.g. "Batignolles et Aligre" both with operator:"near") are
   // all resolved and unioned — not returned on first match.
+  //
+  // CRITICAL: only enter the standalone path when there are NO inside constraints.
+  // If inside constraints exist but resolved to an empty pool (e.g. IRIS cache not
+  // yet populated, wrong zoneId, race condition on first mount), we must NOT use the
+  // filter constraints as standalone entities — that would select all their IRIS from
+  // the entire IDF dataset regardless of the intended geographic scope.
+  if (unionIris.length === 0 && includeConstraints.length > 0) {
+    return { irisIds: [], fallbackZoneIds, matchSummary: [], wasNarrowed: false }
+  }
   if (unionIris.length === 0) {
     const standaloneIds = new Set<string>()
     const standaloneIris: GeoZone[] = []
