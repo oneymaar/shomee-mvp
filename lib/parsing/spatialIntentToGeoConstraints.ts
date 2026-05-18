@@ -218,14 +218,24 @@ export function intentToGeoConstraints(intent: SpatialIntent): GeoConstraint[] {
       if (c) constraints.push(c)
     }
     if (relation.targetText) {
-      constraints.push({
-        type: 'poi',
-        label: relation.targetText,
-        operator: 'near',
-        confidence: relation.confidence,
-        poiType: relation.targetType === 'poi' ? 'park' : 'poi',
-        radiusM: relation.radiusM,
-      })
+      if (relation.targetType === 'neighborhood' && relation.neighborhoodId) {
+        constraints.push({
+          type: 'semantic_neighborhood',
+          label: relation.targetText,
+          operator: 'near',
+          confidence: relation.confidence,
+          neighborhoodId: relation.neighborhoodId,
+        })
+      } else {
+        constraints.push({
+          type: 'poi',
+          label: relation.targetText,
+          operator: 'near',
+          confidence: relation.confidence,
+          poiType: relation.targetType === 'poi' ? 'park' : 'poi',
+          radiusM: relation.radiusM,
+        })
+      }
     }
     for (const e of intent.exclusions) {
       const c = entityToConstraint(e, 'exclude')

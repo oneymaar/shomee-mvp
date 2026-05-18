@@ -345,13 +345,14 @@ describe('inline proximity: "X proche Y" with known geographic reference', () =>
 // ─── Exclusion target resolution — COTE_EXPANSIONS + "côté X" ───────────────
 
 describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
-  it('"Saint-Ouen sauf périph" → poi(exclude) "Boulevard Périphérique", requiresLLM=false', () => {
+  it('"Saint-Ouen sauf périph" → quartier(exclude) "Boulevard Périphérique", requiresLLM=false', () => {
     const r = parseSpatialIntent('Saint-Ouen sauf périph')
     expect(r.requiresLLM).toBe(false)
     expect(r.primaryEntities[0].type).toBe('city')
     expect(r.primaryEntities[0].resolvedId).toBe('com-93070')
     expect(r.exclusions).toHaveLength(1)
-    expect(r.exclusions[0].type).toBe('poi')
+    expect(r.exclusions[0].type).toBe('quartier')
+    expect(r.exclusions[0].resolvedId).toBe('zone-periph')
     expect(r.exclusions[0].label).toBe('Boulevard Périphérique')
   })
 
@@ -391,14 +392,15 @@ describe('resolveExclusionTarget: COTE_EXPANSIONS in exclusion context', () => {
 
 // ─── Negated proximity "X pas proche/loin Y" → exclusion ────────────────────
 
-describe('negated proximity: "X pas proche/loin Y" → poi(exclude)', () => {
-  it('"Saint-Ouen pas proche périph" → inside(com-93070) + poi(exclude, Boulevard Périphérique)', () => {
+describe('negated proximity: "X pas proche/loin Y" → quartier(exclude) for static zones', () => {
+  it('"Saint-Ouen pas proche périph" → inside(com-93070) + quartier(exclude, zone-periph)', () => {
     const r = parseSpatialIntent('Saint-Ouen pas proche périph')
     expect(r.requiresLLM).toBe(false)
     expect(entity(r).resolvedId).toBe('com-93070')
     expect(r.spatialRelations).toHaveLength(0)  // no positive spatial relation
     expect(r.exclusions).toHaveLength(1)
-    expect(r.exclusions[0].type).toBe('poi')
+    expect(r.exclusions[0].type).toBe('quartier')
+    expect(r.exclusions[0].resolvedId).toBe('zone-periph')
     expect(r.exclusions[0].label).toBe('Boulevard Périphérique')
   })
 

@@ -1100,13 +1100,28 @@ export function resolveConstraints(
         if (filtered.length > 0) summary.push(`proche ${name}`)
       }
     } else if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
-      const n = resolveNeighborhoodCoords(c)
-      if (n) {
-        const radius = c.radiusM ?? n.confidenceRadiusMeters
-        let nbFiltered = filterIrisByCoords(narrowed, n.lat, n.lng, radius)
-        if (n.maxSelectedIris) nbFiltered = capIrisByDistance(nbFiltered, n.lat, n.lng, n.maxSelectedIris)
-        filtered = nbFiltered
-        if (filtered.length > 0) summary.push(n.label)
+      // Static zone (curated irisNames list): filter by membership in set.
+      // Used for zone-periph and any future manually-curated zones.
+      const irisNamesToResolve = c.irisNames
+        ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+      if (irisNamesToResolve?.length) {
+        const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
+        const nameFiltered = narrowed.filter(z =>
+          nameSet.has(normalizeIrisName(z.name)) || nameSet.has(normalizeIrisName(z.shortName))
+        )
+        if (nameFiltered.length > 0) {
+          filtered = nameFiltered
+          summary.push(c.label)
+        }
+      } else {
+        const n = resolveNeighborhoodCoords(c)
+        if (n) {
+          const radius = c.radiusM ?? n.confidenceRadiusMeters
+          let nbFiltered = filterIrisByCoords(narrowed, n.lat, n.lng, radius)
+          if (n.maxSelectedIris) nbFiltered = capIrisByDistance(nbFiltered, n.lat, n.lng, n.maxSelectedIris)
+          filtered = nbFiltered
+          if (filtered.length > 0) summary.push(n.label)
+        }
       }
     } else if (c.type === 'poi') {
       const r = c.radiusM ?? poiRadius(c.poiType)

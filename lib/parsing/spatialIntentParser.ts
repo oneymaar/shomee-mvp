@@ -144,7 +144,7 @@ const COMMUNE_ID_MAP: Record<string, { id: string; label: string }> = {
 // Maps a short reference word to the canonical POI name + default proximity radius.
 // NEVER produces a cardinal direction — always edge_of.
 
-const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiusM: number }> = {
+const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiusM: number; neighborhoodId?: string }> = {
   bois:              { label: 'Bois de Boulogne',      targetType: 'poi', radiusM: 300 },
   boisdeboulogne:    { label: 'Bois de Boulogne',      targetType: 'poi', radiusM: 300 },
   boisdevincennes:   { label: 'Bois de Vincennes',     targetType: 'poi', radiusM: 300 },
@@ -154,8 +154,8 @@ const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiu
   parc:              { label: 'parc',                  targetType: 'poi', radiusM: 300 },
   foret:             { label: 'forêt',                 targetType: 'poi', radiusM: 400 },
   marne:             { label: 'Marne',                 targetType: 'poi', radiusM: 200 },
-  periph:            { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
-  peripherique:      { label: 'Boulevard Périphérique',targetType: 'poi', radiusM: 200 },
+  periph:            { label: 'Boulevard Périphérique',targetType: 'neighborhood', radiusM: 0, neighborhoodId: 'zone-periph' },
+  peripherique:      { label: 'Boulevard Périphérique',targetType: 'neighborhood', radiusM: 0, neighborhoodId: 'zone-periph' },
   lac:               { label: 'lac',                   targetType: 'poi', radiusM: 300 },
   // Reference points for directional exclusions ("pas côté Défense", "hors côté Défense")
   defense:           { label: 'La Défense',            targetType: 'poi', radiusM: 500 },
@@ -295,8 +295,11 @@ function resolveExclusionTarget(rawText: string): SpatialEntity {
   const direct = COTE_EXPANSIONS[key]
   if (direct) {
     return {
-      rawText, normalizedText: norm, type: 'poi',
-      label: direct.label, confidence: 0.85,
+      rawText, normalizedText: norm,
+      type: direct.neighborhoodId ? 'quartier' : 'poi',
+      label: direct.label,
+      resolvedId: direct.neighborhoodId,
+      confidence: 0.85,
     }
   }
 
@@ -308,8 +311,11 @@ function resolveExclusionTarget(rawText: string): SpatialEntity {
     const expansion = COTE_EXPANSIONS[innerKey]
     if (expansion) {
       return {
-        rawText, normalizedText: norm, type: 'poi',
-        label: expansion.label, confidence: 0.82,
+        rawText, normalizedText: norm,
+        type: expansion.neighborhoodId ? 'quartier' : 'poi',
+        label: expansion.label,
+        resolvedId: expansion.neighborhoodId,
+        confidence: 0.82,
       }
     }
     // "côté [entity]" where entity is a known place → resolve the inner entity
@@ -382,8 +388,9 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
         exclusions: [{
           rawText: coteMatch[2].trim(),
           normalizedText: normalizeForParsing(coteMatch[2].trim()),
-          type: 'poi',
+          type: expansion.neighborhoodId ? 'quartier' : 'poi',
           label: expansion.label,
+          resolvedId: expansion.neighborhoodId,
           confidence: 0.82,
         }],
         requiresLLM: primaryEntity.type === 'unknown',
@@ -394,7 +401,7 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
     // "X côté Y" → positive: select IRIS of X bordering Y
     const primaryEntity = resolveEntity(primaryText)
     const relation: SpatialRelation = expansion
-      ? { type: 'edge_of', targetText: expansion.label, targetType: expansion.targetType, radiusM: expansion.radiusM, confidence: 0.90 }
+      ? { type: 'edge_of', targetText: expansion.label, targetType: expansion.targetType, radiusM: expansion.radiusM, confidence: 0.90, ...(expansion.neighborhoodId ? { neighborhoodId: expansion.neighborhoodId } : {}) }
       : { type: 'edge_of', targetText: coteMatch[2].trim(), targetType: 'poi', radiusM: 300, confidence: 0.70 }
 
     return {
@@ -434,8 +441,9 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
         exclusions: [{
           rawText: refRaw,
           normalizedText: normalizeForParsing(refRaw),
-          type: 'poi',
+          type: expansion.neighborhoodId ? 'quartier' : 'poi',
           label: expansion.label,
+          resolvedId: expansion.neighborhoodId,
           confidence: 0.88,
         }],
         requiresLLM: primaryEntity.type === 'unknown',
@@ -462,6 +470,7 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
         targetType: expansion.targetType,
         radiusM: expansion.radiusM,
         confidence: 0.88,
+        ...(expansion.neighborhoodId ? { neighborhoodId: expansion.neighborhoodId } : {}),
       }
       return {
         rawQuery, normalizedQuery,

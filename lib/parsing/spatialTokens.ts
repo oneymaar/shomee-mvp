@@ -14,6 +14,7 @@ export interface SpatialRelation {
   direction?: 'north' | 'south' | 'east' | 'west'
   radiusM?: number
   confidence: number
+  neighborhoodId?: string  // static zone reference (e.g. 'zone-periph')
 }
 
 export interface SpatialIntent {
