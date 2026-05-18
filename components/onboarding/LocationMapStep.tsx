@@ -494,9 +494,17 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       }
 
       // ── Fine constraint detection ─────────────────────────────────────────
-      // Station, semantic neighborhood, POI, or between-entities → IRIS zoom, no arr pre-selection
+      // Station, semantic neighborhood, POI, or between-entities → IRIS zoom, no arr pre-selection.
+      // CRITICAL: exclude constraints (operator:"exclude") must NOT trigger hasFineConstraint.
+      // An excluded POI like "La Défense" in "Neuilly mais pas côté Défense" would otherwise:
+      //   1. set hasFineConstraint=true
+      //   2. center the map on La Défense
+      //   3. trigger loadIris() before communes are ready → empty insidePool → standalone path
+      //   4. select all IRIS near La Défense (Nanterre, Puteaux…) instead of Neuilly IRIS
       const hasFineConstraint = enrichedConstraints.some(
-        (c) => (c.type === 'transport_station' || c.type === 'semantic_neighborhood' || c.type === 'poi') && c.confidence >= 0.75
+        (c) => c.operator !== 'exclude' &&
+               (c.type === 'transport_station' || c.type === 'semantic_neighborhood' || c.type === 'poi') &&
+               c.confidence >= 0.75
       ) || enrichedConstraints.some(c => c.operator === 'between')
 
       if (hasFineConstraint) {
@@ -509,10 +517,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           selectedCommuneIds: [],
         })
 
-        // Center on station or POI when no neighborhood matched
+        // Center on the INCLUDED station or POI (never on an excluded entity).
         if (!neighborhoodMatch) {
-          const stationC = enrichedConstraints.find((c) => c.type === 'transport_station' && c.stationName)
-          const poiC = enrichedConstraints.find(c => c.type === 'poi' && c.lat !== undefined)
+          const stationC = enrichedConstraints.find((c) => c.operator !== 'exclude' && c.type === 'transport_station' && c.stationName)
+          const poiC = enrichedConstraints.find(c => c.operator !== 'exclude' && c.type === 'poi' && c.lat !== undefined)
           if (stationC?.stationName) {
             const station = findStation(stationC.stationName)
             if (station) setCenter([station.lat, station.lng])
