@@ -20,6 +20,7 @@ export interface Quartier {
   aliases: string[]
   city: string
   irisNames: string[]
+  irisIds?: string[]  // exact IRIS zone IDs (iris-NNNNNNNNN) — unambiguous, takes priority over irisNames
 }
 
 export const QUARTIERS = rawQuartiers as Quartier[]

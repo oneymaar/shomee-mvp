@@ -563,10 +563,19 @@ function resolveInsideToIris(
   }
 
   if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
-    // 1. Explicit IRIS name list from quartiers.json — most precise resolution
+    // 1a. Explicit IRIS ID list (globally unique — used for curated zones like zone-periph).
+    const quartier = c.neighborhoodId ? findQuartierById(c.neighborhoodId) : null
+    const irisIdList = quartier?.irisIds
+    if (irisIdList?.length) {
+      const idSet = new Set(irisIdList)
+      const matched = iris.filter(z => idSet.has(z.id))
+      if (matched.length > 0) return matched
+    }
+
+    // 1b. Explicit IRIS name list from quartiers.json — most precise resolution
     //    Try irisNames on the constraint first, then look up by neighborhoodId.
     const irisNamesToResolve = c.irisNames
-      ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+      ?? quartier?.irisNames
     if (irisNamesToResolve?.length) {
       const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
       const matched = iris.filter(z =>
@@ -692,12 +701,21 @@ function resolveExcludeToIris(
   }
 
   if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
-    // 1. Explicit IRIS name list from quartiers.json — most precise.
+    // 1a. Explicit IRIS ID list (globally unique — curated zones like zone-periph).
+    const quartierForExcl = c.neighborhoodId ? findQuartierById(c.neighborhoodId) : null
+    const irisIdListForExcl = quartierForExcl?.irisIds
+    if (irisIdListForExcl?.length) {
+      const idSet = new Set(irisIdListForExcl)
+      const matched = allIris.filter(z => idSet.has(z.id))
+      if (matched.length > 0) return matched
+    }
+
+    // 1b. Explicit IRIS name list from quartiers.json — most precise.
     //    Fixes "Paris 12 mais pas Bercy", "Paris 9 hors Pigalle" etc. where the
     //    excluded entity has a known IRIS list. Previously skipped, causing the
     //    fallback to use a radial zone that excluded too few or too many IRIS.
     const irisNamesToResolve = c.irisNames
-      ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+      ?? quartierForExcl?.irisNames
     if (irisNamesToResolve?.length) {
       const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
       const matched = allIris.filter(z =>
@@ -1040,23 +1058,29 @@ export function resolveConstraints(
 
     for (const c of filterConstraints) {
       if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
-        // Try irisNames lookup first (explicit quartiers.json names — precise)
-        const irisNamesToResolve = c.irisNames
-          ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
+        const saQ = c.neighborhoodId ? findQuartierById(c.neighborhoodId) : null
         let nearIris: GeoZone[] = []
-        if (irisNamesToResolve?.length) {
-          const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
-          nearIris = iris.filter(z =>
-            nameSet.has(normalizeIrisName(z.name)) || nameSet.has(normalizeIrisName(z.shortName))
-          )
-        }
-        // Fallback: radius-based from semanticNeighborhoods.json
-        if (!nearIris.length) {
-          const n = resolveNeighborhoodCoords(c)
-          if (n) {
-            const radius = c.radiusM ?? n.confidenceRadiusMeters
-            nearIris = filterIrisByPoint(iris, n.lat, n.lng, radius)
-            if (n.maxSelectedIris) nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
+        // IRIS IDs (globally unique — curated zones like zone-periph)
+        if (saQ?.irisIds?.length) {
+          const idSet = new Set(saQ.irisIds)
+          nearIris = iris.filter(z => idSet.has(z.id))
+        } else {
+          // irisNames lookup
+          const irisNamesToResolve = c.irisNames ?? saQ?.irisNames
+          if (irisNamesToResolve?.length) {
+            const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
+            nearIris = iris.filter(z =>
+              nameSet.has(normalizeIrisName(z.name)) || nameSet.has(normalizeIrisName(z.shortName))
+            )
+          }
+          // Fallback: radius-based from semanticNeighborhoods.json
+          if (!nearIris.length) {
+            const n = resolveNeighborhoodCoords(c)
+            if (n) {
+              const radius = c.radiusM ?? n.confidenceRadiusMeters
+              nearIris = filterIrisByPoint(iris, n.lat, n.lng, radius)
+              if (n.maxSelectedIris) nearIris = capIrisByDistance(nearIris, n.lat, n.lng, n.maxSelectedIris)
+            }
           }
         }
         for (const z of nearIris) if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
@@ -1109,27 +1133,37 @@ export function resolveConstraints(
         if (filtered.length > 0) summary.push(`proche ${name}`)
       }
     } else if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
-      // Static zone (curated irisNames list): filter by membership in set.
-      // Used for zone-periph and any future manually-curated zones.
-      const irisNamesToResolve = c.irisNames
-        ?? (c.neighborhoodId ? (findQuartierById(c.neighborhoodId)?.irisNames) : undefined)
-      if (irisNamesToResolve?.length) {
-        const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
-        const nameFiltered = narrowed.filter(z =>
-          nameSet.has(normalizeIrisName(z.name)) || nameSet.has(normalizeIrisName(z.shortName))
-        )
-        if (nameFiltered.length > 0) {
-          filtered = nameFiltered
+      const filterQ = c.neighborhoodId ? findQuartierById(c.neighborhoodId) : null
+      // Static zone via IRIS IDs (globally unique — curated zones like zone-periph)
+      const filterIrisIds = filterQ?.irisIds
+      if (filterIrisIds?.length) {
+        const idSet = new Set(filterIrisIds)
+        const idFiltered = narrowed.filter(z => idSet.has(z.id))
+        if (idFiltered.length > 0) {
+          filtered = idFiltered
           summary.push(c.label)
         }
       } else {
-        const n = resolveNeighborhoodCoords(c)
-        if (n) {
-          const radius = c.radiusM ?? n.confidenceRadiusMeters
-          let nbFiltered = filterIrisByCoords(narrowed, n.lat, n.lng, radius)
-          if (n.maxSelectedIris) nbFiltered = capIrisByDistance(nbFiltered, n.lat, n.lng, n.maxSelectedIris)
-          filtered = nbFiltered
-          if (filtered.length > 0) summary.push(n.label)
+        // Static zone via IRIS names, or radius-based from semanticNeighborhoods.json
+        const irisNamesToResolve = c.irisNames ?? filterQ?.irisNames
+        if (irisNamesToResolve?.length) {
+          const nameSet = new Set(irisNamesToResolve.map(normalizeIrisName))
+          const nameFiltered = narrowed.filter(z =>
+            nameSet.has(normalizeIrisName(z.name)) || nameSet.has(normalizeIrisName(z.shortName))
+          )
+          if (nameFiltered.length > 0) {
+            filtered = nameFiltered
+            summary.push(c.label)
+          }
+        } else {
+          const n = resolveNeighborhoodCoords(c)
+          if (n) {
+            const radius = c.radiusM ?? n.confidenceRadiusMeters
+            let nbFiltered = filterIrisByCoords(narrowed, n.lat, n.lng, radius)
+            if (n.maxSelectedIris) nbFiltered = capIrisByDistance(nbFiltered, n.lat, n.lng, n.maxSelectedIris)
+            filtered = nbFiltered
+            if (filtered.length > 0) summary.push(n.label)
+          }
         }
       }
     } else if (c.type === 'poi') {
