@@ -147,16 +147,21 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, selectedIrisIds.length])
 
-  // Eager-load IRIS for transport_line and directional constraints.
-  // "Paris 11 proche ligne 1" and "Paris 16 nord" both require IRIS to produce
-  // the correct partial selection — without eager loading the full arrondissement
-  // would appear selected until the user manually zoomed to 15.
+  // Eager-load IRIS for transport_line, directional, and exclusion constraints.
+  // Without eager loading, queries like "Paris 12 mais pas Bercy" or
+  // "Boulogne sauf Marcel Sembat" would show the full zone until the user
+  // manually zoomed to 15 — the exclusion would never be applied.
+  //
+  // Previously, exclusion constraints (operator:"exclude") inadvertently triggered
+  // hasFineConstraint=true which caused setZoom(15). The hasFineConstraint fix
+  // removed that side-effect, so we must re-add the explicit trigger here.
   useEffect(() => {
     if (loading || irisLoading || iris.length > 0) return
     const geoC = locationIntent?.geoConstraints ?? []
     const needsIris = geoC.some(c =>
       c.type === 'transport_line' ||
-      (c.type === 'administrative_area' && c.direction)
+      (c.type === 'administrative_area' && c.direction) ||
+      c.operator === 'exclude'
     )
     if (!needsIris) return
     loadIris()
@@ -246,26 +251,30 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           // Precise IRIS selected: clear any pre-selected arrondissements / quartiers that
           // belong to the narrowed zones so the map shows partial (not full) highlights.
           const narrowedArrIds = new Set(result.fallbackZoneIds.filter((id) => id.startsWith('arr-')))
-          const { selectedArrIds: curArrs, selectedQuartierIds: curQus } = useSearchStore.getState()
+          const narrowedComIds = new Set(result.fallbackZoneIds.filter((id) => id.startsWith('com-')))
+          const { selectedArrIds: curArrs, selectedQuartierIds: curQus, selectedCommuneIds: curComs } = useSearchStore.getState()
           const clearedArrs = curArrs.filter((id) => !narrowedArrIds.has(id))
           const clearedQus = curQus.filter((qId) => {
             const q = quartiersRef.current.find((q) => q.id === qId)
             return !q || !narrowedArrIds.has(q.parentId ?? '')
           })
+          // Also clear pre-selected communes (e.g. "Boulogne" in "Boulogne sauf Marcel Sembat")
+          // so the map shows partial IRIS rather than the full commune highlight.
+          const clearedComs = curComs.filter((id) => !narrowedComIds.has(id))
           useSearchStore.setState({
             selectedIrisIds: result.irisIds,
             selectedArrIds: clearedArrs,
             selectedQuartierIds: clearedQus,
+            selectedCommuneIds: clearedComs,
           })
-          // The pre-IRIS arr selection was a placeholder. Update the initial state
+          // The pre-IRIS zone selection was a placeholder. Update the initial state
           // snapshot so the reset button restores to the *narrowed* selection, not
-          // the full arrondissement that was pre-selected before IRIS loaded.
-          const { selectedCommuneIds: curComs } = useSearchStore.getState()
+          // the full zone that was pre-selected before IRIS loaded.
           initialStateRef.current = {
             arrIds: clearedArrs,
             quartierIds: clearedQus,
             irisIds: result.irisIds,
-            communeIds: [...curComs],
+            communeIds: clearedComs,
           }
           // Fit the map view to encompass all selected IRIS zones
           const selectedZones = zones.filter(z => result.irisIds.includes(z.id))
