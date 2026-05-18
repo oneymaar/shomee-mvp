@@ -521,6 +521,22 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           }
         }
 
+        // DEBUG — log state at the moment loadIris() is triggered
+        console.group('%c[geo] initMap → triggering loadIris', 'color:#8e44ad;font-weight:bold')
+        console.log('locationQuery     :', locationQuery)
+        console.log('hasFineConstraint :', hasFineConstraint, '(triggered by poi/station/neighborhood with confidence ≥ 0.75)')
+        console.log('enrichedConstraints:', enrichedConstraints.map(c => ({
+          type: c.type, operator: c.operator,
+          zoneId: c.zoneId, label: c.label,
+          hasGeometry: !!c.geometry, hasLatLng: c.lat !== undefined,
+          confidence: c.confidence,
+        })))
+        console.log('insideConstraints :', enrichedConstraints.filter(c => c.operator === 'inside').map(c => `${c.type}/${c.zoneId ?? c.label}`))
+        console.log('excludeConstraints:', enrichedConstraints.filter(c => c.operator === 'exclude').map(c => `${c.type}/${c.label} lat=${c.lat?.toFixed(4)??'—'} geom=${!!c.geometry}`))
+        if (enrichedConstraints.filter(c => c.operator === 'inside' && c.type === 'administrative_area').length === 0)
+          console.warn('⚠️  No administrative_area inside constraint — standalone path will be used')
+        console.groupEnd()
+
         setZoom(15) // triggers loadIris via useEffect([zoom])
       } else {
         const loadedCommunes = communesResult.status === 'fulfilled' ? communesResult.value : []

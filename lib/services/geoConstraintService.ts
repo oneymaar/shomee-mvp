@@ -970,13 +970,6 @@ export function resolveConstraints(
   // Handles LLM defaulting to "near" for neighborhoods/stations in addition context.
   const normalized = normalizeNearToInside(constraints, iris, quartiers)
 
-  // DEBUG — log normalization promotions. Remove after validation.
-  if (typeof window !== 'undefined') {
-    const promoted = normalized.filter((n, i) => constraints[i]?.operator === 'near' && n.operator === 'inside')
-    if (promoted.length) console.warn('[resolveConstraints] near→inside promoted:', promoted.map(c => c.label))
-    else console.log('[resolveConstraints] no near→inside promotion (correct for inside+near queries)')
-  }
-
   // ── Partition by operation ─────────────────────────────────────────────────
   const includeConstraints = normalized.filter(c => c.operator === 'inside')
   const filterConstraints  = normalized.filter(c => c.operator === 'near' || c.operator === 'around')
@@ -1111,19 +1104,55 @@ export function resolveConstraints(
     if (filtered.length > 0) narrowed = filtered
   }
 
+  // ── DEBUG — structured trace for AREA_EXCLUSION queries ──────────────────
+  const hasExcludes = excludeConstraints.length > 0
+  if (hasExcludes && typeof window !== 'undefined') {
+    const insideParents = [...new Set(unionIris.map(z => z.parentId ?? '').filter(Boolean))]
+    console.group('%c[geo] AREA_EXCLUSION trace', 'color:#e67e22;font-weight:bold')
+    console.log('insideConstraints :', includeConstraints.map(c => `${c.type}/${c.zoneId ?? c.neighborhoodId ?? c.label}`))
+    console.log('insidePool        :', {
+      count: unionIris.length,
+      parents: insideParents,
+      sample: unionIris.slice(0, 5).map(z => z.name),
+    })
+    if (unionIris.length === 0)
+      console.error('⚠️  EMPTY inside pool — will fall through to standalone path (wrong communes risk)')
+    console.log('excludeConstraints:', excludeConstraints.map(c => ({
+      label: c.label, type: c.type,
+      hasGeometry: !!c.geometry, hasLatLng: c.lat !== undefined,
+      radiusM: c.radiusM ?? '(default)',
+    })))
+    console.groupEnd()
+  }
+
   // ── Step 3: Apply exclude constraints (subtraction) ───────────────────────
+  const excludeMatches: Array<{ label: string; count: number; sampleIris: string[]; parents: string[] }> = []
   for (const c of excludeConstraints) {
     const toExclude = resolveExcludeToIris(c, narrowed, iris, quartiers)
-    if (toExclude.length === 0 && typeof window !== 'undefined') {
-      console.warn('[geo] exclusion returned 0 IRIS — label:', c.label, '| type:', c.type, '| poolSize:', narrowed.length)
+    if (typeof window !== 'undefined') {
+      const ep = [...new Set(toExclude.map(z => z.parentId ?? '').filter(Boolean))]
+      excludeMatches.push({ label: c.label, count: toExclude.length, sampleIris: toExclude.slice(0,3).map(z=>z.name), parents: ep })
+      if (toExclude.length === 0)
+        console.warn('[geo] exclusion returned 0 IRIS — label:', c.label, '| type:', c.type, '| reason: check constraint data above')
     }
     if (toExclude.length > 0) {
       const excludedIds = new Set(toExclude.map(z => z.id))
       narrowed = narrowed.filter(z => !excludedIds.has(z.id))
-      if (typeof window !== 'undefined') {
-        console.log('[geo] exclusion applied — label:', c.label, '| excluded:', toExclude.length, '| remaining:', narrowed.length)
-      }
     }
+  }
+
+  // ── DEBUG — final pool after exclusions ───────────────────────────────────
+  if (hasExcludes && typeof window !== 'undefined') {
+    const finalParents = [...new Set(narrowed.map(z => z.parentId ?? '').filter(Boolean))]
+    const violations = narrowed.filter(z => !unionIris.some(u => u.id === z.id))
+    console.group('%c[geo] AREA_EXCLUSION result', 'color:#27ae60;font-weight:bold')
+    console.log('excludeMatches    :', excludeMatches)
+    console.log('finalPool         :', { count: narrowed.length, parents: finalParents, sample: narrowed.slice(0,5).map(z=>z.name) })
+    if (violations.length > 0)
+      console.error('⚠️  INVARIANT VIOLATED — finalIris ⊄ insidePool. Extra IRIS:', violations.map(z => `${z.name} (parent:${z.parentId})`))
+    else
+      console.log('✓ invariant: finalIris ⊆ insidePool')
+    console.groupEnd()
   }
 
   // Non-admin includes (neighborhood, station) always produce a fine-grained
