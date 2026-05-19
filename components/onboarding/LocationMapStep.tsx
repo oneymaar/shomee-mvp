@@ -1008,9 +1008,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
 
       {/* IRIS sélectionnés — liste sous la carte */}
       {iris.length > 0 && selectedIrisIds.length > 0 && (() => {
-        const names = iris
+        const codes = iris
           .filter(z => selectedIrisIds.includes(z.id))
-          .map(z => z.shortName || z.name)
+          .map(z => z.id.replace(/^iris-/, ''))
           .sort()
         return (
           <div className="flex-shrink-0 px-4 pt-0.5 pb-1 flex items-start gap-2">
@@ -1018,11 +1018,11 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
               <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>
                 {selectedIrisIds.length} IRIS —{' '}
               </span>
-              {names.join(' · ')}
+              {codes.join(' · ')}
             </p>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(names.join(' · ')).then(() => {
+                navigator.clipboard.writeText(codes.join(' · ')).then(() => {
                   setIrisCopied(true)
                   setTimeout(() => setIrisCopied(false), 2000)
                 })
