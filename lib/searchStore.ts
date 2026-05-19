@@ -213,6 +213,17 @@ export const useSearchStore = create<SearchStore>()(
           priorities: [], onboardingCompleted: false,
         }),
     }),
-    { name: 'shomee-search' }
+    {
+      name: 'shomee-search',
+      partialize: (state) => ({
+        budgetMax: state.budgetMax,
+        propertyTypes: state.propertyTypes,
+        minRooms: state.minRooms,
+        minSurface: state.minSurface,
+        maxSurface: state.maxSurface,
+        priorities: state.priorities,
+        onboardingCompleted: state.onboardingCompleted,
+      }),
+    }
   )
 )

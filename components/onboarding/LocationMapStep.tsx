@@ -118,6 +118,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   quartiersRef.current = quartiers
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
+  const resolutionRunIdRef = useRef(0)
 
   // Cache geocoded POI data (label → {lat,lng,bbox,geometry,radiusM}).
   // Written by initMap after /api/location/geocode; read by loadIris to enrich
@@ -138,9 +139,13 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Lazy-load IRIS when user zooms to level 15+
+  // Lazy-load IRIS when user zooms to level 15+ (manual zoom only).
+  // Skip when fineLoadTrigger is active — hasFineConstraint path handles it via
+  // useEffect([fineLoadTrigger]) with correct constraints from fineConstraintsRef.
+  // Running both in parallel would consume fineConstraintsRef in this call,
+  // leaving the fineLoadTrigger call with stale store constraints.
   useEffect(() => {
-    if (zoom < 15 || irisLoading || iris.length > 0) return
+    if (zoom < 15 || irisLoading || iris.length > 0 || fineLoadTrigger > 0) return
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom])
@@ -198,7 +203,48 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     }
   }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds])
 
+  // Runtime debug — to be removed after fix validation
+  useEffect(() => {
+    const isPeriphQuery = locationQuery.toLowerCase().includes('periph') || locationQuery.toLowerCase().includes('périph')
+    const isParis16Query = locationQuery.toLowerCase().includes('paris 16') || locationQuery.toLowerCase().includes('paris16')
+
+    if (isPeriphQuery && isParis16Query) {
+      const nonParis16 = selectedIrisIds.filter(id => !id.includes('75116'))
+      const state = {
+        locationQuery,
+        geoConstraints: locationIntent?.geoConstraints?.map(c => `${c.type}/${c.operator}/${c.zoneId ?? (c as any).neighborhoodId ?? c.label}`),
+        selectedIrisIdsCount: selectedIrisIds.length,
+        selectedIrisIdsSample: selectedIrisIds.slice(0, 5),
+        nonParis16Count: nonParis16.length,
+        nonParis16Sample: nonParis16.slice(0, 5),
+        selectedArrIds,
+        selectedQuartierIds,
+        selectedCommuneIds,
+      }
+
+      if (nonParis16.length > 0 || selectedIrisIds.length > 40) {
+        console.error('🚨 INVARIANT VIOLATED — Paris 16 proche périph has wrong IRIS', state)
+      } else if (selectedIrisIds.length > 0) {
+        console.log('✅ Paris 16 proche périph — correct state', state)
+      }
+    }
+
+    // Expose debug state globally for mobile inspection
+    if (typeof window !== 'undefined') {
+      (window as any).SHOMEE_DEBUG = {
+        locationQuery,
+        geoConstraints: locationIntent?.geoConstraints,
+        selectedIrisIds,
+        selectedArrIds,
+        selectedQuartierIds,
+        selectedCommuneIds,
+        timestamp: Date.now(),
+      }
+    }
+  }, [selectedIrisIds, selectedArrIds, selectedQuartierIds, selectedCommuneIds, locationQuery, locationIntent])
+
   async function loadIris() {
+    const myRunId = ++resolutionRunIdRef.current
     setIrisLoading(true)
     try {
       const zones = await fetchParisIris(quartiersRef.current, communesRef.current)
@@ -257,9 +303,12 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // Snapshot enriched constraints for brief-tag individual removal
       enrichedConstraintsRef.current = resolveConstraintsInput
 
+      console.log('[loadIris] runId:', myRunId, 'constraints:', resolveConstraintsInput.map(c => `${c.type}/${c.operator}/${(c as any).zoneId ?? (c as any).neighborhoodId ?? c.label}`))
+
       // Try geo-constraint intersection first
       if (resolveConstraintsInput.length) {
         const result = resolveConstraints(resolveConstraintsInput, zones, quartiersRef.current, communesRef.current)
+        console.log('[loadIris] result:', { wasNarrowed: result.wasNarrowed, irisCount: result.irisIds.length, sample: result.irisIds.slice(0, 5), nonParis16: result.irisIds.filter(id => !id.includes('75116')).length })
         // DEBUG — trace resolution result. Remove after validation.
         const dbgSrc = useSearchStore.getState().locationIntent?.parserSource ?? 'unknown'
         console.group(`🗺️ IRIS RESOLUTION [${dbgSrc}]`)
@@ -282,6 +331,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           // Also clear pre-selected communes (e.g. "Boulogne" in "Boulogne sauf Marcel Sembat")
           // so the map shows partial IRIS rather than the full commune highlight.
           const clearedComs = curComs.filter((id) => !narrowedComIds.has(id))
+          if (myRunId !== resolutionRunIdRef.current) {
+            console.warn('[geo] later loadIris supersedes this one (runId mismatch) — but still writing since constraints differ', { myRunId, current: resolutionRunIdRef.current })
+          }
           useSearchStore.setState({
             selectedIrisIds: result.irisIds,
             selectedArrIds: clearedArrs,
