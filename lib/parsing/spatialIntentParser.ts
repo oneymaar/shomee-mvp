@@ -365,6 +365,34 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
     workingQuery = workingQuery.slice(0, exclMatch.index!).trim()
   }
 
+  // ── 2b. UNION: multiple zones separated by punctuation or conjunctions ────────
+  // Handles: "X, Y, Z" / "X ; Y" / "X / Y" / "X - Y" (spaced dash)
+  //          "X et Y" / "X ou Y" / "X et aussi Y" / "X ou éventuellement Y"
+  //          "X et pourquoi pas Y"
+  // Must come BEFORE CÔTÉ/NEG_PROX/INLINE_PROX so those don't intercept.
+  // workingQuery is already stripped of trailing exclusions (step 2).
+  {
+    // Split on separators (comma, semicolon, slash, spaced-dash) or coordinating
+    // conjunctions with optional adverbial modifiers.
+    // Spaced dash ` - ` is a separator; inline hyphen (no spaces) is not.
+    const UNION_SEP = /\s*[,;\/]\s*|\s+-\s+|\s+(?:et(?:\s+(?:aussi|pourquoi\s+pas|egalement|meme|surtout))?\s+|ou(?:\s+(?:eventuellement|bien|encore|meme|plutot))?\s+)/gi
+    const rawParts = workingQuery.split(UNION_SEP).map(p => p.trim()).filter(p => p.length >= 2)
+    if (rawParts.length >= 2) {
+      const entities = rawParts.map(p => resolveEntity(p))
+      const someKnown = entities.some(e => e.type !== 'unknown')
+      if (someKnown) {
+        return {
+          rawQuery, normalizedQuery,
+          primaryEntities: entities,
+          spatialRelations: [],
+          exclusions,
+          requiresLLM: entities.some(e => e.type === 'unknown'),
+          confidence: Math.min(...entities.map(e => e.confidence)) * 0.9,
+        }
+      }
+    }
+  }
+
   // ── 3. CÔTÉ: "[entity] côté [reference]" ───────────────────────────────────
   // IMPORTANT: "côté" is NEVER converted to a cardinal direction.
   // After normalizeForParsing, "côté" → "cote".
@@ -548,12 +576,19 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
   // ── 6. Direct entity resolution ────────────────────────────────────────────
   const entity = resolveEntity(workingQuery)
 
+  // If the query has 4+ words and the entity label is much shorter than the query,
+  // it's likely a partial "contains" match on a multi-entity no-separator query.
+  // Send to LLM which handles "Ledru-Rollin rue de Charonne Reuilly Diderot" correctly.
+  const queryWordCount = workingQuery.split(/\s+/).length
+  const entityWordCount = (entity.label ?? entity.rawText).split(/\s+/).length
+  const isPartialMatch = entity.type !== 'unknown' && queryWordCount >= 4 && entityWordCount < queryWordCount - 1
+
   return {
     rawQuery, normalizedQuery,
     primaryEntities: [entity],
     spatialRelations: [],
     exclusions,
-    requiresLLM: entity.type === 'unknown',
+    requiresLLM: entity.type === 'unknown' || isPartialMatch,
     confidence: entity.confidence,
   }
 }
