@@ -1238,6 +1238,32 @@ export function resolveConstraints(
   // coordinate-based IRIS selection — treat as narrowed even without filtering.
   const hasNonAdminInclude = includeConstraints.some(c => c.type !== 'administrative_area')
 
+  // ── INVARIANT GUARD: final result must stay within admin-area inside boundaries ──
+  // Defensive net against any code path that could leak IRIS outside the intended scope
+  // (standalone path bugs, normalizeNearToInside promotions, filter step regressions, etc.).
+  // If any administrative_area inside constraint exists, the result MUST be a subset of
+  // those zones' IRIS. This is the final guarantee that "Paris 16 proche périph" can
+  // never return IRIS from other arrondissements or communes.
+  const adminInsideZoneIds = includeConstraints
+    .filter(c => c.type === 'administrative_area' && c.zoneId)
+    .map(c => c.zoneId as string)
+  if (adminInsideZoneIds.length > 0) {
+    const allowedIrisIds = new Set<string>()
+    for (const zoneId of adminInsideZoneIds) {
+      for (const z of getIrisInZone(zoneId, iris, quartiers)) {
+        allowedIrisIds.add(z.id)
+      }
+    }
+    const beforeGuard = narrowed.length
+    narrowed = narrowed.filter(z => allowedIrisIds.has(z.id))
+    if (typeof window !== 'undefined' && beforeGuard !== narrowed.length) {
+      console.warn(
+        `[geo] INVARIANT GUARD: dropped ${beforeGuard - narrowed.length} IRIS outside admin zones [${adminInsideZoneIds.join(', ')}] — `
+        + `something in the resolver leaked out-of-scope IRIS into the result.`
+      )
+    }
+  }
+
   const wasNarrowed =
     narrowed.length > 0 &&
     (hasDirectional ||
