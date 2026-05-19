@@ -424,7 +424,7 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
   //
   // Only resolves when reference is in COTE_EXPANSIONS (known geographic anchors).
   // Unknown references (e.g. "pas proche métro") fall through to LLM.
-  const NEG_PROX_RE = /^(.+?)\s+(?:pas\s+(?:proche|pres|cote)|loin\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?)\s*(.+)$/
+  const NEG_PROX_RE = /^(.+?)\s+(?:pas\s+(?:trop\s+)?(?:proche|pres|cote)|loin\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?)\s*(.+)$/
   const negProxMatch = workingQuery.match(NEG_PROX_RE)
   if (negProxMatch) {
     // Strip leading French articles from reference before COTE_EXPANSIONS lookup
