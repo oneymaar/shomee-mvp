@@ -414,6 +414,32 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
     }
   }
 
+  // ── 3b-bis. EXCENTRÉ: "[entity] pas (trop) excentré" ──────────────────────────
+  // "Paris 15 pas trop excentré", "Neuilly pas excentré"
+  // → inside(entity) + exclude(zone-periph-elargie)
+  // "excentré" means "too far from the center of Paris" — we exclude the outer ring
+  // of periph-adjacent IRIS (zone-periph-elargie = périph + 1 ring of neighbors).
+  const EXCENTRE_RE = /^(.+?)\s+pas\s+(?:trop\s+)?excentr/
+  const excentreMatch = workingQuery.match(EXCENTRE_RE)
+  if (excentreMatch) {
+    const primaryEntity = resolveEntity(excentreMatch[1].trim())
+    return {
+      rawQuery, normalizedQuery,
+      primaryEntities: [primaryEntity],
+      spatialRelations: [],
+      exclusions: [{
+        rawText: 'excentré',
+        normalizedText: 'excentre',
+        type: 'quartier' as const,
+        label: 'Zone périphérique élargie',
+        resolvedId: 'zone-periph-elargie',
+        confidence: 0.88,
+      }],
+      requiresLLM: primaryEntity.type === 'unknown',
+      confidence: primaryEntity.confidence * 0.88,
+    }
+  }
+
   // ── 3b. NEGATED PROXIMITY: "[entity] pas proche/côté/loin de [reference]" ──────
   // "Saint-Ouen pas proche périph", "Neuilly loin du bois", "Boulogne pas côté bois"
   // → inside(entity) + poi(exclude, reference)
