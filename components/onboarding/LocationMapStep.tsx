@@ -111,6 +111,10 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   // Fully enriched constraints (with geometry/lat/lng) used in the last resolveConstraints call.
   // Required to re-run the resolver when a brief tag is removed individually.
   const enrichedConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[]>([])
+  // Constraints set directly by initMap's hasFineConstraint path.
+  // loadIris prefers this over the store to avoid race conditions where the store
+  // hasn't been updated yet when the useEffect fires.
+  const fineConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[] | null>(null)
   quartiersRef.current = quartiers
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
@@ -206,7 +210,12 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // poi constraints may be in the store without coordinates if the initMap
       // geocoding failed or the Zustand update raced with loadIris.
       // Enrich from the ref cache, then geocode server-side for anything still missing.
-      let resolveConstraintsInput = intent?.geoConstraints ?? []
+      //
+      // Prefer fineConstraintsRef (set directly by initMap's hasFineConstraint path)
+      // over the store to avoid race conditions: the store update from setLocation may
+      // not be visible yet when the useEffect fires, but the ref is always up-to-date.
+      let resolveConstraintsInput = fineConstraintsRef.current ?? intent?.geoConstraints ?? []
+      fineConstraintsRef.current = null  // consume — subsequent loadIris calls fall back to store
       const poiMissing = resolveConstraintsInput.filter(
         c => c.type === 'poi' && !c.lat && !c.bbox && !c.geometry
       )
@@ -555,6 +564,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           }
         }
 
+        // Store enriched constraints directly in the ref so loadIris uses them
+        // even if the Zustand store update (setLocation above) hasn't been committed yet.
+        fineConstraintsRef.current = enrichedConstraints
         setZoom(15)
         setFineLoadTrigger(t => t + 1) // always triggers loadIris after render, even if zoom was already 15
       } else {
