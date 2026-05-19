@@ -166,7 +166,7 @@ function buildQuartierEntity(q: Quartier, confidence: number): RecognizedLocatio
 // OR a spatial relation (proche, côté, pres…) that implies a compound constraint.
 // These queries must go to the analyze API — the entity recognizer only handles
 // single-entity queries.
-const COMPOUND_RE = /\b(et|ou|sauf|sans|hors|mais|entre|proche|pres|cote|cot[eé])\b|[,+\/]/i
+const COMPOUND_RE = /\b(et|ou|sauf|sans|hors|mais|entre|proche|pres|cote|cot[eé]|excent)\b|[,+\/]/i
 
 // Street/way type prefix — when present the query names a specific way, not a neighborhood.
 // Must go to the LLM to generate a poi constraint with full OSM geometry.

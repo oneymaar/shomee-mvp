@@ -434,7 +434,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // Also skip for spatial-relation queries ("proche", "côté", "pres"…) — matchNeighborhood
       // could match a zone token inside the query (e.g. "periph" in "Paris 16 proche périph")
       // and replace the correct [arr-16 inside, zone-periph near] constraints with only zone-periph.
-      const isCompoundLocationQuery = /\b(et|ou|sauf|sans|hors|mais|entre|proche|pres|cote|cot[eé])\b|[,+\/]/i.test(locationQuery.trim())
+      const isCompoundLocationQuery = /\b(et|ou|sauf|sans|hors|mais|entre|proche|pres|cote|cot[eé]|excent)\b|[,+\/]/i.test(locationQuery.trim())
       const neighborhoodMatch = isCompoundLocationQuery ? null : matchNeighborhood(locationQuery)
       // Normalize any residual "neighborhood" type (LLM sometimes confuses explicitLocations
       // type "neighborhood" with geoConstraints type "semantic_neighborhood").

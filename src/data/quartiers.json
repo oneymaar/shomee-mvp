@@ -1972,11 +1972,7 @@
   {
     "id": "zone-periph-elargie",
     "name": "Zone périphérique élargie",
-    "aliases": [
-      "excentré",
-      "excentre",
-      "trop excentré"
-    ],
+    "aliases": [],
     "city": "Paris",
     "irisNames": [],
     "irisIds": [
