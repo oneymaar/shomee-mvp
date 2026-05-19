@@ -94,6 +94,9 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
   const [zoom, setZoom] = useState(12)
   const [loading, setLoading] = useState(true)
   const [irisLoading, setIrisLoading] = useState(false)
+  // Incremented by initMap's hasFineConstraint path to force a fresh loadIris() regardless
+  // of zoom state or cached iris. Avoids the setZoom(15) trap when zoom is already 15.
+  const [fineLoadTrigger, setFineLoadTrigger] = useState(0)
   const [irisCopied, setIrisCopied] = useState(false)
   const [fitBounds, setFitBounds] = useState<[[number, number], [number, number]] | null>(null)
   const [constraintSummary, setConstraintSummary] = useState<string[]>([])
@@ -167,6 +170,15 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading])
+
+  // Triggered by initMap's hasFineConstraint path via setFineLoadTrigger(t => t + 1).
+  // Runs after React has flushed all pending state updates (quartiersRef.current is current),
+  // bypassing the iris.length > 0 guard that would block the zoom-based useEffect.
+  useEffect(() => {
+    if (fineLoadTrigger === 0 || irisLoading) return
+    loadIris()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fineLoadTrigger])
 
   // Capture initial selection state once — first non-empty selection is the engine's output.
   useEffect(() => {
@@ -525,6 +537,11 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           selectedIrisIds: [],
           selectedCommuneIds: [],
         })
+        // Also clear stale IRIS geometry — a previous loadIris() call may have populated
+        // `iris` before initMap finished loading quartiers, causing getIrisInZone to miss
+        // the correct pool and fall through to the standalone path. Clearing iris ensures
+        // the useEffect([zoom]) condition (iris.length > 0) never blocks the fresh load.
+        setIris([])
 
         // Center on the INCLUDED station or POI (never on an excluded entity).
         if (!neighborhoodMatch) {
@@ -538,23 +555,8 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
           }
         }
 
-        // DEBUG — log state at the moment loadIris() is triggered
-        console.group('%c[geo] initMap → triggering loadIris', 'color:#8e44ad;font-weight:bold')
-        console.log('locationQuery     :', locationQuery)
-        console.log('hasFineConstraint :', hasFineConstraint, '(triggered by poi/station/neighborhood with confidence ≥ 0.75)')
-        console.log('enrichedConstraints:', enrichedConstraints.map(c => ({
-          type: c.type, operator: c.operator,
-          zoneId: c.zoneId, label: c.label,
-          hasGeometry: !!c.geometry, hasLatLng: c.lat !== undefined,
-          confidence: c.confidence,
-        })))
-        console.log('insideConstraints :', enrichedConstraints.filter(c => c.operator === 'inside').map(c => `${c.type}/${c.zoneId ?? c.label}`))
-        console.log('excludeConstraints:', enrichedConstraints.filter(c => c.operator === 'exclude').map(c => `${c.type}/${c.label} lat=${c.lat?.toFixed(4)??'—'} geom=${!!c.geometry}`))
-        if (enrichedConstraints.filter(c => c.operator === 'inside' && c.type === 'administrative_area').length === 0)
-          console.warn('⚠️  No administrative_area inside constraint — standalone path will be used')
-        console.groupEnd()
-
-        setZoom(15) // triggers loadIris via useEffect([zoom])
+        setZoom(15)
+        setFineLoadTrigger(t => t + 1) // always triggers loadIris after render, even if zoom was already 15
       } else {
         const loadedCommunes = communesResult.status === 'fulfilled' ? communesResult.value : []
 
