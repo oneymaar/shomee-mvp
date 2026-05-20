@@ -201,23 +201,24 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   const showClarification = ui.kind === 'clarification'
   const showDisambiguation = ui.kind === 'disambiguation'
 
-  const placeholder = `Décrivez librement une ou plusieurs zones. Vous pourrez les affiner sur la carte.\n\nEx : ${examples.join(', ')}`
+  // Placeholder: no "Vous pourrez les affiner", examples on separate lines — fits rows={6} without scroll
+  const placeholder = `Décrivez librement une ou plusieurs zones.\n\nEx :\n${examples.join('\n')}`
 
   return (
     <div className="flex flex-col h-full px-6">
-      {/* Title — centers vertically in remaining space above textarea */}
+      {/* Title — grows to fill available space, centered vertically */}
       <motion.div
         className="flex-1 flex items-center justify-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight text-center">
+        <h2 className="text-[30px] font-bold text-neutral-900 leading-tight text-center tracking-tight">
           Où aimeriez-vous habiter ?
         </h2>
       </motion.div>
 
-      {/* Bottom section — textarea + button stuck at bottom above keyboard */}
+      {/* Bottom section — truly anchored at bottom, no extra space below button */}
       <motion.div
         className="flex-none flex flex-col gap-3"
         style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
@@ -225,7 +226,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Textarea — fixed height ~4 rows, same font size for placeholder and text */}
+        {/* Textarea — rows=6 so all placeholder lines visible without scroll */}
         <div
           className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity"
           style={{
@@ -237,7 +238,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            rows={4}
+            rows={6}
             disabled={isAnalyzing}
             placeholder={placeholder}
             autoFocus
@@ -330,7 +331,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
           <button
             onClick={showClarification ? () => openMapWithQuery(query) : handleOpenMap}
             disabled={!canContinue || isAnalyzing}
-            className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90 mb-3"
+            className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{
               backgroundColor: canContinue && !isAnalyzing ? '#914E3C' : '#D4A89A',
               cursor: canContinue && !isAnalyzing ? 'pointer' : 'default',

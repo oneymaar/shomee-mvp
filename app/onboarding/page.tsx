@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
@@ -46,6 +46,7 @@ export default function OnboardingPage() {
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
+  const mapLoadStartRef = useRef<number>(0)
   // Dynamic viewport height — tracks keyboard open/close on iOS via visualViewport API
   const [viewportH, setViewportH] = useState<number | null>(null)
 
@@ -80,8 +81,17 @@ export default function OnboardingPage() {
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
-  const handleOpenMap = useCallback(() => { setMapLoading(true); setLocationMapOpen(true) }, [])
-  const handleMapReady = useCallback(() => setMapLoading(false), [])
+  const handleOpenMap = useCallback(() => {
+    mapLoadStartRef.current = Date.now()
+    setMapLoading(true)
+    setLocationMapOpen(true)
+  }, [])
+  const handleMapReady = useCallback(() => {
+    // Guarantee at least 4s on the loading screen for UX perception of "thinking"
+    const elapsed = Date.now() - mapLoadStartRef.current
+    const remaining = Math.max(0, 4000 - elapsed)
+    setTimeout(() => setMapLoading(false), remaining)
+  }, [])
   const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
   const showBack = step > 0
