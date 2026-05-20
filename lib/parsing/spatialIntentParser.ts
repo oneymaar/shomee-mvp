@@ -232,7 +232,20 @@ function resolveEntity(rawText: string): SpatialEntity {
     return { rawText, normalizedText: norm, type: 'transport_station', label: tpMatch[1], confidence: 0.7 }
   }
 
-  // 5. Quartier exact match (quartiers.json — includes irisNames)
+  // Priority rule: quartier vécu > QA administratif > station (sans préfixe "métro")
+  // A name that exists as a quartier vécu (semanticNeighborhoods.json) → use that.
+  // A name that exists as a QA (quartiers.json) → use QA, even if also a station name.
+  // Station without explicit "métro/rer" prefix only wins when no neighborhood/QA matches.
+  // Rationale: in real estate searches, "Bel-Air", "Nation", "Daumesnil" refer to
+  // geographic areas, not transport anchors.
+
+  // 5. Semantic neighborhood exact match (quartier vécu — highest priority)
+  const nb = neighborhoodByNorm.get(key)
+  if (nb) {
+    return { rawText, normalizedText: norm, type: 'quartier', resolvedId: nb.id, label: nb.label, confidence: 0.92 }
+  }
+
+  // 6. Quartier administratif exact match (preferred over bare station name)
   const qtMatch = matchQuartier(rawText.trim())
   if (qtMatch && qtMatch.method === 'exact') {
     return {
@@ -244,13 +257,7 @@ function resolveEntity(rawText: string): SpatialEntity {
     }
   }
 
-  // 6. Semantic neighborhood exact match (richer metadata: center, vibeTags…)
-  const nb = neighborhoodByNorm.get(key)
-  if (nb) {
-    return { rawText, normalizedText: norm, type: 'quartier', resolvedId: nb.id, label: nb.label, confidence: 0.90 }
-  }
-
-  // 7. Station exact match — only when no neighborhood matched (bare name = station)
+  // 7. Station exact match — only when no neighborhood or QA matched
   const st = stationByNorm.get(key)
   if (st) {
     return { rawText, normalizedText: norm, type: 'transport_station', resolvedId: st.id, label: st.label, confidence: 0.85 }
