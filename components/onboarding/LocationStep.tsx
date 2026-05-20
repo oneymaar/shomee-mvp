@@ -249,7 +249,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             onChange={(e) => setQuery(e.target.value)}
             rows={3}
             disabled={isAnalyzing}
-            className="flex-1 text-[14px] text-neutral-900 bg-transparent outline-none resize-none leading-relaxed"
+            className="flex-1 text-[16px] text-neutral-900 bg-transparent outline-none resize-none leading-relaxed"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
