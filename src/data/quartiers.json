@@ -943,22 +943,15 @@
     "name": "Bel-Air",
     "aliases": [],
     "city": "Paris",
-    "irisNames": [
-      "Bel-air 1",
-      "Bel-air 2",
-      "Bel-air 3",
-      "Bel-air 4",
-      "Bel-air 5",
-      "Bel-air 6",
-      "Bel-air 7",
-      "Bel-air 8",
-      "Bel-air 9",
-      "Bel-air 10",
-      "Bel-air 11",
-      "Bel-air 12",
-      "Bel-air 13",
-      "Bel-air 14",
-      "Picpus 8"
+    "irisNames": [],
+    "irisIds": [
+      "iris-751124503",
+      "iris-751124504",
+      "iris-751124505",
+      "iris-751124506",
+      "iris-751124507",
+      "iris-751124508",
+      "iris-751124509"
     ]
   },
   {
