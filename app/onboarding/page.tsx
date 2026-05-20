@@ -46,10 +46,22 @@ export default function OnboardingPage() {
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
+  // Dynamic viewport height — tracks keyboard open/close on iOS via visualViewport API
+  const [viewportH, setViewportH] = useState<number | null>(null)
 
   useEffect(() => {
     if (onboardingCompleted) router.replace('/feed')
   }, [onboardingCompleted, router])
+
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const handler = () => setViewportH(vv.height)
+    handler()
+    vv.addEventListener('resize', handler)
+    vv.addEventListener('scroll', handler)
+    return () => { vv.removeEventListener('resize', handler); vv.removeEventListener('scroll', handler) }
+  }, [])
 
   const goTo = useCallback((next: number, dir: Direction = 1) => {
     setDirection(dir)
@@ -83,7 +95,7 @@ export default function OnboardingPage() {
   return (
     <div
       className="fixed inset-x-0 top-0 flex flex-col overflow-hidden"
-      style={{ background: '#f5f0e8', maxWidth: 430, margin: '0 auto', height: '100dvh' }}
+      style={{ background: '#f5f0e8', maxWidth: 430, margin: '0 auto', height: viewportH ? `${viewportH}px` : '100dvh' }}
     >
       {/* Top bar */}
       {(showBack || showProgress) && (

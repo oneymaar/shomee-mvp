@@ -201,24 +201,25 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   const showClarification = ui.kind === 'clarification'
   const showDisambiguation = ui.kind === 'disambiguation'
 
-  const placeholder = `Décrivez librement une ou plusieurs zones. Vous pourrez les affiner sur la carte.\n\nEx : ${examples.join(', ')}`
+  // Compact single-line examples so the placeholder stays short
+  const placeholder = `Décrivez une ou plusieurs zones, vous pourrez les affiner sur la carte.\n\nEx : ${examples.join(', ')}`
 
   return (
-    <div className="flex flex-col h-full px-6 pt-4 pb-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
+    <div className="flex flex-col h-full px-6 pt-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', gap: 16 }}>
       <motion.div
-        className="flex flex-col flex-1 min-h-0"
+        className="flex flex-col gap-4"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         {/* Title */}
-        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight mb-4">
+        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
           Où aimeriez-vous habiter ?
         </h2>
 
-        {/* Textarea — flex-1 so it fills available space */}
+        {/* Textarea — fixed height ~4 rows */}
         <div
-          className="flex flex-col flex-1 min-h-0 bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity mb-3"
+          className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity"
           style={{
             borderColor: query.trim().length > 0 ? 'rgba(145,78,60,0.3)' : undefined,
             opacity: isAnalyzing ? 0.6 : 1,
@@ -228,9 +229,12 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            rows={4}
             disabled={isAnalyzing}
             placeholder={placeholder}
-            className="flex-1 text-[16px] text-neutral-900 placeholder-neutral-400 bg-transparent outline-none resize-none leading-relaxed"
+            // autoFocus opens keyboard on mount when component appears from a user tap
+            autoFocus
+            className="w-full text-[16px] text-neutral-900 bg-transparent outline-none resize-none leading-relaxed placeholder:text-[13px] placeholder:leading-snug placeholder:text-neutral-400"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
