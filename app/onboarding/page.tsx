@@ -54,13 +54,21 @@ export default function OnboardingPage() {
     if (onboardingCompleted) router.replace('/feed')
   }, [onboardingCompleted, router])
 
-  // Prevent document-level scroll (iOS rubber-band effect)
+  // Prevent iOS rubber-band / elastic scroll on the whole onboarding flow.
+  // position:fixed on body is the only reliable approach on Safari iOS.
   useEffect(() => {
-    document.documentElement.style.overflow = 'hidden'
+    const prev = { overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width, top: document.body.style.top }
+    const scrollY = window.scrollY
     document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.top = `-${scrollY}px`
     return () => {
-      document.documentElement.style.overflow = ''
-      document.body.style.overflow = ''
+      document.body.style.overflow = prev.overflow
+      document.body.style.position = prev.position
+      document.body.style.width = prev.width
+      document.body.style.top = prev.top
+      window.scrollTo(0, scrollY)
     }
   }, [])
 

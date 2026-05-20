@@ -116,6 +116,10 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
   // loadIris prefers this over the store to avoid race conditions where the store
   // hasn't been updated yet when the useEffect fires.
   const fineConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[] | null>(null)
+  // Tracks whether onReady has been called (must only fire once, after full map load)
+  const onReadyCalledRef = useRef(false)
+  // Ref mirror of irisLoading for use in setTimeout closures
+  const irisLoadingRef = useRef(false)
   quartiersRef.current = quartiers
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
@@ -189,6 +193,25 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
     loadIris()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fineLoadTrigger])
+
+  // Keep irisLoadingRef in sync for use in setTimeout closures
+  irisLoadingRef.current = irisLoading
+
+  // Fire onReady when the map is FULLY ready: initMap done + loadIris done (or not needed).
+  // Using a 120ms debounce allows fineLoadTrigger's useEffect to fire and set
+  // irisLoading=true before we conclude loadIris won't run (non-fine queries).
+  useEffect(() => {
+    if (onReadyCalledRef.current) return
+    if (loading) return           // initMap still running
+    if (irisLoading) return       // loadIris still running
+    const t = setTimeout(() => {
+      if (!irisLoadingRef.current && !onReadyCalledRef.current) {
+        onReadyCalledRef.current = true
+        onReady?.()
+      }
+    }, 120)
+    return () => clearTimeout(t)
+  }, [loading, irisLoading, onReady])
 
   // Capture initial selection state once — first non-empty selection is the engine's output.
   useEffect(() => {
@@ -737,7 +760,8 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
       setError('Erreur lors du chargement de la carte. Réessayez.')
     } finally {
       setLoading(false)
-      onReady?.()
+      // onReady is NOT called here — it fires from the useEffect that watches
+      // both loading and irisLoading, ensuring the full map (inc. IRIS) is ready.
     }
   }
 
