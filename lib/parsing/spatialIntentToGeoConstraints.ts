@@ -264,10 +264,14 @@ export function intentToGeoConstraints(intent: SpatialIntent): GeoConstraint[] {
   }
 
   // ── DEFAULT: direct entity resolution ─────────────────────────────────────
+  // In a union query (multiple entities, no spatial relations), ALL entities must
+  // use 'inside' so they are added to the pool, not used as proximity filters.
+  // Example: "Bel-Air, Picpus, Daumesnil, Dugommier" → 4 inside constraints → union.
+  // Only a single standalone transport_station uses 'near' (proximity-centered selection).
+  const isUnionQuery = intent.primaryEntities.length > 1 && intent.spatialRelations.length === 0
   for (const e of intent.primaryEntities) {
-    // Standalone transport_station uses 'near' (geoConstraintService standalone path)
     const op: GeoConstraint['operator'] =
-      e.type === 'transport_station' ? 'near' : 'inside'
+      (e.type === 'transport_station' && !isUnionQuery) ? 'near' : 'inside'
     const c = entityToConstraint(e, op)
     if (c) constraints.push(c)
   }
