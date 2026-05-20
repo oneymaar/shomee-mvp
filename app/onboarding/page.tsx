@@ -47,27 +47,68 @@ export default function OnboardingPage() {
   const [locationMapOpen, setLocationMapOpen] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
   const mapLoadStartRef = useRef<number>(0)
-  // Dynamic viewport height — shrinks when keyboard opens on iOS
-  const [viewportH, setViewportH] = useState<number | null>(null)
+  // Dynamic viewport height — shrinks when keyboard opens on iOS.
+  // Initialize from visualViewport on mount to avoid the null-then-100dvh flash.
+  const [viewportH, setViewportH] = useState<number | null>(() => {
+    if (typeof window === 'undefined') return null
+    return window.visualViewport?.height ?? window.innerHeight ?? null
+  })
 
   useEffect(() => {
     if (onboardingCompleted) router.replace('/feed')
   }, [onboardingCompleted, router])
 
   // Prevent iOS rubber-band / elastic scroll on the whole onboarding flow.
-  // position:fixed on body is the only reliable approach on Safari iOS.
+  // Multiple layers because no single approach works reliably on iOS Safari:
+  // 1. position:fixed body — blocks document scroll
+  // 2. Force-reset scroll on any scroll event — catches iOS auto-scroll-to-input
+  // 3. Block touchmove except inside scrollable children (map, textarea)
   useEffect(() => {
-    const prev = { overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width, top: document.body.style.top }
+    const prev = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      width: document.body.style.width,
+      top: document.body.style.top,
+      htmlOverflow: document.documentElement.style.overflow,
+    }
     const scrollY = window.scrollY
+    document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
     document.body.style.position = 'fixed'
     document.body.style.width = '100%'
     document.body.style.top = `-${scrollY}px`
+
+    const resetScroll = () => {
+      if (window.scrollY !== 0) window.scrollTo(0, 0)
+      if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0
+    }
+    window.addEventListener('scroll', resetScroll, { passive: true })
+    document.addEventListener('scroll', resetScroll, { passive: true })
+
+    // Block touchmove on document EXCEPT inside elements that legitimately scroll
+    const blockTouchmove = (e: TouchEvent) => {
+      let el = e.target as HTMLElement | null
+      while (el && el !== document.body) {
+        const ov = getComputedStyle(el).overflowY
+        if (ov === 'auto' || ov === 'scroll') return
+        if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') return
+        // Leaflet map container has class "leaflet-container"
+        if (el.classList && el.classList.contains('leaflet-container')) return
+        el = el.parentElement
+      }
+      e.preventDefault()
+    }
+    document.addEventListener('touchmove', blockTouchmove, { passive: false })
+
     return () => {
+      document.documentElement.style.overflow = prev.htmlOverflow
       document.body.style.overflow = prev.overflow
       document.body.style.position = prev.position
       document.body.style.width = prev.width
       document.body.style.top = prev.top
+      window.removeEventListener('scroll', resetScroll)
+      document.removeEventListener('scroll', resetScroll)
+      document.removeEventListener('touchmove', blockTouchmove)
       window.scrollTo(0, scrollY)
     }
   }, [])
@@ -126,7 +167,7 @@ export default function OnboardingPage() {
         background: '#f5f0e8',
         maxWidth: 430,
         margin: '0 auto',
-        height: viewportH ? `${viewportH}px` : '100dvh',
+        height: viewportH ? `${viewportH}px` : '100svh',
         overscrollBehavior: 'none',
       }}
     >

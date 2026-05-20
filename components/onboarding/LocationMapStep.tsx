@@ -194,24 +194,42 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fineLoadTrigger])
 
-  // Keep irisLoadingRef in sync for use in setTimeout closures
+  // Keep irisLoadingRef in sync (still used by other effects)
   irisLoadingRef.current = irisLoading
 
-  // Fire onReady when the map is FULLY ready: initMap done + loadIris done (or not needed).
-  // Using a 120ms debounce allows fineLoadTrigger's useEffect to fire and set
-  // irisLoading=true before we conclude loadIris won't run (non-fine queries).
+  // Fire onReady when the map is FULLY ready, signaled by zone selections being populated.
+  // Watching irisLoading is unreliable: for cached fetches, irisLoading goes
+  // false→true→false in the same React batch and never appears as true visibly.
+  // We watch selection arrays instead — they populate once loadIris (or initMap
+  // for non-fine queries) has finished resolving constraints.
   useEffect(() => {
     if (onReadyCalledRef.current) return
-    if (loading) return           // initMap still running
-    if (irisLoading) return       // loadIris still running
+    if (loading) return  // initMap still running, definitely not ready
+
+    const hasSelection =
+      selectedArrIds.length > 0 ||
+      selectedCommuneIds.length > 0 ||
+      selectedIrisIds.length > 0 ||
+      selectedQuartierIds.length > 0
+
+    if (hasSelection) {
+      // Selections populated → map is fully ready
+      onReadyCalledRef.current = true
+      onReady?.()
+      return
+    }
+
+    // No selection yet — wait up to 3s for loadIris to complete.
+    // If nothing populates by then, the query likely has no resolvable zones
+    // and we should reveal the empty map anyway (user can manually select).
     const t = setTimeout(() => {
-      if (!irisLoadingRef.current && !onReadyCalledRef.current) {
+      if (!onReadyCalledRef.current) {
         onReadyCalledRef.current = true
         onReady?.()
       }
-    }, 120)
+    }, 3000)
     return () => clearTimeout(t)
-  }, [loading, irisLoading, onReady])
+  }, [loading, selectedArrIds.length, selectedCommuneIds.length, selectedIrisIds.length, selectedQuartierIds.length, onReady])
 
   // Capture initial selection state once — first non-empty selection is the engine's output.
   useEffect(() => {
