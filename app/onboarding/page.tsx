@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
 import IntroStep from '@/components/onboarding/IntroStep'
 import LocationStep from '@/components/onboarding/LocationStep'
@@ -12,6 +12,20 @@ import BudgetStep from '@/components/onboarding/BudgetStep'
 import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep'
 import PrioritiesStep from '@/components/onboarding/PrioritiesStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
+
+function MapLoadingScreen() {
+  return (
+    <div className="flex flex-col h-full items-center justify-center gap-5">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
+      >
+        <Loader2 size={32} style={{ color: '#914E3C', opacity: 0.7 }} />
+      </motion.div>
+      <p className="text-[15px] text-neutral-400 font-medium">SHOMEE réfléchit…</p>
+    </div>
+  )
+}
 
 // Steps: 0=Intro, 1=Location text, 2=Budget, 3=Type, 4=Priorities, 5=AI
 // locationMapOpen is a sub-state of step 1
@@ -31,6 +45,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
+  const [mapLoading, setMapLoading] = useState(false)
 
   useEffect(() => {
     if (onboardingCompleted) router.replace('/feed')
@@ -44,27 +59,31 @@ export default function OnboardingPage() {
 
   const handleNext = useCallback(() => goTo(step + 1, 1), [step, goTo])
   const handleBack = useCallback(() => {
-    if (locationMapOpen) { setLocationMapOpen(false); return }
+    if (locationMapOpen) { setLocationMapOpen(false); setMapLoading(false); return }
     if (step === 0) return
     goTo(step - 1, -1)
   }, [step, locationMapOpen, goTo])
   const handleSkip = useCallback(() => goTo(step + 1, 1), [step, goTo])
-  const handleQuick = useCallback(() => goTo(5, 1), [goTo])
+  // "Aller directement sur le feed" — skip onboarding entirely
+  const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
-  const handleOpenMap = useCallback(() => setLocationMapOpen(true), [])
+  const handleOpenMap = useCallback(() => { setMapLoading(true); setLocationMapOpen(true) }, [])
+  const handleMapReady = useCallback(() => setMapLoading(false), [])
   const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
   const showBack = step > 0
   const showProgress = step >= 1 && step <= 4
 
   // Unique key per "screen" so AnimatePresence correctly animates sub-steps
-  const screenKey = step === 1 ? (locationMapOpen ? '1-map' : '1-text') : String(step)
+  const screenKey = step === 1
+    ? (locationMapOpen ? (mapLoading ? '1-loading' : '1-map') : '1-text')
+    : String(step)
 
   return (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden"
-      style={{ background: '#f5f0e8', maxWidth: 430, margin: '0 auto' }}
+      className="fixed inset-x-0 top-0 flex flex-col overflow-hidden"
+      style={{ background: '#f5f0e8', maxWidth: 430, margin: '0 auto', height: '100dvh' }}
     >
       {/* Top bar */}
       {(showBack || showProgress) && (
@@ -122,8 +141,16 @@ export default function OnboardingPage() {
               <LocationStep onOpenMap={handleOpenMap} onSkip={handleSkip} />
             )}
 
-            {step === 1 && locationMapOpen && (
-              <LocationMapStep onValidate={handleMapValidate} onBack={() => setLocationMapOpen(false)} />
+            {step === 1 && locationMapOpen && mapLoading && (
+              <MapLoadingScreen />
+            )}
+
+            {step === 1 && locationMapOpen && !mapLoading && (
+              <LocationMapStep
+                onValidate={handleMapValidate}
+                onBack={() => { setLocationMapOpen(false); setMapLoading(false) }}
+                onReady={handleMapReady}
+              />
             )}
 
             {step === 2 && (

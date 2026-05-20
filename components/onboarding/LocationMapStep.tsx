@@ -75,9 +75,10 @@ function zonesToBounds(zones: GeoZone[], coverage = 0.8): [[number, number], [nu
 interface LocationMapStepProps {
   onValidate: () => void
   onBack: () => void
+  onReady?: () => void
 }
 
-export default function LocationMapStep({ onValidate, onBack }: LocationMapStepProps) {
+export default function LocationMapStep({ onValidate, onBack, onReady }: LocationMapStepProps) {
   const {
     locationQuery, locationLat, locationLng, locationIntent,
     selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds,
@@ -736,6 +737,7 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       setError('Erreur lors du chargement de la carte. Réessayez.')
     } finally {
       setLoading(false)
+      onReady?.()
     }
   }
 

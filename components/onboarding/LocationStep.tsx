@@ -201,43 +201,24 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   const showClarification = ui.kind === 'clarification'
   const showDisambiguation = ui.kind === 'disambiguation'
 
+  const placeholder = `Décrivez librement une ou plusieurs zones. Vous pourrez les affiner sur la carte.\n\nEx : ${examples.join(', ')}`
+
   return (
-    <div className="flex flex-col h-full items-center justify-center">
+    <div className="flex flex-col h-full px-6 pt-4 pb-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
       <motion.div
-        className="w-full px-6"
+        className="flex flex-col flex-1 min-h-0"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Title + subtitle */}
-        <div className="text-center mb-5">
-          <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
-            Où aimeriez-vous habiter ?
-          </h2>
-          <p className="text-[14px] text-neutral-400 mt-1.5 leading-relaxed">
-            Décrivez librement une ou plusieurs zones. Vous pourrez ensuite les affiner sur la carte.
-          </p>
-        </div>
+        {/* Title */}
+        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight mb-4">
+          Où aimeriez-vous habiter ?
+        </h2>
 
-        {/* Examples — plain text, rotating, no bubbles */}
-        <div className="text-center mb-4">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-2">
-            Exemples
-          </p>
-          {examples.map((ex, i) => (
-            <p
-              key={i}
-              className="text-[13px] italic text-neutral-400 leading-relaxed cursor-pointer active:text-neutral-600 transition-colors"
-              onClick={() => setQuery(ex)}
-            >
-              {ex}
-            </p>
-          ))}
-        </div>
-
-        {/* Textarea */}
+        {/* Textarea — flex-1 so it fills available space */}
         <div
-          className="flex items-start gap-3 bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity mb-3"
+          className="flex flex-col flex-1 min-h-0 bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity mb-3"
           style={{
             borderColor: query.trim().length > 0 ? 'rgba(145,78,60,0.3)' : undefined,
             opacity: isAnalyzing ? 0.6 : 1,
@@ -247,9 +228,9 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            rows={3}
             disabled={isAnalyzing}
-            className="flex-1 text-[16px] text-neutral-900 bg-transparent outline-none resize-none leading-relaxed"
+            placeholder={placeholder}
+            className="flex-1 text-[16px] text-neutral-900 placeholder-neutral-400 bg-transparent outline-none resize-none leading-relaxed"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
@@ -352,15 +333,6 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
           </button>
         )}
 
-        {/* Dessiner sur la carte */}
-        <div className="text-center" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
-          <button
-            onClick={handleDrawOnMap}
-            className="text-[14px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
-          >
-            Dessiner sur la carte
-          </button>
-        </div>
       </motion.div>
     </div>
   )
