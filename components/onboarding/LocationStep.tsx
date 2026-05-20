@@ -201,11 +201,11 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   const showClarification = ui.kind === 'clarification'
   const showDisambiguation = ui.kind === 'disambiguation'
 
-  // Placeholder: no "Vous pourrez les affiner", examples on separate lines — fits rows={6} without scroll
-  const placeholder = `Décrivez librement une ou plusieurs zones.\n\nEx :\n${examples.join('\n')}`
+  // Examples on ONE line separated by commas — 3-4 lines total, fits rows=4 without scroll
+  const placeholder = `Décrivez librement une ou plusieurs zones.\n\nEx : ${examples.join(', ')}`
 
   return (
-    <div className="flex flex-col h-full px-6">
+    <div className="flex flex-col h-full px-4" style={{ overscrollBehavior: 'none', overflow: 'hidden' }}>
       {/* Title — grows to fill available space, centered vertically */}
       <motion.div
         className="flex-1 flex items-center justify-center"
@@ -214,7 +214,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         <h2 className="text-[30px] font-bold text-neutral-900 leading-tight text-center tracking-tight">
-          Où aimeriez-vous habiter ?
+          Où aimeriez-vous habiter&nbsp;?
         </h2>
       </motion.div>
 
@@ -226,7 +226,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Textarea — rows=6 so all placeholder lines visible without scroll */}
+        {/* Textarea — rows=4, examples on one line → fits without scroll */}
         <div
           className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity"
           style={{
@@ -238,7 +238,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            rows={6}
+            rows={4}
             disabled={isAnalyzing}
             placeholder={placeholder}
             autoFocus

@@ -10,7 +10,7 @@ interface IntroStepProps {
 
 export default function IntroStep({ onStart, onQuick }: IntroStepProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 gap-8">
+    <div className="flex flex-col items-center justify-center h-full px-4 gap-8">
       <motion.div
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -34,7 +34,7 @@ export default function IntroStep({ onStart, onQuick }: IntroStepProps) {
         className="text-center max-w-[300px]"
       >
         <h1 className="text-[26px] font-bold text-neutral-900 leading-tight tracking-tight">
-          Trouvez enfin les biens qui vous correspondent vraiment.
+          Trouvez enfin les biens qui vous correspondent.
         </h1>
       </motion.div>
 

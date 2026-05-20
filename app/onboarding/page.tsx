@@ -47,12 +47,22 @@ export default function OnboardingPage() {
   const [locationMapOpen, setLocationMapOpen] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
   const mapLoadStartRef = useRef<number>(0)
-  // Dynamic viewport height — tracks keyboard open/close on iOS via visualViewport API
+  // Dynamic viewport height — shrinks when keyboard opens on iOS
   const [viewportH, setViewportH] = useState<number | null>(null)
 
   useEffect(() => {
     if (onboardingCompleted) router.replace('/feed')
   }, [onboardingCompleted, router])
+
+  // Prevent document-level scroll (iOS rubber-band effect)
+  useEffect(() => {
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+    }
+  }, [])
 
   useEffect(() => {
     const vv = window.visualViewport
@@ -67,6 +77,7 @@ export default function OnboardingPage() {
   const goTo = useCallback((next: number, dir: Direction = 1) => {
     setDirection(dir)
     setLocationMapOpen(false)
+    setMapLoading(false)
     setStep(next)
   }, [])
 
@@ -77,7 +88,6 @@ export default function OnboardingPage() {
     goTo(step - 1, -1)
   }, [step, locationMapOpen, goTo])
   const handleSkip = useCallback(() => goTo(step + 1, 1), [step, goTo])
-  // "Aller directement sur le feed" — skip onboarding entirely
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
@@ -87,7 +97,7 @@ export default function OnboardingPage() {
     setLocationMapOpen(true)
   }, [])
   const handleMapReady = useCallback(() => {
-    // Guarantee at least 4s on the loading screen for UX perception of "thinking"
+    // Guarantee at least 4s on the loading screen
     const elapsed = Date.now() - mapLoadStartRef.current
     const remaining = Math.max(0, 4000 - elapsed)
     setTimeout(() => setMapLoading(false), remaining)
@@ -97,15 +107,20 @@ export default function OnboardingPage() {
   const showBack = step > 0
   const showProgress = step >= 1 && step <= 4
 
-  // Unique key per "screen" so AnimatePresence correctly animates sub-steps
-  const screenKey = step === 1
-    ? (locationMapOpen ? (mapLoading ? '1-loading' : '1-map') : '1-text')
-    : String(step)
+  // Key does NOT depend on mapLoading — changing it would re-mount LocationMapStep
+  // and restart initMap, causing the partial-map flash bug.
+  const screenKey = step === 1 ? (locationMapOpen ? '1-map' : '1-text') : String(step)
 
   return (
     <div
       className="fixed inset-x-0 top-0 flex flex-col overflow-hidden"
-      style={{ background: '#f5f0e8', maxWidth: 430, margin: '0 auto', height: viewportH ? `${viewportH}px` : '100dvh' }}
+      style={{
+        background: '#f5f0e8',
+        maxWidth: 430,
+        margin: '0 auto',
+        height: viewportH ? `${viewportH}px` : '100dvh',
+        overscrollBehavior: 'none',
+      }}
     >
       {/* Top bar */}
       {(showBack || showProgress) && (
@@ -164,20 +179,11 @@ export default function OnboardingPage() {
             )}
 
             {step === 1 && locationMapOpen && (
-              // LocationMapStep is always mounted so initMap() runs immediately.
-              // MapLoadingScreen overlays it until onReady fires (initMap done).
-              <div className="absolute inset-0">
-                <LocationMapStep
-                  onValidate={handleMapValidate}
-                  onBack={() => { setLocationMapOpen(false); setMapLoading(false) }}
-                  onReady={handleMapReady}
-                />
-                {mapLoading && (
-                  <div className="absolute inset-0 z-50" style={{ background: '#f5f0e8' }}>
-                    <MapLoadingScreen />
-                  </div>
-                )}
-              </div>
+              <LocationMapStep
+                onValidate={handleMapValidate}
+                onBack={() => { setLocationMapOpen(false); setMapLoading(false) }}
+                onReady={handleMapReady}
+              />
             )}
 
             {step === 2 && (
@@ -196,6 +202,23 @@ export default function OnboardingPage() {
               <AIPreparationStep onReady={handleReady} />
             )}
           </motion.div>
+        </AnimatePresence>
+
+        {/* Loading overlay — rendered OUTSIDE AnimatePresence so it never
+            triggers a re-mount of LocationMapStep. Fades out when mapLoading=false. */}
+        <AnimatePresence>
+          {step === 1 && locationMapOpen && mapLoading && (
+            <motion.div
+              key="map-overlay"
+              className="absolute inset-0 flex flex-col items-center justify-center"
+              style={{ background: '#f5f0e8', zIndex: 50 }}
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
+            >
+              <MapLoadingScreen />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
