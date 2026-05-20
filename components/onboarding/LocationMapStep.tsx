@@ -197,14 +197,11 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
   // Keep irisLoadingRef in sync (still used by other effects)
   irisLoadingRef.current = irisLoading
 
-  // Fire onReady when the map is FULLY ready, signaled by zone selections being populated.
-  // Watching irisLoading is unreliable: for cached fetches, irisLoading goes
-  // false→true→false in the same React batch and never appears as true visibly.
-  // We watch selection arrays instead — they populate once loadIris (or initMap
-  // for non-fine queries) has finished resolving constraints.
+  // Fire onReady when map is fully ready. Always with a small delay so Leaflet
+  // has time to render zones visually after state updates.
   useEffect(() => {
     if (onReadyCalledRef.current) return
-    if (loading) return  // initMap still running, definitely not ready
+    if (loading) return  // initMap still running
 
     const hasSelection =
       selectedArrIds.length > 0 ||
@@ -212,23 +209,20 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
       selectedIrisIds.length > 0 ||
       selectedQuartierIds.length > 0
 
-    if (hasSelection) {
-      // Selections populated → map is fully ready
-      onReadyCalledRef.current = true
-      onReady?.()
-      return
-    }
+    // Selection populated → wait 800ms for Leaflet to render zones, then fire.
+    // No selection yet → wait up to 5s for loadIris to finish (fire anyway if not).
+    const delay = hasSelection ? 800 : 5000
+    console.log('[LocationMapStep onReady useEffect] hasSelection=', hasSelection, 'delay=', delay, 'loading=', loading, 'iris.length=', iris.length, 'irisLoading=', irisLoading)
 
-    // No selection yet — wait up to 3s for loadIris to complete.
-    // If nothing populates by then, the query likely has no resolvable zones
-    // and we should reveal the empty map anyway (user can manually select).
     const t = setTimeout(() => {
       if (!onReadyCalledRef.current) {
+        console.log('[LocationMapStep] calling onReady, t=', Date.now())
         onReadyCalledRef.current = true
         onReady?.()
       }
-    }, 3000)
+    }, delay)
     return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, selectedArrIds.length, selectedCommuneIds.length, selectedIrisIds.length, selectedQuartierIds.length, onReady])
 
   // Capture initial selection state once — first non-empty selection is the engine's output.

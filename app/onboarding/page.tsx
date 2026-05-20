@@ -46,7 +46,11 @@ export default function OnboardingPage() {
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
   const [mapLoading, setMapLoading] = useState(false)
-  const mapLoadStartRef = useRef<number>(0)
+  // Two independent signals — overlay dismisses only when BOTH are true.
+  // minWaitDoneRef: 4s minimum has elapsed
+  // mapReadyRef: LocationMapStep signaled it's fully loaded
+  const minWaitDoneRef = useRef(false)
+  const mapReadyRef = useRef(false)
   // Dynamic viewport height — shrinks when keyboard opens on iOS.
   // Initialize from visualViewport on mount to avoid the null-then-100dvh flash.
   const [viewportH, setViewportH] = useState<number | null>(() => {
@@ -140,17 +144,30 @@ export default function OnboardingPage() {
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
+  const tryDismissOverlay = useCallback(() => {
+    if (minWaitDoneRef.current && mapReadyRef.current) {
+      console.log('[overlay] dismissing — both signals true')
+      setMapLoading(false)
+    }
+  }, [])
   const handleOpenMap = useCallback(() => {
-    mapLoadStartRef.current = Date.now()
+    console.log('[handleOpenMap] starting, t=', Date.now())
+    minWaitDoneRef.current = false
+    mapReadyRef.current = false
     setMapLoading(true)
     setLocationMapOpen(true)
-  }, [])
+    // 4s minimum timer
+    setTimeout(() => {
+      console.log('[overlay] 4s minimum elapsed')
+      minWaitDoneRef.current = true
+      tryDismissOverlay()
+    }, 4000)
+  }, [tryDismissOverlay])
   const handleMapReady = useCallback(() => {
-    // Guarantee at least 4s on the loading screen
-    const elapsed = Date.now() - mapLoadStartRef.current
-    const remaining = Math.max(0, 4000 - elapsed)
-    setTimeout(() => setMapLoading(false), remaining)
-  }, [])
+    console.log('[handleMapReady] called, t=', Date.now())
+    mapReadyRef.current = true
+    tryDismissOverlay()
+  }, [tryDismissOverlay])
   const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
   const showBack = step > 0
