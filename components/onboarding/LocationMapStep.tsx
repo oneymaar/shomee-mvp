@@ -434,7 +434,11 @@ export default function LocationMapStep({ onValidate, onBack }: LocationMapStepP
       // Also skip for spatial-relation queries ("proche", "côté", "pres"…) — matchNeighborhood
       // could match a zone token inside the query (e.g. "periph" in "Paris 16 proche périph")
       // and replace the correct [arr-16 inside, zone-periph near] constraints with only zone-periph.
-      const isCompoundLocationQuery = /\b(et|ou|sauf|sans|hors|mais|entre|proche|pres|cote|cot[eé]|excent)\b|[,;+\/]|\s+-\s+/i.test(locationQuery.trim())
+      // Also treat 4+ word queries without any known separator as compound:
+      // "Bel air Picpus Daumesnil Dugommier" has no separator but is clearly multi-entity.
+      const hasKnownSeparator = /\b(et|ou|sauf|sans|hors|mais|entre|proche|pres|cote|cot[eé]|excent)\b|[,;+\/]|\s+-\s+/i.test(locationQuery.trim())
+      const isLongQueryWithoutSeparator = !hasKnownSeparator && locationQuery.trim().split(/\s+/).length >= 4
+      const isCompoundLocationQuery = hasKnownSeparator || isLongQueryWithoutSeparator
       const neighborhoodMatch = isCompoundLocationQuery ? null : matchNeighborhood(locationQuery)
       // Normalize any residual "neighborhood" type (LLM sometimes confuses explicitLocations
       // type "neighborhood" with geoConstraints type "semantic_neighborhood").

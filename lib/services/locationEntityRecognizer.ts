@@ -241,7 +241,14 @@ export function recognizeLocationEntity(
   if (nbSub) return buildNeighborhood(nbSub, 0.75)
 
   // 6. Fuzzy match in quartiers (contains / Levenshtein) — handles typos like "picpu", "belair"
+  // Guard: for multi-word queries (≥4 words) with a contains/fuzzy match, the matched entity
+  // is likely just ONE of several entities in the query. Return null → analyze API handles it.
   if (qtExact && qtExact.confidence >= 0.65) {
+    const qWordCount = q.trim().split(/\s+/).length
+    const entityWordCount = qtExact.quartier.name.split(/\s+/).length
+    if (qtExact.method !== 'exact' && qWordCount >= 4 && entityWordCount < qWordCount - 1) {
+      return null  // partial match on multi-entity query — send to LLM
+    }
     return buildQuartierEntity(qtExact.quartier, qtExact.confidence * 0.9)
   }
 
