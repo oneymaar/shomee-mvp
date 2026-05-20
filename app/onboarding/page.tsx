@@ -153,16 +153,21 @@ export default function OnboardingPage() {
               <LocationStep onOpenMap={handleOpenMap} onSkip={handleSkip} />
             )}
 
-            {step === 1 && locationMapOpen && mapLoading && (
-              <MapLoadingScreen />
-            )}
-
-            {step === 1 && locationMapOpen && !mapLoading && (
-              <LocationMapStep
-                onValidate={handleMapValidate}
-                onBack={() => { setLocationMapOpen(false); setMapLoading(false) }}
-                onReady={handleMapReady}
-              />
+            {step === 1 && locationMapOpen && (
+              // LocationMapStep is always mounted so initMap() runs immediately.
+              // MapLoadingScreen overlays it until onReady fires (initMap done).
+              <div className="absolute inset-0">
+                <LocationMapStep
+                  onValidate={handleMapValidate}
+                  onBack={() => { setLocationMapOpen(false); setMapLoading(false) }}
+                  onReady={handleMapReady}
+                />
+                {mapLoading && (
+                  <div className="absolute inset-0 z-50" style={{ background: '#f5f0e8' }}>
+                    <MapLoadingScreen />
+                  </div>
+                )}
+              </div>
             )}
 
             {step === 2 && (

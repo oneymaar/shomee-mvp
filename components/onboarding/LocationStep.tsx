@@ -201,23 +201,31 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
   const showClarification = ui.kind === 'clarification'
   const showDisambiguation = ui.kind === 'disambiguation'
 
-  // Compact single-line examples so the placeholder stays short
-  const placeholder = `Décrivez une ou plusieurs zones, vous pourrez les affiner sur la carte.\n\nEx : ${examples.join(', ')}`
+  const placeholder = `Décrivez librement une ou plusieurs zones. Vous pourrez les affiner sur la carte.\n\nEx : ${examples.join(', ')}`
 
   return (
-    <div className="flex flex-col h-full px-6 pt-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', gap: 16 }}>
+    <div className="flex flex-col h-full px-6">
+      {/* Title — centers vertically in remaining space above textarea */}
       <motion.div
-        className="flex flex-col gap-4"
+        className="flex-1 flex items-center justify-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Title */}
-        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
+        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight text-center">
           Où aimeriez-vous habiter ?
         </h2>
+      </motion.div>
 
-        {/* Textarea — fixed height ~4 rows */}
+      {/* Bottom section — textarea + button stuck at bottom above keyboard */}
+      <motion.div
+        className="flex-none flex flex-col gap-3"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* Textarea — fixed height ~4 rows, same font size for placeholder and text */}
         <div
           className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity"
           style={{
@@ -232,9 +240,8 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
             rows={4}
             disabled={isAnalyzing}
             placeholder={placeholder}
-            // autoFocus opens keyboard on mount when component appears from a user tap
             autoFocus
-            className="w-full text-[16px] text-neutral-900 bg-transparent outline-none resize-none leading-relaxed placeholder:text-[13px] placeholder:leading-snug placeholder:text-neutral-400"
+            className="w-full text-[16px] text-neutral-900 placeholder:text-neutral-400 bg-transparent outline-none resize-none leading-relaxed"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
