@@ -183,12 +183,37 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
     setUi({ kind: 'clarification', analysis })
   }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery, onStartMapLoading, onCancelMapLoading])
 
-  // Re-analyse the option's specific query so geoConstraints are preserved.
-  // Old behavior only passed preselectZones, silently dropping poi/transport constraints.
-  const handleSelectOption = useCallback(async (opt: { preselectZones: string[]; centerQuery: string; label: string; query: string }) => {
+  // Short-circuit re-analysis when the option already carries its own
+  // geoConstraints (new pipeline contract): the LLM has packaged the
+  // promise into structured data, we trust it and feed the map directly.
+  // Falls back to the previous re-analyse path for legacy options that
+  // arrive without geoConstraints (or stale cached responses).
+  const handleSelectOption = useCallback(async (opt: {
+    preselectZones: string[]
+    centerQuery: string
+    label: string
+    query: string
+    geoConstraints?: import('@/lib/services/geoConstraintService').GeoConstraint[]
+    resolutionStrategy?: string
+  }) => {
     const effectiveQuery = opt.query?.trim() || query.trim()
     onStartMapLoading()
     setUi({ kind: 'analyzing' })
+
+    if (opt.geoConstraints && opt.geoConstraints.length > 0) {
+      console.log('[clarification] short-circuit — option carries', opt.geoConstraints.length, 'constraints')
+      openMapWithQuery(
+        opt.centerQuery ?? effectiveQuery,
+        opt.preselectZones,
+        opt.geoConstraints,
+        opt.resolutionStrategy,
+        effectiveQuery,
+        'llm_fallback', // DEBUG: clarification options always originate from LLM
+      )
+      return
+    }
+
+    // Legacy / fallback path — re-analyse the option's query.
     const reanalysis = await analyzeLocationIntent(effectiveQuery)
     const src = reanalysis?.parserSource // DEBUG
     if (!reanalysis || reanalysis.status === 'clear' || reanalysis.mapAction?.type === 'open_map') {
@@ -202,7 +227,6 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
       )
       return
     }
-    // Re-analysis still ambiguous — open map with at least the zone info
     openMapWithQuery(opt.centerQuery ?? effectiveQuery, opt.preselectZones, undefined, undefined, effectiveQuery)
   }, [query, openMapWithQuery, onStartMapLoading])
 

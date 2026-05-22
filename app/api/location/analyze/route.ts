@@ -355,7 +355,92 @@ ZONE + transport_line :
 ZONE DIRECTIONNELLE :
   → administrative_area(zoneId, direction: "north"|"south"|...) seulement
 
-CLARIFICATION pour status ≠ clear : fournir clarificationQuestion + clarificationOptions (2–5 options max).`
+CLARIFICATION pour status ≠ clear : fournir clarificationQuestion + clarificationOptions (2–5 options max).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTRAT clarificationOptions[].geoConstraints — OBLIGATOIRE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Chaque option DOIT contenir un champ \`geoConstraints\` qui encode EXACTEMENT ce que promet son \`label\`.
+Règle d'or : si tu nommes une zone (arrondissement, commune, quartier, station, POI) dans \`label\`,
+elle DOIT apparaître dans \`geoConstraints\` avec le bon type et le bon ID.
+
+Même schéma de constraint que pour status:"clear" — mêmes types, mêmes IDs, même operator logic.
+- Arrondissement → {type:"administrative_area", zoneId:"arr-N", operator:"inside"}
+- Commune       → {type:"administrative_area", zoneId:"com-XXXXX", operator:"inside"}
+- Quartier vécu → {type:"semantic_neighborhood", neighborhoodId:"...", operator:"inside"}
+- Station       → {type:"transport_station", stationName:"...", operator:"near"}
+- POI / voie    → {type:"poi", label:"...", poiType:"...", operator:"inside"}
+
+NE PAS te contenter d'écrire les noms dans \`label\` ou \`description\` — ils sont décoratifs.
+Le client ne LIT QUE \`geoConstraints\` pour résoudre les zones. Si tu listes 4 arrondissements
++ 5 communes dans le label, geoConstraints DOIT contenir 9 entrées exactement.
+
+Pour chaque option, renseigne aussi \`resolutionStrategy\` qui correspond aux constraints choisies.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXEMPLES — clarificationOptions avec geoConstraints fidèle au label
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Requête "Paris Sud" → status:"too_vague" — options :
+[
+  {
+    "label": "Arrondissements sud de Paris (13e, 14e, 15e)",
+    "description": "Intra-muros uniquement",
+    "query": "Paris 13, Paris 14, Paris 15",
+    "preselectZones": ["Paris 13", "Paris 14", "Paris 15"],
+    "centerQuery": "Paris 14",
+    "resolutionStrategy": "direct_area_selection",
+    "geoConstraints": [
+      {"type":"administrative_area","label":"Paris 13","operator":"inside","confidence":0.9,"zoneId":"arr-13"},
+      {"type":"administrative_area","label":"Paris 14","operator":"inside","confidence":0.9,"zoneId":"arr-14"},
+      {"type":"administrative_area","label":"Paris 15","operator":"inside","confidence":0.9,"zoneId":"arr-15"}
+    ]
+  },
+  {
+    "label": "Sud parisien + communes limitrophes sud (Montrouge, Malakoff, Vanves, Gentilly, Le Kremlin-Bicêtre, Ivry-sur-Seine)",
+    "description": "Élargi à la première couronne sud",
+    "query": "Paris 13, Paris 14, Paris 15, Montrouge, Malakoff, Vanves, Gentilly, Le Kremlin-Bicêtre, Ivry-sur-Seine",
+    "preselectZones": ["Paris 13","Paris 14","Paris 15","Montrouge","Malakoff","Vanves","Gentilly","Le Kremlin-Bicêtre","Ivry-sur-Seine"],
+    "centerQuery": "Montrouge",
+    "resolutionStrategy": "direct_area_selection",
+    "geoConstraints": [
+      {"type":"administrative_area","label":"Paris 13","operator":"inside","confidence":0.9,"zoneId":"arr-13"},
+      {"type":"administrative_area","label":"Paris 14","operator":"inside","confidence":0.9,"zoneId":"arr-14"},
+      {"type":"administrative_area","label":"Paris 15","operator":"inside","confidence":0.9,"zoneId":"arr-15"},
+      {"type":"administrative_area","label":"Montrouge","operator":"inside","confidence":0.9,"zoneId":"com-92049"},
+      {"type":"administrative_area","label":"Malakoff","operator":"inside","confidence":0.9,"zoneId":"com-92046"},
+      {"type":"administrative_area","label":"Vanves","operator":"inside","confidence":0.9,"zoneId":"com-92075"},
+      {"type":"administrative_area","label":"Gentilly","operator":"inside","confidence":0.9,"zoneId":"com-94037"},
+      {"type":"administrative_area","label":"Le Kremlin-Bicêtre","operator":"inside","confidence":0.9,"zoneId":"com-94043"},
+      {"type":"administrative_area","label":"Ivry-sur-Seine","operator":"inside","confidence":0.9,"zoneId":"com-94041"}
+    ]
+  }
+]
+
+Requête "Est parisien" → options similaires :
+- Option 1: arr-11, arr-12, arr-19, arr-20
+- Option 2 (élargie): + Montreuil (com-93048), Bagnolet (com-93006), Les Lilas (com-93045),
+                       Pantin (com-93055), Vincennes (com-94080), Saint-Mandé (com-94067),
+                       Charenton-le-Pont (com-94018)
+→ Chaque commune nommée dans le label DOIT être dans geoConstraints avec son com-XXXXX exact.
+
+Requête "Rive Gauche calme" → status:"too_vague", options :
+- Option 1 "Rive Gauche centrale" : arr-5, arr-6, arr-7 → 3 administrative_area
+- Option 2 "Rive Gauche sud résidentielle" : arr-13, arr-14, arr-15 → 3 administrative_area
+- Option 3 "Rive Gauche élargie + sud proche" : arr-5,6,7,13,14,15 + Montrouge + Malakoff
+  → 8 administrative_area (les 6 arrondissements ET les 2 communes ENSEMBLE dans geoConstraints).
+
+Requête "proche RER B nord" → option avec :
+  geoConstraints: [
+    {"type":"transport_line","label":"RER B","operator":"near","confidence":0.85,"line":"B"},
+    {"type":"administrative_area","label":"Paris 10","operator":"inside","confidence":0.8,"zoneId":"arr-10","direction":"north"},
+    {"type":"administrative_area","label":"Paris 18","operator":"inside","confidence":0.8,"zoneId":"arr-18","direction":"north"},
+    {"type":"administrative_area","label":"Paris 19","operator":"inside","confidence":0.8,"zoneId":"arr-19","direction":"north"}
+  ]
+  resolutionStrategy: "transport_line_intersection"
+
+RAPPEL FINAL : la qualité de l'option se mesure à \`geoConstraints\`, PAS au \`label\`.
+Si tu nommes Vanves dans le label sans la mettre dans geoConstraints, l'option est CASSÉE.`
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -409,7 +494,9 @@ Retourne exactement ce JSON (sans markdown, sans commentaires) :
       "description": string,
       "query": string,
       "preselectZones": string[],
-      "centerQuery": string
+      "centerQuery": string,
+      "geoConstraints": [/* same schema as top-level geoConstraints — see below */],
+      "resolutionStrategy": "direct_area_selection"|"semantic_neighborhood_selection"|"point_radius_intersection"|"transport_line_intersection"|"directional_area_slice"|"exclude_from_area"|"between_entities"
     }
   ]|null,
   "mapAction": {
@@ -483,10 +570,26 @@ RÈGLES clarification (status ≠ "clear") :
     const analysis = JSON.parse(match[0])
     // Normalize: LLM sometimes generates type:"neighborhood" (explicitLocations convention)
     // instead of type:"semantic_neighborhood" (geoConstraints convention). Fix at source.
+    const normalizeConstraints = (cs: unknown): unknown =>
+      Array.isArray(cs)
+        ? cs.map((c: Record<string, unknown>) =>
+            c.type === 'neighborhood' ? { ...c, type: 'semantic_neighborhood' } : c
+          )
+        : cs
     if (Array.isArray(analysis.geoConstraints)) {
-      analysis.geoConstraints = analysis.geoConstraints.map((c: Record<string, unknown>) =>
-        c.type === 'neighborhood' ? { ...c, type: 'semantic_neighborhood' } : c
-      )
+      analysis.geoConstraints = normalizeConstraints(analysis.geoConstraints)
+    }
+    // Apply the same normalization to each clarification option's geoConstraints
+    // and log a warning when the LLM forgot to populate them (contract breach).
+    if (Array.isArray(analysis.clarificationOptions)) {
+      analysis.clarificationOptions = analysis.clarificationOptions.map((opt: Record<string, unknown>) => {
+        if (Array.isArray(opt.geoConstraints)) {
+          opt.geoConstraints = normalizeConstraints(opt.geoConstraints)
+        } else {
+          console.warn('[analyze] clarification option missing geoConstraints — label:', opt.label)
+        }
+        return opt
+      })
     }
     return NextResponse.json({ ...analysis, parserSource: 'llm_fallback' })
   } catch (e) {

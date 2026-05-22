@@ -13,9 +13,21 @@ export interface InferredConstraint {
 export interface ClarificationOption {
   label: string
   description: string
-  query: string            // human-readable fallback
+  query: string            // human-readable fallback, only used if geoConstraints absent
   preselectZones: string[] // explicit zone names: ["Paris 1", "Paris 4", "Vincennes"]
   centerQuery: string      // geocoding target for map centering: "Châtelet, Paris"
+  /**
+   * Structured constraints that fulfil the label's promise exactly.
+   * When present, the client short-circuits the re-analysis step and feeds
+   * these straight to the map. Every zone, commune, neighborhood or POI
+   * cited in `label` MUST appear here. Pipeline contract — see analyze
+   * route system prompt.
+   */
+  geoConstraints?: import('./geoConstraintService').GeoConstraint[]
+  /** Resolution strategy paired with the constraints above */
+  resolutionStrategy?: 'direct_area_selection' | 'semantic_neighborhood_selection'
+    | 'point_radius_intersection' | 'transport_line_intersection'
+    | 'directional_area_slice' | 'exclude_from_area' | 'between_entities'
 }
 
 export interface LocationIntentAnalysis {
