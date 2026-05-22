@@ -8,10 +8,13 @@ import { useSearchStore } from '@/lib/searchStore'
 import IntroStep from '@/components/onboarding/IntroStep'
 import LocationStep from '@/components/onboarding/LocationStep'
 import LocationMapStep from '@/components/onboarding/LocationMapStep'
+import ClarificationStep from '@/components/onboarding/ClarificationStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
 import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep'
 import PrioritiesStep from '@/components/onboarding/PrioritiesStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
+import { parseLocationIntent } from '@/lib/services/locationIntentParser'
+import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
 
 function MapLoadingScreen() {
   return (
@@ -42,10 +45,18 @@ const variants = {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { onboardingCompleted } = useSearchStore()
+  const { onboardingCompleted, setLocation } = useSearchStore()
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
+  // Sub-state of step 1 — when set, the dedicated ClarificationStep screen
+  // renders instead of LocationStep (textarea). The originalQuery is kept so
+  // the clarification screen can echo "votre recherche : …" and the
+  // "Ouvrir la carte quand même" CTA can fall back to that vague query.
+  const [clarificationData, setClarificationData] = useState<{
+    analysis: LocationIntentAnalysis
+    originalQuery: string
+  } | null>(null)
   // Atomic-reveal architecture:
   //   - mapWillOpen   : true the moment the user clicks "Afficher sur la carte"
   //                     (before any analysis runs). Drives the loader overlay
@@ -140,6 +151,7 @@ export default function OnboardingPage() {
     setLocationMapOpen(false)
     setMapUiReady(false)
     setMapWillOpen(false)
+    setClarificationData(null)
     mapLoadingStartedAtRef.current = 0
     setStep(next)
   }, [])
@@ -153,9 +165,15 @@ export default function OnboardingPage() {
       mapLoadingStartedAtRef.current = 0
       return
     }
+    if (clarificationData) {
+      // Back from clarification → typing form (still step 1).
+      setDirection(-1)
+      setClarificationData(null)
+      return
+    }
     if (step === 0) return
     goTo(step - 1, -1)
-  }, [step, locationMapOpen, goTo])
+  }, [step, locationMapOpen, clarificationData, goTo])
   const handleSkip = useCallback(() => goTo(step + 1, 1), [step, goTo])
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
@@ -207,12 +225,72 @@ export default function OnboardingPage() {
   }, [])
   const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
+  // ── Clarification handlers ──────────────────────────────────────────────
+  // LocationStep signals it needs clarification; we slide to ClarificationStep.
+  const handleNeedsClarification = useCallback(
+    (analysis: LocationIntentAnalysis, originalQuery: string) => {
+      setDirection(1)
+      setClarificationData({ analysis, originalQuery })
+    },
+    [],
+  )
+  // Build a SearchIntent from the chosen option's structured constraints and
+  // open the map directly. No second LLM call — the option already carries
+  // everything we need (see ClarificationOption.geoConstraints contract).
+  const handleClarificationSelectOption = useCallback(
+    (opt: ClarificationOption) => {
+      const effectiveQuery = opt.query?.trim() || clarificationData?.originalQuery || ''
+      const centerQuery = opt.centerQuery || effectiveQuery
+      const parsed = parseLocationIntent(centerQuery)
+      const intent = {
+        ...(opt.preselectZones?.length ? { ...parsed, location_terms: opt.preselectZones } : parsed),
+        ...(opt.geoConstraints?.length ? { geoConstraints: opt.geoConstraints } : {}),
+        ...(opt.resolutionStrategy ? { resolutionStrategy: opt.resolutionStrategy } : {}),
+        parserSource: 'llm_fallback' as const,
+      }
+      setLocation({ query: effectiveQuery, label: centerQuery, lat: 0, lng: 0, intent })
+      setClarificationData(null)
+      // Re-arm the loader timestamp here — handleCancelMapLoading reset it
+      // when the clarification UI took over.
+      mapLoadingStartedAtRef.current = Date.now()
+      setMapWillOpen(true)
+      setMapUiReady(false)
+      setLocationMapOpen(true)
+    },
+    [clarificationData?.originalQuery, setLocation],
+  )
+  // "Ouvrir la carte quand même" → open the map with the user's original
+  // vague query and no special constraints.
+  const handleClarificationOpenAnyway = useCallback(() => {
+    const q = clarificationData?.originalQuery?.trim() ?? ''
+    if (!q) return
+    const intent = parseLocationIntent(q)
+    setLocation({ query: q, label: q, lat: 0, lng: 0, intent })
+    setClarificationData(null)
+    mapLoadingStartedAtRef.current = Date.now()
+    setMapWillOpen(true)
+    setMapUiReady(false)
+    setLocationMapOpen(true)
+  }, [clarificationData?.originalQuery, setLocation])
+  const handleClarificationBack = useCallback(() => {
+    setDirection(-1)
+    setClarificationData(null)
+  }, [])
+
   const showBack = step > 0
   const showProgress = step >= 1 && step <= 4
 
   // Key does NOT depend on mapLoading — changing it would re-mount LocationMapStep
   // and restart initMap, causing the partial-map flash bug.
-  const screenKey = step === 1 ? (locationMapOpen ? '1-map' : '1-text') : String(step)
+  // Step 1 has three sub-states: typing / clarification / map.
+  const screenKey =
+    step === 1
+      ? locationMapOpen
+        ? '1-map'
+        : clarificationData
+        ? '1-clarify'
+        : '1-text'
+      : String(step)
 
   return (
     <div
@@ -296,12 +374,23 @@ export default function OnboardingPage() {
               <IntroStep onStart={handleNext} onQuick={handleQuick} />
             )}
 
-            {step === 1 && !locationMapOpen && (
+            {step === 1 && !locationMapOpen && !clarificationData && (
               <LocationStep
                 onOpenMap={handleOpenMap}
                 onSkip={handleSkip}
                 onStartMapLoading={handleStartMapLoading}
                 onCancelMapLoading={handleCancelMapLoading}
+                onNeedsClarification={handleNeedsClarification}
+              />
+            )}
+
+            {step === 1 && !locationMapOpen && clarificationData && (
+              <ClarificationStep
+                originalQuery={clarificationData.originalQuery}
+                analysis={clarificationData.analysis}
+                onSelectOption={handleClarificationSelectOption}
+                onBackToTyping={handleClarificationBack}
+                onOpenAnyway={handleClarificationOpenAnyway}
               />
             )}
 

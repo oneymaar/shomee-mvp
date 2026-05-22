@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, HelpCircle, ChevronLeft } from 'lucide-react'
+import { ArrowRight, ChevronLeft } from 'lucide-react'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { analyzeLocationIntent, type LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
 import { recognizeLocationEntity, entityToIntent, type RecognizedLocationEntity } from '@/lib/services/locationEntityRecognizer'
@@ -18,13 +18,15 @@ interface LocationStepProps {
   /** Dismiss the overlay when the analysis ends up needing user clarification
    *  or disambiguation (the typing form must become visible again). */
   onCancelMapLoading: () => void
+  /** Surface a clarification analysis to the parent so it can render the
+   *  dedicated `ClarificationStep` screen instead of inline UI. */
+  onNeedsClarification: (analysis: LocationIntentAnalysis, originalQuery: string) => void
 }
 
 type UIState =
   | { kind: 'typing' }
   | { kind: 'analyzing' }
   | { kind: 'disambiguation'; entities: [RecognizedLocationEntity, RecognizedLocationEntity] }
-  | { kind: 'clarification'; analysis: LocationIntentAnalysis }
 
 const ENTITY_COLORS: Record<RecognizedLocationEntity['type'], { bg: string; text: string; border: string }> = {
   metro_station:      { bg: 'rgba(29,78,216,0.08)',   text: '#1d4ed8', border: 'rgba(29,78,216,0.2)' },
@@ -71,7 +73,7 @@ function pickExamples(): [string, string, string] {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onCancelMapLoading }: LocationStepProps) {
+export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onCancelMapLoading, onNeedsClarification }: LocationStepProps) {
   const { locationQuery, setLocation } = useSearchStore()
   const [query, setQuery] = useState(locationQuery)
   const [recognizedEntity, setRecognizedEntity] = useState<RecognizedLocationEntity | [RecognizedLocationEntity, RecognizedLocationEntity] | null>(null)
@@ -98,7 +100,7 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
   }, [query])
 
   useEffect(() => {
-    if (ui.kind === 'clarification' || ui.kind === 'disambiguation') setUi({ kind: 'typing' })
+    if (ui.kind === 'disambiguation') setUi({ kind: 'typing' })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
@@ -170,65 +172,17 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
       return
     }
 
-    // Clarification needed — surface the typing form again.
+    // Clarification needed — dismiss the loader, hand off to the parent which
+    // renders the dedicated ClarificationStep screen.
     onCancelMapLoading()
-    if (analysis.status === 'contradictory') {
-      setUi({ kind: 'clarification', analysis: { ...analysis, clarificationQuestion: analysis.clarificationQuestion ?? "Ces contraintes semblent incompatibles. Que souhaitez-vous privilégier ?" } })
-      return
-    }
-    if (analysis.status === 'too_vague') {
-      setUi({ kind: 'clarification', analysis: { ...analysis, clarificationQuestion: analysis.clarificationQuestion ?? "Pouvez-vous préciser un secteur géographique de départ ?" } })
-      return
-    }
-    setUi({ kind: 'clarification', analysis })
-  }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery, onStartMapLoading, onCancelMapLoading])
-
-  // Short-circuit re-analysis when the option already carries its own
-  // geoConstraints (new pipeline contract): the LLM has packaged the
-  // promise into structured data, we trust it and feed the map directly.
-  // Falls back to the previous re-analyse path for legacy options that
-  // arrive without geoConstraints (or stale cached responses).
-  const handleSelectOption = useCallback(async (opt: {
-    preselectZones: string[]
-    centerQuery: string
-    label: string
-    query: string
-    geoConstraints?: import('@/lib/services/geoConstraintService').GeoConstraint[]
-    resolutionStrategy?: string
-  }) => {
-    const effectiveQuery = opt.query?.trim() || query.trim()
-    onStartMapLoading()
-    setUi({ kind: 'analyzing' })
-
-    if (opt.geoConstraints && opt.geoConstraints.length > 0) {
-      console.log('[clarification] short-circuit — option carries', opt.geoConstraints.length, 'constraints')
-      openMapWithQuery(
-        opt.centerQuery ?? effectiveQuery,
-        opt.preselectZones,
-        opt.geoConstraints,
-        opt.resolutionStrategy,
-        effectiveQuery,
-        'llm_fallback', // DEBUG: clarification options always originate from LLM
-      )
-      return
-    }
-
-    // Legacy / fallback path — re-analyse the option's query.
-    const reanalysis = await analyzeLocationIntent(effectiveQuery)
-    const src = reanalysis?.parserSource // DEBUG
-    if (!reanalysis || reanalysis.status === 'clear' || reanalysis.mapAction?.type === 'open_map') {
-      openMapWithQuery(
-        reanalysis?.mapAction?.centerQuery ?? opt.centerQuery ?? effectiveQuery,
-        reanalysis?.mapAction?.preselectQueries ?? opt.preselectZones,
-        reanalysis?.geoConstraints,
-        reanalysis?.resolutionStrategy,
-        effectiveQuery,
-        src,
-      )
-      return
-    }
-    openMapWithQuery(opt.centerQuery ?? effectiveQuery, opt.preselectZones, undefined, undefined, effectiveQuery)
-  }, [query, openMapWithQuery, onStartMapLoading])
+    setUi({ kind: 'typing' })
+    const defaulted: LocationIntentAnalysis = analysis.status === 'contradictory'
+      ? { ...analysis, clarificationQuestion: analysis.clarificationQuestion ?? "Ces contraintes semblent incompatibles. Que souhaitez-vous privilégier ?" }
+      : analysis.status === 'too_vague'
+      ? { ...analysis, clarificationQuestion: analysis.clarificationQuestion ?? "Pouvez-vous préciser un secteur géographique de départ ?" }
+      : analysis
+    onNeedsClarification(defaulted, q)
+  }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery, onStartMapLoading, onCancelMapLoading, onNeedsClarification])
 
   const handleBackToTyping = useCallback(() => {
     setUi({ kind: 'typing' })
@@ -237,7 +191,6 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
 
   const canContinue = query.trim().length >= 2
   const isAnalyzing = ui.kind === 'analyzing'
-  const showClarification = ui.kind === 'clarification'
   const showDisambiguation = ui.kind === 'disambiguation'
 
   // Examples on ONE line separated by commas — 3-4 lines total, fits rows=4 without scroll
@@ -330,49 +283,14 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
           )}
         </AnimatePresence>
 
-        {/* Clarification section */}
-        <AnimatePresence>
-          {showClarification && ui.kind === 'clarification' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-3 rounded-2xl overflow-hidden"
-              style={{ backgroundColor: 'rgba(145,78,60,0.06)', border: '1px solid rgba(145,78,60,0.15)' }}
-            >
-              <div className="px-4 pt-4 pb-3">
-                <div className="flex items-start gap-2 mb-3">
-                  <HelpCircle size={16} className="flex-shrink-0 mt-0.5" style={{ color: '#914E3C' }} />
-                  <p className="text-[13px] font-semibold leading-snug" style={{ color: '#914E3C' }}>
-                    {ui.analysis.clarificationQuestion ?? "Pouvez-vous préciser ?"}
-                  </p>
-                </div>
-                {ui.analysis.clarificationOptions && ui.analysis.clarificationOptions.length > 0 && (
-                  <div className="flex flex-col gap-2 overflow-y-auto max-h-52">
-                    {ui.analysis.clarificationOptions.map((opt) => (
-                      <button key={opt.query} onClick={() => handleSelectOption(opt)} className="text-left w-full bg-white rounded-xl px-3.5 py-2.5 border border-black/8 active:bg-black/4 transition-colors">
-                        <p className="text-[13px] font-semibold text-neutral-900 leading-tight">{opt.label}</p>
-                        {opt.description && <p className="text-[11px] text-neutral-600 mt-0.5">{opt.description}</p>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button onClick={handleBackToTyping} className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-black/6 text-[12px] font-medium text-neutral-600 active:text-neutral-800 transition-colors">
-                <ChevronLeft size={13} /> Modifier ma recherche
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Primary CTA — no spinner / no "Analyse en cours" wording: the
             full-screen overlay opens synchronously on click and covers this
             button. `disabled` while analyzing is purely a double-submit guard;
-            the visual stays unchanged. */}
-        {!showDisambiguation && !(showClarification && ui.kind === 'clarification' && ui.analysis.clarificationOptions?.length) && (
+            the visual stays unchanged. The clarification UI lives on its own
+            screen (ClarificationStep) — no inline rendering here. */}
+        {!showDisambiguation && (
           <button
-            onClick={showClarification ? () => openMapWithQuery(query) : handleOpenMap}
+            onClick={handleOpenMap}
             disabled={!canContinue || isAnalyzing}
             className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{
@@ -380,7 +298,7 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
               cursor: canContinue ? 'pointer' : 'default',
             }}
           >
-            {showClarification ? 'Ouvrir la carte quand même' : 'Afficher sur la carte'}
+            Afficher sur la carte
             <ArrowRight size={18} />
           </button>
         )}
