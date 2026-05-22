@@ -39,7 +39,7 @@ export default function PrioritiesStep({ onNext, onSkip }: PrioritiesStepProps) 
           <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
             Qu'est-ce qui compte pour vous ?
           </h2>
-          <p className="text-[14px] text-neutral-400 mt-1.5">
+          <p className="text-[14px] text-neutral-600 mt-1.5">
             Sélectionnez vos priorités de vie. SHOMEE les prendra en compte.
           </p>
         </motion.div>
@@ -81,7 +81,7 @@ export default function PrioritiesStep({ onNext, onSkip }: PrioritiesStepProps) 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-[12px] text-neutral-400 mt-5"
+            className="text-[12px] text-neutral-600 mt-5"
           >
             {priorities.length} priorité{priorities.length > 1 ? 's' : ''} sélectionnée{priorities.length > 1 ? 's' : ''}
           </motion.p>
@@ -104,7 +104,7 @@ export default function PrioritiesStep({ onNext, onSkip }: PrioritiesStepProps) 
         {priorities.length > 0 && (
           <button
             onClick={onSkip}
-            className="w-full py-3 text-[14px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
+            className="w-full py-3 text-[14px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
           >
             Passer cette étape
           </button>

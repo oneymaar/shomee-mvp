@@ -46,7 +46,7 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
           <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
             Quel est votre budget ?
           </h2>
-          <p className="text-[14px] text-neutral-400 mt-1.5">
+          <p className="text-[14px] text-neutral-600 mt-1.5">
             Une fourchette suffit. Vous pourrez affiner plus tard.
           </p>
         </motion.div>
@@ -74,7 +74,7 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
                   {opt.label}
                 </p>
                 {opt.sublabel && (
-                  <p className="text-[12px] mt-0.5" style={{ color: isSelected ? 'rgba(255,255,255,0.7)' : '#a3a3a3' }}>
+                  <p className="text-[12px] mt-0.5" style={{ color: isSelected ? 'rgba(255,255,255,0.7)' : '#525252' }}>
                     {opt.sublabel}
                   </p>
                 )}
@@ -109,7 +109,7 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
         </button>
         <button
           onClick={onSkip}
-          className="w-full py-3 text-[14px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
+          className="w-full py-3 text-[14px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
         >
           Passer cette étape
         </button>

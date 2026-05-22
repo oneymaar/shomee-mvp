@@ -50,7 +50,7 @@ export default function PropertyTypeStep({ onNext, onSkip }: PropertyTypeStepPro
           <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
             Quel type de bien ?
           </h2>
-          <p className="text-[14px] text-neutral-400 mt-1.5">
+          <p className="text-[14px] text-neutral-600 mt-1.5">
             Sélectionnez tout ce qui vous correspond.
           </p>
         </motion.div>
@@ -63,7 +63,7 @@ export default function PropertyTypeStep({ onNext, onSkip }: PropertyTypeStepPro
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
             Type de bien
           </p>
           <div className="flex flex-wrap gap-2.5 mb-7">
@@ -94,7 +94,7 @@ export default function PropertyTypeStep({ onNext, onSkip }: PropertyTypeStepPro
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 mb-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
             Nombre de pièces minimum
           </p>
           <div className="flex gap-2.5 flex-wrap">
@@ -135,7 +135,7 @@ export default function PropertyTypeStep({ onNext, onSkip }: PropertyTypeStepPro
         {canContinue && (
           <button
             onClick={onSkip}
-            className="w-full py-3 text-[14px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
+            className="w-full py-3 text-[14px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
           >
             Passer cette étape
           </button>

@@ -980,7 +980,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
         <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h2>
-        <p className="text-[13px] text-neutral-400 mt-1">
+        <p className="text-[13px] text-neutral-600 mt-1">
           Touchez pour sélectionner · Zoomez pour affiner
         </p>
       </div>
@@ -990,7 +990,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
         {loading && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-neutral-50 gap-3">
             <Loader2 size={28} className="text-neutral-300 animate-spin" />
-            <p className="text-[13px] text-neutral-400">Chargement des zones…</p>
+            <p className="text-[13px] text-neutral-600">Chargement des zones…</p>
           </div>
         )}
         {error && (
@@ -1130,7 +1130,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
           >
             <button
               onClick={handleReset}
-              className="text-[11px] font-medium text-neutral-400 active:text-neutral-600 transition-colors"
+              className="text-[11px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
             >
               ↺ Réinitialiser la sélection
             </button>
@@ -1159,7 +1159,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
         </button>
         <button
           onClick={onValidate}
-          className="w-full py-2 text-[13px] font-medium text-neutral-400 active:text-neutral-600"
+          className="w-full py-2 text-[13px] font-medium text-neutral-600 active:text-neutral-800"
         >
           Continuer sans sélectionner
         </button>

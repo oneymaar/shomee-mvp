@@ -22,7 +22,7 @@ function MapLoadingScreen() {
       >
         <Loader2 size={32} style={{ color: '#914E3C', opacity: 0.7 }} />
       </motion.div>
-      <p className="text-[15px] text-neutral-400 font-medium">SHOMEE réfléchit…</p>
+      <p className="text-[15px] text-neutral-600 font-medium">SHOMEE réfléchit…</p>
     </div>
   )
 }
@@ -248,9 +248,17 @@ export default function OnboardingPage() {
                 const isActive = i === step - 1
                 const isPast = i < step - 1
                 const isFuture = !isActive && !isPast
-                const barColor = isFuture ? 'rgba(0,0,0,0.1)' : '#914E3C'
-                const labelColor = isFuture ? 'rgba(0,0,0,0.35)' : '#914E3C'
-                const labelWeight = isActive ? 700 : 400
+                // Active: full terracotta bold | Past: pale terracotta bold
+                // (same hue as the disabled CTA `#D4A89A`) | Future: gray normal
+                const barColor =
+                  isActive ? '#914E3C' :
+                  isPast   ? '#D4A89A' :
+                             'rgba(0,0,0,0.1)'
+                const labelColor =
+                  isActive ? '#914E3C' :
+                  isPast   ? '#D4A89A' :
+                             '#525252'  // neutral-600 — readable on cream
+                const labelWeight = (isActive || isPast) ? 700 : 500
                 return (
                   <div key={label} className="flex-1 flex flex-col items-stretch gap-1">
                     <div

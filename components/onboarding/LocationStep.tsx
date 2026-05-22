@@ -299,7 +299,7 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
                   ))}
                 </div>
               </div>
-              <button onClick={handleBackToTyping} className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-black/6 text-[12px] font-medium text-neutral-400 active:text-neutral-600 transition-colors mt-2">
+              <button onClick={handleBackToTyping} className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-black/6 text-[12px] font-medium text-neutral-600 active:text-neutral-800 transition-colors mt-2">
                 <ChevronLeft size={13} /> Modifier ma recherche
               </button>
             </motion.div>
@@ -329,13 +329,13 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
                     {ui.analysis.clarificationOptions.map((opt) => (
                       <button key={opt.query} onClick={() => handleSelectOption(opt)} className="text-left w-full bg-white rounded-xl px-3.5 py-2.5 border border-black/8 active:bg-black/4 transition-colors">
                         <p className="text-[13px] font-semibold text-neutral-900 leading-tight">{opt.label}</p>
-                        {opt.description && <p className="text-[11px] text-neutral-400 mt-0.5">{opt.description}</p>}
+                        {opt.description && <p className="text-[11px] text-neutral-600 mt-0.5">{opt.description}</p>}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-              <button onClick={handleBackToTyping} className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-black/6 text-[12px] font-medium text-neutral-400 active:text-neutral-600 transition-colors">
+              <button onClick={handleBackToTyping} className="w-full flex items-center justify-center gap-1.5 py-2.5 border-t border-black/6 text-[12px] font-medium text-neutral-600 active:text-neutral-800 transition-colors">
                 <ChevronLeft size={13} /> Modifier ma recherche
               </button>
             </motion.div>
