@@ -550,7 +550,9 @@ RÈGLES clarification (status ≠ "clear") :
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        // Bumped from 1500: clarificationOptions now carry full geoConstraints
+        // arrays (3 options × ~9 constraints can easily reach 2-3k tokens).
+        max_tokens: 4000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
@@ -565,9 +567,19 @@ RÈGLES clarification (status ≠ "clear") :
     const data = await res.json()
     const text: string = data.content?.[0]?.text ?? ''
     const match = text.match(/\{[\s\S]*\}/)
-    if (!match) return NextResponse.json({ error: 'no JSON in response' }, { status: 500 })
+    if (!match) {
+      console.error('[analyze] no JSON in LLM response. stop_reason:', data.stop_reason, 'usage:', data.usage, 'text:', text.slice(0, 500))
+      return NextResponse.json({ error: 'no JSON in response' }, { status: 500 })
+    }
 
-    const analysis = JSON.parse(match[0])
+    let analysis: Record<string, unknown>
+    try {
+      analysis = JSON.parse(match[0])
+    } catch (parseErr) {
+      console.error('[analyze] JSON.parse failed. stop_reason:', data.stop_reason, 'usage:', data.usage, 'raw text length:', text.length, 'parse error:', parseErr)
+      console.error('[analyze] last 500 chars of raw text:', text.slice(-500))
+      return NextResponse.json({ error: 'JSON parse failed' }, { status: 500 })
+    }
     // Normalize: LLM sometimes generates type:"neighborhood" (explicitLocations convention)
     // instead of type:"semantic_neighborhood" (geoConstraints convention). Fix at source.
     const normalizeConstraints = (cs: unknown): unknown =>
