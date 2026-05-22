@@ -654,9 +654,11 @@ export interface ZoneMapProps {
   onClickCommune: (z: GeoZone) => void
   onClickCommuneIris: (z: GeoZone) => void
   onZoomChange: (z: number) => void
+  /** Fires once when the Leaflet map instance is ready (tiles can paint). */
+  whenMapReady?: () => void
 }
 
-export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange, whenMapReady }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -664,6 +666,7 @@ export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quar
       style={{ height: '100%', width: '100%' }}
       zoomControl={false}
       attributionControl={false}
+      whenReady={whenMapReady}
     >
       {/* Base sans labels — nos labels custom restent les seuls au zoom large */}
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png" />

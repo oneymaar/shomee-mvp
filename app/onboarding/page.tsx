@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
@@ -45,12 +45,11 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
-  const [mapLoading, setMapLoading] = useState(false)
-  // Two independent signals — overlay dismisses only when BOTH are true.
-  // minWaitDoneRef: 4s minimum has elapsed
-  // mapReadyRef: LocationMapStep signaled it's fully loaded
-  const minWaitDoneRef = useRef(false)
-  const mapReadyRef = useRef(false)
+  // Atomic-reveal architecture: the loader overlay stays up — and the mounted
+  // LocationMapStep stays at opacity:0 — until LocationMapStep explicitly
+  // signals via onReady that its full UI (Leaflet instance + selection + tags
+  // + CTAs) is painted. No timers, no minimum-wait heuristics.
+  const [mapUiReady, setMapUiReady] = useState(false)
   // Dynamic viewport height — shrinks when keyboard opens on iOS.
   // Initialize from visualViewport on mount to avoid the null-then-100dvh flash.
   const [viewportH, setViewportH] = useState<number | null>(() => {
@@ -130,13 +129,13 @@ export default function OnboardingPage() {
   const goTo = useCallback((next: number, dir: Direction = 1) => {
     setDirection(dir)
     setLocationMapOpen(false)
-    setMapLoading(false)
+    setMapUiReady(false)
     setStep(next)
   }, [])
 
   const handleNext = useCallback(() => goTo(step + 1, 1), [step, goTo])
   const handleBack = useCallback(() => {
-    if (locationMapOpen) { setLocationMapOpen(false); setMapLoading(false); return }
+    if (locationMapOpen) { setLocationMapOpen(false); setMapUiReady(false); return }
     if (step === 0) return
     goTo(step - 1, -1)
   }, [step, locationMapOpen, goTo])
@@ -144,30 +143,17 @@ export default function OnboardingPage() {
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
-  const tryDismissOverlay = useCallback(() => {
-    if (minWaitDoneRef.current && mapReadyRef.current) {
-      console.log('[overlay] dismissing — both signals true')
-      setMapLoading(false)
-    }
-  }, [])
   const handleOpenMap = useCallback(() => {
-    console.log('[handleOpenMap] starting, t=', Date.now())
-    minWaitDoneRef.current = false
-    mapReadyRef.current = false
-    setMapLoading(true)
+    setMapUiReady(false)
     setLocationMapOpen(true)
-    // 4s minimum timer
-    setTimeout(() => {
-      console.log('[overlay] 4s minimum elapsed')
-      minWaitDoneRef.current = true
-      tryDismissOverlay()
-    }, 4000)
-  }, [tryDismissOverlay])
+  }, [])
+  // Two requestAnimationFrames let React commit the latest state and Leaflet
+  // paint the styled zones in the same frame before we reveal the page.
   const handleMapReady = useCallback(() => {
-    console.log('[handleMapReady] called, t=', Date.now())
-    mapReadyRef.current = true
-    tryDismissOverlay()
-  }, [tryDismissOverlay])
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setMapUiReady(true))
+    })
+  }, [])
   const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
   const showBack = step > 0
@@ -245,11 +231,19 @@ export default function OnboardingPage() {
             )}
 
             {step === 1 && locationMapOpen && (
-              <LocationMapStep
-                onValidate={handleMapValidate}
-                onBack={() => { setLocationMapOpen(false); setMapLoading(false) }}
-                onReady={handleMapReady}
-              />
+              // Atomic-reveal wrapper: LocationMapStep stays mounted but invisible
+              // until it has signaled (onReady) that its full UI is painted.
+              // opacity:0 instead of display:none so Leaflet computes the right size.
+              <div
+                className={`h-full ${mapUiReady ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                style={{ transition: 'opacity 180ms ease' }}
+              >
+                <LocationMapStep
+                  onValidate={handleMapValidate}
+                  onBack={() => { setLocationMapOpen(false); setMapUiReady(false) }}
+                  onReady={handleMapReady}
+                />
+              </div>
             )}
 
             {step === 2 && (
@@ -269,24 +263,19 @@ export default function OnboardingPage() {
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* Loading overlay — rendered OUTSIDE AnimatePresence so it never
-            triggers a re-mount of LocationMapStep. Fades out when mapLoading=false. */}
-        <AnimatePresence>
-          {step === 1 && locationMapOpen && mapLoading && (
-            <motion.div
-              key="map-overlay"
-              className="absolute inset-0 flex flex-col items-center justify-center"
-              style={{ background: '#f5f0e8', zIndex: 50 }}
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }}
-            >
-              <MapLoadingScreen />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Atomic-reveal overlay — covers the whole viewport until LocationMapStep
+          signals its full UI is ready. Sits above everything (including the
+          AnimatePresence slide) so the user never sees a partially-loaded map. */}
+      {locationMapOpen && !mapUiReady && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          style={{ background: '#f5f0e8' }}
+        >
+          <MapLoadingScreen />
+        </div>
+      )}
     </div>
   )
 }

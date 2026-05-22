@@ -118,8 +118,12 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
   const fineConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[] | null>(null)
   // Tracks whether onReady has been called (must only fire once, after full map load)
   const onReadyCalledRef = useRef(false)
-  // Ref mirror of irisLoading for use in setTimeout closures
-  const irisLoadingRef = useRef(false)
+  // Set true by ZoneMap's whenReady callback — Leaflet instance is alive.
+  const [mapInstanceReady, setMapInstanceReady] = useState(false)
+  // Set true 2 rAF after `loading` becomes false — gives cascading useEffects time
+  // to fire (e.g. loadIris setting irisLoading=true) so the !irisLoading check below
+  // doesn't yield a false positive in the brief window between renders.
+  const [engineSettled, setEngineSettled] = useState(false)
   quartiersRef.current = quartiers
   const communesRef = useRef<GeoZone[]>([])
   communesRef.current = communes
@@ -194,36 +198,49 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fineLoadTrigger])
 
-  // Keep irisLoadingRef in sync (still used by other effects)
-  irisLoadingRef.current = irisLoading
-
-  // Fire onReady when map is fully ready. Always with a small delay so Leaflet
-  // has time to render zones visually after state updates.
+  // Mark the engine "settled" two animation frames after initMap finishes.
+  // This window lets the cascade of post-loading useEffects fire (notably
+  // loadIris setting irisLoading=true) so the `!irisLoading` check in
+  // fullMapUiReady doesn't yield a false positive in the inter-render gap.
   useEffect(() => {
+    if (loading) {
+      setEngineSettled(false)
+      return
+    }
+    let raf2 = 0
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setEngineSettled(true))
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      if (raf2) cancelAnimationFrame(raf2)
+    }
+  }, [loading])
+
+  // The page is genuinely ready to be revealed only when:
+  //   - Leaflet has initialized (whenReady fired)
+  //   - initMap finished (loading=false)
+  //   - the engine is settled (post-loading cascade has had a chance to run)
+  //   - no IRIS load is in flight
+  // No fixed-delay timer: the loader stays up until this composite signal is true.
+  const fullMapUiReady = mapInstanceReady && engineSettled && !loading && !irisLoading
+
+  // Fire onReady exactly once when the full UI is ready. Two rAFs let React
+  // commit the latest state and Leaflet paint the styled zones before the
+  // parent reveals the page.
+  useEffect(() => {
+    if (!fullMapUiReady) return
     if (onReadyCalledRef.current) return
-    if (loading) return  // initMap still running
+    onReadyCalledRef.current = true
+    const raf1 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => onReady?.())
+    })
+    return () => cancelAnimationFrame(raf1)
+  }, [fullMapUiReady, onReady])
 
-    const hasSelection =
-      selectedArrIds.length > 0 ||
-      selectedCommuneIds.length > 0 ||
-      selectedIrisIds.length > 0 ||
-      selectedQuartierIds.length > 0
-
-    // Selection populated → wait 800ms for Leaflet to render zones, then fire.
-    // No selection yet → wait up to 5s for loadIris to finish (fire anyway if not).
-    const delay = hasSelection ? 800 : 5000
-    console.log('[LocationMapStep onReady useEffect] hasSelection=', hasSelection, 'delay=', delay, 'loading=', loading, 'iris.length=', iris.length, 'irisLoading=', irisLoading)
-
-    const t = setTimeout(() => {
-      if (!onReadyCalledRef.current) {
-        console.log('[LocationMapStep] calling onReady, t=', Date.now())
-        onReadyCalledRef.current = true
-        onReady?.()
-      }
-    }, delay)
-    return () => clearTimeout(t)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, selectedArrIds.length, selectedCommuneIds.length, selectedIrisIds.length, selectedQuartierIds.length, onReady])
+  const handleMapInstanceReady = useCallback(() => {
+    setMapInstanceReady(true)
+  }, [])
 
   // Capture initial selection state once — first non-empty selection is the engine's output.
   useEffect(() => {
@@ -772,8 +789,6 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
       setError('Erreur lors du chargement de la carte. Réessayez.')
     } finally {
       setLoading(false)
-      // onReady is NOT called here — it fires from the useEffect that watches
-      // both loading and irisLoading, ensuring the full map (inc. IRIS) is ready.
     }
   }
 
@@ -1013,6 +1028,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
             onClickCommune={handleClickCommune}
             onClickCommuneIris={handleClickCommuneIris}
             onZoomChange={handleZoomChange}
+            whenMapReady={handleMapInstanceReady}
           />
         )}
       </div>
