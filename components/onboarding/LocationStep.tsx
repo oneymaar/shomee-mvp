@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Loader2, HelpCircle, ChevronLeft } from 'lucide-react'
+import { ArrowRight, HelpCircle, ChevronLeft } from 'lucide-react'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { analyzeLocationIntent, type LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
 import { recognizeLocationEntity, entityToIntent, type RecognizedLocationEntity } from '@/lib/services/locationEntityRecognizer'
@@ -11,6 +11,13 @@ import { useSearchStore } from '@/lib/searchStore'
 interface LocationStepProps {
   onOpenMap: () => void
   onSkip: () => void
+  /** Show the full-screen loader overlay immediately on click — before any
+   *  async analysis starts — so the button never has time to render a
+   *  "Analyse en cours" state. */
+  onStartMapLoading: () => void
+  /** Dismiss the overlay when the analysis ends up needing user clarification
+   *  or disambiguation (the typing form must become visible again). */
+  onCancelMapLoading: () => void
 }
 
 type UIState =
@@ -64,7 +71,7 @@ function pickExamples(): [string, string, string] {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
+export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onCancelMapLoading }: LocationStepProps) {
   const { locationQuery, setLocation } = useSearchStore()
   const [query, setQuery] = useState(locationQuery)
   const [recognizedEntity, setRecognizedEntity] = useState<RecognizedLocationEntity | [RecognizedLocationEntity, RecognizedLocationEntity] | null>(null)
@@ -142,10 +149,14 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         setUi({ kind: 'disambiguation', entities: recognizedEntity })
         return
       }
+      // openMapWithEntity → onOpenMap will set mapWillOpen synchronously.
       openMapWithEntity(recognizedEntity, q)
       return
     }
 
+    // Open the full-screen overlay BEFORE the async analysis starts so the
+    // button never has a chance to render an "Analyse en cours" state.
+    onStartMapLoading()
     setUi({ kind: 'analyzing' })
     const analysis = await analyzeLocationIntent(q)
     const src = analysis?.parserSource // DEBUG
@@ -158,6 +169,9 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
       openMapWithQuery(analysis?.mapAction?.centerQuery ?? q, analysis?.mapAction?.preselectQueries, analysis?.geoConstraints, analysis?.resolutionStrategy, q, src) // DEBUG: src
       return
     }
+
+    // Clarification needed — surface the typing form again.
+    onCancelMapLoading()
     if (analysis.status === 'contradictory') {
       setUi({ kind: 'clarification', analysis: { ...analysis, clarificationQuestion: analysis.clarificationQuestion ?? "Ces contraintes semblent incompatibles. Que souhaitez-vous privilégier ?" } })
       return
@@ -167,12 +181,13 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
       return
     }
     setUi({ kind: 'clarification', analysis })
-  }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery])
+  }, [query, recognizedEntity, openMapWithEntity, openMapWithQuery, onStartMapLoading, onCancelMapLoading])
 
   // Re-analyse the option's specific query so geoConstraints are preserved.
   // Old behavior only passed preselectZones, silently dropping poi/transport constraints.
   const handleSelectOption = useCallback(async (opt: { preselectZones: string[]; centerQuery: string; label: string; query: string }) => {
     const effectiveQuery = opt.query?.trim() || query.trim()
+    onStartMapLoading()
     setUi({ kind: 'analyzing' })
     const reanalysis = await analyzeLocationIntent(effectiveQuery)
     const src = reanalysis?.parserSource // DEBUG
@@ -189,7 +204,7 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
     }
     // Re-analysis still ambiguous — open map with at least the zone info
     openMapWithQuery(opt.centerQuery ?? effectiveQuery, opt.preselectZones, undefined, undefined, effectiveQuery)
-  }, [query, openMapWithQuery])
+  }, [query, openMapWithQuery, onStartMapLoading])
 
   const handleBackToTyping = useCallback(() => {
     setUi({ kind: 'typing' })
@@ -226,12 +241,13 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Textarea — rows=4, examples on one line → fits without scroll */}
+        {/* Textarea — rows=4, examples on one line → fits without scroll.
+            No opacity change while analyzing: the overlay covers everything,
+            and we don't want any visible loading state on this form. */}
         <div
-          className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm transition-opacity"
+          className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm"
           style={{
             borderColor: query.trim().length > 0 ? 'rgba(145,78,60,0.3)' : undefined,
-            opacity: isAnalyzing ? 0.6 : 1,
           }}
         >
           <textarea
@@ -326,22 +342,22 @@ export default function LocationStep({ onOpenMap, onSkip }: LocationStepProps) {
           )}
         </AnimatePresence>
 
-        {/* Primary CTA */}
+        {/* Primary CTA — no spinner / no "Analyse en cours" wording: the
+            full-screen overlay opens synchronously on click and covers this
+            button. `disabled` while analyzing is purely a double-submit guard;
+            the visual stays unchanged. */}
         {!showDisambiguation && !(showClarification && ui.kind === 'clarification' && ui.analysis.clarificationOptions?.length) && (
           <button
             onClick={showClarification ? () => openMapWithQuery(query) : handleOpenMap}
             disabled={!canContinue || isAnalyzing}
             className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{
-              backgroundColor: canContinue && !isAnalyzing ? '#914E3C' : '#D4A89A',
-              cursor: canContinue && !isAnalyzing ? 'pointer' : 'default',
+              backgroundColor: canContinue ? '#914E3C' : '#D4A89A',
+              cursor: canContinue ? 'pointer' : 'default',
             }}
           >
-            {isAnalyzing ? (
-              <><Loader2 size={18} className="animate-spin" />Analyse en cours…</>
-            ) : (
-              <>{showClarification ? 'Ouvrir la carte quand même' : 'Afficher sur la carte'}<ArrowRight size={18} /></>
-            )}
+            {showClarification ? 'Ouvrir la carte quand même' : 'Afficher sur la carte'}
+            <ArrowRight size={18} />
           </button>
         )}
 

@@ -45,11 +45,17 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
-  // Atomic-reveal architecture: the loader overlay stays up — and the mounted
-  // LocationMapStep stays at opacity:0 — until LocationMapStep explicitly
-  // signals via onReady that its full UI (Leaflet instance + selection + tags
-  // + CTAs) is painted. A 3s floor on the visible loader is enforced at the
-  // reveal step only — the map keeps preparing in the background.
+  // Atomic-reveal architecture:
+  //   - mapWillOpen   : true the moment the user clicks "Afficher sur la carte"
+  //                     (before any analysis runs). Drives the loader overlay
+  //                     directly so the underlying button never has time to
+  //                     render an "Analyse en cours" state.
+  //   - locationMapOpen: true once LocationStep has finished analyzing and
+  //                     called setLocation + onOpenMap → LocationMapStep mounts.
+  //   - mapUiReady    : true when LocationMapStep has signaled onReady AND the
+  //                     3s minimum has elapsed → opacity flips to 1.
+  // The loader overlay is shown while (mapWillOpen && !mapUiReady).
+  const [mapWillOpen, setMapWillOpen] = useState(false)
   const [mapUiReady, setMapUiReady] = useState(false)
   const mapLoadingStartedAtRef = useRef<number>(0)
   // Dynamic viewport height — shrinks when keyboard opens on iOS.
@@ -132,12 +138,20 @@ export default function OnboardingPage() {
     setDirection(dir)
     setLocationMapOpen(false)
     setMapUiReady(false)
+    setMapWillOpen(false)
+    mapLoadingStartedAtRef.current = 0
     setStep(next)
   }, [])
 
   const handleNext = useCallback(() => goTo(step + 1, 1), [step, goTo])
   const handleBack = useCallback(() => {
-    if (locationMapOpen) { setLocationMapOpen(false); setMapUiReady(false); return }
+    if (locationMapOpen) {
+      setLocationMapOpen(false)
+      setMapUiReady(false)
+      setMapWillOpen(false)
+      mapLoadingStartedAtRef.current = 0
+      return
+    }
     if (step === 0) return
     goTo(step - 1, -1)
   }, [step, locationMapOpen, goTo])
@@ -145,8 +159,29 @@ export default function OnboardingPage() {
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
-  const handleOpenMap = useCallback(() => {
+  // Called by LocationStep synchronously on button click — BEFORE the async
+  // analysis starts. The overlay appears in the same paint so the user never
+  // sees the button transition to a loading state.
+  const handleStartMapLoading = useCallback(() => {
     mapLoadingStartedAtRef.current = Date.now()
+    setMapUiReady(false)
+    setMapWillOpen(true)
+  }, [])
+  // Called by LocationStep when the analysis ends up needing clarification or
+  // disambiguation from the user — we cancel the pending overlay and let the
+  // typing form become visible again.
+  const handleCancelMapLoading = useCallback(() => {
+    setMapWillOpen(false)
+    mapLoadingStartedAtRef.current = 0
+  }, [])
+  const handleOpenMap = useCallback(() => {
+    // For sync paths (e.g. disambiguation pick) handleStartMapLoading wasn't
+    // called first — initialise the timestamp now. For async paths it's
+    // already set; don't reset it (we want the 3s floor to count from click).
+    if (mapLoadingStartedAtRef.current === 0) {
+      mapLoadingStartedAtRef.current = Date.now()
+    }
+    setMapWillOpen(true)
     setMapUiReady(false)
     setLocationMapOpen(true)
   }, [])
@@ -161,7 +196,11 @@ export default function OnboardingPage() {
     const remaining = Math.max(0, MIN_LOADING_DURATION - elapsed)
     window.setTimeout(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => setMapUiReady(true))
+        requestAnimationFrame(() => {
+          setMapUiReady(true)
+          setMapWillOpen(false)
+          mapLoadingStartedAtRef.current = 0
+        })
       })
     }, remaining)
   }, [])
@@ -238,7 +277,12 @@ export default function OnboardingPage() {
             )}
 
             {step === 1 && !locationMapOpen && (
-              <LocationStep onOpenMap={handleOpenMap} onSkip={handleSkip} />
+              <LocationStep
+                onOpenMap={handleOpenMap}
+                onSkip={handleSkip}
+                onStartMapLoading={handleStartMapLoading}
+                onCancelMapLoading={handleCancelMapLoading}
+              />
             )}
 
             {step === 1 && locationMapOpen && (
@@ -276,10 +320,12 @@ export default function OnboardingPage() {
         </AnimatePresence>
       </div>
 
-      {/* Atomic-reveal overlay — covers the whole viewport until LocationMapStep
-          signals its full UI is ready. Sits above everything (including the
-          AnimatePresence slide) so the user never sees a partially-loaded map. */}
-      {locationMapOpen && !mapUiReady && (
+      {/* Atomic-reveal overlay — covers the whole viewport from the very click
+          (mapWillOpen is set BEFORE LocationStep starts its async analysis) and
+          stays up until LocationMapStep signals onReady AND the 3s floor has
+          elapsed. Sits above everything (incl. AnimatePresence + topbar) so
+          the user never sees the button transition through a loading state. */}
+      {mapWillOpen && !mapUiReady && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center"
           style={{ background: '#f5f0e8' }}
