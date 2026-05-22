@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
@@ -48,8 +48,10 @@ export default function OnboardingPage() {
   // Atomic-reveal architecture: the loader overlay stays up — and the mounted
   // LocationMapStep stays at opacity:0 — until LocationMapStep explicitly
   // signals via onReady that its full UI (Leaflet instance + selection + tags
-  // + CTAs) is painted. No timers, no minimum-wait heuristics.
+  // + CTAs) is painted. A 3s floor on the visible loader is enforced at the
+  // reveal step only — the map keeps preparing in the background.
   const [mapUiReady, setMapUiReady] = useState(false)
+  const mapLoadingStartedAtRef = useRef<number>(0)
   // Dynamic viewport height — shrinks when keyboard opens on iOS.
   // Initialize from visualViewport on mount to avoid the null-then-100dvh flash.
   const [viewportH, setViewportH] = useState<number | null>(() => {
@@ -144,15 +146,24 @@ export default function OnboardingPage() {
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
   const handleOpenMap = useCallback(() => {
+    mapLoadingStartedAtRef.current = Date.now()
     setMapUiReady(false)
     setLocationMapOpen(true)
   }, [])
-  // Two requestAnimationFrames let React commit the latest state and Leaflet
-  // paint the styled zones in the same frame before we reveal the page.
+  // 3s minimum visible duration for the loader (UX feel). The map keeps
+  // preparing in the background — this only delays the visual reveal so quick
+  // resolutions don't flash by. If the engine took longer than 3s, reveal
+  // happens immediately. Double rAF: let React commit latest state and Leaflet
+  // paint the styled zones in the same frame before we flip opacity.
+  const MIN_LOADING_DURATION = 3000
   const handleMapReady = useCallback(() => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setMapUiReady(true))
-    })
+    const elapsed = Date.now() - mapLoadingStartedAtRef.current
+    const remaining = Math.max(0, MIN_LOADING_DURATION - elapsed)
+    window.setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setMapUiReady(true))
+      })
+    }, remaining)
   }, [])
   const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
 
