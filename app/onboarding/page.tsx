@@ -27,9 +27,10 @@ function MapLoadingScreen() {
   )
 }
 
-// Steps: 0=Intro, 1=Location text, 2=Budget, 3=Type, 4=Priorities, 5=AI
-// locationMapOpen is a sub-state of step 1
-const TOTAL_STEPS = 5
+// Steps: 0=Intro, 1=Location (text + map), 2=Budget, 3=PropertyType, 4=Priorities, 5=AI
+// locationMapOpen is a sub-state of step 1 — still the same Localisation step.
+const STEP_LABELS = ['Localisation', 'Budget', 'Critères', 'Vibes'] as const
+const TOTAL_STEPS = STEP_LABELS.length
 
 type Direction = 1 | -1
 
@@ -243,15 +244,26 @@ export default function OnboardingPage() {
 
           {showProgress && (
             <div className="flex-1 flex gap-1.5">
-              {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
-                const filled = i < step - 1 || (i === step - 1 && !locationMapOpen)
-                const active = i === step - 1
+              {STEP_LABELS.map((label, i) => {
+                const isActive = i === step - 1
+                const isPast = i < step - 1
+                const isFuture = !isActive && !isPast
+                const barColor = isFuture ? 'rgba(0,0,0,0.1)' : '#914E3C'
+                const labelColor = isFuture ? 'rgba(0,0,0,0.35)' : '#914E3C'
+                const labelWeight = isActive ? 700 : 400
                 return (
-                  <div
-                    key={i}
-                    className="flex-1 h-1 rounded-full transition-all duration-400"
-                    style={{ backgroundColor: filled || active ? '#914E3C' : 'rgba(0,0,0,0.1)' }}
-                  />
+                  <div key={label} className="flex-1 flex flex-col items-stretch gap-1">
+                    <div
+                      className="h-1 rounded-full transition-all duration-400"
+                      style={{ backgroundColor: barColor }}
+                    />
+                    <span
+                      className="text-[10px] leading-none text-center transition-colors duration-400"
+                      style={{ color: labelColor, fontWeight: labelWeight }}
+                    >
+                      {label}
+                    </span>
+                  </div>
                 )
               })}
             </div>

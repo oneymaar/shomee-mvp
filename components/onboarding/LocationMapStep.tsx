@@ -6,7 +6,7 @@ const SHOW_IRIS_DEBUG = false
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
-import { ArrowLeft, CheckCircle, Loader2, MapPin, AlertCircle, Copy, Check } from 'lucide-react'
+import { CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
 import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, matchQuartiersByName, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
 import { findStation } from '@/lib/services/metroStationsDb'
 import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
@@ -98,7 +98,6 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
   // Incremented by initMap's hasFineConstraint path to force a fresh loadIris() regardless
   // of zoom state or cached iris. Avoids the setZoom(15) trap when zoom is already 15.
   const [fineLoadTrigger, setFineLoadTrigger] = useState(0)
-  const [irisCopied, setIrisCopied] = useState(false)
   const [fitBounds, setFitBounds] = useState<[[number, number], [number, number]] | null>(null)
   const [constraintSummary, setConstraintSummary] = useState<string[]>([])
   // briefDismissed removed — brief tag visibility is now controlled by
@@ -980,7 +979,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
         className="flex-shrink-0 px-4 pb-2"
         style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
       >
-        <h3 className="text-[20px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h3>
+        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">Sélectionnez vos zones</h2>
         <p className="text-[13px] text-neutral-400 mt-1">
           Touchez pour sélectionner · Zoomez pour affiner
         </p>
@@ -1032,20 +1031,6 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
           />
         )}
       </div>
-
-      {/* DEBUG badge — remove after parser validation */}
-      {locationIntent?.parserSource && (
-        <div className="flex-shrink-0 flex justify-center pt-1.5">
-          <span
-            className="text-[10px] font-mono px-2 py-0.5 rounded-full"
-            style={locationIntent.parserSource === 'spatial_intent_parser'
-              ? { background: 'rgba(34,197,94,0.12)', color: '#16a34a' }
-              : { background: 'rgba(245,158,11,0.12)', color: '#d97706' }}
-          >
-            {locationIntent.parserSource === 'spatial_intent_parser' ? '⚡ parser' : '🤖 llm'}{' · '}{locationIntent.resolutionStrategy ?? ''}
-          </span>
-        </div>
-      )}
 
       {/* Tag system — 3 rows under the map */}
       <div className="flex-shrink-0 px-4 pt-2 min-h-[36px]">
@@ -1132,37 +1117,6 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
           )}
         </AnimatePresence>
       </div>
-
-      {/* IRIS sélectionnés — liste sous la carte */}
-      {iris.length > 0 && selectedIrisIds.length > 0 && (() => {
-        const codes = iris
-          .filter(z => selectedIrisIds.includes(z.id))
-          .map(z => z.id.replace(/^iris-/, ''))
-          .sort()
-        return (
-          <div className="flex-shrink-0 px-4 pt-0.5 pb-1 flex items-start gap-2">
-            <p className="text-[10px] leading-relaxed flex-1 max-h-16 overflow-y-auto" style={{ color: 'rgba(0,0,0,0.38)' }}>
-              <span className="font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>
-                {selectedIrisIds.length} IRIS —{' '}
-              </span>
-              {codes.join(' · ')}
-            </p>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(codes.join(' · ')).then(() => {
-                  setIrisCopied(true)
-                  setTimeout(() => setIrisCopied(false), 2000)
-                })
-              }}
-              className="flex-shrink-0 mt-0.5 active:opacity-60 transition-opacity"
-              style={{ color: irisCopied ? '#16a34a' : 'rgba(0,0,0,0.3)' }}
-              title="Copier la liste"
-            >
-              {irisCopied ? <Check size={12} /> : <Copy size={12} />}
-            </button>
-          </div>
-        )
-      })()}
 
       {/* Reset button — only visible when user has diverged from engine's initial selection */}
       <AnimatePresence>
