@@ -1,24 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronRight } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
+import { budgetSignal } from '@/lib/services/budgetFeasibility'
+import BudgetFeasibilityMap from './BudgetFeasibilityMap'
 
-interface BudgetOption {
-  label: string
-  max: number
-  sublabel?: string
+// Non-linear budget steps:
+//   0 → 400 000 €   step 25 000
+//   400 000 → 1 000 000 €   step 50 000
+//   1 000 000 → 2 000 000 €   step 100 000
+function buildBudgetScale(): number[] {
+  const steps: number[] = []
+  for (let v = 0;        v <= 400_000;   v += 25_000)  steps.push(v)
+  for (let v = 450_000;  v <= 1_000_000; v += 50_000)  steps.push(v)
+  for (let v = 1_100_000; v <= 2_000_000; v += 100_000) steps.push(v)
+  return steps
+}
+const SCALE = buildBudgetScale()
+const SCALE_MAX_INDEX = SCALE.length - 1
+const DEFAULT_MIN_INDEX = SCALE.indexOf(250_000)
+const DEFAULT_MAX_INDEX = SCALE.indexOf(500_000)
+
+function formatBudget(value: number): string {
+  if (value === 0) return '0'
+  if (value >= 1_000_000) {
+    const m = value / 1_000_000
+    return Number.isInteger(m) ? `${m} M€` : `${m.toFixed(1).replace('.', ',')} M€`
+  }
+  return `${(value / 1_000).toLocaleString('fr-FR')} K€`
 }
 
-const BUDGET_OPTIONS: BudgetOption[] = [
-  { label: '< 200 000 €', max: 200_000, sublabel: 'Studio, petite surface' },
-  { label: '200 000 – 350 000 €', max: 350_000, sublabel: '2-3 pièces en région' },
-  { label: '350 000 – 500 000 €', max: 500_000, sublabel: 'Bon confort, bonne localisation' },
-  { label: '500 000 – 750 000 €', max: 750_000, sublabel: 'Paris ou grandes villes' },
-  { label: '750 000 – 1 500 000 €', max: 1_500_000, sublabel: 'Grand appartement ou maison' },
-  { label: '> 1 500 000 €', max: 99_000_000, sublabel: 'Prestige' },
-]
+const TONE_DOT: Record<string, string> = {
+  comfort: '#7A9E7E',
+  average: '#C4A87A',
+  tight: '#A05A40',
+  very_tight: '#7A3A28',
+  none: '#A3A3A3',
+}
 
 interface BudgetStepProps {
   onNext: () => void
@@ -26,94 +46,193 @@ interface BudgetStepProps {
 }
 
 export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
-  const { setBudgetMax, budgetMax } = useSearchStore()
-  const [selected, setSelected] = useState<number | null>(budgetMax)
+  const {
+    setBudgetRange, budgetMin, budgetMax,
+    minSurface,
+    selectedIrisIds,
+  } = useSearchStore()
 
-  const handleSelect = (max: number) => {
-    setSelected(max)
-    setBudgetMax(max)
+  // Surface is supposed to be set in the previous "Bien" step. If somehow
+  // missing, fall back to the BienStep's default so the math still works.
+  const surface = minSurface ?? 50
+
+  // Hydrate slider position from store, fall back to sensible defaults.
+  const initialMinIndex = useMemo(
+    () => (budgetMin == null ? DEFAULT_MIN_INDEX : findClosestIndex(budgetMin)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const initialMaxIndex = useMemo(
+    () => (budgetMax == null ? DEFAULT_MAX_INDEX : findClosestIndex(budgetMax)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const [minIndex, setMinIndex] = useState<number>(initialMinIndex)
+  const [maxIndex, setMaxIndex] = useState<number>(initialMaxIndex)
+
+  const minValue = SCALE[minIndex]
+  const maxValue = SCALE[maxIndex]
+
+  // Persist on every change — the slider event is `input` (continuous).
+  const commit = (lo: number, hi: number) => {
+    setBudgetRange(SCALE[lo], SCALE[hi])
   }
 
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const idx = Number(e.target.value)
+    const next = Math.min(idx, maxIndex)  // never overtake the max thumb
+    setMinIndex(next)
+    commit(next, maxIndex)
+  }
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const idx = Number(e.target.value)
+    const next = Math.max(idx, minIndex)  // never undercut the min thumb
+    setMaxIndex(next)
+    commit(minIndex, next)
+  }
+
+  // ── Track progress for the active fill segment ───────────────────────────
+  const trackProgress = useMemo(() => {
+    const lo = (minIndex / SCALE_MAX_INDEX) * 100
+    const hi = (maxIndex / SCALE_MAX_INDEX) * 100
+    return { lo, hi }
+  }, [minIndex, maxIndex])
+
+  // ── Signal ───────────────────────────────────────────────────────────────
+  const signal = useMemo(
+    () => budgetSignal(selectedIrisIds, maxValue, surface),
+    [selectedIrisIds, maxValue, surface],
+  )
+  const dotColor = TONE_DOT[signal.tone] ?? TONE_DOT.none
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="px-6 pt-6 pb-5 flex-shrink-0">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h2 className="text-[22px] font-bold text-neutral-900 leading-tight">
-            Quel est votre budget ?
-          </h2>
-          <p className="text-[14px] text-neutral-600 mt-1.5">
-            Une fourchette suffit. Vous pourrez affiner plus tard.
-          </p>
-        </motion.div>
+    <div className="flex flex-col h-full px-4" style={{ overscrollBehavior: 'none', overflow: 'hidden' }}>
+      {/* Header — compact, same vibe as the Quartiers step */}
+      <motion.div
+        className="flex-none pt-3 pb-2"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <h2 className="text-[22px] font-bold text-neutral-900 leading-tight tracking-tight">
+          Quel est votre budget&nbsp;?
+        </h2>
+        <p className="text-[13px] text-neutral-600 mt-1">
+          Glissez les bornes pour cadrer votre fourchette.
+        </p>
+      </motion.div>
+
+      {/* Slider + values + signal — fixed height */}
+      <div className="flex-none mt-1">
+        {/* Live values above the track */}
+        <div className="flex items-baseline justify-between px-1 mb-2.5">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
+            <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#914E3C' }}>
+              {formatBudget(minValue)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Maximum</p>
+            <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#914E3C' }}>
+              {formatBudget(maxValue)}
+            </p>
+          </div>
+        </div>
+
+        {/* Dual-thumb slider — two overlaid <input type="range"> sharing one track */}
+        <div className="shomee-dual-slider">
+          <div
+            className="shomee-dual-slider-track"
+            style={{
+              backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${trackProgress.lo}%, #914E3C ${trackProgress.lo}%, #914E3C ${trackProgress.hi}%, rgba(0,0,0,0.08) ${trackProgress.hi}%)`,
+            }}
+          />
+          <input
+            type="range"
+            min={0}
+            max={SCALE_MAX_INDEX}
+            step={1}
+            value={minIndex}
+            onChange={handleMinChange}
+            aria-label="Budget minimum"
+            className="shomee-dual-slider-input shomee-dual-slider-input-min"
+          />
+          <input
+            type="range"
+            min={0}
+            max={SCALE_MAX_INDEX}
+            step={1}
+            value={maxIndex}
+            onChange={handleMaxChange}
+            aria-label="Budget maximum"
+            className="shomee-dual-slider-input shomee-dual-slider-input-max"
+          />
+        </div>
+
+        {/* Signal — short phrase + colour dot */}
+        <div className="mt-3 flex items-center gap-2 min-h-[20px]">
+          {signal.text ? (
+            <>
+              <span
+                className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: dotColor }}
+                aria-hidden
+              />
+              <p className="text-[13px] font-medium text-neutral-900 leading-snug">
+                {signal.text}
+              </p>
+            </>
+          ) : (
+            <p className="text-[13px] text-neutral-600 leading-snug">
+              Sélectionnez d&apos;abord vos quartiers pour activer la lecture marché.
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Budget options */}
-      <div className="px-6 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-4">
-        {BUDGET_OPTIONS.map((opt, i) => {
-          const isSelected = selected === opt.max
-          return (
-            <motion.button
-              key={opt.max}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.35, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              onClick={() => handleSelect(opt.max)}
-              className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl border text-left transition-all active:scale-[0.98]"
-              style={{
-                backgroundColor: isSelected ? '#914E3C' : 'white',
-                borderColor: isSelected ? '#914E3C' : 'rgba(0,0,0,0.08)',
-              }}
-            >
-              <div>
-                <p className="text-[15px] font-semibold" style={{ color: isSelected ? 'white' : '#1a1a1a' }}>
-                  {opt.label}
-                </p>
-                {opt.sublabel && (
-                  <p className="text-[12px] mt-0.5" style={{ color: isSelected ? 'rgba(255,255,255,0.7)' : '#525252' }}>
-                    {opt.sublabel}
-                  </p>
-                )}
-              </div>
-              {isSelected && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0"
-                >
-                  <div className="w-2 h-2 rounded-full bg-white" />
-                </motion.div>
-              )}
-            </motion.button>
-          )
-        })}
+      {/* Feasibility map — takes the remaining vertical space */}
+      <div className="flex-1 min-h-0 mt-3">
+        <BudgetFeasibilityMap
+          selectedIrisIds={selectedIrisIds}
+          budgetMax={maxValue}
+          surface={surface}
+        />
       </div>
 
       {/* CTAs */}
       <div
-        className="px-6 pt-4 pb-10 flex flex-col gap-3 flex-shrink-0"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}
+        className="flex-none flex flex-col gap-1.5 pt-3"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
       >
         <button
           onClick={onNext}
-          disabled={!selected}
-          className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-          style={{ backgroundColor: selected ? '#914E3C' : '#D4A89A', cursor: selected ? 'pointer' : 'default' }}
+          className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
+          style={{ backgroundColor: '#914E3C' }}
         >
-          Continuer
-          <ChevronRight size={18} />
+          <CheckCircle size={16} />
+          Valider mon budget
+          <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">3 / 4</span>
         </button>
         <button
           onClick={onSkip}
-          className="w-full py-3 text-[14px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
+          className="w-full py-2 text-[13px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
         >
           Passer cette étape
         </button>
       </div>
     </div>
   )
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function findClosestIndex(value: number): number {
+  let best = 0
+  let bestDiff = Number.POSITIVE_INFINITY
+  for (let i = 0; i < SCALE.length; i++) {
+    const d = Math.abs(SCALE[i] - value)
+    if (d < bestDiff) { bestDiff = d; best = i }
+  }
+  return best
 }

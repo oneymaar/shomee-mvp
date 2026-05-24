@@ -1,0 +1,7 @@
+{
+  "_meta": {
+    "note": "MOCK temporaire — données par IRIS générées par batch (à venir). Le service irisMarketService applique un fallback par commune INSEE (premiers 5 chiffres du code IRIS) tant que ce fichier est sparse.",
+    "lastUpdated": "2026-05-24",
+    "format": "{ \"<code_iris_9_chars>\": { \"median\": <€/m²>, \"n\": <nb_ventes_obs> } }"
+  }
+}

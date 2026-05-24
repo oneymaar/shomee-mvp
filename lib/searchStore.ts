@@ -32,6 +32,7 @@ export interface SearchPreferences {
   selectedQuartierIds: string[]
   selectedIrisIds: string[]
   selectedCommuneIds: string[]
+  budgetMin: number | null
   budgetMax: number | null
   propertyTypes: PropertyType[]
   minRooms: number | null
@@ -55,7 +56,9 @@ interface SearchStore extends SearchPreferences {
   toggleCommune: (id: string) => void
   /** Toggle IRIS zone inside a suburban commune — propagates up to commune */
   toggleCommuneIris: (id: string, parentCommuneId: string, allCommuneSiblingIds: string[]) => void
+  setBudgetMin: (min: number | null) => void
   setBudgetMax: (max: number | null) => void
+  setBudgetRange: (min: number | null, max: number | null) => void
   setPropertyTypes: (types: PropertyType[]) => void
   togglePropertyType: (type: PropertyType) => void
   setMinRooms: (min: number | null) => void
@@ -78,6 +81,7 @@ export const useSearchStore = create<SearchStore>()(
       selectedQuartierIds: [],
       selectedIrisIds: [],
       selectedCommuneIds: [],
+      budgetMin: null,
       budgetMax: null,
       propertyTypes: [],
       minRooms: null,
@@ -196,7 +200,9 @@ export const useSearchStore = create<SearchStore>()(
         set({ selectedCommuneIds: newCommuneIds, selectedIrisIds: newIrisIds })
       },
 
+      setBudgetMin: (min) => set({ budgetMin: min }),
       setBudgetMax: (max) => set({ budgetMax: max }),
+      setBudgetRange: (min, max) => set({ budgetMin: min, budgetMax: max }),
       setPropertyTypes: (types) => set({ propertyTypes: types }),
       togglePropertyType: (type) =>
         set((s) => ({ propertyTypes: s.propertyTypes.includes(type) ? s.propertyTypes.filter((t) => t !== type) : [...s.propertyTypes, type] })),
@@ -209,13 +215,14 @@ export const useSearchStore = create<SearchStore>()(
         set({
           locationQuery: '', locationLabel: '', locationLat: null, locationLng: null, locationRadius: 2,
           locationIntent: null, selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [],
-          budgetMax: null, propertyTypes: [], minRooms: null, minSurface: null, maxSurface: null,
+          budgetMin: null, budgetMax: null, propertyTypes: [], minRooms: null, minSurface: null, maxSurface: null,
           priorities: [], onboardingCompleted: false,
         }),
     }),
     {
       name: 'shomee-search',
       partialize: (state) => ({
+        budgetMin: state.budgetMin,
         budgetMax: state.budgetMax,
         propertyTypes: state.propertyTypes,
         minRooms: state.minRooms,

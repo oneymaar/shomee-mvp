@@ -108,3 +108,79 @@ body {
 .shomee-surface-slider::-moz-range-track {
   background: transparent;
 }
+
+/* Dual-thumb budget slider — Budget step.
+   Two <input type="range"> stacked on top of each other share a single
+   visual track. pointer-events is moved off the input track and onto the
+   thumbs only, so each thumb is independently draggable without one
+   blocking the other. The active fill segment is painted by the
+   track element below (background gradient is set inline in JSX). */
+.shomee-dual-slider {
+  position: relative;
+  width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+.shomee-dual-slider-track {
+  position: absolute;
+  inset: auto 0;
+  height: 6px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.shomee-dual-slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 32px;
+  background: transparent;
+  pointer-events: none; /* re-enabled on the thumb pseudo-elements below */
+  margin: 0;
+  outline: none;
+}
+.shomee-dual-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #914E3C;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(145, 78, 60, 0.25);
+  cursor: grab;
+  transition: transform 120ms ease;
+}
+.shomee-dual-slider-input::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+.shomee-dual-slider-input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #914E3C;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(145, 78, 60, 0.25);
+  cursor: grab;
+  transition: transform 120ms ease;
+}
+.shomee-dual-slider-input::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+.shomee-dual-slider-input::-moz-range-track {
+  background: transparent;
+}
+/* Ensure the min thumb sits visually above the max one when they collide,
+   so the user can pull it apart even at the edges. */
+.shomee-dual-slider-input-min {
+  z-index: 2;
+}
+.shomee-dual-slider-input-max {
+  z-index: 1;
+}
