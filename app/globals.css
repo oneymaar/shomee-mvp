@@ -184,3 +184,12 @@ body {
 .shomee-dual-slider-input-max {
   z-index: 1;
 }
+
+/* Budget step — IRIS feasibility map.
+   Smooth fill interpolation on every Leaflet path inside the map root, so
+   moving the budget slider produces a fluid colour transition instead of a
+   hard snap. The class is scoped to the budget step's wrapper so the
+   Quartiers step map isn't affected. */
+.shomee-feasibility-map .leaflet-overlay-pane path {
+  transition: fill 150ms ease-out;
+}

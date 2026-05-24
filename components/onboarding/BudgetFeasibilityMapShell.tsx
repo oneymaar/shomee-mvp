@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { Loader2 } from 'lucide-react'
@@ -23,14 +23,22 @@ interface BudgetFeasibilityMapShellProps {
 function fillStyleFor(color: string): L.PathOptions {
   return {
     fillColor: color,
-    fillOpacity: 0.7,
-    color: '#fff',
-    weight: 0.6,
-    opacity: 0.9,
+    fillOpacity: 0.65,
+    weight: 0,      // no internal strokes — outline is a separate layer
+    opacity: 0,
+    stroke: false,
   }
 }
 
-/** Compute fitBounds corners from selected IRIS polygons. */
+const OUTLINE_STYLE: L.PathOptions = {
+  color: '#ffffff',
+  weight: 1.5,
+  opacity: 0.4,
+  fill: false,
+}
+
+// ─── Geometry helpers ──────────────────────────────────────────────────────
+
 function zonesToBounds(
   zones: GeoZone[],
   coverage = 0.92,
@@ -66,7 +74,73 @@ function zonesToBounds(
   return [[minLat, minLng], [maxLat, maxLng]]
 }
 
-/** Inner controller — owns the L.geoJSON layer and updates its styles imperatively. */
+/** Simple polygon centroid (average of outer-ring vertices). MultiPolygon: largest ring. */
+function polygonCentroid(geom: GeoJSON.Polygon | GeoJSON.MultiPolygon): [number, number] {
+  const outerRings: GeoJSON.Position[][] =
+    geom.type === 'Polygon' ? [geom.coordinates[0]]
+    : geom.type === 'MultiPolygon' ? geom.coordinates.map(p => p[0])
+    : []
+  // Pick the longest outer ring for MultiPolygon — typically the main body.
+  let best: GeoJSON.Position[] = outerRings[0] ?? []
+  for (const r of outerRings) if (r.length > best.length) best = r
+  if (best.length === 0) return [0, 0]
+  let sx = 0, sy = 0, n = 0
+  for (const p of best) { sx += p[0]; sy += p[1]; n++ }
+  return [sx / n, sy / n]
+}
+
+/**
+ * Group outline via edge counting.
+ *
+ * Every outer-ring edge that appears EXACTLY ONCE across all selected IRIS
+ * is on the group boundary. Edges shared by two adjacent IRIS appear TWICE
+ * and are discarded — that's how we remove internal seams without computing
+ * a real polygon union.
+ *
+ * Works because Paris IRIS data shares exact vertex coordinates between
+ * neighbours (no float drift), since they come from a single coherent source.
+ */
+function computeGroupOutline(zones: GeoZone[]): GeoJSON.FeatureCollection {
+  const edges = new Map<string, { a: GeoJSON.Position; b: GeoJSON.Position; count: number }>()
+  const key = (a: GeoJSON.Position, b: GeoJSON.Position): string => {
+    // Canonicalize so [a,b] and [b,a] map to the same key
+    const [a0, a1, b0, b1] = [a[0], a[1], b[0], b[1]]
+    if (a0 < b0 || (a0 === b0 && a1 < b1)) return `${a0},${a1}|${b0},${b1}`
+    return `${b0},${b1}|${a0},${a1}`
+  }
+  for (const z of zones) {
+    const geom = z.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon
+    const polygons: GeoJSON.Position[][][] =
+      geom.type === 'Polygon' ? [geom.coordinates]
+      : geom.type === 'MultiPolygon' ? geom.coordinates
+      : []
+    for (const poly of polygons) {
+      const outer = poly[0]  // outer ring only — ignore holes
+      if (!outer || outer.length < 2) continue
+      for (let i = 0; i < outer.length - 1; i++) {
+        const a = outer[i], b = outer[i + 1]
+        const k = key(a, b)
+        const existing = edges.get(k)
+        if (existing) existing.count++
+        else edges.set(k, { a, b, count: 1 })
+      }
+    }
+  }
+  const lineSegments: GeoJSON.Feature[] = []
+  for (const e of edges.values()) {
+    if (e.count === 1) {
+      lineSegments.push({
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'LineString', coordinates: [e.a, e.b] },
+      })
+    }
+  }
+  return { type: 'FeatureCollection', features: lineSegments }
+}
+
+// ─── Inner controller — owns the L.geoJSON layers ──────────────────────────
+
 function IrisFeasibilityLayer({
   irisZones,
   budgetMax,
@@ -77,56 +151,76 @@ function IrisFeasibilityLayer({
   surface: number
 }) {
   const map = useMap()
-  const layerRef = useRef<L.GeoJSON | null>(null)
+  const fillLayerRef = useRef<L.GeoJSON | null>(null)
+  const outlineLayerRef = useRef<L.GeoJSON | null>(null)
   const pathByIdRef = useRef<Map<string, L.Path>>(new Map())
 
-  // ── Rebuild the GeoJSON layer when the zones array changes ───────────────
+  // Precompute centroids once per zones change — used by the noise function.
+  const irisInputs = useMemo(
+    () => irisZones.map(z => ({
+      id: z.id,
+      centroid: polygonCentroid(z.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon),
+    })),
+    [irisZones],
+  )
+
+  // Outline: static for a given selection — recompute only when zones change.
+  const outlineGeoJson = useMemo(() => computeGroupOutline(irisZones), [irisZones])
+
+  // ── (Re)build layers when zones change ───────────────────────────────────
   useEffect(() => {
-    layerRef.current?.remove()
+    fillLayerRef.current?.remove()
+    outlineLayerRef.current?.remove()
     pathByIdRef.current.clear()
     if (!irisZones.length) return
 
-    const layer = L.geoJSON(
+    const fillLayer = L.geoJSON(
       { type: 'FeatureCollection', features: irisZones.map(z => z.feature) } as GeoJSON.FeatureCollection,
-      {
-        style: () => fillStyleFor(NO_DATA_FILL),
-        // No click handler — read-only map.
-      },
+      { style: () => fillStyleFor(NO_DATA_FILL), interactive: false },
     )
-    // Build the id → path map for fast imperative updates later.
-    layer.eachLayer(l => {
+    fillLayer.eachLayer(l => {
       if (l instanceof L.Path) {
         const f = (l as unknown as { feature?: GeoJSON.Feature }).feature
         const id = f?.properties?._zoneId as string | undefined
         if (id) pathByIdRef.current.set(id, l)
       }
     })
-    layer.addTo(map)
-    layerRef.current = layer
+    fillLayer.addTo(map)
+    fillLayerRef.current = fillLayer
+
+    const outlineLayer = L.geoJSON(outlineGeoJson, {
+      style: () => OUTLINE_STYLE,
+      interactive: false,
+    })
+    outlineLayer.addTo(map)
+    outlineLayerRef.current = outlineLayer
 
     const bounds = zonesToBounds(irisZones)
-    if (bounds) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 14, animate: false })
+    if (bounds) map.fitBounds(bounds, { padding: [16, 16], maxZoom: 14, animate: false })
 
     return () => {
-      layer.remove()
+      fillLayer.remove()
+      outlineLayer.remove()
       pathByIdRef.current.clear()
     }
-  }, [irisZones, map])
+  }, [irisZones, outlineGeoJson, map])
 
-  // ── Imperative restyle when budget/surface change ────────────────────────
-  // Pure pure function call + setStyle per layer → no React rerender, no
-  // layer rebuild. Stays well under 16ms even for ~1k polygons.
+  // ── Imperative restyle on budget / surface change ────────────────────────
+  // No React rerender, no layer rebuild. Pure setStyle per path — paired with
+  // a CSS transition on the `fill` attribute for a smooth interpolated effect.
   useEffect(() => {
-    if (!layerRef.current || pathByIdRef.current.size === 0) return
-    const feas = computeFeasibility(irisZones.map(z => z.id), budgetMax, surface)
+    if (!fillLayerRef.current || pathByIdRef.current.size === 0) return
+    const feas = computeFeasibility(irisInputs, budgetMax, surface)
     for (const f of feas) {
       const path = pathByIdRef.current.get(f.irisId)
       if (path) path.setStyle({ fillColor: f.color })
     }
-  }, [budgetMax, surface, irisZones])
+  }, [budgetMax, surface, irisInputs])
 
   return null
 }
+
+// ─── Public shell ───────────────────────────────────────────────────────────
 
 export default function BudgetFeasibilityMapShell({
   selectedIrisIds,
@@ -136,7 +230,6 @@ export default function BudgetFeasibilityMapShell({
   const [irisZones, setIrisZones] = useState<GeoZone[]>([])
   const [loading, setLoading] = useState(true)
 
-  // ── Load IRIS once on mount, then filter to the user's selection ─────────
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -156,29 +249,11 @@ export default function BudgetFeasibilityMapShell({
       }
     })()
     return () => { cancelled = true }
-    // selectedIrisIds intentionally not in deps — if it changes mid-step we
-    // refilter without re-fetching (the wanted set is reapplied on the next
-    // render via the filtered state below).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Refilter if the user navigates back & changes selection.
-  useEffect(() => {
-    if (loading) return
-    const wanted = new Set(selectedIrisIds)
-    setIrisZones(prev => {
-      // Avoid expensive re-set if the set is unchanged.
-      const same = prev.length === wanted.size && prev.every(z => wanted.has(z.id))
-      if (same) return prev
-      // We don't have the full list cached here — fetch path returns from cache.
-      // Cheap enough to leave as-is for V1.
-      return prev.filter(z => wanted.has(z.id))
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIrisIds.join('|')])
-
   return (
-    <>
+    <div className="shomee-feasibility-map w-full h-full relative">
       <MapContainer
         center={PARIS_CENTER}
         zoom={12}
@@ -204,6 +279,6 @@ export default function BudgetFeasibilityMapShell({
           <Loader2 size={22} className="text-neutral-400 animate-spin" />
         </div>
       )}
-    </>
+    </div>
   )
 }

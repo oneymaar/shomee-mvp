@@ -2,21 +2,26 @@
  * Budget feasibility math for the Budget step.
  *
  * Ratio per IRIS = budgetMax / (median €/m² × target surface m²)
- *   > 1.3 → comfortable (sauge)
+ *   ≥ 1.3 → comfortable (sauge)
  *   ≈ 1.0 → average    (sand)
- *   < 0.75 → tight     (terracotta)
+ *   ≤ 0.7 → tight      (terracotta)
  *
  * Colours are interpolated continuously in HSL between three stops, so a
  * ratio of 0.9 doesn't visually snap to the "tight" bucket — it stays close
  * to the "average" hue.
+ *
+ * When centroids are provided, we add a small spatial-noise jitter to the
+ * median (±15%) and the ratio (±5%). The jitter is deterministic per
+ * centroid (sin/cos on lng/lat), so adjacent IRIS get smooth gradients
+ * rather than a tiled-checker look — until the real data lands.
  */
 
 import { irisMedian } from './irisMarketService'
 
-const STOP_TIGHT     = { ratio: 0.75, hex: '#A05A40' } // terracotta atténué
-const STOP_AVERAGE   = { ratio: 1.0,  hex: '#C4A87A' } // beige/sable
-const STOP_COMFORT   = { ratio: 1.3,  hex: '#7A9E7E' } // vert sauge doux
-const NO_DATA_COLOR  = '#C8C0B0'                       // gris neutre
+const STOP_TIGHT   = { ratio: 0.7, hex: '#A05A40' } // terracotta atténué
+const STOP_AVERAGE = { ratio: 1.0, hex: '#C4A87A' } // beige/sable
+const STOP_COMFORT = { ratio: 1.3, hex: '#7A9E7E' } // vert sauge doux
+const NO_DATA_COLOR = '#C8C0B0'                     // gris neutre
 
 // ─── Color helpers ──────────────────────────────────────────────────────────
 
@@ -68,7 +73,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 function lerpHsl(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
-  // Hue lerp shortest path
+  // Hue lerp via shortest arc
   let h0 = a[0], h1 = b[0]
   if (Math.abs(h1 - h0) > 180) {
     if (h1 > h0) h0 += 360
@@ -79,32 +84,46 @@ function lerpHsl(a: [number, number, number], b: [number, number, number], t: nu
 
 /**
  * Continuous color for a feasibility ratio.
- *  - ratio ≤ 0.75 clamps to STOP_TIGHT
+ *  - ratio ≤ 0.7 clamps to STOP_TIGHT
  *  - ratio ≥ 1.3 clamps to STOP_COMFORT
  *  - between: interpolated through STOP_AVERAGE at ratio = 1.0
  */
 export function feasibilityColor(ratio: number): string {
   if (!Number.isFinite(ratio) || ratio <= 0) return NO_DATA_COLOR
-  if (ratio <= STOP_TIGHT.ratio) return STOP_TIGHT.hex
-  if (ratio >= STOP_COMFORT.ratio) return STOP_COMFORT.hex
-  if (ratio <= STOP_AVERAGE.ratio) {
-    const t = (ratio - STOP_TIGHT.ratio) / (STOP_AVERAGE.ratio - STOP_TIGHT.ratio)
+  const clamped = Math.max(STOP_TIGHT.ratio, Math.min(STOP_COMFORT.ratio, ratio))
+  if (clamped <= STOP_AVERAGE.ratio) {
+    const t = (clamped - STOP_TIGHT.ratio) / (STOP_AVERAGE.ratio - STOP_TIGHT.ratio)
     const [h, s, l] = lerpHsl(HSL_TIGHT, HSL_AVERAGE, t)
     return hslToHex(h, s, l)
   }
-  const t = (ratio - STOP_AVERAGE.ratio) / (STOP_COMFORT.ratio - STOP_AVERAGE.ratio)
+  const t = (clamped - STOP_AVERAGE.ratio) / (STOP_COMFORT.ratio - STOP_AVERAGE.ratio)
   const [h, s, l] = lerpHsl(HSL_AVERAGE, HSL_COMFORT, t)
   return hslToHex(h, s, l)
 }
 
 export const NO_DATA_FILL = NO_DATA_COLOR
 
+// ─── Spatial noise (mock-only — remove when real per-IRIS data lands) ──────
+// Deterministic ±1 value smooth across space, multi-frequency sin/cos.
+function spatialNoise(lng: number, lat: number): number {
+  const f1 = Math.sin(lng * 30 + 0.31) * Math.cos(lat * 30 + 0.17)
+  const f2 = Math.sin(lng * 78 + 1.91) * Math.cos(lat * 78 + 0.83) * 0.5
+  const f3 = Math.sin(lng * 165 + 2.71) * Math.cos(lat * 165 + 1.13) * 0.25
+  return (f1 + f2 + f3) / 1.75 // ~ [-1, 1]
+}
+
 // ─── Ratio + signal ─────────────────────────────────────────────────────────
+
+export interface IrisInput {
+  id: string
+  /** [lng, lat] — when present, enables spatial-noise mock + intra-zone radiance. */
+  centroid?: [number, number]
+}
 
 export interface FeasibilityPerIris {
   irisId: string
-  ratio: number | null  // null when median is unknown
-  color: string         // hex (already pre-computed for performance)
+  ratio: number | null
+  color: string
 }
 
 /**
@@ -112,18 +131,29 @@ export interface FeasibilityPerIris {
  * Pure function — cheap enough to call on every slider `input` event.
  */
 export function computeFeasibility(
-  irisIds: string[],
+  iris: IrisInput[],
   budgetMax: number,
   surface: number,
 ): FeasibilityPerIris[] {
   if (budgetMax <= 0 || surface <= 0) {
-    return irisIds.map(id => ({ irisId: id, ratio: null, color: NO_DATA_COLOR }))
+    return iris.map(i => ({ irisId: i.id, ratio: null, color: NO_DATA_COLOR }))
   }
-  return irisIds.map(id => {
-    const m = irisMedian(id)
-    if (!m) return { irisId: id, ratio: null, color: NO_DATA_COLOR }
-    const ratio = budgetMax / (m.median * surface)
-    return { irisId: id, ratio, color: feasibilityColor(ratio) }
+  return iris.map(i => {
+    const m = irisMedian(i.id)
+    if (!m) return { irisId: i.id, ratio: null, color: NO_DATA_COLOR }
+    // Median jitter (±15%) — gives realistic spatial variation between
+    // neighbours even when the underlying fallback is per-commune flat.
+    // Ratio jitter (±5%) — adds intra-zone radiance so adjacent IRIS show
+    // a soft gradient instead of identical fills.
+    let median = m.median
+    let ratio = budgetMax / (median * surface)
+    if (i.centroid) {
+      const n = spatialNoise(i.centroid[0], i.centroid[1])
+      median = median * (1 + n * 0.15)
+      ratio = budgetMax / (median * surface)
+      ratio = ratio * (1 + n * 0.05)
+    }
+    return { irisId: i.id, ratio, color: feasibilityColor(ratio) }
   })
 }
 
@@ -151,16 +181,34 @@ export function budgetSignal(
   if (ratios.length === 0) {
     return { text: 'Données marché indisponibles sur ces zones', tone: 'none', ratio: null }
   }
-  // Use median rather than mean — more robust to a single very-cheap or
-  // very-expensive IRIS pulling the average around.
   const sorted = [...ratios].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
   const median = sorted.length % 2 === 0
     ? (sorted[mid - 1] + sorted[mid]) / 2
     : sorted[mid]
 
-  if (median >= 1.3)  return { text: 'Budget confortable pour vos zones',                 tone: 'comfort',    ratio: median }
+  if (median >= 1.3)  return { text: 'Budget confortable pour vos zones',                    tone: 'comfort',    ratio: median }
   if (median >= 1.0)  return { text: 'Budget dans la moyenne — plusieurs biens accessibles', tone: 'average',    ratio: median }
-  if (median >= 0.75) return { text: 'Budget serré — quelques opportunités existent',     tone: 'tight',      ratio: median }
-  return                       { text: 'Budget très limité pour ces zones',                  tone: 'very_tight', ratio: median }
+  if (median >= 0.7)  return { text: 'Budget serré — quelques opportunités existent',        tone: 'tight',      ratio: median }
+  return                       { text: 'Budget très limité pour ces zones',                    tone: 'very_tight', ratio: median }
+}
+
+/**
+ * Synchronous helper used by BudgetStep to derive the initial max slider
+ * position: median(medians) × surface — i.e. exactly the "ratio = 1.0"
+ * budget for the user's selected IRIS. Returns null when no rated IRIS.
+ */
+export function medianBudgetFor(irisIds: string[], surface: number): number | null {
+  if (irisIds.length === 0 || surface <= 0) return null
+  const medians = irisIds
+    .map(id => irisMedian(id))
+    .filter((m): m is NonNullable<ReturnType<typeof irisMedian>> => m !== null)
+    .map(m => m.median)
+  if (medians.length === 0) return null
+  const sorted = [...medians].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  const med = sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid]
+  return Math.round(med * surface)
 }

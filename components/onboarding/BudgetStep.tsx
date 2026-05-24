@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
-import { budgetSignal } from '@/lib/services/budgetFeasibility'
+import { budgetSignal, medianBudgetFor } from '@/lib/services/budgetFeasibility'
 import BudgetFeasibilityMap from './BudgetFeasibilityMap'
 
 // Non-linear budget steps:
@@ -20,8 +20,9 @@ function buildBudgetScale(): number[] {
 }
 const SCALE = buildBudgetScale()
 const SCALE_MAX_INDEX = SCALE.length - 1
-const DEFAULT_MIN_INDEX = SCALE.indexOf(250_000)
-const DEFAULT_MAX_INDEX = SCALE.indexOf(500_000)
+// min always starts at 0; max defaults to "ratio = 1" against the selected
+// IRIS, falling back to 500K when nothing's been picked upstream.
+const FALLBACK_MAX_INDEX = SCALE.indexOf(500_000)
 
 function formatBudget(value: number): string {
   if (value === 0) return '0'
@@ -56,19 +57,36 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
   // missing, fall back to the BienStep's default so the math still works.
   const surface = minSurface ?? 50
 
-  // Hydrate slider position from store, fall back to sensible defaults.
+  // Initial slider positions:
+  //   min: always 0 (left edge)
+  //   max: median(medians_of_selected_iris) × surface — exactly the
+  //        ratio=1.0 budget. The signal lights up "Budget dans la moyenne"
+  //        on first paint so the user immediately sees the calibration.
+  //   Hydrate from store ONLY if the user has already touched the slider
+  //   in a previous visit (budgetMax not null).
   const initialMinIndex = useMemo(
-    () => (budgetMin == null ? DEFAULT_MIN_INDEX : findClosestIndex(budgetMin)),
+    () => (budgetMin == null ? 0 : findClosestIndex(budgetMin)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
-  const initialMaxIndex = useMemo(
-    () => (budgetMax == null ? DEFAULT_MAX_INDEX : findClosestIndex(budgetMax)),
+  const initialMaxIndex = useMemo(() => {
+    if (budgetMax != null) return findClosestIndex(budgetMax)
+    const med = medianBudgetFor(selectedIrisIds, surface)
+    if (med == null) return FALLBACK_MAX_INDEX
+    return findClosestIndex(med)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  )
+  }, [])
   const [minIndex, setMinIndex] = useState<number>(initialMinIndex)
   const [maxIndex, setMaxIndex] = useState<number>(initialMaxIndex)
+
+  // Persist the computed initial values once on mount so the user can leave
+  // this step without touching the slider and still have a budget recorded.
+  useEffect(() => {
+    if (budgetMin == null || budgetMax == null) {
+      setBudgetRange(SCALE[initialMinIndex], SCALE[initialMaxIndex])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const minValue = SCALE[minIndex]
   const maxValue = SCALE[maxIndex]
@@ -191,14 +209,20 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
         </div>
       </div>
 
-      {/* Feasibility map — takes the remaining vertical space */}
-      <div className="flex-1 min-h-0 mt-3">
+      {/* Feasibility map — square, width-driven aspect-ratio 1:1.
+          The map sizes by its own width, not the leftover flex space; we keep
+          the CTA pinned to the bottom via the spacer below. */}
+      <div className="flex-none mt-3">
         <BudgetFeasibilityMap
           selectedIrisIds={selectedIrisIds}
           budgetMax={maxValue}
           surface={surface}
         />
       </div>
+
+      {/* Spacer pushes the CTA to the bottom on tall screens; collapses to 0
+          on shorter screens (iPhone SE) so nothing scrolls. */}
+      <div className="flex-1 min-h-0" />
 
       {/* CTAs */}
       <div

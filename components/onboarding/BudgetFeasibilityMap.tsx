@@ -34,7 +34,10 @@ const MapShell = dynamic(() => import('./BudgetFeasibilityMapShell'), {
 
 export default function BudgetFeasibilityMap(props: BudgetFeasibilityMapProps) {
   return (
-    <div className="w-full h-full rounded-2xl overflow-hidden border border-black/8 relative">
+    <div
+      className="w-full rounded-2xl overflow-hidden border border-black/8 relative"
+      style={{ aspectRatio: '1 / 1' }}
+    >
       <MapShell {...props} />
     </div>
   )
