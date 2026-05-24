@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
+import type { GeoZone } from '@/lib/services/geoDataService'
 
 /**
  * Read-only map showing each selected IRIS polygon coloured by feasibility
@@ -10,14 +11,15 @@ import { Loader2 } from 'lucide-react'
  * triggering a React re-render of the map. That keeps the slider at 60fps
  * even with hundreds of polygons.
  *
- * Same Leaflet stack + tile provider as ZoneMap (Quartiers step) for visual
- * consistency. Different component because feasibility has zero interactivity
- * — duplicating the simpler surface area is lighter than adding a mode flag
- * to ZoneMap.
+ * The IRIS geometries are passed in directly (loaded by the parent step).
+ * That way we avoid a second fetch and we trust the parent to have already
+ * expanded any arrondissement / quartier / commune selection into its
+ * constituent IRIS — a coverage detail the map shouldn't have to know about.
  */
 
 interface BudgetFeasibilityMapProps {
-  selectedIrisIds: string[]
+  irisZones: GeoZone[]
+  loading: boolean
   budgetMax: number
   surface: number
 }

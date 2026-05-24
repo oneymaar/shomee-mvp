@@ -1,21 +1,17 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { Loader2 } from 'lucide-react'
-import {
-  fetchParisGeoData,
-  fetchParisIris,
-  fetchSuburbanCommunes,
-  type GeoZone,
-} from '@/lib/services/geoDataService'
+import type { GeoZone } from '@/lib/services/geoDataService'
 import { computeFeasibility, NO_DATA_FILL } from '@/lib/services/budgetFeasibility'
 
 const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
 interface BudgetFeasibilityMapShellProps {
-  selectedIrisIds: string[]
+  irisZones: GeoZone[]
+  loading: boolean
   budgetMax: number
   surface: number
 }
@@ -223,35 +219,11 @@ function IrisFeasibilityLayer({
 // ─── Public shell ───────────────────────────────────────────────────────────
 
 export default function BudgetFeasibilityMapShell({
-  selectedIrisIds,
+  irisZones,
+  loading,
   budgetMax,
   surface,
 }: BudgetFeasibilityMapShellProps) {
-  const [irisZones, setIrisZones] = useState<GeoZone[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const [geoData, communes] = await Promise.all([
-          fetchParisGeoData(),
-          fetchSuburbanCommunes(),
-        ])
-        const all = await fetchParisIris(geoData.quartiers, communes)
-        if (cancelled) return
-        const wanted = new Set(selectedIrisIds)
-        setIrisZones(all.filter(z => wanted.has(z.id)))
-      } catch (e) {
-        console.error('[BudgetFeasibilityMap] iris load failed', e)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   return (
     <div className="shomee-feasibility-map w-full h-full relative">
       <MapContainer

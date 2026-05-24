@@ -1,10 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
 import { budgetSignal, medianBudgetFor } from '@/lib/services/budgetFeasibility'
+import {
+  fetchParisGeoData,
+  fetchParisIris,
+  fetchSuburbanCommunes,
+  type GeoZone,
+} from '@/lib/services/geoDataService'
 import BudgetFeasibilityMap from './BudgetFeasibilityMap'
 
 // Non-linear budget steps:
@@ -20,9 +26,9 @@ function buildBudgetScale(): number[] {
 }
 const SCALE = buildBudgetScale()
 const SCALE_MAX_INDEX = SCALE.length - 1
-// min always starts at 0; max defaults to "ratio = 1" against the selected
-// IRIS, falling back to 500K when nothing's been picked upstream.
+const DEFAULT_MIN = 50_000
 const FALLBACK_MAX_INDEX = SCALE.indexOf(500_000)
+const INITIAL_MIN_INDEX = SCALE.indexOf(DEFAULT_MIN)
 
 function formatBudget(value: number): string {
   if (value === 0) return '0'
@@ -50,37 +56,97 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
   const {
     setBudgetRange, budgetMin, budgetMax,
     minSurface,
-    selectedIrisIds,
+    selectedIrisIds, selectedArrIds, selectedQuartierIds, selectedCommuneIds,
   } = useSearchStore()
 
   // Surface is supposed to be set in the previous "Bien" step. If somehow
   // missing, fall back to the BienStep's default so the math still works.
   const surface = minSurface ?? 50
 
-  // Initial slider positions:
-  //   min: always 0 (left edge)
-  //   max: median(medians_of_selected_iris) × surface — exactly the
-  //        ratio=1.0 budget. The signal lights up "Budget dans la moyenne"
-  //        on first paint so the user immediately sees the calibration.
-  //   Hydrate from store ONLY if the user has already touched the slider
-  //   in a previous visit (budgetMax not null).
+  // ── Resolve the effective IRIS set ───────────────────────────────────────
+  // The Quartiers step may leave only arrondissements / quartiers / communes
+  // populated when the user never zoomed deep enough for IRIS to load (a
+  // zoom-12 click on arr-12 records selectedArrIds but childIrisIds=[]).
+  // We expand here so the budget step always works at the IRIS grain
+  // regardless of how the user selected upstream.
+  const [effectiveIrisZones, setEffectiveIrisZones] = useState<GeoZone[]>([])
+  const [irisLoading, setIrisLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [geoData, communes] = await Promise.all([
+          fetchParisGeoData(),
+          fetchSuburbanCommunes(),
+        ])
+        const allIris = await fetchParisIris(geoData.quartiers, communes)
+        if (cancelled) return
+
+        const direct = new Set(selectedIrisIds)
+        const quSet  = new Set(selectedQuartierIds)
+        const comSet = new Set(selectedCommuneIds)
+        const arrSet = new Set(selectedArrIds)
+        // arr → quartiers index for fast lookup
+        const arrChildQuartiers = new Map<string, Set<string>>()
+        for (const qu of geoData.quartiers) {
+          if (!qu.parentId) continue
+          if (!arrChildQuartiers.has(qu.parentId)) arrChildQuartiers.set(qu.parentId, new Set())
+          arrChildQuartiers.get(qu.parentId)!.add(qu.id)
+        }
+
+        const picked: GeoZone[] = []
+        for (const iris of allIris) {
+          if (direct.has(iris.id)) { picked.push(iris); continue }
+          const parent = iris.parentId
+          if (!parent) continue
+          if (quSet.has(parent)) { picked.push(iris); continue }
+          if (comSet.has(parent)) { picked.push(iris); continue }
+          // grandparent (arrondissement) match
+          for (const arr of arrSet) {
+            if (arrChildQuartiers.get(arr)?.has(parent)) { picked.push(iris); break }
+          }
+        }
+
+        if (!cancelled) {
+          setEffectiveIrisZones(picked)
+          setIrisLoading(false)
+        }
+      } catch (e) {
+        console.error('[BudgetStep] effective IRIS resolution failed', e)
+        if (!cancelled) setIrisLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+    // Re-resolve when the upstream selection identity changes.
+  }, [selectedIrisIds.join('|'), selectedArrIds.join('|'), selectedQuartierIds.join('|'), selectedCommuneIds.join('|')])
+
+  const effectiveIrisIds = useMemo(
+    () => effectiveIrisZones.map(z => z.id),
+    [effectiveIrisZones],
+  )
+
+  // ── Slider state ─────────────────────────────────────────────────────────
+  // Initial min: 50K (or whatever the user committed last time).
+  // Initial max: 500K fallback while IRIS data is still loading; once we have
+  //   effective IRIS, recompute median(medians) × surface and snap the thumb,
+  //   but only if the user hasn't already touched the slider this session.
   const initialMinIndex = useMemo(
-    () => (budgetMin == null ? 0 : findClosestIndex(budgetMin)),
+    () => (budgetMin == null ? INITIAL_MIN_INDEX : findClosestIndex(budgetMin)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
-  const initialMaxIndex = useMemo(() => {
-    if (budgetMax != null) return findClosestIndex(budgetMax)
-    const med = medianBudgetFor(selectedIrisIds, surface)
-    if (med == null) return FALLBACK_MAX_INDEX
-    return findClosestIndex(med)
+  const initialMaxIndex = useMemo(
+    () => (budgetMax == null ? FALLBACK_MAX_INDEX : findClosestIndex(budgetMax)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    [],
+  )
   const [minIndex, setMinIndex] = useState<number>(initialMinIndex)
   const [maxIndex, setMaxIndex] = useState<number>(initialMaxIndex)
+  const userTouchedRef = useRef(false)
+  const initialMaxAppliedRef = useRef(budgetMax != null)
 
-  // Persist the computed initial values once on mount so the user can leave
-  // this step without touching the slider and still have a budget recorded.
+  // Persist defaults once on mount so the user can leave without touching.
   useEffect(() => {
     if (budgetMin == null || budgetMax == null) {
       setBudgetRange(SCALE[initialMinIndex], SCALE[initialMaxIndex])
@@ -88,23 +154,38 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Once effective IRIS resolve, snap the max thumb to the market-median
+  // budget (ratio = 1.0), unless the user is already driving the slider.
+  useEffect(() => {
+    if (irisLoading) return
+    if (userTouchedRef.current) return
+    if (initialMaxAppliedRef.current) return
+    const med = medianBudgetFor(effectiveIrisIds, surface)
+    if (med == null) return
+    const idx = findClosestIndex(med)
+    initialMaxAppliedRef.current = true
+    setMaxIndex(idx)
+    setBudgetRange(SCALE[minIndex], SCALE[idx])
+  }, [irisLoading, effectiveIrisIds, surface, minIndex, setBudgetRange])
+
   const minValue = SCALE[minIndex]
   const maxValue = SCALE[maxIndex]
 
-  // Persist on every change — the slider event is `input` (continuous).
   const commit = (lo: number, hi: number) => {
     setBudgetRange(SCALE[lo], SCALE[hi])
   }
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    userTouchedRef.current = true
     const idx = Number(e.target.value)
-    const next = Math.min(idx, maxIndex)  // never overtake the max thumb
+    const next = Math.min(idx, maxIndex)
     setMinIndex(next)
     commit(next, maxIndex)
   }
   const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    userTouchedRef.current = true
     const idx = Number(e.target.value)
-    const next = Math.max(idx, minIndex)  // never undercut the min thumb
+    const next = Math.max(idx, minIndex)
     setMaxIndex(next)
     commit(minIndex, next)
   }
@@ -118,10 +199,16 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
 
   // ── Signal ───────────────────────────────────────────────────────────────
   const signal = useMemo(
-    () => budgetSignal(selectedIrisIds, maxValue, surface),
-    [selectedIrisIds, maxValue, surface],
+    () => budgetSignal(effectiveIrisIds, maxValue, surface),
+    [effectiveIrisIds, maxValue, surface],
   )
   const dotColor = TONE_DOT[signal.tone] ?? TONE_DOT.none
+  const hasAnySelection =
+    effectiveIrisIds.length > 0 ||
+    selectedIrisIds.length > 0 ||
+    selectedArrIds.length > 0 ||
+    selectedQuartierIds.length > 0 ||
+    selectedCommuneIds.length > 0
 
   return (
     <div className="flex flex-col h-full px-4" style={{ overscrollBehavior: 'none', overflow: 'hidden' }}>
@@ -140,9 +227,8 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
         </p>
       </motion.div>
 
-      {/* Slider + values + signal — fixed height */}
+      {/* Slider + values + signal */}
       <div className="flex-none mt-1">
-        {/* Live values above the track */}
         <div className="flex items-baseline justify-between px-1 mb-2.5">
           <div>
             <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
@@ -158,7 +244,6 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
           </div>
         </div>
 
-        {/* Dual-thumb slider — two overlaid <input type="range"> sharing one track */}
         <div className="shomee-dual-slider">
           <div
             className="shomee-dual-slider-track"
@@ -167,22 +252,14 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
             }}
           />
           <input
-            type="range"
-            min={0}
-            max={SCALE_MAX_INDEX}
-            step={1}
-            value={minIndex}
-            onChange={handleMinChange}
+            type="range" min={0} max={SCALE_MAX_INDEX} step={1}
+            value={minIndex} onChange={handleMinChange}
             aria-label="Budget minimum"
             className="shomee-dual-slider-input shomee-dual-slider-input-min"
           />
           <input
-            type="range"
-            min={0}
-            max={SCALE_MAX_INDEX}
-            step={1}
-            value={maxIndex}
-            onChange={handleMaxChange}
+            type="range" min={0} max={SCALE_MAX_INDEX} step={1}
+            value={maxIndex} onChange={handleMaxChange}
             aria-label="Budget maximum"
             className="shomee-dual-slider-input shomee-dual-slider-input-max"
           />
@@ -201,6 +278,10 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
                 {signal.text}
               </p>
             </>
+          ) : hasAnySelection ? (
+            <p className="text-[13px] text-neutral-600 leading-snug">
+              Préparation de la lecture marché…
+            </p>
           ) : (
             <p className="text-[13px] text-neutral-600 leading-snug">
               Sélectionnez d&apos;abord vos quartiers pour activer la lecture marché.
@@ -209,19 +290,16 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
         </div>
       </div>
 
-      {/* Feasibility map — square, width-driven aspect-ratio 1:1.
-          The map sizes by its own width, not the leftover flex space; we keep
-          the CTA pinned to the bottom via the spacer below. */}
+      {/* Square feasibility map — receives geometries directly, no fetch here */}
       <div className="flex-none mt-3">
         <BudgetFeasibilityMap
-          selectedIrisIds={selectedIrisIds}
+          irisZones={effectiveIrisZones}
+          loading={irisLoading}
           budgetMax={maxValue}
           surface={surface}
         />
       </div>
 
-      {/* Spacer pushes the CTA to the bottom on tall screens; collapses to 0
-          on shorter screens (iPhone SE) so nothing scrolls. */}
       <div className="flex-1 min-h-0" />
 
       {/* CTAs */}

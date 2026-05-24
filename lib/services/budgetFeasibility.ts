@@ -104,12 +104,27 @@ export function feasibilityColor(ratio: number): string {
 export const NO_DATA_FILL = NO_DATA_COLOR
 
 // ─── Spatial noise (mock-only — remove when real per-IRIS data lands) ──────
-// Deterministic ±1 value smooth across space, multi-frequency sin/cos.
+// Deterministic [-1, 1] value, smoothly varying across space and guaranteed
+// distinct per IRIS even when two centroids land very close. Combines:
+//   (a) multi-frequency sin/cos on lat/lng — smooth gradients between neighbours
+//   (b) hash on the IRIS code — guarantees a distinct value per polygon
+// Equal weighting so adjacent IRIS stay close in colour but never identical.
 function spatialNoise(lng: number, lat: number): number {
   const f1 = Math.sin(lng * 30 + 0.31) * Math.cos(lat * 30 + 0.17)
   const f2 = Math.sin(lng * 78 + 1.91) * Math.cos(lat * 78 + 0.83) * 0.5
   const f3 = Math.sin(lng * 165 + 2.71) * Math.cos(lat * 165 + 1.13) * 0.25
   return (f1 + f2 + f3) / 1.75 // ~ [-1, 1]
+}
+function irisCodeNoise(id: string): number {
+  // Cheap deterministic hash → [-1, 1]
+  let h = 2166136261 | 0
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  // Spread a bit more by also stirring the high bits
+  h ^= h >>> 13
+  return ((h >>> 0) / 0xffffffff) * 2 - 1
 }
 
 // ─── Ratio + signal ─────────────────────────────────────────────────────────
@@ -141,18 +156,21 @@ export function computeFeasibility(
   return iris.map(i => {
     const m = irisMedian(i.id)
     if (!m) return { irisId: i.id, ratio: null, color: NO_DATA_COLOR }
-    // Median jitter (±15%) — gives realistic spatial variation between
-    // neighbours even when the underlying fallback is per-commune flat.
-    // Ratio jitter (±5%) — adds intra-zone radiance so adjacent IRIS show
-    // a soft gradient instead of identical fills.
+    // Mock-only realism: spread the per-commune flat fallback into a smooth
+    // ±20% variation per IRIS. Mix the spatial term (smooth gradient between
+    // neighbours) with a per-code hash (guarantees distinct values even when
+    // centroids collide). Drop this whole block when the batch script lands
+    // real per-IRIS medians.
     let median = m.median
-    let ratio = budgetMax / (median * surface)
     if (i.centroid) {
-      const n = spatialNoise(i.centroid[0], i.centroid[1])
-      median = median * (1 + n * 0.15)
-      ratio = budgetMax / (median * surface)
-      ratio = ratio * (1 + n * 0.05)
+      const ns = spatialNoise(i.centroid[0], i.centroid[1])
+      const nh = irisCodeNoise(i.id)
+      const n = ns * 0.6 + nh * 0.4
+      median = median * (1 + n * 0.20)
+    } else {
+      median = median * (1 + irisCodeNoise(i.id) * 0.20)
     }
+    const ratio = budgetMax / (median * surface)
     return { irisId: i.id, ratio, color: feasibilityColor(ratio) }
   })
 }
