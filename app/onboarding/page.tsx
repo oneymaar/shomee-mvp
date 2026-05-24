@@ -9,8 +9,8 @@ import IntroStep from '@/components/onboarding/IntroStep'
 import LocationStep from '@/components/onboarding/LocationStep'
 import LocationMapStep from '@/components/onboarding/LocationMapStep'
 import ClarificationStep from '@/components/onboarding/ClarificationStep'
+import BienStep from '@/components/onboarding/BienStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
-import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep'
 import PrioritiesStep from '@/components/onboarding/PrioritiesStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
@@ -30,9 +30,10 @@ function MapLoadingScreen() {
   )
 }
 
-// Steps: 0=Intro, 1=Location (text + map), 2=Budget, 3=PropertyType, 4=Priorities, 5=AI
-// locationMapOpen is a sub-state of step 1 — still the same Localisation step.
-const STEP_LABELS = ['Localisation', 'Budget', 'Critères', 'Vibes'] as const
+// Steps: 0=Intro, 1=Location (text + map), 2=Bien, 3=Budget, 4=Priorities, 5=AI
+// locationMapOpen / clarificationData are sub-states of step 1 — still the
+// same Localisation step.
+const STEP_LABELS = ['Quartiers', 'Bien', 'Budget', 'Autres critères'] as const
 const TOTAL_STEPS = STEP_LABELS.length
 
 type Direction = 1 | -1
@@ -411,11 +412,11 @@ export default function OnboardingPage() {
             )}
 
             {step === 2 && (
-              <BudgetStep onNext={handleNext} onSkip={handleSkip} />
+              <BienStep onNext={handleNext} onSkip={handleSkip} />
             )}
 
             {step === 3 && (
-              <PropertyTypeStep onNext={handleNext} onSkip={handleSkip} />
+              <BudgetStep onNext={handleNext} onSkip={handleSkip} />
             )}
 
             {step === 4 && (

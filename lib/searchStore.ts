@@ -19,7 +19,7 @@ export interface LocationIntent {
   parserSource?: 'spatial_intent_parser' | 'llm_fallback'
 }
 
-export type PropertyType = 'appartement' | 'maison' | 'studio' | 'loft' | 'duplex'
+export type PropertyType = 'appartement' | 'maison' | 'loft' | 'atelier'
 
 export interface SearchPreferences {
   locationQuery: string

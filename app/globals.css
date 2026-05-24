@@ -62,3 +62,49 @@ body {
 .station-popup .leaflet-popup-tip-container {
   display: none;
 }
+
+/* Surface slider — onboarding "Bien" step.
+   Track background is set inline (terracotta gradient up to the thumb).
+   Thumb: terracotta circle with subtle shadow, larger touch target. */
+.shomee-surface-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  outline: none;
+  touch-action: pan-y;
+  cursor: pointer;
+}
+.shomee-surface-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #914E3C;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(145, 78, 60, 0.25);
+  cursor: grab;
+  transition: transform 120ms ease;
+}
+.shomee-surface-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+.shomee-surface-slider::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #914E3C;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(145, 78, 60, 0.25);
+  cursor: grab;
+  transition: transform 120ms ease;
+}
+.shomee-surface-slider::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+.shomee-surface-slider::-moz-range-track {
+  background: transparent;
+}
