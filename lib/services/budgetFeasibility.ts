@@ -18,10 +18,28 @@
 
 import { irisMedian } from './irisMarketService'
 
-const STOP_TIGHT   = { ratio: 0.7, hex: '#A05A40' } // terracotta atténué
-const STOP_AVERAGE = { ratio: 1.0, hex: '#C4A87A' } // beige/sable
-const STOP_COMFORT = { ratio: 1.3, hex: '#7A9E7E' } // vert sauge doux
-const NO_DATA_COLOR = '#C8C0B0'                     // gris neutre
+// Five-stop palette — soft, intuitive, "positive" without being loud.
+// The ratio range [0.6, 1.6] gives more granularity than the previous
+// 3-stop [0.7, 1.3] and avoids dark greens that read negatively.
+const STOPS: Array<{ ratio: number; hex: string }> = [
+  { ratio: 0.6, hex: '#C17A6F' }, // Budget très serré       (terracotta doux)
+  { ratio: 0.8, hex: '#C4956A' }, // Budget serré            (orange sable)
+  { ratio: 1.0, hex: '#C4B48A' }, // Budget moyen            (beige neutre)
+  { ratio: 1.3, hex: '#A8C4A0' }, // Budget confortable      (sauge clair)
+  { ratio: 1.6, hex: '#7DA882' }, // Budget très large       (sauge saturé)
+]
+const RATIO_MIN = STOPS[0].ratio
+const RATIO_MAX = STOPS[STOPS.length - 1].ratio
+const NO_DATA_COLOR = '#C8C0B0' // gris neutre
+
+/** Legend gradient — evenly-spaced 5 stops so the "Dans la moyenne" label
+ *  sits exactly above the central (beige) colour. Used only for the small
+ *  horizontal bar above the map. The per-IRIS colours on the map use the
+ *  ratio-mapped interpolation below. */
+export const LEGEND_GRADIENT_CSS = (() => {
+  const parts = STOPS.map((s, i) => `${s.hex} ${(i / (STOPS.length - 1)) * 100}%`)
+  return `linear-gradient(to right, ${parts.join(', ')})`
+})()
 
 // ─── Color helpers ──────────────────────────────────────────────────────────
 
@@ -64,9 +82,7 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
-const HSL_TIGHT   = hexToHsl(STOP_TIGHT.hex)
-const HSL_AVERAGE = hexToHsl(STOP_AVERAGE.hex)
-const HSL_COMFORT = hexToHsl(STOP_COMFORT.hex)
+const HSL_STOPS: Array<[number, number, number]> = STOPS.map(s => hexToHsl(s.hex))
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
@@ -83,22 +99,24 @@ function lerpHsl(a: [number, number, number], b: [number, number, number], t: nu
 }
 
 /**
- * Continuous color for a feasibility ratio.
- *  - ratio ≤ 0.7 clamps to STOP_TIGHT
- *  - ratio ≥ 1.3 clamps to STOP_COMFORT
- *  - between: interpolated through STOP_AVERAGE at ratio = 1.0
+ * Continuous color for a feasibility ratio across the 5-stop palette.
+ *  - ratio ≤ 0.6 clamps to the "très serré" stop (#C17A6F).
+ *  - ratio ≥ 1.6 clamps to the "très large" stop (#7DA882).
+ *  - between: HSL-interpolated through the two consecutive stops bracketing
+ *    the ratio (e.g. 0.9 → between "serré" 0.8 and "moyen" 1.0).
  */
 export function feasibilityColor(ratio: number): string {
   if (!Number.isFinite(ratio) || ratio <= 0) return NO_DATA_COLOR
-  const clamped = Math.max(STOP_TIGHT.ratio, Math.min(STOP_COMFORT.ratio, ratio))
-  if (clamped <= STOP_AVERAGE.ratio) {
-    const t = (clamped - STOP_TIGHT.ratio) / (STOP_AVERAGE.ratio - STOP_TIGHT.ratio)
-    const [h, s, l] = lerpHsl(HSL_TIGHT, HSL_AVERAGE, t)
-    return hslToHex(h, s, l)
+  const clamped = Math.max(RATIO_MIN, Math.min(RATIO_MAX, ratio))
+  for (let i = 0; i < STOPS.length - 1; i++) {
+    const lo = STOPS[i], hi = STOPS[i + 1]
+    if (clamped <= hi.ratio) {
+      const t = (clamped - lo.ratio) / (hi.ratio - lo.ratio)
+      const [h, s, l] = lerpHsl(HSL_STOPS[i], HSL_STOPS[i + 1], t)
+      return hslToHex(h, s, l)
+    }
   }
-  const t = (clamped - STOP_AVERAGE.ratio) / (STOP_COMFORT.ratio - STOP_AVERAGE.ratio)
-  const [h, s, l] = lerpHsl(HSL_AVERAGE, HSL_COMFORT, t)
-  return hslToHex(h, s, l)
+  return STOPS[STOPS.length - 1].hex
 }
 
 export const NO_DATA_FILL = NO_DATA_COLOR
@@ -207,7 +225,7 @@ export function budgetSignal(
 
   if (median >= 1.3)  return { text: 'Budget confortable pour vos zones',                    tone: 'comfort',    ratio: median }
   if (median >= 1.0)  return { text: 'Budget dans la moyenne — plusieurs biens accessibles', tone: 'average',    ratio: median }
-  if (median >= 0.7)  return { text: 'Budget serré — quelques opportunités existent',        tone: 'tight',      ratio: median }
+  if (median >= 0.8)  return { text: 'Budget serré — quelques opportunités existent',        tone: 'tight',      ratio: median }
   return                       { text: 'Budget très limité pour ces zones',                    tone: 'very_tight', ratio: median }
 }
 

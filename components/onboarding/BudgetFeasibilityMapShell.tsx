@@ -19,7 +19,7 @@ interface BudgetFeasibilityMapShellProps {
 function fillStyleFor(color: string): L.PathOptions {
   return {
     fillColor: color,
-    fillOpacity: 0.65,
+    fillOpacity: 0.70,
     weight: 0,      // no internal strokes — outline is a separate layer
     opacity: 0,
     stroke: false,
@@ -37,7 +37,7 @@ const OUTLINE_STYLE: L.PathOptions = {
 
 function zonesToBounds(
   zones: GeoZone[],
-  coverage = 0.92,
+  coverage = 1,
 ): [[number, number], [number, number]] | null {
   let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity
   let found = false
@@ -191,8 +191,10 @@ function IrisFeasibilityLayer({
     outlineLayer.addTo(map)
     outlineLayerRef.current = outlineLayer
 
+    // Auto-fit: target ~80% coverage of the square map with ~10% margin on
+    // each side. 36px padding on a 343px-usable iPhone X frame ≈ 10.5%.
     const bounds = zonesToBounds(irisZones)
-    if (bounds) map.fitBounds(bounds, { padding: [16, 16], maxZoom: 14, animate: false })
+    if (bounds) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false })
 
     return () => {
       fillLayer.remove()
@@ -230,6 +232,7 @@ export default function BudgetFeasibilityMapShell({
         center={PARIS_CENTER}
         zoom={12}
         style={{ height: '100%', width: '100%' }}
+        // Strictly non-interactive — this is a visualisation, not a tool.
         zoomControl={false}
         attributionControl={false}
         dragging={false}

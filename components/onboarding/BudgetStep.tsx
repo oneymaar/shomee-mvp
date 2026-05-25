@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
-import { budgetSignal, medianBudgetFor } from '@/lib/services/budgetFeasibility'
+import { budgetSignal, medianBudgetFor, LEGEND_GRADIENT_CSS } from '@/lib/services/budgetFeasibility'
 import {
   fetchParisGeoData,
   fetchParisIris,
@@ -47,11 +47,12 @@ function formatBudget(value: number): string {
   return `${(value / 1_000).toLocaleString('fr-FR')} K€`
 }
 
+// Dot colours match the new 5-stop palette used on the map / legend.
 const TONE_DOT: Record<string, string> = {
-  comfort: '#7A9E7E',
-  average: '#C4A87A',
-  tight: '#A05A40',
-  very_tight: '#7A3A28',
+  comfort: '#A8C4A0',    // sauge clair
+  average: '#C4B48A',    // beige neutre
+  tight: '#C4956A',      // orange sable
+  very_tight: '#C17A6F', // terracotta doux
   none: '#A3A3A3',
 }
 
@@ -295,6 +296,21 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
               Sélectionnez d&apos;abord vos quartiers pour activer la lecture marché.
             </p>
           )}
+        </div>
+      </div>
+
+      {/* Colour legend — horizontal gradient bar with 3 anchor labels.
+          Self-explanatory ("Serré / Dans la moyenne / Confortable"), no title. */}
+      <div className="flex-none mt-3">
+        <div
+          className="w-full h-1.5 rounded-full"
+          style={{ background: LEGEND_GRADIENT_CSS }}
+          aria-hidden
+        />
+        <div className="flex justify-between text-[11px] text-neutral-600 mt-1.5 leading-none">
+          <span>Serré</span>
+          <span>Dans la moyenne</span>
+          <span>Confortable</span>
         </div>
       </div>
 
