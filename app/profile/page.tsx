@@ -54,7 +54,7 @@ export default function ProfilePage() {
         {/* Header */}
         <div
           className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
-          style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+          style={{ backgroundColor: '#FDF5F2', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
         >
           <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Mon profil</h1>
           <p className="text-neutral-500 text-xs mt-0.5">Utilisateur SHOMEE</p>
@@ -104,7 +104,7 @@ export default function ProfilePage() {
           <button
             onClick={handleResetOnboarding}
             className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-black/8 bg-white text-sm font-medium active:bg-black/4 transition-colors"
-            style={{ color: '#914E3C' }}
+            style={{ color: '#BC4F29' }}
           >
             <RefreshCw size={14} />
             Modifier ma recherche

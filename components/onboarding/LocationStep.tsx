@@ -33,8 +33,8 @@ const ENTITY_COLORS: Record<RecognizedLocationEntity['type'], { bg: string; text
   rer_station:        { bg: 'rgba(14,116,144,0.08)',  text: '#0e7490', border: 'rgba(14,116,144,0.2)' },
   tram_station:       { bg: 'rgba(5,150,105,0.08)',   text: '#059669', border: 'rgba(5,150,105,0.2)' },
   transilien_station: { bg: 'rgba(101,163,13,0.08)',  text: '#65a30d', border: 'rgba(101,163,13,0.2)' },
-  semantic_neighborhood: { bg: 'rgba(145,78,60,0.08)', text: '#914E3C', border: 'rgba(145,78,60,0.2)' },
-  administrative_area:   { bg: 'rgba(145,78,60,0.08)', text: '#914E3C', border: 'rgba(145,78,60,0.2)' },
+  semantic_neighborhood: { bg: 'rgba(188,79,41,0.08)', text: '#BC4F29', border: 'rgba(188,79,41,0.2)' },
+  administrative_area:   { bg: 'rgba(188,79,41,0.08)', text: '#BC4F29', border: 'rgba(188,79,41,0.2)' },
 }
 
 // ─── Example pools (3 types, one picked randomly per page load) ────────────
@@ -224,7 +224,7 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
         <div
           className="bg-white border border-black/8 rounded-2xl px-4 py-3.5 shadow-sm"
           style={{
-            borderColor: query.trim().length > 0 ? 'rgba(145,78,60,0.3)' : undefined,
+            borderColor: query.trim().length > 0 ? 'rgba(188,79,41,0.3)' : undefined,
           }}
         >
           <textarea
@@ -294,7 +294,7 @@ export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onC
             disabled={!canContinue || isAnalyzing}
             className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{
-              backgroundColor: canContinue ? '#914E3C' : '#D4A89A',
+              backgroundColor: canContinue ? '#BC4F29' : '#E69C85',
               cursor: canContinue ? 'pointer' : 'default',
             }}
           >

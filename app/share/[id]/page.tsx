@@ -50,7 +50,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
         {/* Top bar — download CTA */}
         <div
           className="absolute top-0 left-0 right-0 z-30 border-b border-white/10"
-          style={{ backgroundColor: '#914E3C', paddingTop: 'env(safe-area-inset-top, 0px)' }}
+          style={{ backgroundColor: '#BC4F29', paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
           <div className="flex items-center justify-between px-4 h-[52px] gap-3">
             <p className="text-white/90 text-[13px] leading-tight">
@@ -95,7 +95,7 @@ export default function SharePage({ params }: { params: Promise<{ id: string }> 
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
                   className="w-full rounded-3xl p-6 shadow-2xl"
-                  style={{ backgroundColor: '#914E3C' }}
+                  style={{ backgroundColor: '#BC4F29' }}
                   onClick={e => e.stopPropagation()}
                 >
                   <button

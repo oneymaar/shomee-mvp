@@ -42,7 +42,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
           )}
         </div>
         {unread && (
-          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-[#f5f0e8]" />
+          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-[#FDF5F2]" />
         )}
       </div>
 
@@ -75,7 +75,7 @@ function MessagesEmpty() {
     <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'var(--nav-h)' }}>
       <div
         className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
-        style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+        style={{ backgroundColor: '#FDF5F2', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
       >
         <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Messages</h1>
         <p className="text-neutral-500 text-xs mt-0.5">Vos échanges avec les agents</p>
@@ -110,7 +110,7 @@ function MessagesList() {
     <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ bottom: 'var(--nav-h)' }}>
       <div
         className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
-        style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+        style={{ backgroundColor: '#FDF5F2', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
       >
         <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Messages</h1>
         <p className="text-neutral-500 text-xs mt-0.5">Vos échanges avec les agents</p>

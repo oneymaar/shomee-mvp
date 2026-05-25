@@ -23,7 +23,7 @@ function MapLoadingScreen() {
         animate={{ rotate: 360 }}
         transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
       >
-        <Loader2 size={32} style={{ color: '#914E3C', opacity: 0.7 }} />
+        <Loader2 size={32} style={{ color: '#BC4F29', opacity: 0.7 }} />
       </motion.div>
       <p className="text-[15px] text-neutral-600 font-medium">SHOMEE réfléchit…</p>
     </div>
@@ -297,7 +297,7 @@ export default function OnboardingPage() {
     <div
       className="fixed inset-x-0 top-0 flex flex-col overflow-hidden"
       style={{
-        background: '#f5f0e8',
+        background: '#FDF5F2',
         maxWidth: 430,
         margin: '0 auto',
         height: viewportH ? `${viewportH}px` : '100svh',
@@ -328,14 +328,14 @@ export default function OnboardingPage() {
                 const isPast = i < step - 1
                 const isFuture = !isActive && !isPast
                 // Active: full terracotta bold | Past: pale terracotta bold
-                // (same hue as the disabled CTA `#D4A89A`) | Future: gray normal
+                // (same hue as the disabled CTA `#E69C85`) | Future: gray normal
                 const barColor =
-                  isActive ? '#914E3C' :
-                  isPast   ? '#D4A89A' :
+                  isActive ? '#BC4F29' :
+                  isPast   ? '#E69C85' :
                              'rgba(0,0,0,0.1)'
                 const labelColor =
-                  isActive ? '#914E3C' :
-                  isPast   ? '#D4A89A' :
+                  isActive ? '#BC4F29' :
+                  isPast   ? '#E69C85' :
                              '#525252'  // neutral-600 — readable on cream
                 const labelWeight = (isActive || isPast) ? 700 : 500
                 return (
@@ -438,7 +438,7 @@ export default function OnboardingPage() {
       {mapWillOpen && !mapUiReady && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center"
-          style={{ background: '#f5f0e8' }}
+          style={{ background: '#FDF5F2' }}
         >
           <MapLoadingScreen />
         </div>

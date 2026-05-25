@@ -64,9 +64,9 @@ export default function PrioritiesStep({ onNext, onSkip }: PrioritiesStepProps) 
                 onClick={() => togglePriority(p.value)}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
                 style={{
-                  backgroundColor: isSelected ? '#914E3C' : 'white',
+                  backgroundColor: isSelected ? '#BC4F29' : 'white',
                   color: isSelected ? 'white' : '#1a1a1a',
-                  borderColor: isSelected ? '#914E3C' : 'rgba(0,0,0,0.08)',
+                  borderColor: isSelected ? '#BC4F29' : 'rgba(0,0,0,0.08)',
                 }}
               >
                 <span>{p.emoji}</span>
@@ -96,7 +96,7 @@ export default function PrioritiesStep({ onNext, onSkip }: PrioritiesStepProps) 
         <button
           onClick={onNext}
           className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-          style={{ backgroundColor: '#914E3C' }}
+          style={{ backgroundColor: '#BC4F29' }}
         >
           {priorities.length > 0 ? 'Voir ma sélection' : 'Passer'}
           <ChevronRight size={18} />

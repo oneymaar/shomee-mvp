@@ -62,14 +62,14 @@ function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
       {/* Inner cream circle — 7px ring visible */}
       <div
         className="absolute rounded-full"
-        style={{ inset: 7, backgroundColor: '#f5f0e8' }}
+        style={{ inset: 7, backgroundColor: '#FDF5F2' }}
       />
       {/* Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ gap: 2 }}>
-        <span style={{ color: '#914E3C', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>
+        <span style={{ color: '#BC4F29', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>
           {displayScore}%
         </span>
-        <span style={{ color: '#914E3C', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1 }}>
+        <span style={{ color: '#BC4F29', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1 }}>
           MATCH
         </span>
       </div>

@@ -40,12 +40,12 @@ export default function ClarificationStep({
       >
         <p
           className="text-[11px] font-bold uppercase tracking-widest mb-2"
-          style={{ color: '#914E3C' }}
+          style={{ color: '#BC4F29' }}
         >
           Affinons ensemble
         </p>
         <div className="flex items-start gap-2.5">
-          <HelpCircle size={20} className="flex-shrink-0 mt-0.5" style={{ color: '#914E3C' }} />
+          <HelpCircle size={20} className="flex-shrink-0 mt-0.5" style={{ color: '#BC4F29' }} />
           <h2 className="text-[20px] font-bold text-neutral-900 leading-snug tracking-tight">
             {question}
           </h2>
@@ -101,8 +101,8 @@ export default function ClarificationStep({
           onClick={onOpenAnyway}
           className="w-full py-3.5 rounded-2xl font-semibold text-[14px] active:opacity-80 transition-opacity border"
           style={{
-            color: '#914E3C',
-            borderColor: 'rgba(145,78,60,0.35)',
+            color: '#BC4F29',
+            borderColor: 'rgba(188,79,41,0.35)',
             backgroundColor: 'transparent',
           }}
         >

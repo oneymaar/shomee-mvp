@@ -19,7 +19,7 @@ export default function BottomNav() {
   const unreadCount = conversations.filter(hasUnread).length
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/10" style={{ backgroundColor: '#f5f0e8' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/10" style={{ backgroundColor: '#FDF5F2' }}>
       <div className="flex items-center justify-around px-2 h-[60px]">
         {tabs.map(({ label, href, icon: Icon }) => {
           const active = pathname.startsWith(href)
@@ -32,13 +32,13 @@ export default function BottomNav() {
               data-tab={label.toLowerCase()}
               className={clsx(
                 'flex flex-col items-center gap-0.5 px-5 py-1.5 transition-all duration-200',
-                active ? 'text-[#914E3C]' : 'text-neutral-400',
+                active ? 'text-[#BC4F29]' : 'text-neutral-400',
               )}
             >
               <div className="relative">
                 <Icon size={23} strokeWidth={active ? 1.5 : 1.8} className={active ? 'fill-current' : ''} />
                 {isMessages && unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-[#f5f0e8]" />
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-[#FDF5F2]" />
                 )}
               </div>
               <span className="text-[12px] font-medium tracking-wide">{label}</span>

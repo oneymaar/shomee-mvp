@@ -4,7 +4,7 @@ import { useRef, useEffect, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Send } from 'lucide-react'
 
-const CREAM = '#f5f0e8'
+const CREAM = '#FDF5F2'
 
 interface BAIAModalProps {
   open: boolean

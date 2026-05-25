@@ -45,7 +45,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
   return (
     <div
       className="flex flex-col items-center justify-center h-full px-8 text-center"
-      style={{ background: 'linear-gradient(135deg, #f5f0e8 0%, #f0e8df 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #FDF5F2 0%, #f0e8df 100%)' }}
     >
       {/* BAIA avatar */}
       <motion.div
@@ -58,13 +58,13 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
           animate={{ scale: [1, 1.06, 1] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           className="w-20 h-20 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(145,78,60,0.08)' }}
+          style={{ background: 'rgba(188,79,41,0.08)' }}
         >
           <motion.div
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
             className="w-14 h-14 rounded-full overflow-hidden"
-            style={{ border: '2px solid rgba(145,78,60,0.2)' }}
+            style={{ border: '2px solid rgba(188,79,41,0.2)' }}
           >
             <Image src="/Baia couleur 2.png" alt="BAIA" width={56} height={56} className="object-cover" />
           </motion.div>
@@ -75,7 +75,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
           <motion.div
             key={i}
             className="absolute w-2 h-2 rounded-full"
-            style={{ background: '#914E3C', opacity: 0.3, top: '50%', left: '50%' }}
+            style={{ background: '#BC4F29', opacity: 0.3, top: '50%', left: '50%' }}
             animate={{
               x: Math.cos((i / 3) * Math.PI * 2) * 40 - 4,
               y: Math.sin((i / 3) * Math.PI * 2) * 40 - 4,
@@ -118,7 +118,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#914E3C' }}
+                  style={{ backgroundColor: '#BC4F29' }}
                 >
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                     <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -140,7 +140,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
           className="mt-8 px-5 py-3.5 bg-white border border-black/8 rounded-2xl flex items-center gap-3"
         >
           <div className="text-left">
-            <p className="text-[22px] font-bold" style={{ color: '#914E3C' }}>4</p>
+            <p className="text-[22px] font-bold" style={{ color: '#BC4F29' }}>4</p>
             <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">biens sélectionnés</p>
           </div>
           <div className="w-px h-8 bg-black/8" />

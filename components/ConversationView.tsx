@@ -93,12 +93,12 @@ export default function ConversationView({ property }: { property: Property }) {
   const hasMessages = messages.length > 0
 
   return (
-    <div className="absolute inset-0 flex flex-col" style={{ bottom: 'var(--nav-h)', backgroundColor: '#f5f0e8' }}>
+    <div className="absolute inset-0 flex flex-col" style={{ bottom: 'var(--nav-h)', backgroundColor: '#FDF5F2' }}>
 
       {/* ── Header ── */}
       <div
         className="shrink-0 flex items-center gap-3 px-4 border-b border-black/8"
-        style={{ backgroundColor: '#f5f0e8', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
+        style={{ backgroundColor: '#FDF5F2', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)', paddingBottom: '10px' }}
       >
         <button onClick={() => router.push('/messages')} className="text-neutral-500 -ml-1 p-1">
           <ChevronLeft size={22} />
@@ -169,7 +169,7 @@ export default function ConversationView({ property }: { property: Property }) {
                     ? 'text-white rounded-[20px] rounded-br-[5px]'
                     : 'bg-white text-neutral-900 rounded-[20px] rounded-bl-[5px] shadow-sm'
                 }`}
-                style={isUser ? { backgroundColor: '#914E3C' } : {}}
+                style={isUser ? { backgroundColor: '#BC4F29' } : {}}
               >
                 <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                 <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-white/60' : 'text-neutral-400'}`}>
@@ -213,7 +213,7 @@ export default function ConversationView({ property }: { property: Property }) {
       {/* ── Input bar ── */}
       <div
         className="shrink-0 flex items-end gap-2.5 px-4 py-3 border-t border-black/8"
-        style={{ backgroundColor: '#f5f0e8' }}
+        style={{ backgroundColor: '#FDF5F2' }}
       >
         <div className="flex-1 bg-white rounded-[20px] px-4 py-2.5 shadow-sm">
           <textarea
@@ -231,7 +231,7 @@ export default function ConversationView({ property }: { property: Property }) {
           className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
             text.trim() ? '' : 'bg-black/8'
           }`}
-          style={text.trim() ? { backgroundColor: '#914E3C' } : {}}
+          style={text.trim() ? { backgroundColor: '#BC4F29' } : {}}
         >
           <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-white' : 'text-neutral-400'} />
         </button>

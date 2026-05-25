@@ -2,10 +2,10 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #f5f0e8;
+  --background: #FDF5F2;
   --foreground: #1a1a1a;
-  --accent: #914E3C;
-  --cream: #f5f0e8;
+  --accent: #BC4F29;
+  --cream: #FDF5F2;
   --nav-h: 60px;
   --safe-top: env(safe-area-inset-top, 0px);
 }
@@ -23,7 +23,7 @@ html,
 body {
   height: 100%;
   overscroll-behavior: none;
-  background: #f5f0e8;
+  background: #FDF5F2;
   color: #1a1a1a;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -103,9 +103,9 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #914E3C;
+  background: #BC4F29;
   border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(145, 78, 60, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(188, 79, 41, 0.25);
   cursor: grab;
   transition: transform 120ms ease;
 }
@@ -118,9 +118,9 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #914E3C;
+  background: #BC4F29;
   border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(145, 78, 60, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(188, 79, 41, 0.25);
   cursor: grab;
   transition: transform 120ms ease;
 }

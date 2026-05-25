@@ -1000,7 +1000,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
             <button
               onClick={initMap}
               className="text-[13px] font-semibold px-4 py-2 rounded-full"
-              style={{ backgroundColor: '#914E3C', color: 'white' }}
+              style={{ backgroundColor: '#BC4F29', color: 'white' }}
             >
               Réessayer
             </button>
@@ -1054,9 +1054,9 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
                         onClick={() => handleRemoveTag(tag)}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border"
                         style={{
-                          backgroundColor: isFull ? 'rgba(145,78,60,0.14)' : 'rgba(145,78,60,0.07)',
-                          color: '#914E3C',
-                          borderColor: isFull ? '#914E3C' : 'rgba(145,78,60,0.45)',
+                          backgroundColor: isFull ? 'rgba(188,79,41,0.14)' : 'rgba(188,79,41,0.07)',
+                          color: '#BC4F29',
+                          borderColor: isFull ? '#BC4F29' : 'rgba(188,79,41,0.45)',
                           borderStyle: isFull ? 'solid' : 'dashed',
                         }}
                       >
@@ -1094,8 +1094,8 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
                     <button
                       key={tag.id}
                       onClick={() => handleRemoveBrief(tag)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border border-[rgba(145,78,60,0.35)]"
-                      style={{ backgroundColor: 'rgba(145,78,60,0.1)', color: '#914E3C' }}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold active:opacity-70 transition-opacity border border-[rgba(188,79,41,0.35)]"
+                      style={{ backgroundColor: 'rgba(188,79,41,0.1)', color: '#BC4F29' }}
                     >
                       {tag.icon === 'station' ? (
                         <span style={{
@@ -1147,7 +1147,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
           onClick={onValidate}
           disabled={!canValidate}
           className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-          style={{ backgroundColor: canValidate ? '#914E3C' : '#D4A89A', cursor: canValidate ? 'pointer' : 'default' }}
+          style={{ backgroundColor: canValidate ? '#BC4F29' : '#E69C85', cursor: canValidate ? 'pointer' : 'default' }}
         >
           <CheckCircle size={17} />
           Valider ma zone

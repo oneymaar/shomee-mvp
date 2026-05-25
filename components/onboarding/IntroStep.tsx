@@ -48,14 +48,14 @@ export default function IntroStep({ onStart, onQuick }: IntroStepProps) {
         <button
           onClick={onStart}
           className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white active:opacity-90 transition-opacity"
-          style={{ backgroundColor: '#914E3C' }}
+          style={{ backgroundColor: '#BC4F29' }}
         >
           Commencer
         </button>
         <button
           onClick={onQuick}
           className="w-full py-3.5 rounded-2xl font-medium text-[15px] active:bg-black/5 transition-colors"
-          style={{ color: '#914E3C' }}
+          style={{ color: '#BC4F29' }}
         >
           Aller directement sur le feed
         </button>

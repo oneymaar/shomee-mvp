@@ -298,14 +298,14 @@ export default function PropertyDetailSheet({
             <motion.div
               key="sheet-body"
               className="absolute inset-0 z-[70] flex flex-col overflow-hidden"
-              style={{ backgroundColor: '#f5f0e8' }}
+              style={{ backgroundColor: '#FDF5F2' }}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             >
               {/* ── STICKY HEADER ─────────────────────────────────────── */}
-              <div className="shrink-0" style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 0 rgba(0,0,0,0.06)' }}>
+              <div className="shrink-0" style={{ backgroundColor: '#FDF5F2', paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 0 rgba(0,0,0,0.06)' }}>
                 <div className="px-4 py-3">
                   {/* Agency + Close */}
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -367,7 +367,7 @@ export default function PropertyDetailSheet({
               </div>
 
               {/* ── CONTENT AREA ──────────────────────────────────────── */}
-              <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
+              <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#FDF5F2' }}>
 
                 {/* Scrollable body */}
                 <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 96 }}>
@@ -379,7 +379,7 @@ export default function PropertyDetailSheet({
                         <button
                           key={key}
                           onClick={() => setMediaTab(key)}
-                          style={mediaTab === key ? { backgroundColor: '#914E3C' } : {}}
+                          style={mediaTab === key ? { backgroundColor: '#BC4F29' } : {}}
                           className={clsx(
                             'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all',
                             mediaTab === key ? 'text-white' : 'text-neutral-500 border border-black/15',
@@ -638,7 +638,7 @@ export default function PropertyDetailSheet({
                   style={{ bottom: 8, filter: 'drop-shadow(0 -2px 12px rgba(0,0,0,0.12))' }}
                 >
                   {/* Left pill — 3 CTAs */}
-                  <div className="flex-1 rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden" style={{ backgroundColor: '#914E3C' }}>
+                  <div className="flex-1 rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden" style={{ backgroundColor: '#BC4F29' }}>
                     {[
                       { icon: MessageCircle, label: 'Message', onClick: onMessage },
                       { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = 'tel:+33670744935' } },
@@ -655,7 +655,7 @@ export default function PropertyDetailSheet({
                   </div>
 
                   {/* Right pill — Like + Share */}
-                  <div className="rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden px-1" style={{ backgroundColor: '#914E3C' }}>
+                  <div className="rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden px-1" style={{ backgroundColor: '#BC4F29' }}>
                     <button
                       onClick={onToggleFavorite}
                       className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"

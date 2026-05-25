@@ -44,7 +44,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
   )
 
   return (
-    <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
+    <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ backgroundColor: '#FDF5F2' }}>
       {/* Blurred property thumbnail as background */}
       <div className="absolute inset-0 opacity-8 pointer-events-none">
         <Image
@@ -101,10 +101,10 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                       onClick={() => toggle(id)}
                       className={`flex items-center gap-2 px-3 py-3 rounded-2xl border text-left transition-all ${
                         active
-                          ? 'text-white border-[#914E3C]'
+                          ? 'text-white border-[#BC4F29]'
                           : 'bg-white text-neutral-700 border-black/8 active:border-black/20'
                       }`}
-                      style={active ? { backgroundColor: '#914E3C' } : {}}
+                      style={active ? { backgroundColor: '#BC4F29' } : {}}
                     >
                       <span className="text-lg shrink-0">{emoji}</span>
                       <span className="text-sm font-medium leading-tight">{label}</span>
@@ -121,7 +121,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
                     ? 'text-white active:opacity-90'
                     : 'bg-black/8 text-neutral-400 cursor-not-allowed'
                 }`}
-                style={selected.length > 0 ? { backgroundColor: '#914E3C' } : {}}
+                style={selected.length > 0 ? { backgroundColor: '#BC4F29' } : {}}
               >
                 Envoyer mon retour
               </button>
@@ -143,7 +143,7 @@ export default function SkipFeedbackCard({ property, onAfterSubmit }: SkipFeedba
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#914E3C' }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ backgroundColor: '#BC4F29' }}>
                 <Check size={24} className="text-white" strokeWidth={2.5} />
               </div>
               <p className="text-neutral-900 font-semibold text-xl">Merci pour votre retour&nbsp;!</p>

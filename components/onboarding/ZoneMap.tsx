@@ -103,16 +103,16 @@ type ZoneState = 'unselected' | 'selected' | 'partial'
 
 function topLevelStyle(state: ZoneState): L.PathOptions {
   switch (state) {
-    case 'selected':  return { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.16, weight: 2.5, opacity: 0.9 }
-    case 'partial':   return { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.05, weight: 2, opacity: 0.55, dashArray: '7 4' }
+    case 'selected':  return { color: '#BC4F29', fillColor: '#BC4F29', fillOpacity: 0.16, weight: 2.5, opacity: 0.9 }
+    case 'partial':   return { color: '#BC4F29', fillColor: '#BC4F29', fillOpacity: 0.05, weight: 2, opacity: 0.55, dashArray: '7 4' }
     case 'unselected':return { color: '#444', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.18 }
   }
 }
 
 function quartierStyle(state: ZoneState): L.PathOptions {
   switch (state) {
-    case 'selected':  return { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.22, weight: 1.8, opacity: 0.85 }
-    case 'partial':   return { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.06, weight: 1.5, opacity: 0.5, dashArray: '5 3' }
+    case 'selected':  return { color: '#BC4F29', fillColor: '#BC4F29', fillOpacity: 0.22, weight: 1.8, opacity: 0.85 }
+    case 'partial':   return { color: '#BC4F29', fillColor: '#BC4F29', fillOpacity: 0.06, weight: 1.5, opacity: 0.5, dashArray: '5 3' }
     case 'unselected':return { color: '#555', fillColor: 'transparent', fillOpacity: 0, weight: 0.8, opacity: 0.22 }
   }
 }
@@ -121,13 +121,13 @@ function quartierStyle(state: ZoneState): L.PathOptions {
 // Selected: solid fill, no border → adjacent QAs fuse into one shape.
 // Partial/unselected: fully invisible → IRIS layer handles partial areas.
 function quartierStyleLowZoom(state: ZoneState): L.PathOptions {
-  if (state === 'selected') return { fillColor: '#914E3C', fillOpacity: 0.18, weight: 0, opacity: 0 }
+  if (state === 'selected') return { fillColor: '#BC4F29', fillOpacity: 0.18, weight: 0, opacity: 0 }
   return { fillOpacity: 0, weight: 0, opacity: 0 }
 }
 
 function irisStyle(selected: boolean): L.PathOptions {
   return selected
-    ? { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.28, weight: 1.5, opacity: 0.9 }
+    ? { color: '#BC4F29', fillColor: '#BC4F29', fillOpacity: 0.28, weight: 1.5, opacity: 0.9 }
     : { color: '#777', fillColor: 'transparent', fillOpacity: 0, weight: 0.6, opacity: 0.3 }
 }
 
@@ -136,7 +136,7 @@ function irisStyle(selected: boolean): L.PathOptions {
 // Unselected IRIS are fully transparent — invisible at low zoom (no visual noise).
 function irisStyleLowZoom(selected: boolean): L.PathOptions {
   return selected
-    ? { color: '#914E3C', fillColor: '#914E3C', fillOpacity: 0.22, weight: 0, opacity: 0 }
+    ? { color: '#BC4F29', fillColor: '#BC4F29', fillOpacity: 0.22, weight: 0, opacity: 0 }
     : { fillColor: 'transparent', fillOpacity: 0, weight: 0, opacity: 0 }
 }
 
@@ -144,7 +144,7 @@ function irisStyleLowZoom(selected: boolean): L.PathOptions {
 
 function makeLabel(text: string, state: ZoneState | 'selected' | 'unselected', fontSize = 11, bold = true): L.DivIcon {
   const isSelected = state === 'selected'
-  const color = isSelected ? '#914E3C' : '#2a2a2a'
+  const color = isSelected ? '#BC4F29' : '#2a2a2a'
   return L.divIcon({
     html: `<div style="
       display:inline-block;

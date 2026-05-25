@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className="h-full">
-      <body className="h-full" style={{ backgroundColor: '#f5f0e8' }}>
+      <body className="h-full" style={{ backgroundColor: '#FDF5F2' }}>
         <ServiceWorkerRegistrar />
         {children}
       </body>

@@ -21,7 +21,7 @@ export default function FavoritesPage() {
         {/* Header */}
         <div
           className="sticky top-0 z-10 border-b border-black/8 px-5 pb-4"
-          style={{ backgroundColor: '#f5f0e8', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
+          style={{ backgroundColor: '#FDF5F2', paddingTop: 'max(20px, env(safe-area-inset-top, 20px))' }}
         >
           <h1 className="text-neutral-900 font-bold text-xl tracking-tight">Favoris</h1>
           <p className="text-neutral-500 text-xs mt-0.5">
@@ -41,7 +41,7 @@ export default function FavoritesPage() {
             <Link
               href="/feed"
               className="font-semibold text-sm border rounded-full px-5 py-2.5 transition-colors active:opacity-70"
-              style={{ color: '#914E3C', borderColor: '#914E3C' }}
+              style={{ color: '#BC4F29', borderColor: '#BC4F29' }}
             >
               Explorer les biens
             </Link>

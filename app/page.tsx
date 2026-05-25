@@ -15,11 +15,11 @@ export default function SplashPage() {
 
   useEffect(() => {
     // Match body + theme-color to splash background so safe-area zone is terracotta
-    document.body.style.backgroundColor = '#914E3C'
+    document.body.style.backgroundColor = '#BC4F29'
     const themeMeta = document.querySelector('meta[name="theme-color"]')
-    if (themeMeta) themeMeta.setAttribute('content', '#914E3C')
+    if (themeMeta) themeMeta.setAttribute('content', '#BC4F29')
     return () => {
-      document.body.style.backgroundColor = '#f5f0e8'
+      document.body.style.backgroundColor = '#FDF5F2'
       if (themeMeta) themeMeta.setAttribute('content', '#000000')
     }
   }, [])
@@ -40,7 +40,7 @@ export default function SplashPage() {
   return (
     <motion.div
       className="fixed inset-0 flex flex-col items-center justify-center"
-      style={{ backgroundColor: '#914E3C' }}
+      style={{ backgroundColor: '#BC4F29' }}
       animate={{ opacity: exiting ? 0 : 1 }}
       initial={{ opacity: 1 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
@@ -72,7 +72,7 @@ export default function SplashPage() {
           <button
             onClick={navigateToFeed}
             className="text-white font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
-            style={{ backgroundColor: '#f5f0e8', color: '#914E3C' }}
+            style={{ backgroundColor: '#FDF5F2', color: '#BC4F29' }}
           >
             Commencer
           </button>
