@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ArrowUp, Check, X, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
@@ -36,9 +36,13 @@ const BUILDING_TAGS: string[] = [
 interface CriteriaStepProps {
   onNext: () => void
   onSkip: () => void
+  /** Bubbled up so the parent onboarding chrome (back + progress) can hide
+   *  while the textarea is focused — the focus mode is meant to be a
+   *  fullscreen parenthesis. */
+  onFocusChange?: (focused: boolean) => void
 }
 
-export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
+export default function CriteriaStep({ onNext, onSkip, onFocusChange }: CriteriaStepProps) {
   const {
     propertyTypes,
     propertyTags,
@@ -50,18 +54,23 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
     removeCustomCriteria,
   } = useSearchStore()
 
-  // Show the building category whenever the user hasn't restricted to maison-only.
-  // Empty propertyTypes (= Indifférent) → assume copro-relevant.
   const showBuilding = useMemo(() => {
     if (propertyTypes.length === 0) return true
     return propertyTypes.some((t) => t === 'appartement' || t === 'loft' || t === 'atelier')
   }, [propertyTypes])
 
-  // Focus mode — when the user taps the textarea, the rest of the screen
-  // collapses out so the keyboard never fights for vertical space. The
-  // textarea stays mounted across the switch (single React element, single
-  // DOM node) so iOS never sees a focus blip → the keyboard never closes.
+  // ── Focus mode state ─────────────────────────────────────────────────────
+  // Single textarea instance across both modes — never unmounts → iOS never
+  // sees a focus blip → keyboard stays open while the layout collapses.
+  // Reporting up to the parent so the global top bar (back arrow +
+  // progress) can also hide for a truly immersive parenthesis.
   const [isFocused, setIsFocused] = useState(false)
+  useEffect(() => {
+    onFocusChange?.(isFocused)
+  }, [isFocused, onFocusChange])
+  // Clean up on unmount (e.g. user navigates away mid-focus).
+  useEffect(() => () => onFocusChange?.(false), [onFocusChange])
+
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const [text, setText] = useState('')
@@ -96,16 +105,14 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
       setError('Erreur réseau. Réessayez.')
     } finally {
       setAnalyzing(false)
-      // Keep keyboard open across submissions — refocus inside the same
-      // gesture chain (rAF instead of timeout) so iOS doesn't dismiss it.
       requestAnimationFrame(() => textareaRef.current?.focus())
     }
   }
 
-  // Prevent the textarea from losing focus when the user taps the send
-  // button or a chip close button. preventDefault on pointer/mouse down
-  // stops the focus-stealing behaviour before the click fires — keeps the
-  // keyboard up so the flow stays conversational.
+  // Prevent the textarea from losing focus when the user taps action
+  // buttons (validate / chip close / × exit). preventDefault on
+  // pointerdown stops the focus transfer before the click fires — keeps
+  // the keyboard up during the action.
   const keepFocus = (e: React.PointerEvent | React.MouseEvent) => {
     if (document.activeElement === textareaRef.current) {
       e.preventDefault()
@@ -125,25 +132,26 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
       {/* ─── Top region ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0">
         {isFocused ? (
+          // Minimalist focus mode: ONLY a small orange × in the top-right.
+          // No label, no title — the parent onboarding bar is also hidden.
           <motion.div
             key="focus-top"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.18 }}
-            className="flex items-center justify-between px-4 pt-2 pb-2"
+            className="flex justify-end px-3 pt-3 pb-1"
+            style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
           >
-            <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">
-              Vos critères
-            </span>
             <button
               type="button"
+              aria-label="Quitter"
               onMouseDown={(e) => e.preventDefault()}
               onPointerDown={(e) => e.preventDefault()}
               onClick={exitFocus}
-              className="px-3 py-1 rounded-full text-[12.5px] font-semibold transition-colors active:opacity-70"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-opacity active:opacity-70"
               style={{ color: '#A64B27' }}
             >
-              Terminer
+              <X size={22} strokeWidth={2.2} />
             </button>
           </motion.div>
         ) : (
@@ -164,14 +172,10 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
         )}
       </div>
 
-      {/* ─── Middle scrollable area ─────────────────────────────────────────
-          - Normal mode: categories at top, hints/criteria below.
-          - Focus mode : just criteria chips, pinned to the bottom of this
-            region so they sit right above the textarea (which is in the
-            next flex slot). */}
+      {/* ─── Middle scrollable region ────────────────────────────────────── */}
       <div
         className={`flex-1 overflow-y-auto flex flex-col ${
-          isFocused ? 'px-4 pb-2 justify-end' : 'px-6 pb-3'
+          isFocused ? 'px-4 pb-1 justify-end' : 'px-6 pb-3'
         }`}
       >
         {!isFocused && (
@@ -204,7 +208,7 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
               </div>
             </motion.section>
 
-            {/* Catégorie 2 — L'immeuble (conditionnel) */}
+            {/* Catégorie 2 — L'immeuble (conditional) */}
             {showBuilding && (
               <motion.section
                 initial={{ opacity: 0, y: 10 }}
@@ -234,10 +238,8 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
               </motion.section>
             )}
 
-            {/* Catégorie 3 — section label only. The textarea itself sits
-                in the bottom flex slot below so it's pinned to the visible
-                viewport bottom (just above the CTAs in normal mode, and
-                just above the keyboard in focus mode). */}
+            {/* Catégorie 3 — section label only. Textarea + examples sit in
+                the bottom flex slot below. */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -246,29 +248,14 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
               <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
                 Précisez vos critères
               </p>
-              {/* Hints — only when no input and no parsed criteria. */}
-              {text.length === 0 && customCriteria.length === 0 && (
-                <p className="text-[11.5px] text-neutral-500 px-1 leading-snug">
-                  Ex&nbsp;: «&nbsp;ascenseur indispensable à partir du 3e&nbsp;»,
-                  «&nbsp;terrasse orientée sud&nbsp;», «&nbsp;pas de chambre sur rue&nbsp;».
-                </p>
-              )}
             </motion.div>
           </>
         )}
 
-        {/* Focus-mode hint when empty. */}
-        {isFocused && customCriteria.length === 0 && (
-          <p className="text-[12px] text-neutral-500 leading-snug pb-2">
-            Ex&nbsp;: «&nbsp;ascenseur indispensable à partir du 3e&nbsp;»,
-            «&nbsp;terrasse orientée sud&nbsp;», «&nbsp;pas de chambre sur rue&nbsp;».
-          </p>
-        )}
-
-        {/* Parsed criteria — visible in both modes, sits just above the
-            textarea (last child in this flex column). */}
+        {/* Parsed criteria — visible in both modes. Sits just above the
+            textarea so newest items appear right next to the input. */}
         {customCriteria.length > 0 && (
-          <div className={isFocused ? '' : 'mt-3'}>
+          <div className={isFocused ? 'pb-1.5' : 'mt-1'}>
             <div className="flex flex-wrap gap-1.5">
               <AnimatePresence initial={false}>
                 {customCriteria.map((c) => (
@@ -305,9 +292,7 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
         )}
       </div>
 
-      {/* ─── Input (always mounted) ─────────────────────────────────────────
-          Single React element across both modes so the textarea DOM node
-          never unmounts → iOS keyboard stays open during the layout switch. */}
+      {/* ─── Input region — always mounted, single textarea ─────────────── */}
       <div
         className={`flex-shrink-0 ${isFocused ? 'px-4 pt-1' : 'px-6 pt-1'}`}
         style={
@@ -316,29 +301,41 @@ export default function CriteriaStep({ onNext, onSkip }: CriteriaStepProps) {
             : undefined
         }
       >
+        {/* Inline hint examples — sit just above the textarea per the spec.
+            Visible in focus mode whenever there's no validated criteria yet
+            (so the user has anchors); also visible in normal mode in the
+            same situation for consistency. */}
+        {customCriteria.length === 0 && text.length === 0 && (
+          <p className="text-[11.5px] text-neutral-500 leading-snug px-1 mb-1.5">
+            Ex&nbsp;: «&nbsp;ascenseur indispensable à partir du 3e&nbsp;»,
+            «&nbsp;terrasse orientée sud&nbsp;», «&nbsp;pas de chambre sur rue&nbsp;».
+          </p>
+        )}
+
         {error && (
           <p className="text-[11.5px] text-[#B23228] mb-1.5 px-1">{error}</p>
         )}
+
         <div
           className="relative rounded-2xl bg-white border transition-colors"
           style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
         >
+          {/* CRITICAL: font-size ≥ 16px prevents iOS Safari from
+              auto-zooming on focus. The same rule applies on step 1
+              (LocationStep) — anything smaller would trigger a viewport
+              jump when the keyboard opens. */}
           <textarea
             ref={textareaRef}
             value={text}
             onChange={(e) => { setText(e.target.value); if (error) setError(null) }}
             onFocus={() => setIsFocused(true)}
-            // We don't auto-exit on blur — exit only via the explicit
-            // "Terminer" button. This prevents tap-outside accidents on
-            // mobile from collapsing the flow mid-edit. The user can also
-            // dismiss the keyboard via the OS-native keyboard-down button,
-            // which fires blur — handled by the global tap-outside below
-            // would re-open it; we keep isFocused true so the layout stays
-            // collapsed until they explicitly say "Terminer".
             placeholder="Décrivez les détails importants pour vous…"
             rows={isFocused ? 3 : 2}
-            className="w-full resize-none rounded-2xl bg-transparent text-[13.5px] leading-snug text-neutral-900 placeholder:text-neutral-400 outline-none px-3.5 py-2.5 pr-11"
-            style={{ minHeight: isFocused ? 76 : 58 }}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            className="w-full resize-none rounded-2xl bg-transparent text-[16px] leading-snug text-neutral-900 placeholder:text-neutral-400 outline-none px-3.5 py-2.5 pr-11"
+            style={{ minHeight: isFocused ? 82 : 64 }}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                 e.preventDefault()

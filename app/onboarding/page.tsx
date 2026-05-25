@@ -278,8 +278,13 @@ export default function OnboardingPage() {
     setClarificationData(null)
   }, [])
 
-  const showBack = step > 0
-  const showProgress = step >= 1 && step <= 4
+  // CriteriaStep collapses the chrome (back + progress) when its textarea
+  // enters focus mode. Tracked here so the top bar can react.
+  const [criteriaFocused, setCriteriaFocused] = useState(false)
+
+  const chromeHidden = step === 4 && criteriaFocused
+  const showBack = step > 0 && !chromeHidden
+  const showProgress = step >= 1 && step <= 4 && !chromeHidden
 
   // Key does NOT depend on mapLoading — changing it would re-mount LocationMapStep
   // and restart initMap, causing the partial-map flash bug.
@@ -420,7 +425,11 @@ export default function OnboardingPage() {
             )}
 
             {step === 4 && (
-              <CriteriaStep onNext={handleNext} onSkip={handleSkip} />
+              <CriteriaStep
+                onNext={handleNext}
+                onSkip={handleSkip}
+                onFocusChange={setCriteriaFocused}
+              />
             )}
 
             {step === 5 && (
