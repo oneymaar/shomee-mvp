@@ -20,9 +20,19 @@ function fillStyleFor(color: string): L.PathOptions {
   return {
     fillColor: color,
     fillOpacity: 0.70,
-    weight: 0,      // no internal strokes — outline is a separate layer
-    opacity: 0,
-    stroke: false,
+    // Same-colour stroke at the same opacity as the fill. Seals the
+    // sub-pixel gaps SVG anti-aliasing leaves between adjacent polygons:
+    //   - on an isolated edge → stroke = fill = invisible
+    //   - on a shared edge → two strokes overlap, effective opacity
+    //     ≈ 1 − (1−0.7)² ≈ 0.91 → seam covered by the gradient's own
+    //     colour, never a white pixel showing through.
+    // The deliberate white outer outline is still drawn by the separate
+    // edge-counting line layer.
+    color: color,
+    weight: 2,
+    opacity: 0.70,
+    stroke: true,
+    lineJoin: 'round',
   }
 }
 
@@ -191,16 +201,17 @@ function IrisFeasibilityLayer({
     outlineLayer.addTo(map)
     outlineLayerRef.current = outlineLayer
 
-    // Auto-fit: ~80% coverage with ~10% margin per side. Combined with
+    // Auto-fit: ~90% coverage with ~5% margin per side. Combined with
     // zoomSnap=0 on the MapContainer, Leaflet picks the exact fractional
     // zoom that places the selection bounding box at (container - 2*padding).
+    // 16px padding on a 343px-usable iPhone X frame ≈ 4.7% per side.
     // invalidateSize() is paranoia — guarantees Leaflet measures the
     // container before computing the fit, in case the dynamic-import shell
     // mounts before the parent flex layout has settled.
     const bounds = zonesToBounds(irisZones)
     if (bounds) {
       map.invalidateSize()
-      map.fitBounds(bounds, { padding: [28, 28], maxZoom: 15, animate: false })
+      map.fitBounds(bounds, { padding: [16, 16], maxZoom: 15, animate: false })
     }
 
     return () => {
@@ -218,7 +229,9 @@ function IrisFeasibilityLayer({
     const feas = computeFeasibility(irisInputs, budgetMax, surface)
     for (const f of feas) {
       const path = pathByIdRef.current.get(f.irisId)
-      if (path) path.setStyle({ fillColor: f.color })
+      // Keep stroke colour in lockstep with fill colour so the seam-
+      // sealing trick (see fillStyleFor) keeps working on every restyle.
+      if (path) path.setStyle({ fillColor: f.color, color: f.color })
     }
   }, [budgetMax, surface, irisInputs])
 
