@@ -17,7 +17,8 @@ interface AIPreparationStepProps {
 }
 
 export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
-  const { locationLabel, budgetMax, priorities, completeOnboarding } = useSearchStore()
+  const { locationLabel, propertyTags, buildingTags, customCriteria, completeOnboarding } = useSearchStore()
+  const criteriaCount = propertyTags.length + buildingTags.length + customCriteria.length
   const [visibleSteps, setVisibleSteps] = useState<number[]>([])
   const [done, setDone] = useState(false)
 
@@ -146,10 +147,10 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
           <div className="w-px h-8 bg-black/8" />
           <div className="text-left">
             <p className="text-[22px] font-bold text-neutral-900">
-              {priorities.length > 0 ? `${priorities.length}` : '—'}
+              {criteriaCount > 0 ? `${criteriaCount}` : '—'}
             </p>
             <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">
-              {priorities.length > 0 ? 'priorités' : 'critères'}
+              critères
             </p>
           </div>
         </motion.div>

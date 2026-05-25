@@ -140,6 +140,66 @@ body {
   z-index: 1;
 }
 
+/* Refined chips — Linear/Notion-style. Used by Bien + Autres critères steps.
+   Smaller, denser, more elegant than the previous "big button" treatment.
+   Selection state painted via [data-selected="true"] so JSX stays terse. */
+.shomee-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, transform 100ms ease;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.shomee-chip:active {
+  transform: scale(0.96);
+}
+.shomee-chip[data-selected="true"] {
+  background: #A64B27;
+  color: #fff;
+  border-color: #A64B27;
+}
+.shomee-chip[data-tone="positive"] {
+  background: rgba(166, 75, 39, 0.07);
+  color: #A64B27;
+  border-color: rgba(166, 75, 39, 0.22);
+  font-weight: 600;
+}
+.shomee-chip[data-tone="negative"] {
+  background: rgba(180, 50, 40, 0.06);
+  color: #B23228;
+  border-color: rgba(180, 50, 40, 0.22);
+  font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-color: rgba(180, 50, 40, 0.45);
+  text-decoration-thickness: 1px;
+}
+.shomee-chip-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  margin-left: 2px;
+  margin-right: -3px;
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+.shomee-chip-close:hover,
+.shomee-chip-close:active {
+  opacity: 1;
+}
+
 /* Budget step — IRIS feasibility map.
    Smooth fill + stroke interpolation on every Leaflet path inside the map
    root, so moving the budget slider produces a fluid colour transition

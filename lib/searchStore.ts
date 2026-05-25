@@ -38,7 +38,12 @@ export interface SearchPreferences {
   minRooms: number | null
   minSurface: number | null
   maxSurface: number | null
-  priorities: string[]
+  /** Selected chips in the "Le bien" category of the Autres critères step. */
+  propertyTags: string[]
+  /** Selected chips in the "L'immeuble" category — hidden for maison-only. */
+  buildingTags: string[]
+  /** AI-parsed free-text criteria. Positive = wanted; negative = excluded. */
+  customCriteria: Array<{ id: string; label: string; type: 'positive' | 'negative' }>
   onboardingCompleted: boolean
 }
 
@@ -63,7 +68,11 @@ interface SearchStore extends SearchPreferences {
   togglePropertyType: (type: PropertyType) => void
   setMinRooms: (min: number | null) => void
   setSurface: (min: number | null, max: number | null) => void
-  togglePriority: (priority: string) => void
+  togglePropertyTag: (tag: string) => void
+  toggleBuildingTag: (tag: string) => void
+  addCustomCriteria: (items: Array<{ label: string; type: 'positive' | 'negative' }>) => void
+  removeCustomCriteria: (id: string) => void
+  clearCustomCriteria: () => void
   completeOnboarding: () => void
   resetOnboarding: () => void
 }
@@ -87,7 +96,9 @@ export const useSearchStore = create<SearchStore>()(
       minRooms: null,
       minSurface: null,
       maxSurface: null,
-      priorities: [],
+      propertyTags: [],
+      buildingTags: [],
+      customCriteria: [],
       onboardingCompleted: false,
 
       setLocation: ({ query, label, lat, lng, intent }) =>
@@ -208,15 +219,31 @@ export const useSearchStore = create<SearchStore>()(
         set((s) => ({ propertyTypes: s.propertyTypes.includes(type) ? s.propertyTypes.filter((t) => t !== type) : [...s.propertyTypes, type] })),
       setMinRooms: (min) => set({ minRooms: min }),
       setSurface: (min, max) => set({ minSurface: min, maxSurface: max }),
-      togglePriority: (priority) =>
-        set((s) => ({ priorities: s.priorities.includes(priority) ? s.priorities.filter((p) => p !== priority) : [...s.priorities, priority] })),
+      togglePropertyTag: (tag) =>
+        set((s) => ({ propertyTags: s.propertyTags.includes(tag) ? s.propertyTags.filter((t) => t !== tag) : [...s.propertyTags, tag] })),
+      toggleBuildingTag: (tag) =>
+        set((s) => ({ buildingTags: s.buildingTags.includes(tag) ? s.buildingTags.filter((t) => t !== tag) : [...s.buildingTags, tag] })),
+      addCustomCriteria: (items) =>
+        set((s) => ({
+          customCriteria: [
+            ...s.customCriteria,
+            ...items.map((it) => ({
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              label: it.label,
+              type: it.type,
+            })),
+          ],
+        })),
+      removeCustomCriteria: (id) =>
+        set((s) => ({ customCriteria: s.customCriteria.filter((c) => c.id !== id) })),
+      clearCustomCriteria: () => set({ customCriteria: [] }),
       completeOnboarding: () => set({ onboardingCompleted: true }),
       resetOnboarding: () =>
         set({
           locationQuery: '', locationLabel: '', locationLat: null, locationLng: null, locationRadius: 2,
           locationIntent: null, selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [],
           budgetMin: null, budgetMax: null, propertyTypes: [], minRooms: null, minSurface: null, maxSurface: null,
-          priorities: [], onboardingCompleted: false,
+          propertyTags: [], buildingTags: [], customCriteria: [], onboardingCompleted: false,
         }),
     }),
     {
@@ -228,7 +255,9 @@ export const useSearchStore = create<SearchStore>()(
         minRooms: state.minRooms,
         minSurface: state.minSurface,
         maxSurface: state.maxSurface,
-        priorities: state.priorities,
+        propertyTags: state.propertyTags,
+        buildingTags: state.buildingTags,
+        customCriteria: state.customCriteria,
         onboardingCompleted: state.onboardingCompleted,
       }),
     }

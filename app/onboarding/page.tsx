@@ -11,7 +11,7 @@ import LocationMapStep from '@/components/onboarding/LocationMapStep'
 import ClarificationStep from '@/components/onboarding/ClarificationStep'
 import BienStep from '@/components/onboarding/BienStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
-import PrioritiesStep from '@/components/onboarding/PrioritiesStep'
+import CriteriaStep from '@/components/onboarding/CriteriaStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
@@ -420,7 +420,7 @@ export default function OnboardingPage() {
             )}
 
             {step === 4 && (
-              <PrioritiesStep onNext={handleNext} onSkip={handleSkip} />
+              <CriteriaStep onNext={handleNext} onSkip={handleSkip} />
             )}
 
             {step === 5 && (

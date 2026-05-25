@@ -174,19 +174,16 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
           <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
             Type de bien
           </p>
-          <div className="flex flex-wrap gap-2.5 mb-7">
+          <div className="flex flex-wrap gap-1.5 mb-6">
             {PROPERTY_TYPES.map((pt) => {
               const isSelected = !typeIndifferent && propertyTypes.includes(pt.value)
               return (
                 <button
                   key={pt.value}
+                  type="button"
                   onClick={() => handlePropertyType(pt.value)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
-                  style={{
-                    backgroundColor: isSelected ? '#A64B27' : 'white',
-                    color: isSelected ? 'white' : '#1a1a1a',
-                    borderColor: isSelected ? '#A64B27' : 'rgba(0,0,0,0.08)',
-                  }}
+                  className="shomee-chip"
+                  data-selected={isSelected}
                 >
                   <span>{pt.emoji}</span>
                   <span>{pt.label}</span>
@@ -194,13 +191,10 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
               )
             })}
             <button
+              type="button"
               onClick={handleTypeIndifferent}
-              className="px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
-              style={{
-                backgroundColor: typeIndifferent ? '#A64B27' : 'white',
-                color: typeIndifferent ? 'white' : '#1a1a1a',
-                borderColor: typeIndifferent ? '#A64B27' : 'rgba(0,0,0,0.08)',
-              }}
+              className="shomee-chip"
+              data-selected={typeIndifferent}
             >
               Indifférent
             </button>
@@ -261,32 +255,26 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
           <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
             Nombre de pièces
           </p>
-          <div className="flex gap-2.5 flex-wrap">
+          <div className="flex gap-1.5 flex-wrap">
             {ROOM_OPTIONS.map((opt) => {
               const isSelected = !roomsAny && minRooms === opt.value
               return (
                 <button
                   key={opt.value}
+                  type="button"
                   onClick={() => handleRooms(opt.value)}
-                  className="px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
-                  style={{
-                    backgroundColor: isSelected ? '#A64B27' : 'white',
-                    color: isSelected ? 'white' : '#1a1a1a',
-                    borderColor: isSelected ? '#A64B27' : 'rgba(0,0,0,0.08)',
-                  }}
+                  className="shomee-chip"
+                  data-selected={isSelected}
                 >
                   {opt.label}
                 </button>
               )
             })}
             <button
+              type="button"
               onClick={handleRoomsAny}
-              className="px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
-              style={{
-                backgroundColor: roomsAny ? '#A64B27' : 'white',
-                color: roomsAny ? 'white' : '#1a1a1a',
-                borderColor: roomsAny ? '#A64B27' : 'rgba(0,0,0,0.08)',
-              }}
+              className="shomee-chip"
+              data-selected={roomsAny}
             >
               Peu importe
             </button>
