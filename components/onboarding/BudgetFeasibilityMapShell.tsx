@@ -191,10 +191,17 @@ function IrisFeasibilityLayer({
     outlineLayer.addTo(map)
     outlineLayerRef.current = outlineLayer
 
-    // Auto-fit: target ~80% coverage of the square map with ~10% margin on
-    // each side. 36px padding on a 343px-usable iPhone X frame ≈ 10.5%.
+    // Auto-fit: ~80% coverage with ~10% margin per side. Combined with
+    // zoomSnap=0 on the MapContainer, Leaflet picks the exact fractional
+    // zoom that places the selection bounding box at (container - 2*padding).
+    // invalidateSize() is paranoia — guarantees Leaflet measures the
+    // container before computing the fit, in case the dynamic-import shell
+    // mounts before the parent flex layout has settled.
     const bounds = zonesToBounds(irisZones)
-    if (bounds) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 15, animate: false })
+    if (bounds) {
+      map.invalidateSize()
+      map.fitBounds(bounds, { padding: [28, 28], maxZoom: 15, animate: false })
+    }
 
     return () => {
       fillLayer.remove()
@@ -231,6 +238,12 @@ export default function BudgetFeasibilityMapShell({
       <MapContainer
         center={PARIS_CENTER}
         zoom={12}
+        // Continuous zoom: fitBounds picks the exact fractional level that
+        // makes the IRIS bounds fill ~80% of the container. With the default
+        // zoomSnap=1, Leaflet floors to the nearest integer zoom and Paris-
+        // wide selections end up with a huge halo of surrounding map.
+        zoomSnap={0}
+        zoomDelta={0.25}
         style={{ height: '100%', width: '100%' }}
         // Strictly non-interactive — this is a visualisation, not a tool.
         zoomControl={false}
