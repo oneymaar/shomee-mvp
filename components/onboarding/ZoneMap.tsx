@@ -192,6 +192,20 @@ interface GeoLayerConfig {
   /** Pre-computed boolean: labels visible. Changes only at zoom thresholds, not on every tick. */
   showLabels: boolean
   /**
+   * Optional per-zone label visibility predicate. When provided, a marker is
+   * only shown if showLabels is true AND labelFilter returns true. Used to
+   * thin out crowded label sets at intermediate zoom levels (e.g. only the
+   * largest communes at zoom 11, all of them at zoom 12+).
+   */
+  labelFilter?: (zone: GeoZone) => boolean
+  /**
+   * Opaque key whose change re-runs the per-marker visibility pass. Must
+   * change whenever labelFilter's effective output changes (function
+   * identity isn't enough — useCallback works too but a string key keeps
+   * the effect deps array stable).
+   */
+  labelFilterKey?: string
+  /**
    * When false, all SVG paths in this layer get pointer-events:none so clicks fall
    * through to the layer underneath. Used to restore correct click targets when
    * sticky-visible layers are shown outside their natural interactive zoom range.
@@ -296,19 +310,26 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
   }, [cfg.styleKey])
 
   // ── Effect 3: toggle layer + labels visibility ────────────────────────────
-  // Fast: only adds/removes from map. Deps are booleans that change only at
-  // threshold crossings, not on every zoom tick — avoids O(n) marker work.
+  // Fast: only adds/removes from map. Deps are booleans/strings that change
+  // only at threshold crossings, not on every zoom tick — avoids O(n) marker
+  // work. When labelFilter is set, per-marker visibility is recomputed
+  // whenever labelFilterKey changes (e.g. crossing the "thin labels" tier).
   useEffect(() => {
     const layer = layerRef.current
     if (!layer) return
     if (cfg.visible && !map.hasLayer(layer)) map.addLayer(layer)
     else if (!cfg.visible && map.hasLayer(layer)) map.removeLayer(layer)
 
-    labelsRef.current.forEach((m) => {
-      if (cfg.showLabels && !map.hasLayer(m)) map.addLayer(m)
-      else if (!cfg.showLabels && map.hasLayer(m)) map.removeLayer(m)
-    })
-  }, [cfg.visible, cfg.showLabels, map])
+    const filter = cfgRef.current.labelFilter
+    for (const zone of cfgRef.current.zones) {
+      const marker = zoneMarkerMapRef.current.get(zone.id)
+      if (!marker) continue
+      const passes = filter ? filter(zone) : true
+      const shouldShow = cfg.showLabels && passes
+      if (shouldShow && !map.hasLayer(marker)) map.addLayer(marker)
+      else if (!shouldShow && map.hasLayer(marker)) map.removeLayer(marker)
+    }
+  }, [cfg.visible, cfg.showLabels, cfg.labelFilterKey, map])
 
   // ── Effect 4: toggle pointer-events when clickable changes ────────────────
   // Uses applyInteractive() which removes the leaflet-interactive CSS class
@@ -325,6 +346,7 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
     labelsRef.current = []
     zoneMarkerMapRef.current.clear()
     const showLabels = cfgRef.current.showLabels
+    const filter = cfgRef.current.labelFilter
     layer.eachLayer((l) => {
       if (!(l instanceof L.Path)) return
       const f = (l as any).feature as GeoJSON.Feature | undefined
@@ -337,7 +359,8 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
         interactive: false,
         zIndexOffset: 300,
       })
-      if (showLabels) marker.addTo(map)
+      const passes = filter ? filter(zone) : true
+      if (showLabels && passes) marker.addTo(map)
       labelsRef.current.push(marker)
       zoneMarkerMapRef.current.set(zone.id, marker)
     })
@@ -389,6 +412,29 @@ function computeQuartierState(id: string, allIris: GeoZone[], state: { selectedQ
   return 'unselected'
 }
 
+/**
+ * Crude polygon area in coordinate units² — only used for RANKING commune
+ * polygons, so absolute units don't matter. Sum of |signed shoelace| over
+ * the outer rings of each (Multi)Polygon part; holes ignored.
+ */
+function polygonRankArea(geom: GeoJSON.Polygon | GeoJSON.MultiPolygon): number {
+  const polys: GeoJSON.Position[][][] =
+    geom.type === 'Polygon' ? [geom.coordinates]
+    : geom.type === 'MultiPolygon' ? geom.coordinates
+    : []
+  let total = 0
+  for (const poly of polys) {
+    const outer = poly[0]
+    if (!outer || outer.length < 3) continue
+    let s = 0
+    for (let i = 0; i < outer.length - 1; i++) {
+      s += outer[i][0] * outer[i + 1][1] - outer[i + 1][0] * outer[i][1]
+    }
+    total += Math.abs(s) / 2
+  }
+  return total
+}
+
 function computeCommuneState(id: string, communeIris: GeoZone[], state: { selectedCommuneIds: string[]; selectedIrisIds: string[] }): ZoneState {
   if (state.selectedCommuneIds.includes(id)) return 'selected'
   const childIris = communeIris.filter((i) => i.parentId === id)
@@ -417,6 +463,17 @@ function GeoLayers(props: GeoLayersProps) {
 
   const parisIris = useMemo(() => iris.filter((i) => !i.parentId?.startsWith('com-')), [iris])
   const communeIris = useMemo(() => iris.filter((i) => i.parentId?.startsWith('com-')), [iris])
+
+  // Largest 1/3 of communes by polygon area — used to thin out the label
+  // cluster at zoom 11 (Paris-wide view). Below that, no labels show.
+  // At zoom 12+ all communes' labels appear.
+  const largeCommuneIds = useMemo(() => {
+    const ranked = communes
+      .map(c => ({ id: c.id, area: polygonRankArea(c.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon) }))
+      .sort((a, b) => b.area - a.area)
+    const cutoff = Math.max(1, Math.ceil(ranked.length / 3))
+    return new Set(ranked.slice(0, cutoff).map(r => r.id))
+  }, [communes])
 
   // "Sticky selection" flags: layers with active selections stay visible when zooming out
   // so the user always sees their selection mosaic, regardless of zoom level.
@@ -474,6 +531,11 @@ function GeoLayers(props: GeoLayersProps) {
     clickable: true,
   })
 
+  // Commune labels: at zoom 11 (Paris-wide), only the largest 1/3 of
+  // communes get labelled so the map doesn't drown in text. From zoom 12
+  // onward the user has zoomed into the suburbs enough that the smaller
+  // communes have room to breathe — show everything.
+  const thinCommuneLabels = zoom < 12
   useGeoLayer(map, {
     zones: communes,
     getPathStyle: (z) => topLevelStyle(computeCommuneState(z.id, communeIris, comSel)),
@@ -483,6 +545,8 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showCommunes,
     styleKey: communeStyleKey,
     showLabels: zoom >= 11,
+    labelFilter: thinCommuneLabels ? (z) => largeCommuneIds.has(z.id) : undefined,
+    labelFilterKey: thinCommuneLabels ? 'thin' : 'all',
     clickable: true,
   })
 
