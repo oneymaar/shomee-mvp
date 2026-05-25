@@ -429,31 +429,34 @@ function polygonCentroid(geom: GeoJSON.Polygon | GeoJSON.MultiPolygon): [number,
   return [sx / best.length, sy / best.length]
 }
 
+interface CommuneCentroid {
+  id: string
+  centroid: [number, number] // [lng, lat]
+}
+
 /**
- * Pick a geographically-spread subset of communes around Paris.
+ * Pick a geographically-spread subset of items around a reference point.
  *
- * Angular bucketing: each commune is binned by its centroid's bearing from
- * the Paris reference point. Within each sector the closest communes win,
- * filled round-robin until we hit the target count. Result: every cardinal
- * direction has at least one labelled commune AND the first ring (directly
- * bordering Paris) is favoured over distant suburbs — much better than
- * "biggest by area" which let the bigger but farther outer-ring win.
+ * Angular bucketing: each item is binned by its centroid's bearing from
+ * the reference. Within each sector the closest items win, filled round-
+ * robin until we hit the target count. Result: every cardinal direction
+ * is represented AND the closest items are favoured over distant ones —
+ * much better than "biggest by area" (which lets far-but-large items win)
+ * and adapts to the current map centre instead of a fixed Paris anchor.
  */
-function pickSpreadCommunes(
-  communes: GeoZone[],
+function pickSpreadByCentroid(
+  items: CommuneCentroid[],
   refLngLat: [number, number],
   targetCount: number,
   sectorCount = 8,
 ): Set<string> {
-  if (communes.length === 0) return new Set()
-  const enriched = communes.map(c => {
-    const [lng, lat] = polygonCentroid(c.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon)
-    const dx = lng - refLngLat[0]
-    const dy = lat - refLngLat[1]
+  if (items.length === 0 || targetCount <= 0) return new Set()
+  const enriched = items.map(it => {
+    const dx = it.centroid[0] - refLngLat[0]
+    const dy = it.centroid[1] - refLngLat[1]
     return {
-      id: c.id,
+      id: it.id,
       dist: Math.sqrt(dx * dx + dy * dy),
-      // atan2 returns [-π, π] → shift to [0, 2π) → bucket
       sector: Math.floor(((Math.atan2(dy, dx) + Math.PI) / (2 * Math.PI)) * sectorCount) % sectorCount,
     }
   })
@@ -471,7 +474,7 @@ function pickSpreadCommunes(
         if (picked.size >= targetCount) break
       }
     }
-    if (!progressed) break // all buckets exhausted
+    if (!progressed) break
   }
   return picked
 }
@@ -489,13 +492,19 @@ function computeCommuneState(id: string, communeIris: GeoZone[], state: { select
 function GeoLayers(props: GeoLayersProps) {
   const map = useMap()
   const [zoom, setZoom] = useState(map.getZoom())
+  // Tracks the visible viewport — used by the thin-mode label picker so the
+  // set follows the user as they pan, instead of staying locked to whatever
+  // happened to be near Paris on first paint.
+  const [viewBounds, setViewBounds] = useState<L.LatLngBounds>(() => map.getBounds())
 
   useMapEvents({
     zoomend: () => {
       const z = map.getZoom()
       setZoom(z)
+      setViewBounds(map.getBounds())
       props.onZoomChange(z)
     },
+    moveend: () => setViewBounds(map.getBounds()),
   })
 
   const { arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, irisLoading } = props
@@ -505,15 +514,41 @@ function GeoLayers(props: GeoLayersProps) {
   const parisIris = useMemo(() => iris.filter((i) => !i.parentId?.startsWith('com-')), [iris])
   const communeIris = useMemo(() => iris.filter((i) => i.parentId?.startsWith('com-')), [iris])
 
-  // Spread subset of communes for the zoom-11 view: angular bucketing
-  // around Paris (8 sectors), closest-first round-robin. Every cardinal
-  // direction gets at least one commune labelled, and first-ring communes
-  // (Vanves, Malakoff, Vincennes, Saint-Ouen…) are picked before distant
-  // outer-ring ones even if the latter have larger polygons.
-  const PARIS_REF: [number, number] = [2.3522, 48.8566] // [lng, lat]
-  const largeCommuneIds = useMemo(
-    () => pickSpreadCommunes(communes, PARIS_REF, Math.max(1, Math.ceil(communes.length / 3))),
+  // Precompute commune centroids once — used by the viewport-aware label
+  // picker below. The centroids themselves don't change unless the commune
+  // dataset is reloaded.
+  const communeCentroids = useMemo<CommuneCentroid[]>(
+    () => communes.map(c => ({
+      id: c.id,
+      centroid: polygonCentroid(c.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon),
+    })),
     [communes],
+  )
+
+  // Thin-mode label set at zoom 11: restricted to communes whose centroid
+  // sits inside the current viewport (padded slightly to catch communes
+  // whose polygon spills into the visible area), then angular-bucketed
+  // around the *current* viewport centre. Capped at MAX_THIN_LABELS so the
+  // map never feels noisy. Updates on pan + zoom.
+  const MAX_THIN_LABELS = 8
+  const thinCommuneLabels = zoom < 12
+  const thinLabeledSet = useMemo<Set<string> | null>(() => {
+    if (!thinCommuneLabels) return null
+    const padded = viewBounds.pad(0.1)
+    const visible = communeCentroids.filter(c =>
+      padded.contains([c.centroid[1], c.centroid[0]]),  // L.LatLngBounds.contains expects [lat, lng]
+    )
+    if (visible.length === 0) return new Set()
+    const center = viewBounds.getCenter()
+    const target = Math.min(MAX_THIN_LABELS, visible.length)
+    return pickSpreadByCentroid(visible, [center.lng, center.lat], target)
+  }, [thinCommuneLabels, communeCentroids, viewBounds])
+
+  // Stable key for the labelFilter effect — changes only when the picked
+  // set's identity changes, not on every render.
+  const thinLabelKey = useMemo(
+    () => (thinLabeledSet ? Array.from(thinLabeledSet).sort().join('|') : 'all'),
+    [thinLabeledSet],
   )
 
   // "Sticky selection" flags: layers with active selections stay visible when zooming out
@@ -572,11 +607,10 @@ function GeoLayers(props: GeoLayersProps) {
     clickable: true,
   })
 
-  // Commune labels: at zoom 11 (Paris-wide), only the largest 1/3 of
-  // communes get labelled so the map doesn't drown in text. From zoom 12
-  // onward the user has zoomed into the suburbs enough that the smaller
-  // communes have room to breathe — show everything.
-  const thinCommuneLabels = zoom < 12
+  // Commune labels at zoom 11 (Paris-wide): viewport-aware thinning —
+  // only ~MAX_THIN_LABELS labels visible, geographically spread around the
+  // current viewport centre. At zoom 12+ the user has zoomed in enough
+  // that every commune can breathe; we drop the filter.
   useGeoLayer(map, {
     zones: communes,
     getPathStyle: (z) => topLevelStyle(computeCommuneState(z.id, communeIris, comSel)),
@@ -586,8 +620,8 @@ function GeoLayers(props: GeoLayersProps) {
     visible: showCommunes,
     styleKey: communeStyleKey,
     showLabels: zoom >= 11,
-    labelFilter: thinCommuneLabels ? (z) => largeCommuneIds.has(z.id) : undefined,
-    labelFilterKey: thinCommuneLabels ? 'thin' : 'all',
+    labelFilter: thinLabeledSet ? (z) => thinLabeledSet.has(z.id) : undefined,
+    labelFilterKey: thinLabelKey,
     clickable: true,
   })
 
