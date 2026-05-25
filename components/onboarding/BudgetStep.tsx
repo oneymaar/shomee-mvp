@@ -13,24 +13,32 @@ import {
 } from '@/lib/services/geoDataService'
 import BudgetFeasibilityMap from './BudgetFeasibilityMap'
 
-// Non-linear budget steps:
-//   0 → 400 000 €   step 25 000
-//   400 000 → 1 000 000 €   step 50 000
-//   1 000 000 → 2 000 000 €   step 100 000
+// Non-linear budget scale — denser at the bottom, coarser at the top:
+//    50 000 →   400 000 €   step  25 000
+//   450 000 → 1 000 000 €   step  50 000
+// 1 100 000 → 2 000 000 €   step 100 000
+// 2 500 000 → 5 000 000 €   step 500 000
+// 5 000 001 €  = sentinel for the "5 M€+" position. Stored verbatim in the
+// search store; downstream consumers should treat any budgetMax ≥ this
+// constant as "no upper limit". Exported for that purpose.
+export const BUDGET_UNLIMITED = 5_000_001
+const UNLIMITED_SENTINEL = BUDGET_UNLIMITED
 function buildBudgetScale(): number[] {
   const steps: number[] = []
-  for (let v = 0;        v <= 400_000;   v += 25_000)  steps.push(v)
-  for (let v = 450_000;  v <= 1_000_000; v += 50_000)  steps.push(v)
+  for (let v =    50_000; v <=   400_000; v +=  25_000) steps.push(v)
+  for (let v =   450_000; v <= 1_000_000; v +=  50_000) steps.push(v)
   for (let v = 1_100_000; v <= 2_000_000; v += 100_000) steps.push(v)
+  for (let v = 2_500_000; v <= 5_000_000; v += 500_000) steps.push(v)
+  steps.push(UNLIMITED_SENTINEL)
   return steps
 }
 const SCALE = buildBudgetScale()
 const SCALE_MAX_INDEX = SCALE.length - 1
-const DEFAULT_MIN = 50_000
+const INITIAL_MIN_INDEX = 0  // 50 000 € — the absolute lower bound
 const FALLBACK_MAX_INDEX = SCALE.indexOf(500_000)
-const INITIAL_MIN_INDEX = SCALE.indexOf(DEFAULT_MIN)
 
 function formatBudget(value: number): string {
+  if (value >= UNLIMITED_SENTINEL) return '5 M€+'
   if (value === 0) return '0'
   if (value >= 1_000_000) {
     const m = value / 1_000_000
