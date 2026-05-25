@@ -36,13 +36,12 @@ const PLACEHOLDER =
 
 interface CriteriaStepProps {
   onNext: () => void
-  onSkip: () => void
   /** Bubbled up so the parent onboarding chrome (back + progress) can hide
    *  while the textarea is focused. */
   onFocusChange?: (focused: boolean) => void
 }
 
-export default function CriteriaStep({ onNext, onSkip, onFocusChange }: CriteriaStepProps) {
+export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProps) {
   const {
     propertyTypes,
     propertyTags,
@@ -61,9 +60,10 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
 
   // ── Focus mode state ─────────────────────────────────────────────────────
   // The textarea instance MUST stay mounted across mode switches so iOS
-  // never sees a focus blip → keyboard stays open. That's why intro +
-  // textarea live in a single fixed bottom container whose structural
-  // position in the React tree never changes; only its className adapts.
+  // never sees a focus blip → keyboard stays open. Each conditionally
+  // rendered child carries an explicit `key` so React tracks the textarea
+  // by identity, not by sibling index. Without keys, removing a sibling
+  // above the textarea would shift its index and force a remount.
   const [isFocused, setIsFocused] = useState(false)
   useEffect(() => {
     onFocusChange?.(isFocused)
@@ -108,9 +108,6 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
     }
   }
 
-  // Prevent the textarea from losing focus when the user taps action
-  // buttons. preventDefault on pointer/mouse down stops the focus transfer
-  // before the click fires.
   const keepFocus = (e: React.PointerEvent | React.MouseEvent) => {
     if (document.activeElement === textareaRef.current) {
       e.preventDefault()
@@ -122,11 +119,8 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
     setIsFocused(false)
   }
 
-  const hasAnyCriteria =
-    propertyTags.length > 0 || buildingTags.length > 0 || customCriteria.length > 0
-
-  // ── Shared chips renderer ───────────────────────────────────────────────
-  const renderCriteriaChips = () => (
+  // ── Sub-renders ─────────────────────────────────────────────────────────
+  const criteriaChipsList = (
     <div className="flex flex-wrap gap-1.5">
       <AnimatePresence initial={false}>
         {customCriteria.map((c) => (
@@ -158,6 +152,62 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
           </motion.span>
         ))}
       </AnimatePresence>
+    </div>
+  )
+
+  const textareaBlock = (
+    <div
+      className="relative rounded-2xl bg-white border transition-colors"
+      style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
+    >
+      {/* CRITICAL: 16px font-size — iOS Safari zooms inputs below 16px on
+          focus, which destabilises the viewport. Placeholder inherits this
+          size for visual consistency with typed text. */}
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={(e) => { setText(e.target.value); if (error) setError(null) }}
+        onFocus={() => setIsFocused(true)}
+        placeholder={PLACEHOLDER}
+        rows={3}
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        className="w-full resize-none rounded-2xl bg-transparent text-[16px] leading-snug text-neutral-900 placeholder:text-neutral-400 outline-none px-3.5 py-3 pr-11"
+        style={{ minHeight: 100 }}
+        onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault()
+            handleValidate()
+          }
+        }}
+      />
+      <button
+        type="button"
+        aria-label="Analyser"
+        onMouseDown={keepFocus}
+        onPointerDown={keepFocus}
+        onClick={handleValidate}
+        disabled={!canValidate}
+        className="absolute right-2 bottom-2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+        style={{
+          background: canValidate ? '#A64B27' : 'rgba(0,0,0,0.07)',
+          color: canValidate ? '#fff' : 'rgba(0,0,0,0.35)',
+          cursor: canValidate ? 'pointer' : 'default',
+        }}
+      >
+        {analyzing ? (
+          <motion.span
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+            className="inline-flex"
+          >
+            <Loader2 size={14} />
+          </motion.span>
+        ) : (
+          <ArrowUp size={16} />
+        )}
+      </button>
     </div>
   )
 
@@ -206,178 +256,128 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
       </div>
 
       {/* ─── Scrollable body ─────────────────────────────────────────────
-          - Normal mode: categories + (when present) criteria chips. Scrolls
-            with shadow indicators when content overflows; CTAs below stay
-            reachable since they sit outside the scroll region.
-          - Focus mode: just the chips, justified to the bottom so newest
-            sit right above the fixed intro+textarea below. */}
+          Three sibling sections in normal mode: Le bien / L'immeuble /
+          Critères personnalisés. The third section contains the textarea
+          itself — same visual rhythm as the first two.
+          In focus mode, the first two sections are removed; the textarea
+          (still inside the scrollable body) pins to the bottom via
+          justify-end. Explicit keys ensure the textarea DOM node persists. */}
       <div
-        className={`flex-1 min-h-0 overflow-y-auto shomee-scroll-shadow flex flex-col ${
-          isFocused ? 'px-4 justify-end pb-1' : 'px-6 pb-1'
+        className={`flex-1 min-h-0 overflow-y-auto shomee-scroll-shadow flex flex-col px-6 pb-2 ${
+          isFocused ? 'justify-end' : ''
         }`}
       >
         {!isFocused && (
-          <>
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-4"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-                Le bien
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {PROPERTY_TAGS.map((tag) => {
-                  const isSelected = propertyTags.includes(tag)
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => togglePropertyTag(tag)}
-                      className="shomee-chip"
-                      data-selected={isSelected}
-                    >
-                      {tag}
-                    </button>
-                  )
-                })}
-              </div>
-            </motion.section>
-
-            {showBuilding && (
-              <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-4"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-                  L&apos;immeuble
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {BUILDING_TAGS.map((tag) => {
-                    const isSelected = buildingTags.includes(tag)
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleBuildingTag(tag)}
-                        className="shomee-chip"
-                        data-selected={isSelected}
-                      >
-                        {tag}
-                      </button>
-                    )
-                  })}
-                </div>
-              </motion.section>
-            )}
-          </>
+          <motion.section
+            key="cat-bien"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-4"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
+              Le bien
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {PROPERTY_TAGS.map((tag) => {
+                const isSelected = propertyTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => togglePropertyTag(tag)}
+                    className="shomee-chip"
+                    data-selected={isSelected}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+          </motion.section>
         )}
 
-        {customCriteria.length > 0 && renderCriteriaChips()}
-      </div>
+        {!isFocused && showBuilding && (
+          <motion.section
+            key="cat-immeuble"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-4"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
+              L&apos;immeuble
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {BUILDING_TAGS.map((tag) => {
+                const isSelected = buildingTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => toggleBuildingTag(tag)}
+                    className="shomee-chip"
+                    data-selected={isSelected}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+          </motion.section>
+        )}
 
-      {/* ─── Fixed bottom: intro + textarea ──────────────────────────────
-          Always rendered with the same React structure so the textarea DOM
-          node persists across mode switches → iOS keyboard stays up. */}
-      <div
-        className={`flex-shrink-0 pt-2 ${isFocused ? 'px-4' : 'px-6'}`}
-        style={
-          isFocused
-            ? { paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }
-            : undefined
-        }
-      >
-        <p className="text-[13px] text-neutral-600 leading-snug mb-1.5">
-          Décrivez les détails importants pour vous.
-        </p>
+        {/* Section 3: Critères personnalisés — same label style as above
+            sections so the textarea reads as a coherent third category, not
+            as a floating element attached to the CTA below. */}
+        {!isFocused && (
+          <motion.p
+            key="cat-custom-label"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2"
+          >
+            Critères personnalisés
+          </motion.p>
+        )}
+
+        {customCriteria.length > 0 && (
+          <div key="chips" className={isFocused ? 'pb-1.5' : 'mb-2'}>
+            {criteriaChipsList}
+          </div>
+        )}
 
         {error && (
-          <p className="text-[11.5px] text-[#B23228] mb-1.5">{error}</p>
+          <p key="error" className="text-[11.5px] text-[#B23228] mb-1.5">{error}</p>
         )}
 
         <div
-          className="relative rounded-2xl bg-white border transition-colors"
-          style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
+          key="textarea"
+          className={isFocused ? '' : ''}
+          style={isFocused ? { paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' } : undefined}
         >
-          {/* CRITICAL: 16px font-size — iOS Safari zooms inputs below 16px
-              on focus, which destabilises the viewport. Placeholder
-              inherits this size so empty state matches typed text. */}
-          <textarea
-            ref={textareaRef}
-            value={text}
-            onChange={(e) => { setText(e.target.value); if (error) setError(null) }}
-            onFocus={() => setIsFocused(true)}
-            placeholder={PLACEHOLDER}
-            rows={isFocused ? 3 : 2}
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            className="w-full resize-none rounded-2xl bg-transparent text-[16px] leading-snug text-neutral-900 placeholder:text-neutral-400 outline-none px-3.5 py-2.5 pr-11"
-            style={{ minHeight: isFocused ? 82 : 64 }}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                e.preventDefault()
-                handleValidate()
-              }
-            }}
-          />
-          <button
-            type="button"
-            aria-label="Analyser"
-            onMouseDown={keepFocus}
-            onPointerDown={keepFocus}
-            onClick={handleValidate}
-            disabled={!canValidate}
-            className="absolute right-2 bottom-2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
-            style={{
-              background: canValidate ? '#A64B27' : 'rgba(0,0,0,0.07)',
-              color: canValidate ? '#fff' : 'rgba(0,0,0,0.35)',
-              cursor: canValidate ? 'pointer' : 'default',
-            }}
-          >
-            {analyzing ? (
-              <motion.span
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-                className="inline-flex"
-              >
-                <Loader2 size={14} />
-              </motion.span>
-            ) : (
-              <ArrowUp size={16} />
-            )}
-          </button>
+          {textareaBlock}
         </div>
       </div>
 
-      {/* ─── CTAs — normal mode only, always reachable ─────────────────── */}
+      {/* ─── CTAs — normal mode only, always reachable below scroll ─────── */}
       {!isFocused && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.25, delay: 0.08 }}
-          className="px-6 pt-3 pb-8 flex flex-col gap-2 flex-shrink-0"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
+          className="px-6 pt-5 flex-shrink-0"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 28px)' }}
         >
           <button
             onClick={onNext}
             className="w-full py-3.5 rounded-2xl font-semibold text-[15.5px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{ backgroundColor: '#A64B27' }}
           >
-            {hasAnyCriteria ? 'Voir ma sélection' : 'Continuer'}
+            Continuer
             <ChevronRight size={18} />
           </button>
-          {hasAnyCriteria && (
-            <button
-              onClick={onSkip}
-              className="w-full py-2 text-[13px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
-            >
-              Passer cette étape
-            </button>
-          )}
         </motion.div>
       )}
     </div>

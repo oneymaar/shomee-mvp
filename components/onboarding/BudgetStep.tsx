@@ -58,10 +58,9 @@ const TONE_DOT: Record<string, string> = {
 
 interface BudgetStepProps {
   onNext: () => void
-  onSkip: () => void
 }
 
-export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
+export default function BudgetStep({ onNext }: BudgetStepProps) {
   const {
     setBudgetRange, budgetMin, budgetMax,
     minSurface,
@@ -339,12 +338,6 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
           <CheckCircle size={16} />
           Valider mon budget
           <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">3 / 4</span>
-        </button>
-        <button
-          onClick={onSkip}
-          className="w-full py-2 text-[13px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
-        >
-          Passer cette étape
         </button>
       </div>
     </div>

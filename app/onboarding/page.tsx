@@ -175,7 +175,6 @@ export default function OnboardingPage() {
     if (step === 0) return
     goTo(step - 1, -1)
   }, [step, locationMapOpen, clarificationData, goTo])
-  const handleSkip = useCallback(() => goTo(step + 1, 1), [step, goTo])
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
@@ -383,7 +382,6 @@ export default function OnboardingPage() {
             {step === 1 && !locationMapOpen && !clarificationData && (
               <LocationStep
                 onOpenMap={handleOpenMap}
-                onSkip={handleSkip}
                 onStartMapLoading={handleStartMapLoading}
                 onCancelMapLoading={handleCancelMapLoading}
                 onNeedsClarification={handleNeedsClarification}
@@ -417,17 +415,16 @@ export default function OnboardingPage() {
             )}
 
             {step === 2 && (
-              <BienStep onNext={handleNext} onSkip={handleSkip} />
+              <BienStep onNext={handleNext} />
             )}
 
             {step === 3 && (
-              <BudgetStep onNext={handleNext} onSkip={handleSkip} />
+              <BudgetStep onNext={handleNext} />
             )}
 
             {step === 4 && (
               <CriteriaStep
                 onNext={handleNext}
-                onSkip={handleSkip}
                 onFocusChange={setCriteriaFocused}
               />
             )}

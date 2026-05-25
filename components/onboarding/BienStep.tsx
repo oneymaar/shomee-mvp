@@ -57,10 +57,9 @@ function findClosestSurfaceIndex(v: number): number {
 
 interface BienStepProps {
   onNext: () => void
-  onSkip: () => void
 }
 
-export default function BienStep({ onNext, onSkip }: BienStepProps) {
+export default function BienStep({ onNext }: BienStepProps) {
   const {
     togglePropertyType, setPropertyTypes, propertyTypes,
     setMinRooms, minRooms,
@@ -140,10 +139,6 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
     const hi = (surfMaxIndex / SURFACE_SCALE_MAX_INDEX) * 100
     return { lo, hi }
   }, [surfMinIndex, surfMaxIndex])
-
-  // The Bien step always commits a default surface range on mount, so the
-  // user can continue at any point. Surface is no longer part of canContinue.
-  const canContinue = true
 
   return (
     <div className="flex flex-col h-full">
@@ -292,17 +287,9 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
           className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
           style={{ backgroundColor: '#A64B27' }}
         >
-          {canContinue ? 'Continuer' : 'Passer'}
+          Continuer
           <ChevronRight size={18} />
         </button>
-        {canContinue && (
-          <button
-            onClick={onSkip}
-            className="w-full py-3 text-[14px] font-medium text-neutral-600 active:text-neutral-800 transition-colors"
-          >
-            Passer cette étape
-          </button>
-        )}
       </div>
     </div>
   )

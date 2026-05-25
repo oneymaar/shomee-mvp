@@ -10,7 +10,6 @@ import { useSearchStore } from '@/lib/searchStore'
 
 interface LocationStepProps {
   onOpenMap: () => void
-  onSkip: () => void
   /** Show the full-screen loader overlay immediately on click — before any
    *  async analysis starts — so the button never has time to render a
    *  "Analyse en cours" state. */
@@ -73,7 +72,7 @@ function pickExamples(): [string, string, string] {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export default function LocationStep({ onOpenMap, onSkip, onStartMapLoading, onCancelMapLoading, onNeedsClarification }: LocationStepProps) {
+export default function LocationStep({ onOpenMap, onStartMapLoading, onCancelMapLoading, onNeedsClarification }: LocationStepProps) {
   const { locationQuery, setLocation } = useSearchStore()
   const [query, setQuery] = useState(locationQuery)
   const [recognizedEntity, setRecognizedEntity] = useState<RecognizedLocationEntity | [RecognizedLocationEntity, RecognizedLocationEntity] | null>(null)
