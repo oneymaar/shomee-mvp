@@ -413,26 +413,67 @@ function computeQuartierState(id: string, allIris: GeoZone[], state: { selectedQ
 }
 
 /**
- * Crude polygon area in coordinate units² — only used for RANKING commune
- * polygons, so absolute units don't matter. Sum of |signed shoelace| over
- * the outer rings of each (Multi)Polygon part; holes ignored.
+ * Cheap centroid (mean of the longest outer ring's vertices). Sufficient
+ * for ranking and angular bucketing — we don't need a true mass centroid.
  */
-function polygonRankArea(geom: GeoJSON.Polygon | GeoJSON.MultiPolygon): number {
-  const polys: GeoJSON.Position[][][] =
-    geom.type === 'Polygon' ? [geom.coordinates]
-    : geom.type === 'MultiPolygon' ? geom.coordinates
+function polygonCentroid(geom: GeoJSON.Polygon | GeoJSON.MultiPolygon): [number, number] {
+  const outers: GeoJSON.Position[][] =
+    geom.type === 'Polygon' ? [geom.coordinates[0]]
+    : geom.type === 'MultiPolygon' ? geom.coordinates.map(p => p[0])
     : []
-  let total = 0
-  for (const poly of polys) {
-    const outer = poly[0]
-    if (!outer || outer.length < 3) continue
-    let s = 0
-    for (let i = 0; i < outer.length - 1; i++) {
-      s += outer[i][0] * outer[i + 1][1] - outer[i + 1][0] * outer[i][1]
+  let best: GeoJSON.Position[] = outers[0] ?? []
+  for (const r of outers) if (r.length > best.length) best = r
+  if (best.length === 0) return [0, 0]
+  let sx = 0, sy = 0
+  for (const p of best) { sx += p[0]; sy += p[1] }
+  return [sx / best.length, sy / best.length]
+}
+
+/**
+ * Pick a geographically-spread subset of communes around Paris.
+ *
+ * Angular bucketing: each commune is binned by its centroid's bearing from
+ * the Paris reference point. Within each sector the closest communes win,
+ * filled round-robin until we hit the target count. Result: every cardinal
+ * direction has at least one labelled commune AND the first ring (directly
+ * bordering Paris) is favoured over distant suburbs — much better than
+ * "biggest by area" which let the bigger but farther outer-ring win.
+ */
+function pickSpreadCommunes(
+  communes: GeoZone[],
+  refLngLat: [number, number],
+  targetCount: number,
+  sectorCount = 8,
+): Set<string> {
+  if (communes.length === 0) return new Set()
+  const enriched = communes.map(c => {
+    const [lng, lat] = polygonCentroid(c.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon)
+    const dx = lng - refLngLat[0]
+    const dy = lat - refLngLat[1]
+    return {
+      id: c.id,
+      dist: Math.sqrt(dx * dx + dy * dy),
+      // atan2 returns [-π, π] → shift to [0, 2π) → bucket
+      sector: Math.floor(((Math.atan2(dy, dx) + Math.PI) / (2 * Math.PI)) * sectorCount) % sectorCount,
     }
-    total += Math.abs(s) / 2
+  })
+  const buckets: Array<typeof enriched> = Array.from({ length: sectorCount }, () => [])
+  for (const e of enriched) buckets[e.sector].push(e)
+  for (const b of buckets) b.sort((a, b) => a.dist - b.dist)
+
+  const picked = new Set<string>()
+  for (let lap = 0; picked.size < targetCount; lap++) {
+    let progressed = false
+    for (const b of buckets) {
+      if (lap < b.length) {
+        picked.add(b[lap].id)
+        progressed = true
+        if (picked.size >= targetCount) break
+      }
+    }
+    if (!progressed) break // all buckets exhausted
   }
-  return total
+  return picked
 }
 
 function computeCommuneState(id: string, communeIris: GeoZone[], state: { selectedCommuneIds: string[]; selectedIrisIds: string[] }): ZoneState {
@@ -464,16 +505,16 @@ function GeoLayers(props: GeoLayersProps) {
   const parisIris = useMemo(() => iris.filter((i) => !i.parentId?.startsWith('com-')), [iris])
   const communeIris = useMemo(() => iris.filter((i) => i.parentId?.startsWith('com-')), [iris])
 
-  // Largest 1/3 of communes by polygon area — used to thin out the label
-  // cluster at zoom 11 (Paris-wide view). Below that, no labels show.
-  // At zoom 12+ all communes' labels appear.
-  const largeCommuneIds = useMemo(() => {
-    const ranked = communes
-      .map(c => ({ id: c.id, area: polygonRankArea(c.feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon) }))
-      .sort((a, b) => b.area - a.area)
-    const cutoff = Math.max(1, Math.ceil(ranked.length / 3))
-    return new Set(ranked.slice(0, cutoff).map(r => r.id))
-  }, [communes])
+  // Spread subset of communes for the zoom-11 view: angular bucketing
+  // around Paris (8 sectors), closest-first round-robin. Every cardinal
+  // direction gets at least one commune labelled, and first-ring communes
+  // (Vanves, Malakoff, Vincennes, Saint-Ouen…) are picked before distant
+  // outer-ring ones even if the latter have larger polygons.
+  const PARIS_REF: [number, number] = [2.3522, 48.8566] // [lng, lat]
+  const largeCommuneIds = useMemo(
+    () => pickSpreadCommunes(communes, PARIS_REF, Math.max(1, Math.ceil(communes.length / 3))),
+    [communes],
+  )
 
   // "Sticky selection" flags: layers with active selections stay visible when zooming out
   // so the user always sees their selection mosaic, regardless of zoom level.
