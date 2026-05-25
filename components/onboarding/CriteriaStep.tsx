@@ -38,8 +38,7 @@ interface CriteriaStepProps {
   onNext: () => void
   onSkip: () => void
   /** Bubbled up so the parent onboarding chrome (back + progress) can hide
-   *  while the textarea is focused — focus mode is meant as a fullscreen
-   *  parenthesis without any surrounding UI. */
+   *  while the textarea is focused. */
   onFocusChange?: (focused: boolean) => void
 }
 
@@ -61,8 +60,10 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
   }, [propertyTypes])
 
   // ── Focus mode state ─────────────────────────────────────────────────────
-  // The textarea instance stays mounted across mode switches so iOS never
-  // sees a focus blip — the keyboard never closes during the layout change.
+  // The textarea instance MUST stay mounted across mode switches so iOS
+  // never sees a focus blip → keyboard stays open. That's why intro +
+  // textarea live in a single fixed bottom container whose structural
+  // position in the React tree never changes; only its className adapts.
   const [isFocused, setIsFocused] = useState(false)
   useEffect(() => {
     onFocusChange?.(isFocused)
@@ -124,7 +125,7 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
   const hasAnyCriteria =
     propertyTags.length > 0 || buildingTags.length > 0 || customCriteria.length > 0
 
-  // ── Shared sub-renders ───────────────────────────────────────────────────
+  // ── Shared chips renderer ───────────────────────────────────────────────
   const renderCriteriaChips = () => (
     <div className="flex flex-wrap gap-1.5">
       <AnimatePresence initial={false}>
@@ -165,9 +166,6 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
       {/* ─── Top region ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0">
         {isFocused ? (
-          // Minimalist focus mode top bar: a small check + "Valider" pill in
-          // the top-right. Communicates "I'm done with my criteria" rather
-          // than "I'm cancelling" — the parent chrome is also hidden.
           <motion.div
             key="focus-top"
             initial={{ opacity: 0 }}
@@ -207,53 +205,36 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
         )}
       </div>
 
-      {/* ─── Categories block — normal mode only ────────────────────────── */}
-      {!isFocused && (
-        <div className="flex-shrink-0 px-6 pb-3">
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-4"
-          >
-            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-              Le bien
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {PROPERTY_TAGS.map((tag) => {
-                const isSelected = propertyTags.includes(tag)
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => togglePropertyTag(tag)}
-                    className="shomee-chip"
-                    data-selected={isSelected}
-                  >
-                    {tag}
-                  </button>
-                )
-              })}
-            </div>
-          </motion.section>
-
-          {showBuilding && (
+      {/* ─── Scrollable body ─────────────────────────────────────────────
+          - Normal mode: categories + (when present) criteria chips. Scrolls
+            with shadow indicators when content overflows; CTAs below stay
+            reachable since they sit outside the scroll region.
+          - Focus mode: just the chips, justified to the bottom so newest
+            sit right above the fixed intro+textarea below. */}
+      <div
+        className={`flex-1 min-h-0 overflow-y-auto shomee-scroll-shadow flex flex-col ${
+          isFocused ? 'px-4 justify-end pb-1' : 'px-6 pb-1'
+        }`}
+      >
+        {!isFocused && (
+          <>
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-4"
             >
               <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-                L&apos;immeuble
+                Le bien
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {BUILDING_TAGS.map((tag) => {
-                  const isSelected = buildingTags.includes(tag)
+                {PROPERTY_TAGS.map((tag) => {
+                  const isSelected = propertyTags.includes(tag)
                   return (
                     <button
                       key={tag}
                       type="button"
-                      onClick={() => toggleBuildingTag(tag)}
+                      onClick={() => togglePropertyTag(tag)}
                       className="shomee-chip"
                       data-selected={isSelected}
                     >
@@ -263,52 +244,52 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
                 })}
               </div>
             </motion.section>
-          )}
-        </div>
-      )}
 
-      {/* ─── Section content block ───────────────────────────────────────
-          Contains: section label (normal only) → criteria chips (if any,
-          scrollable, with shadow indicator when overflowing) → intro
-          description → textarea + submit.
-          In normal mode: sits right after categories, attached to its
-          section label (NOT to the CTAs below — there's a flex spacer).
-          In focus mode: takes the remaining vertical space (flex-1) and
-          pins to the bottom via justify-end so the textarea hugs the
-          keyboard.
-          Single React subtree across modes → textarea stays mounted. */}
+            {showBuilding && (
+              <motion.section
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-4"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
+                  L&apos;immeuble
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {BUILDING_TAGS.map((tag) => {
+                    const isSelected = buildingTags.includes(tag)
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleBuildingTag(tag)}
+                        className="shomee-chip"
+                        data-selected={isSelected}
+                      >
+                        {tag}
+                      </button>
+                    )
+                  })}
+                </div>
+              </motion.section>
+            )}
+          </>
+        )}
+
+        {customCriteria.length > 0 && renderCriteriaChips()}
+      </div>
+
+      {/* ─── Fixed bottom: intro + textarea ──────────────────────────────
+          Always rendered with the same React structure so the textarea DOM
+          node persists across mode switches → iOS keyboard stays up. */}
       <div
-        className={`flex flex-col ${
+        className={`flex-shrink-0 pt-2 ${isFocused ? 'px-4' : 'px-6'}`}
+        style={
           isFocused
-            ? 'flex-1 justify-end px-4 pb-1'
-            : 'flex-shrink-0 min-h-0 px-6'
-        }`}
+            ? { paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }
+            : undefined
+        }
       >
-        {!isFocused && (
-          <motion.p
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-1.5"
-          >
-            Précisez vos critères
-          </motion.p>
-        )}
-
-        {/* Criteria chips — scroll-capped so a long list doesn't push the
-            textarea off-screen. Scroll-shadows appear only when there's
-            actual overflow (CSS background-attachment:local trick). */}
-        {customCriteria.length > 0 && (
-          <div
-            className={`shomee-scroll-shadow overflow-y-auto -mx-1 px-1 ${
-              isFocused ? 'pb-1.5 max-h-[35vh]' : 'mb-2 max-h-[26vh]'
-            }`}
-          >
-            {renderCriteriaChips()}
-          </div>
-        )}
-
-        {/* Intro description — sits right above the textarea in both modes. */}
         <p className="text-[13px] text-neutral-600 leading-snug mb-1.5">
           Décrivez les détails importants pour vous.
         </p>
@@ -322,9 +303,8 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
           style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
         >
           {/* CRITICAL: 16px font-size — iOS Safari zooms inputs below 16px
-              on focus, which destabilises the viewport. Placeholder inherits
-              this size so the empty state looks consistent with typed text
-              (no tiny grey ghost text). */}
+              on focus, which destabilises the viewport. Placeholder
+              inherits this size so empty state matches typed text. */}
           <textarea
             ref={textareaRef}
             value={text}
@@ -371,26 +351,15 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
             )}
           </button>
         </div>
-
-        {/* Focus-mode safe-area padding below the textarea so it never
-            hugs the very edge of the visible viewport on iOS. */}
-        {isFocused && (
-          <div style={{ height: 'max(env(safe-area-inset-bottom), 8px)' }} />
-        )}
       </div>
 
-      {/* ─── Flex spacer — normal mode only ─────────────────────────────
-          Pushes the CTAs to the bottom while leaving the textarea visually
-          attached to its section label above. */}
-      {!isFocused && <div className="flex-1 min-h-[12px]" />}
-
-      {/* ─── CTAs — normal mode only ────────────────────────────────────── */}
+      {/* ─── CTAs — normal mode only, always reachable ─────────────────── */}
       {!isFocused && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.25, delay: 0.08 }}
-          className="px-6 pt-2 pb-8 flex flex-col gap-2 flex-shrink-0"
+          className="px-6 pt-3 pb-8 flex flex-col gap-2 flex-shrink-0"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
         >
           <button
