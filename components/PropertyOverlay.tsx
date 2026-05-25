@@ -66,10 +66,10 @@ function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
       />
       {/* Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ gap: 2 }}>
-        <span style={{ color: '#BC4F29', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>
+        <span style={{ color: '#A64B27', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>
           {displayScore}%
         </span>
-        <span style={{ color: '#BC4F29', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1 }}>
+        <span style={{ color: '#A64B27', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1 }}>
           MATCH
         </span>
       </div>

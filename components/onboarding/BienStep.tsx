@@ -183,9 +183,9 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
                   onClick={() => handlePropertyType(pt.value)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
                   style={{
-                    backgroundColor: isSelected ? '#BC4F29' : 'white',
+                    backgroundColor: isSelected ? '#A64B27' : 'white',
                     color: isSelected ? 'white' : '#1a1a1a',
-                    borderColor: isSelected ? '#BC4F29' : 'rgba(0,0,0,0.08)',
+                    borderColor: isSelected ? '#A64B27' : 'rgba(0,0,0,0.08)',
                   }}
                 >
                   <span>{pt.emoji}</span>
@@ -197,9 +197,9 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
               onClick={handleTypeIndifferent}
               className="px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
               style={{
-                backgroundColor: typeIndifferent ? '#BC4F29' : 'white',
+                backgroundColor: typeIndifferent ? '#A64B27' : 'white',
                 color: typeIndifferent ? 'white' : '#1a1a1a',
-                borderColor: typeIndifferent ? '#BC4F29' : 'rgba(0,0,0,0.08)',
+                borderColor: typeIndifferent ? '#A64B27' : 'rgba(0,0,0,0.08)',
               }}
             >
               Indifférent
@@ -219,13 +219,13 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
           <div className="flex items-baseline justify-between px-1 mb-2.5">
             <div>
               <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
-              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#BC4F29' }}>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
                 {formatSurface(surfaceMinValue)}
               </p>
             </div>
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Maximum</p>
-              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#BC4F29' }}>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
                 {formatSurface(surfaceMaxValue)}
               </p>
             </div>
@@ -234,7 +234,7 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
             <div
               className="shomee-dual-slider-track"
               style={{
-                backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${surfaceTrack.lo}%, #BC4F29 ${surfaceTrack.lo}%, #BC4F29 ${surfaceTrack.hi}%, rgba(0,0,0,0.08) ${surfaceTrack.hi}%)`,
+                backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${surfaceTrack.lo}%, #A64B27 ${surfaceTrack.lo}%, #A64B27 ${surfaceTrack.hi}%, rgba(0,0,0,0.08) ${surfaceTrack.hi}%)`,
               }}
             />
             <input
@@ -270,9 +270,9 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
                   onClick={() => handleRooms(opt.value)}
                   className="px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
                   style={{
-                    backgroundColor: isSelected ? '#BC4F29' : 'white',
+                    backgroundColor: isSelected ? '#A64B27' : 'white',
                     color: isSelected ? 'white' : '#1a1a1a',
-                    borderColor: isSelected ? '#BC4F29' : 'rgba(0,0,0,0.08)',
+                    borderColor: isSelected ? '#A64B27' : 'rgba(0,0,0,0.08)',
                   }}
                 >
                   {opt.label}
@@ -283,9 +283,9 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
               onClick={handleRoomsAny}
               className="px-4 py-2.5 rounded-full border text-[14px] font-medium transition-all active:scale-95"
               style={{
-                backgroundColor: roomsAny ? '#BC4F29' : 'white',
+                backgroundColor: roomsAny ? '#A64B27' : 'white',
                 color: roomsAny ? 'white' : '#1a1a1a',
-                borderColor: roomsAny ? '#BC4F29' : 'rgba(0,0,0,0.08)',
+                borderColor: roomsAny ? '#A64B27' : 'rgba(0,0,0,0.08)',
               }}
             >
               Peu importe
@@ -302,7 +302,7 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
         <button
           onClick={onNext}
           className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-          style={{ backgroundColor: '#BC4F29' }}
+          style={{ backgroundColor: '#A64B27' }}
         >
           {canContinue ? 'Continuer' : 'Passer'}
           <ChevronRight size={18} />

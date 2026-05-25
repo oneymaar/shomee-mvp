@@ -66,7 +66,7 @@ export default function EndOfFeedCard({
         <div className="flex flex-col items-center text-center mb-8">
           <motion.div
             className="w-16 h-16 rounded-full border-2 flex items-center justify-center mb-4"
-            style={{ backgroundColor: 'rgba(188,79,41,0.12)', borderColor: 'rgba(188,79,41,0.35)' }}
+            style={{ backgroundColor: 'rgba(166,75,39,0.12)', borderColor: 'rgba(166,75,39,0.35)' }}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', damping: 14, stiffness: 180 }}
@@ -76,7 +76,7 @@ export default function EndOfFeedCard({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.25, type: 'spring', damping: 18 }}
             >
-              <Check size={28} strokeWidth={2.5} style={{ color: '#BC4F29' }} />
+              <Check size={28} strokeWidth={2.5} style={{ color: '#A64B27' }} />
             </motion.div>
           </motion.div>
           <h2 className="text-neutral-900 font-bold text-2xl leading-snug mb-2">
@@ -105,9 +105,9 @@ export default function EndOfFeedCard({
                       key={id}
                       onClick={() => toggle(id)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
-                        active ? 'text-white border-[#BC4F29]' : 'bg-white text-neutral-700 border-black/8'
+                        active ? 'text-white border-[#A64B27]' : 'bg-white text-neutral-700 border-black/8'
                       }`}
-                      style={active ? { backgroundColor: '#BC4F29' } : {}}
+                      style={active ? { backgroundColor: '#A64B27' } : {}}
                     >
                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                         active ? 'border-white' : 'border-black/20'
@@ -123,14 +123,14 @@ export default function EndOfFeedCard({
 
                 {/* 4th item: free text */}
                 <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
-                  textActive ? 'border-[#BC4F29]' : 'bg-white border-black/8'
+                  textActive ? 'border-[#A64B27]' : 'bg-white border-black/8'
                 }`}
-                  style={textActive ? { backgroundColor: 'rgba(188,79,41,0.08)' } : {}}
+                  style={textActive ? { backgroundColor: 'rgba(166,75,39,0.08)' } : {}}
                 >
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                    textActive ? 'border-[#BC4F29]' : 'border-black/20'
+                    textActive ? 'border-[#A64B27]' : 'border-black/20'
                   }`}
-                    style={textActive ? { backgroundColor: '#BC4F29' } : {}}
+                    style={textActive ? { backgroundColor: '#A64B27' } : {}}
                   >
                     {textActive && <Check size={11} strokeWidth={3} className="text-white" />}
                   </div>
@@ -152,7 +152,7 @@ export default function EndOfFeedCard({
                 className={`w-full py-4 rounded-2xl text-sm font-bold transition-all mt-5 ${
                   canSubmit ? 'text-white active:opacity-90' : 'bg-black/8 text-neutral-400 cursor-not-allowed'
                 }`}
-                style={canSubmit ? { backgroundColor: '#BC4F29' } : {}}
+                style={canSubmit ? { backgroundColor: '#A64B27' } : {}}
               >
                 Modifier mes critères
               </button>
@@ -171,7 +171,7 @@ export default function EndOfFeedCard({
             >
               <motion.div
                 className="w-12 h-12 rounded-full border-2 border-black/10"
-                style={{ borderTopColor: '#BC4F29' }}
+                style={{ borderTopColor: '#A64B27' }}
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               />
@@ -195,11 +195,11 @@ export default function EndOfFeedCard({
             >
               <motion.div
                 className="w-14 h-14 rounded-full flex items-center justify-center border"
-                style={{ backgroundColor: 'rgba(188,79,41,0.12)', borderColor: 'rgba(188,79,41,0.35)' }}
+                style={{ backgroundColor: 'rgba(166,75,39,0.12)', borderColor: 'rgba(166,75,39,0.35)' }}
                 animate={{ scale: [1, 1.12, 1] }}
                 transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
               >
-                <Check size={24} strokeWidth={2.5} style={{ color: '#BC4F29' }} />
+                <Check size={24} strokeWidth={2.5} style={{ color: '#A64B27' }} />
               </motion.div>
               <div className="text-center">
                 <p className="text-neutral-900 font-bold text-xl">{resultLabel}</p>

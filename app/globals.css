@@ -4,7 +4,7 @@
 :root {
   --background: #FDF5F2;
   --foreground: #1a1a1a;
-  --accent: #BC4F29;
+  --accent: #A64B27;
   --cream: #FDF5F2;
   --nav-h: 60px;
   --safe-top: env(safe-area-inset-top, 0px);
@@ -103,9 +103,9 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #BC4F29;
+  background: #A64B27;
   border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(188, 79, 41, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(166, 75, 39, 0.25);
   cursor: grab;
   transition: transform 120ms ease;
 }
@@ -118,9 +118,9 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #BC4F29;
+  background: #A64B27;
   border: 3px solid #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(188, 79, 41, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(166, 75, 39, 0.25);
   cursor: grab;
   transition: transform 120ms ease;
 }

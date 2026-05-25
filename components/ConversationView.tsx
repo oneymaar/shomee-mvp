@@ -169,7 +169,7 @@ export default function ConversationView({ property }: { property: Property }) {
                     ? 'text-white rounded-[20px] rounded-br-[5px]'
                     : 'bg-white text-neutral-900 rounded-[20px] rounded-bl-[5px] shadow-sm'
                 }`}
-                style={isUser ? { backgroundColor: '#BC4F29' } : {}}
+                style={isUser ? { backgroundColor: '#A64B27' } : {}}
               >
                 <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                 <p className={`text-[10px] text-right mt-1 ${isUser ? 'text-white/60' : 'text-neutral-400'}`}>
@@ -231,7 +231,7 @@ export default function ConversationView({ property }: { property: Property }) {
           className={`w-9 h-9 mb-0.5 rounded-full flex items-center justify-center transition-all duration-150 shrink-0 ${
             text.trim() ? '' : 'bg-black/8'
           }`}
-          style={text.trim() ? { backgroundColor: '#BC4F29' } : {}}
+          style={text.trim() ? { backgroundColor: '#A64B27' } : {}}
         >
           <Send size={14} strokeWidth={2.2} className={text.trim() ? 'text-white' : 'text-neutral-400'} />
         </button>

@@ -104,7 +104,7 @@ export default function ProfilePage() {
           <button
             onClick={handleResetOnboarding}
             className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-black/8 bg-white text-sm font-medium active:bg-black/4 transition-colors"
-            style={{ color: '#BC4F29' }}
+            style={{ color: '#A64B27' }}
           >
             <RefreshCw size={14} />
             Modifier ma recherche

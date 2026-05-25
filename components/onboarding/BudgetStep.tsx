@@ -241,13 +241,13 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
         <div className="flex items-baseline justify-between px-1 mb-2.5">
           <div>
             <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
-            <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#BC4F29' }}>
+            <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
               {formatBudget(minValue)}
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Maximum</p>
-            <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#BC4F29' }}>
+            <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
               {formatBudget(maxValue)}
             </p>
           </div>
@@ -257,7 +257,7 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
           <div
             className="shomee-dual-slider-track"
             style={{
-              backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${trackProgress.lo}%, #BC4F29 ${trackProgress.lo}%, #BC4F29 ${trackProgress.hi}%, rgba(0,0,0,0.08) ${trackProgress.hi}%)`,
+              backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${trackProgress.lo}%, #A64B27 ${trackProgress.lo}%, #A64B27 ${trackProgress.hi}%, rgba(0,0,0,0.08) ${trackProgress.hi}%)`,
             }}
           />
           <input
@@ -334,7 +334,7 @@ export default function BudgetStep({ onNext, onSkip }: BudgetStepProps) {
         <button
           onClick={onNext}
           className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-          style={{ backgroundColor: '#BC4F29' }}
+          style={{ backgroundColor: '#A64B27' }}
         >
           <CheckCircle size={16} />
           Valider mon budget
