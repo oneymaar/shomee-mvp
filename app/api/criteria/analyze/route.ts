@@ -15,6 +15,14 @@ Règles strictes :
 
 Marqueurs typiques de négatif : "pas", "sans", "éviter", "ne veut pas", "ne souhaite pas", "non", "hors", "exclure".
 
+IMPORTANT — formulation du label pour les critères NÉGATIFS :
+Le client affiche les critères négatifs barrés (text-decoration: line-through). La négation est donc déjà visuellement marquée par le rayage. Tu DOIS retirer toute marque de négation du label : pas de "Pas de…", "Pas d'…", "Sans…", "Aucun…", "Éviter…", "Hors…". Le label négatif décrit la CHOSE refusée, sans préfixe.
+Exemples :
+  "Pas de chambre sur rue"    → label "Chambres sur rue"
+  "Sans vis-à-vis"            → label "Vis-à-vis"
+  "Éviter le rez-de-chaussée" → label "Rez-de-chaussée"
+  "Pas d'ascenseur lent"      → label "Ascenseur lent"
+
 Exemples :
 Entrée : "ascenseur indispensable à partir du 3e"
 Sortie : [{"label":"Ascenseur obligatoire à partir du 3e","type":"positive"}]
@@ -22,21 +30,21 @@ Sortie : [{"label":"Ascenseur obligatoire à partir du 3e","type":"positive"}]
 Entrée : "terrasse orientée sud, pas de chambre sur rue"
 Sortie : [
   {"label":"Terrasse orientée sud","type":"positive"},
-  {"label":"Pas de chambre sur rue","type":"negative"}
+  {"label":"Chambres sur rue","type":"negative"}
 ]
 
 Entrée : "salon lumineux, cuisine où on peut recevoir, éviter le rez-de-chaussée"
 Sortie : [
   {"label":"Salon lumineux","type":"positive"},
   {"label":"Cuisine conviviale","type":"positive"},
-  {"label":"Pas de rez-de-chaussée","type":"negative"}
+  {"label":"Rez-de-chaussée","type":"negative"}
 ]
 
 Entrée : "vue dégagée et calme, sans vis-à-vis"
 Sortie : [
   {"label":"Vue dégagée","type":"positive"},
   {"label":"Logement calme","type":"positive"},
-  {"label":"Sans vis-à-vis","type":"negative"}
+  {"label":"Vis-à-vis","type":"negative"}
 ]
 
 FORMAT DE SORTIE OBLIGATOIRE :
@@ -48,6 +56,23 @@ Retourner UNIQUEMENT du JSON pur, sans markdown, sans commentaires.
 }
 
 Si rien d'exploitable : retourne { "criteria": [] }.`
+
+/**
+ * Strip leading negation markers from a negative criterion's label so the
+ * chip can render naturally with the strikethrough doing the negation
+ * work visually. Matches "Pas de", "Pas d'", "Sans", "Aucun(e)",
+ * "Éviter", "Hors". Idempotent. The server applies this as a safety net
+ * — the prompt also instructs the model to do it.
+ */
+function stripNegationPrefix(label: string): string {
+  const stripped = label.replace(
+    /^(pas\s+(?:de|d['’])?|sans\s+|aucun(?:e|s)?\s+|éviter\s+(?:de\s+|d['’])?|hors\s+(?:de\s+)?|non\s+)/i,
+    '',
+  )
+  if (!stripped) return label
+  // Capitalise first letter to match the rest of the label style.
+  return stripped.charAt(0).toUpperCase() + stripped.slice(1)
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -103,7 +128,10 @@ export async function POST(req: NextRequest) {
               c.label.trim().length > 0 &&
               (c.type === 'positive' || c.type === 'negative'),
           )
-          .map((c) => ({ label: c.label.trim(), type: c.type }))
+          .map((c) => ({
+            label: c.type === 'negative' ? stripNegationPrefix(c.label.trim()) : c.label.trim(),
+            type: c.type,
+          }))
       : []
 
     return NextResponse.json({ criteria })

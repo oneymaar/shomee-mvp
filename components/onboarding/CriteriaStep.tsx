@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ArrowUp, Check, X, Loader2 } from 'lucide-react'
+import { ChevronRight, ArrowRight, Check, X, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
 
 const PROPERTY_TAGS: string[] = [
@@ -31,8 +31,9 @@ const BUILDING_TAGS: string[] = [
   'Parties communes rénovées',
 ]
 
-const PLACEHOLDER =
-  'Ex : pas de chambre sur rue, terrasse orientée sud, ascenseur à partir du 3e…'
+// Single-line, single-example placeholder — invites the user to add one
+// criterion at a time (each one validated individually).
+const PLACEHOLDER = 'Séjour orienté ouest'
 
 interface CriteriaStepProps {
   onNext: () => void
@@ -70,7 +71,7 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
   }, [isFocused, onFocusChange])
   useEffect(() => () => onFocusChange?.(false), [onFocusChange])
 
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   const [text, setText] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
@@ -104,18 +105,18 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
       setError('Erreur réseau. Réessayez.')
     } finally {
       setAnalyzing(false)
-      requestAnimationFrame(() => textareaRef.current?.focus())
+      requestAnimationFrame(() => inputRef.current?.focus())
     }
   }
 
   const keepFocus = (e: React.PointerEvent | React.MouseEvent) => {
-    if (document.activeElement === textareaRef.current) {
+    if (document.activeElement === inputRef.current) {
       e.preventDefault()
     }
   }
 
   const exitFocus = () => {
-    textareaRef.current?.blur()
+    inputRef.current?.blur()
     setIsFocused(false)
   }
 
@@ -157,26 +158,26 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
 
   const textareaBlock = (
     <div
-      className="relative rounded-2xl bg-white border transition-colors"
+      className="relative rounded-full bg-white border transition-colors"
       style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
     >
-      {/* CRITICAL: 16px font-size — iOS Safari zooms inputs below 16px on
-          focus, which destabilises the viewport. Placeholder inherits this
-          size for visual consistency with typed text. */}
-      <textarea
-        ref={textareaRef}
+      {/* Single-line input — implies one-criterion-per-validation. iOS
+          Safari zooms inputs below 16px on focus, so we keep 16px to
+          prevent viewport jump. Placeholder inherits the same size. */}
+      <input
+        ref={inputRef}
+        type="text"
         value={text}
         onChange={(e) => { setText(e.target.value); if (error) setError(null) }}
         onFocus={() => setIsFocused(true)}
         placeholder={PLACEHOLDER}
-        rows={3}
         autoComplete="off"
         autoCorrect="off"
         spellCheck={false}
-        className="w-full resize-none rounded-2xl bg-transparent text-[16px] leading-snug text-neutral-900 placeholder:text-neutral-400 outline-none px-3.5 py-3 pr-11"
-        style={{ minHeight: 100 }}
+        enterKeyHint="send"
+        className="w-full rounded-full bg-transparent text-[16px] leading-none text-neutral-900 placeholder:text-neutral-400 outline-none pl-4 pr-11 py-3"
         onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          if (e.key === 'Enter') {
             e.preventDefault()
             handleValidate()
           }
@@ -184,12 +185,12 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
       />
       <button
         type="button"
-        aria-label="Analyser"
+        aria-label="Ajouter"
         onMouseDown={keepFocus}
         onPointerDown={keepFocus}
         onClick={handleValidate}
         disabled={!canValidate}
-        className="absolute right-2 bottom-2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+        className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all"
         style={{
           background: canValidate ? '#A64B27' : 'rgba(0,0,0,0.07)',
           color: canValidate ? '#fff' : 'rgba(0,0,0,0.35)',
@@ -205,7 +206,7 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
             <Loader2 size={14} />
           </motion.span>
         ) : (
-          <ArrowUp size={16} />
+          <ArrowRight size={16} />
         )}
       </button>
     </div>

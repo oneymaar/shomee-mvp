@@ -33,7 +33,7 @@ function MapLoadingScreen() {
 // Steps: 0=Intro, 1=Location (text + map), 2=Bien, 3=Budget, 4=Priorities, 5=AI
 // locationMapOpen / clarificationData are sub-states of step 1 — still the
 // same Localisation step.
-const STEP_LABELS = ['Quartiers', 'Bien', 'Budget', 'Autres critères'] as const
+const STEP_LABELS = ['Quartiers', 'Bien', 'Budget', 'Critères'] as const
 const TOTAL_STEPS = STEP_LABELS.length
 
 type Direction = 1 | -1
