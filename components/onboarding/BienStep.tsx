@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
 import { useSearchStore, type PropertyType } from '@/lib/searchStore'
@@ -19,10 +19,41 @@ const ROOM_OPTIONS: Array<{ value: number; label: string }> = [
   { value: 4, label: '4 pièces +' },
 ]
 
-const SURFACE_MIN = 20
-const SURFACE_MAX = 200
-const SURFACE_STEP = 5
-const SURFACE_DEFAULT = 50
+// Non-linear surface scale — finer at the bottom, coarser at the top:
+//    10 →  100 m²   step  5
+//   100 →  200 m²   step 10
+//   200 →  500 m²   step 50
+//   500+ m²  = sentinel for "no upper limit" (stored verbatim as 999;
+//   downstream consumers should treat any maxSurface ≥ this as unbounded).
+export const SURFACE_UNLIMITED = 999
+function buildSurfaceScale(): number[] {
+  const steps: number[] = []
+  for (let v =  10; v <= 100; v += 5)  steps.push(v)
+  for (let v = 110; v <= 200; v += 10) steps.push(v)
+  for (let v = 250; v <= 500; v += 50) steps.push(v)
+  steps.push(SURFACE_UNLIMITED)
+  return steps
+}
+const SURFACE_SCALE = buildSurfaceScale()
+const SURFACE_SCALE_MAX_INDEX = SURFACE_SCALE.length - 1
+// Defaults: 30 m² → 70 m² — covers the median Paris flat without locking
+// the user into studio-only or large-only territory.
+const SURFACE_DEFAULT_MIN_INDEX = SURFACE_SCALE.indexOf(30)
+const SURFACE_DEFAULT_MAX_INDEX = SURFACE_SCALE.indexOf(70)
+
+function formatSurface(v: number): string {
+  if (v >= SURFACE_UNLIMITED) return '500 m²+'
+  return `${v} m²`
+}
+function findClosestSurfaceIndex(v: number): number {
+  let best = 0
+  let bestDiff = Number.POSITIVE_INFINITY
+  for (let i = 0; i < SURFACE_SCALE.length; i++) {
+    const d = Math.abs(SURFACE_SCALE[i] - v)
+    if (d < bestDiff) { bestDiff = d; best = i }
+  }
+  return best
+}
 
 interface BienStepProps {
   onNext: () => void
@@ -33,7 +64,7 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
   const {
     togglePropertyType, setPropertyTypes, propertyTypes,
     setMinRooms, minRooms,
-    setSurface, minSurface,
+    setSurface, minSurface, maxSurface,
   } = useSearchStore()
 
   // ── Local UI state ────────────────────────────────────────────────────────
@@ -42,17 +73,29 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
   // (otherwise it would be indistinguishable from "user hasn't touched it").
   const [typeIndifferent, setTypeIndifferent] = useState(false)
   const [roomsAny, setRoomsAny] = useState(false)
-  const [surface, setSurfaceLocal] = useState<number>(minSurface ?? SURFACE_DEFAULT)
-  const [surfaceTouched, setSurfaceTouched] = useState(minSurface !== null)
 
-  // Keep the local surface in sync if the user navigates back and the
-  // store value was hydrated from a previous visit.
+  // Surface dual-slider — same pattern as the Budget step.
+  const initialSurfaceMinIndex = useMemo(
+    () => (minSurface == null ? SURFACE_DEFAULT_MIN_INDEX : findClosestSurfaceIndex(minSurface)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const initialSurfaceMaxIndex = useMemo(
+    () => (maxSurface == null ? SURFACE_DEFAULT_MAX_INDEX : findClosestSurfaceIndex(maxSurface)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const [surfMinIndex, setSurfMinIndex] = useState<number>(initialSurfaceMinIndex)
+  const [surfMaxIndex, setSurfMaxIndex] = useState<number>(initialSurfaceMaxIndex)
+
+  // Persist defaults once on mount so the user can leave without touching
+  // and still have a surface range recorded.
   useEffect(() => {
-    if (minSurface !== null && !surfaceTouched) {
-      setSurfaceLocal(minSurface)
-      setSurfaceTouched(true)
+    if (minSurface == null || maxSurface == null) {
+      setSurface(SURFACE_SCALE[initialSurfaceMinIndex], SURFACE_SCALE[initialSurfaceMaxIndex])
     }
-  }, [minSurface, surfaceTouched])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handlePropertyType = (value: PropertyType) => {
@@ -73,21 +116,34 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
     setMinRooms(null)
   }
 
-  const handleSurfaceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = Number(e.target.value)
-    setSurfaceLocal(v)
-    setSurfaceTouched(true)
-    setSurface(v, null)
+  const commitSurface = (lo: number, hi: number) => {
+    setSurface(SURFACE_SCALE[lo], SURFACE_SCALE[hi])
+  }
+  const handleSurfaceMin = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const idx = Number(e.target.value)
+    const next = Math.min(idx, surfMaxIndex)
+    setSurfMinIndex(next)
+    commitSurface(next, surfMaxIndex)
+  }
+  const handleSurfaceMax = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const idx = Number(e.target.value)
+    const next = Math.max(idx, surfMinIndex)
+    setSurfMaxIndex(next)
+    commitSurface(surfMinIndex, next)
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  const typesSelected = propertyTypes.length > 0
-  const roomsSelected = minRooms !== null
-  const surfaceProgress = ((surface - SURFACE_MIN) / (SURFACE_MAX - SURFACE_MIN)) * 100
-  // Slider track gradient — terracotta up to the thumb, neutral past it.
-  const trackBg = `linear-gradient(to right, #914E3C 0%, #914E3C ${surfaceProgress}%, rgba(0,0,0,0.08) ${surfaceProgress}%, rgba(0,0,0,0.08) 100%)`
+  const surfaceMinValue = SURFACE_SCALE[surfMinIndex]
+  const surfaceMaxValue = SURFACE_SCALE[surfMaxIndex]
+  const surfaceTrack = useMemo(() => {
+    const lo = (surfMinIndex / SURFACE_SCALE_MAX_INDEX) * 100
+    const hi = (surfMaxIndex / SURFACE_SCALE_MAX_INDEX) * 100
+    return { lo, hi }
+  }, [surfMinIndex, surfMaxIndex])
 
-  const canContinue = typesSelected || typeIndifferent || roomsSelected || roomsAny || surfaceTouched
+  // The Bien step always commits a default surface range on mount, so the
+  // user can continue at any point. Surface is no longer part of canContinue.
+  const canContinue = true
 
   return (
     <div className="flex flex-col h-full">
@@ -151,40 +207,48 @@ export default function BienStep({ onNext, onSkip }: BienStepProps) {
           </div>
         </motion.div>
 
-        {/* Surface */}
+        {/* Surface — dual-thumb range, same component as the Budget slider */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="flex items-baseline justify-between mb-3">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600">
-              Surface souhaitée
-            </p>
-            <p
-              className="text-[18px] font-bold tabular-nums leading-none transition-opacity"
-              style={{
-                color: '#914E3C',
-                opacity: surfaceTouched ? 1 : 0.55,
-              }}
-            >
-              {surface} m²
-            </p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
+            Surface
+          </p>
+          <div className="flex items-baseline justify-between px-1 mb-2.5">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#914E3C' }}>
+                {formatSurface(surfaceMinValue)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Maximum</p>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#914E3C' }}>
+                {formatSurface(surfaceMaxValue)}
+              </p>
+            </div>
           </div>
-          <input
-            type="range"
-            min={SURFACE_MIN}
-            max={SURFACE_MAX}
-            step={SURFACE_STEP}
-            value={surface}
-            onChange={handleSurfaceChange}
-            aria-label="Surface souhaitée en mètres carrés"
-            className="shomee-surface-slider w-full mb-2"
-            style={{ background: trackBg }}
-          />
-          <div className="flex justify-between text-[11px] text-neutral-600 mb-7">
-            <span>{SURFACE_MIN} m²</span>
-            <span>{SURFACE_MAX}+ m²</span>
+          <div className="shomee-dual-slider mb-7">
+            <div
+              className="shomee-dual-slider-track"
+              style={{
+                backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${surfaceTrack.lo}%, #914E3C ${surfaceTrack.lo}%, #914E3C ${surfaceTrack.hi}%, rgba(0,0,0,0.08) ${surfaceTrack.hi}%)`,
+              }}
+            />
+            <input
+              type="range" min={0} max={SURFACE_SCALE_MAX_INDEX} step={1}
+              value={surfMinIndex} onChange={handleSurfaceMin}
+              aria-label="Surface minimum"
+              className="shomee-dual-slider-input shomee-dual-slider-input-min"
+            />
+            <input
+              type="range" min={0} max={SURFACE_SCALE_MAX_INDEX} step={1}
+              value={surfMaxIndex} onChange={handleSurfaceMax}
+              aria-label="Surface maximum"
+              className="shomee-dual-slider-input shomee-dual-slider-input-max"
+            />
           </div>
         </motion.div>
 
