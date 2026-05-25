@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, ArrowUp, Check, X, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
 
-// Static taxonomies — kept small (~10 per category) so the step stays
-// scannable. Labels are simple French phrases, no jargon.
 const PROPERTY_TAGS: string[] = [
   'Extérieur',
   'Terrasse',
@@ -33,12 +31,15 @@ const BUILDING_TAGS: string[] = [
   'Parties communes rénovées',
 ]
 
+const PLACEHOLDER =
+  'Ex : pas de chambre sur rue, terrasse orientée sud, ascenseur à partir du 3e…'
+
 interface CriteriaStepProps {
   onNext: () => void
   onSkip: () => void
   /** Bubbled up so the parent onboarding chrome (back + progress) can hide
-   *  while the textarea is focused — the focus mode is meant to be a
-   *  fullscreen parenthesis. */
+   *  while the textarea is focused — focus mode is meant as a fullscreen
+   *  parenthesis without any surrounding UI. */
   onFocusChange?: (focused: boolean) => void
 }
 
@@ -60,15 +61,12 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
   }, [propertyTypes])
 
   // ── Focus mode state ─────────────────────────────────────────────────────
-  // Single textarea instance across both modes — never unmounts → iOS never
-  // sees a focus blip → keyboard stays open while the layout collapses.
-  // Reporting up to the parent so the global top bar (back arrow +
-  // progress) can also hide for a truly immersive parenthesis.
+  // The textarea instance stays mounted across mode switches so iOS never
+  // sees a focus blip — the keyboard never closes during the layout change.
   const [isFocused, setIsFocused] = useState(false)
   useEffect(() => {
     onFocusChange?.(isFocused)
   }, [isFocused, onFocusChange])
-  // Clean up on unmount (e.g. user navigates away mid-focus).
   useEffect(() => () => onFocusChange?.(false), [onFocusChange])
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -110,9 +108,8 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
   }
 
   // Prevent the textarea from losing focus when the user taps action
-  // buttons (validate / chip close / × exit). preventDefault on
-  // pointerdown stops the focus transfer before the click fires — keeps
-  // the keyboard up during the action.
+  // buttons. preventDefault on pointer/mouse down stops the focus transfer
+  // before the click fires.
   const keepFocus = (e: React.PointerEvent | React.MouseEvent) => {
     if (document.activeElement === textareaRef.current) {
       e.preventDefault()
@@ -127,13 +124,50 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
   const hasAnyCriteria =
     propertyTags.length > 0 || buildingTags.length > 0 || customCriteria.length > 0
 
+  // ── Shared sub-renders ───────────────────────────────────────────────────
+  const renderCriteriaChips = () => (
+    <div className="flex flex-wrap gap-1.5">
+      <AnimatePresence initial={false}>
+        {customCriteria.map((c) => (
+          <motion.span
+            key={c.id}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="shomee-chip"
+            data-tone={c.type}
+          >
+            {c.type === 'positive' ? (
+              <Check size={11} strokeWidth={2.6} />
+            ) : (
+              <X size={11} strokeWidth={2.6} />
+            )}
+            <span>{c.label}</span>
+            <button
+              type="button"
+              aria-label="Supprimer"
+              onMouseDown={keepFocus}
+              onPointerDown={keepFocus}
+              onClick={() => removeCustomCriteria(c.id)}
+              className="shomee-chip-close"
+            >
+              <X size={11} strokeWidth={2.6} />
+            </button>
+          </motion.span>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+
   return (
     <div className="flex flex-col h-full">
       {/* ─── Top region ──────────────────────────────────────────────────── */}
       <div className="flex-shrink-0">
         {isFocused ? (
-          // Minimalist focus mode: ONLY a small orange × in the top-right.
-          // No label, no title — the parent onboarding bar is also hidden.
+          // Minimalist focus mode top bar: a small check + "Valider" pill in
+          // the top-right. Communicates "I'm done with my criteria" rather
+          // than "I'm cancelling" — the parent chrome is also hidden.
           <motion.div
             key="focus-top"
             initial={{ opacity: 0 }}
@@ -144,14 +178,15 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
           >
             <button
               type="button"
-              aria-label="Quitter"
+              aria-label="Valider"
               onMouseDown={(e) => e.preventDefault()}
               onPointerDown={(e) => e.preventDefault()}
               onClick={exitFocus}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-opacity active:opacity-70"
-              style={{ color: '#A64B27' }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12.5px] font-semibold transition-opacity active:opacity-70"
+              style={{ color: '#A64B27', background: 'rgba(166,75,39,0.08)' }}
             >
-              <X size={22} strokeWidth={2.2} />
+              <Check size={13} strokeWidth={2.6} />
+              Valider
             </button>
           </motion.div>
         ) : (
@@ -172,32 +207,53 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
         )}
       </div>
 
-      {/* ─── Middle scrollable region ────────────────────────────────────── */}
-      <div
-        className={`flex-1 overflow-y-auto flex flex-col ${
-          isFocused ? 'px-4 pb-1 justify-end' : 'px-6 pb-3'
-        }`}
-      >
-        {!isFocused && (
-          <>
-            {/* Catégorie 1 — Le bien */}
+      {/* ─── Categories block — normal mode only ────────────────────────── */}
+      {!isFocused && (
+        <div className="flex-shrink-0 px-6 pb-3">
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-4"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
+              Le bien
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {PROPERTY_TAGS.map((tag) => {
+                const isSelected = propertyTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => togglePropertyTag(tag)}
+                    className="shomee-chip"
+                    data-selected={isSelected}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+          </motion.section>
+
+          {showBuilding && (
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-4"
+              transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
             >
               <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-                Le bien
+                L&apos;immeuble
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {PROPERTY_TAGS.map((tag) => {
-                  const isSelected = propertyTags.includes(tag)
+                {BUILDING_TAGS.map((tag) => {
+                  const isSelected = buildingTags.includes(tag)
                   return (
                     <button
                       key={tag}
                       type="button"
-                      onClick={() => togglePropertyTag(tag)}
+                      onClick={() => toggleBuildingTag(tag)}
                       className="shomee-chip"
                       data-selected={isSelected}
                     >
@@ -207,129 +263,74 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
                 })}
               </div>
             </motion.section>
+          )}
+        </div>
+      )}
 
-            {/* Catégorie 2 — L'immeuble (conditional) */}
-            {showBuilding && (
-              <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-                className="mb-4"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-                  L&apos;immeuble
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {BUILDING_TAGS.map((tag) => {
-                    const isSelected = buildingTags.includes(tag)
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleBuildingTag(tag)}
-                        className="shomee-chip"
-                        data-selected={isSelected}
-                      >
-                        {tag}
-                      </button>
-                    )
-                  })}
-                </div>
-              </motion.section>
-            )}
-
-            {/* Catégorie 3 — section label only. Textarea + examples sit in
-                the bottom flex slot below. */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-2">
-                Précisez vos critères
-              </p>
-            </motion.div>
-          </>
+      {/* ─── Section content block ───────────────────────────────────────
+          Contains: section label (normal only) → criteria chips (if any,
+          scrollable, with shadow indicator when overflowing) → intro
+          description → textarea + submit.
+          In normal mode: sits right after categories, attached to its
+          section label (NOT to the CTAs below — there's a flex spacer).
+          In focus mode: takes the remaining vertical space (flex-1) and
+          pins to the bottom via justify-end so the textarea hugs the
+          keyboard.
+          Single React subtree across modes → textarea stays mounted. */}
+      <div
+        className={`flex flex-col ${
+          isFocused
+            ? 'flex-1 justify-end px-4 pb-1'
+            : 'flex-shrink-0 min-h-0 px-6'
+        }`}
+      >
+        {!isFocused && (
+          <motion.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 mb-1.5"
+          >
+            Précisez vos critères
+          </motion.p>
         )}
 
-        {/* Parsed criteria — visible in both modes. Sits just above the
-            textarea so newest items appear right next to the input. */}
+        {/* Criteria chips — scroll-capped so a long list doesn't push the
+            textarea off-screen. Scroll-shadows appear only when there's
+            actual overflow (CSS background-attachment:local trick). */}
         {customCriteria.length > 0 && (
-          <div className={isFocused ? 'pb-1.5' : 'mt-1'}>
-            <div className="flex flex-wrap gap-1.5">
-              <AnimatePresence initial={false}>
-                {customCriteria.map((c) => (
-                  <motion.span
-                    key={c.id}
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.85 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="shomee-chip"
-                    data-tone={c.type}
-                  >
-                    {c.type === 'positive' ? (
-                      <Check size={11} strokeWidth={2.6} />
-                    ) : (
-                      <X size={11} strokeWidth={2.6} />
-                    )}
-                    <span>{c.label}</span>
-                    <button
-                      type="button"
-                      aria-label="Supprimer"
-                      onMouseDown={keepFocus}
-                      onPointerDown={keepFocus}
-                      onClick={() => removeCustomCriteria(c.id)}
-                      className="shomee-chip-close"
-                    >
-                      <X size={11} strokeWidth={2.6} />
-                    </button>
-                  </motion.span>
-                ))}
-              </AnimatePresence>
-            </div>
+          <div
+            className={`shomee-scroll-shadow overflow-y-auto -mx-1 px-1 ${
+              isFocused ? 'pb-1.5 max-h-[35vh]' : 'mb-2 max-h-[26vh]'
+            }`}
+          >
+            {renderCriteriaChips()}
           </div>
         )}
-      </div>
 
-      {/* ─── Input region — always mounted, single textarea ─────────────── */}
-      <div
-        className={`flex-shrink-0 ${isFocused ? 'px-4 pt-1' : 'px-6 pt-1'}`}
-        style={
-          isFocused
-            ? { paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }
-            : undefined
-        }
-      >
-        {/* Inline hint examples — sit just above the textarea per the spec.
-            Visible in focus mode whenever there's no validated criteria yet
-            (so the user has anchors); also visible in normal mode in the
-            same situation for consistency. */}
-        {customCriteria.length === 0 && text.length === 0 && (
-          <p className="text-[11.5px] text-neutral-500 leading-snug px-1 mb-1.5">
-            Ex&nbsp;: «&nbsp;ascenseur indispensable à partir du 3e&nbsp;»,
-            «&nbsp;terrasse orientée sud&nbsp;», «&nbsp;pas de chambre sur rue&nbsp;».
-          </p>
-        )}
+        {/* Intro description — sits right above the textarea in both modes. */}
+        <p className="text-[13px] text-neutral-600 leading-snug mb-1.5">
+          Décrivez les détails importants pour vous.
+        </p>
 
         {error && (
-          <p className="text-[11.5px] text-[#B23228] mb-1.5 px-1">{error}</p>
+          <p className="text-[11.5px] text-[#B23228] mb-1.5">{error}</p>
         )}
 
         <div
           className="relative rounded-2xl bg-white border transition-colors"
           style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
         >
-          {/* CRITICAL: font-size ≥ 16px prevents iOS Safari from
-              auto-zooming on focus. The same rule applies on step 1
-              (LocationStep) — anything smaller would trigger a viewport
-              jump when the keyboard opens. */}
+          {/* CRITICAL: 16px font-size — iOS Safari zooms inputs below 16px
+              on focus, which destabilises the viewport. Placeholder inherits
+              this size so the empty state looks consistent with typed text
+              (no tiny grey ghost text). */}
           <textarea
             ref={textareaRef}
             value={text}
             onChange={(e) => { setText(e.target.value); if (error) setError(null) }}
             onFocus={() => setIsFocused(true)}
-            placeholder="Décrivez les détails importants pour vous…"
+            placeholder={PLACEHOLDER}
             rows={isFocused ? 3 : 2}
             autoComplete="off"
             autoCorrect="off"
@@ -345,7 +346,7 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
           />
           <button
             type="button"
-            aria-label="Valider"
+            aria-label="Analyser"
             onMouseDown={keepFocus}
             onPointerDown={keepFocus}
             onClick={handleValidate}
@@ -370,7 +371,18 @@ export default function CriteriaStep({ onNext, onSkip, onFocusChange }: Criteria
             )}
           </button>
         </div>
+
+        {/* Focus-mode safe-area padding below the textarea so it never
+            hugs the very edge of the visible viewport on iOS. */}
+        {isFocused && (
+          <div style={{ height: 'max(env(safe-area-inset-bottom), 8px)' }} />
+        )}
       </div>
+
+      {/* ─── Flex spacer — normal mode only ─────────────────────────────
+          Pushes the CTAs to the bottom while leaving the textarea visually
+          attached to its section label above. */}
+      {!isFocused && <div className="flex-1 min-h-[12px]" />}
 
       {/* ─── CTAs — normal mode only ────────────────────────────────────── */}
       {!isFocused && (

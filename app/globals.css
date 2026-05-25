@@ -200,6 +200,20 @@ body {
   opacity: 1;
 }
 
+/* Scroll shadow indicator — Lea Verou's background-attachment:local trick.
+   Subtle top/bottom shadows that fade in only when there's hidden content
+   above/below the visible scroll region. No JS, no layout listener needed.
+   Cover gradients use the cream surface colour (#FDF5F2) so they fully
+   mask the dark shadow at the edges of the content.
+   Apply on any element with overflow-y:auto and a cream-coloured surface. */
+.shomee-scroll-shadow {
+  background:
+    linear-gradient(#FDF5F2 30%, rgba(253, 245, 242, 0)) 0 0 / 100% 22px no-repeat local,
+    linear-gradient(rgba(253, 245, 242, 0), #FDF5F2 70%) 0 100% / 100% 22px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0)) 0 0 / 100% 10px no-repeat,
+    radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0)) 0 100% / 100% 10px no-repeat;
+}
+
 /* Budget step — IRIS feasibility map.
    Smooth fill + stroke interpolation on every Leaflet path inside the map
    root, so moving the budget slider produces a fluid colour transition
