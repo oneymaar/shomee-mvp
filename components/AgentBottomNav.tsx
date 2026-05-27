@@ -39,6 +39,9 @@ export default function AgentBottomNav() {
   const pathname = usePathname()
   const router = useRouter()
 
+  // Hide on full-screen wizards/editors
+  if (pathname.endsWith('/editer') || pathname.endsWith('/nouveau')) return null
+
   const isActive = (tab: Tab) => tab.match.some((m) => pathname === m || pathname.startsWith(m + '/'))
 
   return (
