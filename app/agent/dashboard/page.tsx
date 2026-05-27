@@ -55,14 +55,31 @@ export default async function AgentDashboardPage() {
 
   return (
     <main className="px-5 pt-6">
-      {/* Header — logo + agency + plan */}
+      {/* Header — agency logo + name + plan */}
       <header className="flex items-center gap-3 mb-5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo%20terracotta.png"
-          alt="SHOMEE"
-          style={{ height: 40, width: 'auto' }}
-        />
+        {agent.agency.logo ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={agent.agency.logo}
+            alt={agent.agency.name}
+            style={{ height: 40, width: 'auto' }}
+            className="object-contain flex-shrink-0"
+          />
+        ) : (
+          <div
+            className="flex-shrink-0 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center"
+            style={{ width: 40, height: 40 }}
+            aria-label={agent.agency.name}
+          >
+            <span className="text-[13px] font-bold text-gray-700">
+              {agent.agency.name
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((s) => s[0]?.toUpperCase() ?? '')
+                .join('')}
+            </span>
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-[15px] font-semibold text-[#0a0a0a] truncate">{agent.agency.name}</h1>

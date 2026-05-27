@@ -13,10 +13,10 @@ type Tab = {
 }
 
 const tabs: Tab[] = [
-  { label: 'Biens',        href: '/agent/biens',      icon: Home,          match: ['/agent/dashboard', '/agent/biens'] },
-  { label: 'Messagerie',   href: '/agent/messages',   icon: MessageCircle, match: ['/agent/messages'] },
-  { label: 'Statistiques', href: '/agent/stats',      icon: BarChart3,     match: ['/agent/stats'] },
-  { label: 'Paramètres',   href: '/agent/parametres', icon: Settings,      match: ['/agent/parametres'] },
+  { label: 'Biens',       href: '/agent/biens',      icon: Home,          match: ['/agent/dashboard', '/agent/biens'] },
+  { label: 'Messages',    href: '/agent/messages',   icon: MessageCircle, match: ['/agent/messages'] },
+  { label: 'Stats',       href: '/agent/stats',      icon: BarChart3,     match: ['/agent/stats'] },
+  { label: 'Paramètres',  href: '/agent/parametres', icon: Settings,      match: ['/agent/parametres'] },
 ]
 
 function TabLink({ tab, active }: { tab: Tab; active: boolean }) {
@@ -25,7 +25,7 @@ function TabLink({ tab, active }: { tab: Tab; active: boolean }) {
     <Link
       href={tab.href}
       className={clsx(
-        'flex flex-col items-center gap-0.5 px-3 py-2 transition-colors',
+        'flex flex-col items-center justify-end gap-0.5 h-full pb-2 transition-colors',
         active ? 'text-[#0a0a0a]' : 'text-neutral-400',
       )}
     >
@@ -41,15 +41,22 @@ export default function AgentBottomNav() {
 
   const isActive = (tab: Tab) => tab.match.some((m) => pathname === m || pathname.startsWith(m + '/'))
 
-  const leftTabs = tabs.slice(0, 2)
-  const rightTabs = tabs.slice(2)
-
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div className="relative h-[64px]">
+        {/* 5-column grid: 4 tabs + a centered slot for the + button.
+            grid guarantees perfect symmetry around the center. */}
+        <div className="grid grid-cols-5 h-full">
+          <TabLink tab={tabs[0]} active={isActive(tabs[0])} />
+          <TabLink tab={tabs[1]} active={isActive(tabs[1])} />
+          <div aria-hidden /> {/* + button slot */}
+          <TabLink tab={tabs[2]} active={isActive(tabs[2])} />
+          <TabLink tab={tabs[3]} active={isActive(tabs[3])} />
+        </div>
+
         {/* Center + button — perfectly round, raised above nav */}
         <button
           type="button"
@@ -60,20 +67,6 @@ export default function AgentBottomNav() {
         >
           <Plus size={26} strokeWidth={2.4} />
         </button>
-
-        {/* Two tab groups */}
-        <div className="flex justify-between items-end h-full px-4">
-          <div className="flex">
-            {leftTabs.map((tab) => (
-              <TabLink key={tab.href} tab={tab} active={isActive(tab)} />
-            ))}
-          </div>
-          <div className="flex">
-            {rightTabs.map((tab) => (
-              <TabLink key={tab.href} tab={tab} active={isActive(tab)} />
-            ))}
-          </div>
-        </div>
       </div>
     </nav>
   )
