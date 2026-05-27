@@ -55,20 +55,24 @@ export default async function AgentDashboardPage() {
 
   return (
     <main className="px-5 pt-6">
-      {/* Header — agency logo + name + plan */}
+      {/* Header — agency logo (circle) + name + plan */}
       <header className="flex items-center gap-3 mb-5">
         {agent.agency.logo ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={agent.agency.logo}
-            alt={agent.agency.name}
-            style={{ height: 40, width: 'auto' }}
-            className="object-contain flex-shrink-0"
-          />
+          <div
+            className="flex-shrink-0 rounded-full overflow-hidden bg-white border border-gray-200 flex items-center justify-center"
+            style={{ width: 44, height: 44 }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={agent.agency.logo}
+              alt={agent.agency.name}
+              className="w-full h-full object-contain p-1"
+            />
+          </div>
         ) : (
           <div
-            className="flex-shrink-0 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center"
-            style={{ width: 40, height: 40 }}
+            className="flex-shrink-0 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center"
+            style={{ width: 44, height: 44 }}
             aria-label={agent.agency.name}
           >
             <span className="text-[13px] font-bold text-gray-700">
