@@ -6,16 +6,6 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-function formatToday(): string {
-  const formatted = new Intl.DateTimeFormat('fr-FR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date())
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-}
-
 export default async function AgentDashboardPage() {
   const agent = await prisma.agent.findFirst({ include: { agency: true } })
 
@@ -94,12 +84,6 @@ export default async function AgentDashboardPage() {
           <p className="text-[11px] text-gray-500 mt-0.5">Espace agent</p>
         </div>
       </header>
-
-      {/* Greeting */}
-      <section className="mb-5">
-        <h2 className="text-[22px] font-bold text-[#0a0a0a] leading-tight">Bonjour {agent.name.split(' ')[0]}</h2>
-        <p className="text-[12px] text-gray-500 mt-0.5">{formatToday()}</p>
-      </section>
 
       {/* Quick stats */}
       <section className="grid grid-cols-3 gap-2 mb-6">

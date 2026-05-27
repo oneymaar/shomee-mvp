@@ -44,6 +44,7 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
   const isAvantPremiere = avantPremiere || badges.includes('AVANT_PREMIERE')
   const completionPct = Math.round(completionRate * 100)
   const isDraft = statut === 'DRAFT'
+  const hasSecondaryBadges = isAvantPremiere || isExclusive
 
   return (
     <article
@@ -54,61 +55,65 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
           : 'bg-white border border-gray-200',
       )}
     >
-      {/* Clickable body — thumbnail left, info right */}
+      {/* Clickable body — portrait thumbnail left, info right */}
       <Link href={`/agent/biens/${id}/editer`} className="block active:bg-black/[0.02]">
         <div className="flex gap-3 p-3">
-          {/* Thumbnail */}
+          {/* Thumbnail — portrait 3/4 */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrlFallback}
             alt=""
             loading="lazy"
             className={clsx(
-              'w-24 h-24 rounded-xl object-cover flex-shrink-0 bg-gray-100',
+              'rounded-xl object-cover flex-shrink-0 bg-gray-100',
               isDraft && 'opacity-75',
             )}
+            style={{ width: 96, aspectRatio: '3 / 4' }}
           />
 
           {/* Info */}
-          <div className="flex-1 min-w-0 flex flex-col gap-1">
-            {/* Status + secondary pills on one wrap row */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex-1 min-w-0 flex flex-col">
+            {/* Line 1 — status pill (uniform sizing across all statuts) */}
+            <div>
               <span
                 className={clsx(
-                  'inline-block rounded-full tracking-wide',
+                  'inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full tracking-wide',
                   STATUT_STYLE[statut],
-                  isDraft
-                    ? 'text-[12px] font-bold px-3 py-1'
-                    : 'text-[11px] font-semibold px-2.5 py-0.5',
                 )}
               >
                 {STATUT_LABEL[statut]}
               </span>
-              {isAvantPremiere && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-700">
-                  Avant-première
-                </span>
-              )}
-              {isExclusive && (
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-400/15 border border-violet-400/40 text-violet-700">
-                  Exclusivité
-                </span>
-              )}
             </div>
 
+            {/* Line 2 — secondary badges (smaller, no icon) */}
+            {hasSecondaryBadges && (
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                {isAvantPremiere && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-700">
+                    Avant-première
+                  </span>
+                )}
+                {isExclusive && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-violet-400/15 border border-violet-400/40 text-violet-700">
+                    Exclusivité
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* Title */}
-            <h3 className="text-[14px] font-semibold text-[#0a0a0a] leading-tight truncate mt-0.5">{title}</h3>
+            <h3 className="text-[14px] font-semibold text-[#0a0a0a] leading-tight truncate mt-2">{title}</h3>
 
             {/* Location · surface */}
-            <p className="text-[12px] text-gray-500 truncate">
+            <p className="text-[12px] text-gray-500 truncate mt-0.5">
               {arrondissement} · {surface} m²
             </p>
 
             {/* Price */}
-            <p className="text-[14px] font-bold text-[#0a0a0a]">{formatPrice(price)}</p>
+            <p className="text-[14px] font-bold text-[#0a0a0a] mt-0.5">{formatPrice(price)}</p>
 
             {/* Completion bar */}
-            <div className="mt-auto pt-1">
+            <div className="mt-2">
               <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
                 <span>Complétion</span>
                 <span className="font-medium text-[#0a0a0a]">{completionPct}%</span>
@@ -123,17 +128,25 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
                 />
               </div>
             </div>
+
+            {/* Missing video — inline, small */}
+            {!videoUrl && (
+              <div className="flex items-center gap-1 mt-1.5 text-orange-600">
+                <Video size={11} />
+                <span className="text-[10px] font-medium">Vidéo manquante</span>
+              </div>
+            )}
           </div>
         </div>
       </Link>
 
-      {/* Action buttons row (outside Link so buttons aren't nested in <a>) */}
+      {/* Action buttons row (outside Link to keep <button> out of <a>) */}
       <div className="flex border-t border-gray-200 divide-x divide-gray-200 text-xs">
         {statut === 'DRAFT' && (
           <>
             <button
               type="button"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 font-semibold bg-emerald-50 text-emerald-700 active:bg-emerald-100 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 font-semibold bg-gray-100 text-[#0a0a0a] active:bg-gray-200 transition-colors"
             >
               <Check size={13} strokeWidth={2.4} />
               Publier
@@ -175,14 +188,6 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
           </button>
         )}
       </div>
-
-      {/* Missing video banner */}
-      {!videoUrl && (
-        <div className="flex items-center gap-1.5 px-4 py-2 bg-orange-50 border-t border-orange-100 text-orange-700">
-          <Video size={13} />
-          <span className="text-[11px] font-medium">Vidéo manquante</span>
-        </div>
-      )}
     </article>
   )
 }
