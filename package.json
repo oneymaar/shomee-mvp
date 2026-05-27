@@ -8,16 +8,24 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:seed": "node --experimental-strip-types prisma/seed.ts",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "node --experimental-strip-types prisma/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@types/leaflet": "^1.9.21",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
+    "pg": "^8.21.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",
@@ -27,10 +35,13 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.6"

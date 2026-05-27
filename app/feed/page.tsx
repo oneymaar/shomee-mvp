@@ -14,11 +14,12 @@ import EndOfFeedCard from '@/components/EndOfFeedCard'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
 import { useShomeeStore } from '@/lib/store'
-import { properties } from '@/lib/mockData'
+import { properties as mockProperties } from '@/lib/mockData'
+import type { Property } from '@/lib/types'
 
 type FeedItem =
-  | { type: 'property';     property: (typeof properties)[0] }
-  | { type: 'interstitial'; property: (typeof properties)[0] }
+  | { type: 'property';     property: Property }
+  | { type: 'interstitial'; property: Property }
   | { type: 'end-of-feed';  id: string; hasNewResults: boolean }
 
 // Three stages driving the feed structure:
@@ -30,9 +31,30 @@ type ResultsStage = 'blocked' | 'pre-reveal' | 'revealed'
 export default function FeedPage() {
   const [muted, setMuted] = useState(true)
   const [baiaOpen, setBaiaOpen] = useState(false)
-  const [detailProperty, setDetailProperty] = useState<typeof properties[0] | null>(null)
+  const [detailProperty, setDetailProperty] = useState<Property | null>(null)
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
   const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
+  const [properties, setProperties] = useState<Property[]>(mockProperties)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/properties')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
+      .then((data: Property[]) => {
+        if (!cancelled && Array.isArray(data) && data.length > 0) {
+          setProperties(data)
+        }
+      })
+      .catch((err) => {
+        console.warn('[feed] /api/properties unavailable, using mock fallback', err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   interface FlyHeart { id: number; from: { x: number; y: number }; to: { x: number; y: number } }
   const [flyHearts, setFlyHearts] = useState<FlyHeart[]>([])
@@ -96,7 +118,7 @@ export default function FeedPage() {
     }
 
     return items
-  }, [resultsStage])
+  }, [resultsStage, properties])
 
   // Step 1: BAIA found results → add b4 to DOM below eof-1 so the scroll has a destination
   const handleFoundResults = useCallback(() => {
@@ -119,7 +141,7 @@ export default function FeedPage() {
         if (el && container) container.scrollTop = el.offsetTop
       })
     }, 1200)
-  }, [])
+  }, [properties])
 
   // Force scroll to 0 on mount — iOS PWA sets a non-zero contentOffset on full-screen scroll containers
   useEffect(() => {
@@ -167,7 +189,7 @@ export default function FeedPage() {
       propObserver.disconnect()
       specialObserver.disconnect()
     }
-  }, [resultsStage])
+  }, [resultsStage, properties])
 
   return (
     <MobileFrame>

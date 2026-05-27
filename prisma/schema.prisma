@@ -1,0 +1,284 @@
+// Shomee — Prisma schema
+// Source of truth for persistence. View-model types in lib/types.ts mirror
+// the fields here and stay backward-compatible with the existing feed.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  BUYER
+  AGENT
+  ADMIN
+}
+
+enum AgencyPlan {
+  BASIC
+  PRO
+  PREMIUM
+}
+
+enum MandatType {
+  EXCLUSIF
+  SIMPLE
+  COEXCLUSIF
+}
+
+enum PropertyStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum DpeRating {
+  A
+  B
+  C
+  D
+  E
+  F
+  G
+}
+
+enum PropertyBadge {
+  AVANT_PREMIERE
+  EXCLUSIVITE
+}
+
+enum TagSource {
+  AI_VIDEO
+  AI_DOC
+  AGENT_MANUAL
+}
+
+enum VideoAnalysisStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+enum DocumentType {
+  PLAN
+  PV_AG
+  DIAGNOSTIC
+  AUTRE
+}
+
+// ─── Identity ───────────────────────────────────────────────────────────────
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  avatar       String?
+  role         UserRole      @default(BUYER)
+  createdAt    DateTime      @default(now())
+
+  buyerProfile BuyerProfile?
+}
+
+model BuyerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  parsedCriteria    Json     @default("[]")
+  rawTags           String[] @default([])
+  searchPreferences Json     @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Agency {
+  id            String     @id @default(cuid())
+  name          String
+  logo          String?
+  plan          AgencyPlan @default(BASIC)
+  maxProperties Int        @default(10)
+  createdAt     DateTime   @default(now())
+
+  agents        Agent[]
+  properties    Property[]
+}
+
+model Agent {
+  id         String     @id @default(cuid())
+  name       String
+  email      String     @unique
+  avatar     String?
+  agencyId   String
+  createdAt  DateTime   @default(now())
+
+  agency     Agency     @relation(fields: [agencyId], references: [id], onDelete: Restrict)
+  properties Property[] @relation("PropertyCreatedBy")
+
+  @@index([agencyId])
+}
+
+// ─── Property ───────────────────────────────────────────────────────────────
+
+model Property {
+  id                    String          @id @default(cuid())
+
+  // Feed display (denormalised for fast reads)
+  arrondissement        String
+  subtitle              String
+  agentName             String
+  agentAvatar           String?
+
+  // Core
+  title                 String
+  price                 Int
+  pricePerSqm           Int?
+  surface               Float
+  rooms                 Int
+  bedrooms              Int?
+  location              String
+  district              String
+  description           String          @db.Text
+  tags                  String[]        @default([])
+  features              String[]        @default([])
+  dpe                   DpeRating
+  ges                   DpeRating?
+
+  // Physical
+  floor                 Int?
+  totalFloors           Int?
+  orientation           String?
+  exteriorType          String?
+  heatingType           String?
+  hotWaterType          String?
+  yearBuilt             Int?
+  lotCount              Int?
+  proceduresEnCours     Boolean?
+  monthlyCharges        Int?
+  propertyTax           Int?
+
+  // Composition / IRIS / map / market (JSON for nested structures)
+  composition           Json?           // Array<{ label, surface }>
+  irisZone              String?
+  irisDescription       String?
+  irisPolygon           Json?           // [number, number][]
+  mapLat                Float?
+  mapLng                Float?
+  transports            String[]        @default([])
+  nearbyPlaces          String[]        @default([])
+  neighborhoodVibe      String?
+  mapTransports         Json?           // Array<{ name, line, lat, lng }>
+  mapPois               Json?           // Array<{ name, lat, lng }>
+  marketAvgPricePerSqm  Int?
+  marketEvolution10y    String?
+  marketHighPrice       Int?
+  marketLowPrice        Int?
+
+  // Media
+  videoUrl              String?
+  matterportUrl         String?
+  imageUrlFallback      String
+  gallery               String[]        @default([])
+  chapters              Json?           // Array<{ label, fraction }>
+
+  // Social
+  likeCount             Int             @default(0)
+  shareCount            Int             @default(0)
+  promising             Boolean         @default(false)
+  badges                PropertyBadge[] @default([])
+
+  // ── Structured attributes (matching engine) ──
+  hasElevator           Boolean         @default(false)
+  hasTerrace            Boolean         @default(false)
+  terraceSurfaceM2      Float?
+  hasBalcony            Boolean         @default(false)
+  balconySurfaceM2      Float?
+  hasGarden             Boolean         @default(false)
+  gardenSurfaceM2       Float?
+  hasCellar             Boolean         @default(false)
+  hasParking            Boolean         @default(false)
+  hasConcierge          Boolean         @default(false)
+  isGroundFloor         Boolean         @default(false)
+  bedroomStreetSide     Boolean?
+  isQuietStreet         Boolean?
+  orientationStructured String[]        @default([]) // 'north'|'south'|'east'|'west'
+
+  // ── Semantic scores 0..1 ──
+  luminosity            Float?
+  quietness             Float?
+  charm                 Float?
+  spaciousness          Float?
+  livingQuality         Float?
+  outdoorUsability      Float?
+
+  // ── Sprint fields ──
+  mandatType            MandatType      @default(SIMPLE)
+  avantPremiere         Boolean         @default(false)
+  refInterneAgence      String?
+  statut                PropertyStatus  @default(DRAFT)
+  completionRate        Float           @default(0)
+  collaborateurIds      String[]        @default([])
+
+  // Relations
+  agencyId              String
+  createdByAgentId      String
+  agency                Agency          @relation(fields: [agencyId], references: [id], onDelete: Restrict)
+  createdByAgent        Agent           @relation("PropertyCreatedBy", fields: [createdByAgentId], references: [id], onDelete: Restrict)
+
+  propertyTags          PropertyTag[]
+  videoAnalysis         VideoAnalysis?
+  documents             Document[]
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([agencyId])
+  @@index([createdByAgentId])
+  @@index([statut])
+  @@index([avantPremiere])
+}
+
+model PropertyTag {
+  id          String    @id @default(cuid())
+  propertyId  String
+  label       String
+  category    String    // CriterionCategory: outdoor|bedroom|living|building|location|ambiance
+  source      TagSource
+  validated   Boolean   @default(false)
+  confidence  Float     @default(0)
+  criterionId String?
+
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([propertyId])
+  @@index([category])
+}
+
+model VideoAnalysis {
+  id          String              @id @default(cuid())
+  propertyId  String              @unique
+  status      VideoAnalysisStatus @default(PENDING)
+  chapitres   Json?               // Array<{ label, fraction }>
+  extractedAt DateTime?
+
+  property    Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model Document {
+  id         String       @id @default(cuid())
+  propertyId String
+  url        String
+  type       DocumentType
+  nom        String
+
+  property   Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+
+  @@index([propertyId])
+}
