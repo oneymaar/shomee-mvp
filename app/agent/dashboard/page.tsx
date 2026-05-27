@@ -1,28 +1,10 @@
 import { prisma } from '@/lib/prisma'
-import { AgencyPlan, PropertyStatus } from '@prisma/client'
+import { PropertyStatus } from '@prisma/client'
 import PropertyCardAgent from '@/components/agent/PropertyCardAgent'
 import { Eye, FileText, CheckCircle2, Crown } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
-
-const PLAN_STYLE: Record<AgencyPlan, string> = {
-  BASIC:   'bg-gray-100 text-gray-700',
-  PRO:     'bg-blue-100 text-blue-700',
-  PREMIUM: 'bg-amber-100 text-amber-800',
-}
-
-function ShomeeLogoDark() {
-  return (
-    <div
-      className="border-[2.5px] border-[#0a0a0a] rounded-[9px] flex flex-col items-center justify-center"
-      style={{ width: 42, height: 46 }}
-    >
-      <span className="text-[#0a0a0a] font-black text-[13px] leading-[1.05] tracking-[0.04em]">SHO</span>
-      <span className="text-[#0a0a0a] font-black text-[13px] leading-[1.05] tracking-[0.04em]">MEE</span>
-    </div>
-  )
-}
 
 function formatToday(): string {
   const formatted = new Intl.DateTimeFormat('fr-FR', {
@@ -75,11 +57,16 @@ export default async function AgentDashboardPage() {
     <main className="px-5 pt-6">
       {/* Header — logo + agency + plan */}
       <header className="flex items-center gap-3 mb-5">
-        <ShomeeLogoDark />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo%20terracotta.png"
+          alt="SHOMEE"
+          style={{ height: 40, width: 'auto' }}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-[15px] font-semibold text-[#0a0a0a] truncate">{agent.agency.name}</h1>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider ${PLAN_STYLE[agent.agency.plan]}`}>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.12em] px-1.5 py-[3px] rounded border border-[#0a0a0a]/25 text-[#0a0a0a]/75">
               {agent.agency.plan}
             </span>
           </div>
