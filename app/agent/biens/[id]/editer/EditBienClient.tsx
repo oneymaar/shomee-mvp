@@ -222,7 +222,19 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 
   const addChapter = () => {
     if (videoDuration <= 0) return
-    const startSec = Math.max(0, Math.min(videoDuration, videoRef.current?.currentTime ?? 0))
+    // Place the new marker at the centre of the largest section between
+    // existing markers (with 0 and videoDuration as virtual boundaries).
+    const boundaries = [0, ...chapters.map((c) => c.startSec), videoDuration].sort((a, b) => a - b)
+    let bestStart = videoDuration / 2
+    let bestSize = -1
+    for (let i = 0; i < boundaries.length - 1; i++) {
+      const size = boundaries[i + 1] - boundaries[i]
+      if (size > bestSize) {
+        bestSize = size
+        bestStart = (boundaries[i] + boundaries[i + 1]) / 2
+      }
+    }
+    const startSec = Math.max(0, Math.min(videoDuration, bestStart))
     setChapters((prev) => [
       ...prev,
       { id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, label: 'Nouveau', startSec },
