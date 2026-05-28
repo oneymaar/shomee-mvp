@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
-  Sparkles, MapPin, Image as ImageIcon, Cable, Globe, Trash,
+  Sparkles, MapPin, Image as ImageIcon, Cable, Globe,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
@@ -82,7 +82,6 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [plans, setPlans]                  = useState<string[]>([])
   const [matterportUrl, setMatterportUrl]  = useState<string>(initialProperty.matterportUrl ?? '')
   const [videoAnalysisStarted, setVideoAnalysisStarted] = useState(false)
-  const [replacingVideo, setReplacingVideo] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
@@ -213,6 +212,21 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     update({ videoUrl: url })
     setVideoAnalysisStarted(true)
     setOpenSection('medias')
+  }
+
+  const removeVideo = () => {
+    update({ videoUrl: undefined })
+    setVideoAnalysisStarted(false)
+    setVideoDuration(0)
+  }
+
+  const addChapter = () => {
+    if (videoDuration <= 0) return
+    const startSec = Math.max(0, Math.min(videoDuration, videoRef.current?.currentTime ?? 0))
+    setChapters((prev) => [
+      ...prev,
+      { id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, label: 'Nouveau', startSec },
+    ])
   }
 
   return (
@@ -785,8 +799,22 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           onToggle={() => toggleSection('medias')}
         >
           {/* Vidéo */}
-          <SubSection title="Vidéo" required>
-            {form.videoUrl && !replacingVideo ? (
+          <SubSection
+            title="Vidéo"
+            rightSlot={
+              form.videoUrl ? (
+                <button
+                  type="button"
+                  onClick={removeVideo}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-200 text-[11px] font-medium text-red-600 active:bg-red-50"
+                >
+                  <Trash2 size={11} />
+                  Supprimer la vidéo
+                </button>
+              ) : null
+            }
+          >
+            {form.videoUrl ? (
               <>
                 <video
                   ref={videoRef}
@@ -802,51 +830,41 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 />
 
                 {videoAnalysisStarted && (
-                  <div className="mt-3 px-1">
+                  <div className="mt-4">
                     <VideoChapterEditor
                       videoRef={videoRef}
                       duration={videoDuration}
                       chapters={chapters}
                       onChange={setChapters}
                     />
+
+                    <p className="text-[11px] text-gray-400 text-center mt-3 px-2 leading-snug">
+                      Les temps forts aident les acquéreurs à se repérer dans votre vidéo. Déplacez-les, renommez-les, ajoutez-en ou supprimez-en selon vos besoins.
+                    </p>
+
+                    <div className="flex justify-center mt-3">
+                      <button
+                        type="button"
+                        onClick={addChapter}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] font-medium text-[#0a0a0a] active:bg-gray-50"
+                      >
+                        <Plus size={13} />
+                        Ajouter un temps fort
+                      </button>
+                    </div>
                   </div>
                 )}
-
-                <div className="flex gap-2 mt-3 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setReplacingVideo(true)}
-                    className="px-3 py-2 rounded-lg border border-[#0a0a0a]/20 text-[12px] font-medium text-[#0a0a0a] active:bg-black/5"
-                  >
-                    Remplacer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      update({ videoUrl: undefined })
-                      setVideoAnalysisStarted(false)
-                      setVideoDuration(0)
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium text-red-600 active:bg-red-50"
-                  >
-                    <Trash size={13} />
-                    Supprimer
-                  </button>
-                </div>
               </>
             ) : (
               <MediaUploader
                 bienId={form.id}
                 type="video"
-                onSuccess={(url) => {
-                  handleVideoUploaded(url)
-                  setReplacingVideo(false)
-                }}
+                onSuccess={handleVideoUploaded}
               />
             )}
 
             {/* ── Analyse IA CTA (before analysis is started) ──────────── */}
-            {form.videoUrl && !replacingVideo && !videoAnalysisStarted && (
+            {form.videoUrl && !videoAnalysisStarted && (
               <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
                 <h4 className="text-[14px] font-semibold text-[#0a0a0a]">Analyser la vidéo</h4>
                 <p className="text-[12px] text-gray-500 mt-1 max-w-[280px] leading-snug">
@@ -864,7 +882,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             )}
 
             {/* ── Results (after analysis is started) ──────────────────── */}
-            {form.videoUrl && !replacingVideo && videoAnalysisStarted && (
+            {form.videoUrl && videoAnalysisStarted && (
               <>
                 <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2.5 flex items-center gap-1">
@@ -1154,16 +1172,22 @@ function Section({
 }
 
 function SubSection({
-  title, required, children,
+  title, required, rightSlot, children,
 }: {
-  title: string; required?: boolean; children: React.ReactNode
+  title: string
+  required?: boolean
+  rightSlot?: React.ReactNode
+  children: React.ReactNode
 }) {
   return (
     <div className="pt-2">
-      <h4 className="text-[12px] font-semibold uppercase tracking-wider text-[#0a0a0a] mb-2 flex items-center gap-2">
-        {title}
-        {required && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-50 text-red-600">Obligatoire</span>}
-      </h4>
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <h4 className="text-[12px] font-semibold uppercase tracking-wider text-[#0a0a0a] flex items-center gap-2">
+          {title}
+          {required && <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-50 text-red-600">Obligatoire</span>}
+        </h4>
+        {rightSlot}
+      </div>
       {children}
     </div>
   )
