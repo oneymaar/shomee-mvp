@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
-  Upload, Sparkles, Clock, MapPin, Image as ImageIcon, Cable, Globe,
+  Sparkles, Clock, MapPin, Image as ImageIcon, Cable, Globe,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
+import MediaUploader from '@/components/agent/MediaUploader'
 
 const ALL_FEATURES = [
   'Ascenseur', 'Cave', 'Parking', 'Balcon', 'Terrasse', 'Gardien',
@@ -193,8 +194,8 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const sumMedias     = `${form.videoUrl ? '1 vidéo · ' : 'Pas de vidéo · '}${photos.length} photo${photos.length > 1 ? 's' : ''}`
   const sumMandat     = `${MANDAT_OPTIONS.find((o) => o.value === form.mandatType)?.label ?? '—'}${form.avantPremiere ? ' · Avant-première' : ''}`
 
-  const handleVideoUpload = () => {
-    update({ videoUrl: '/videos/bien-uploaded.mp4' })
+  const handleVideoUploaded = (url: string) => {
+    update({ videoUrl: url })
     setVideoAnalysisStarted(true)
     setOpenSection('medias')
   }
@@ -249,21 +250,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 
         {/* ── Top video CTA (if no video) ────────────────────────────── */}
         {!form.videoUrl && (
-          <div className="bg-[#0a0a0a] text-white rounded-2xl p-4 flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-              <Video size={18} />
+          <div className="mb-1">
+            <div className="flex items-center gap-2 mb-2 text-[#0a0a0a]">
+              <Video size={15} />
+              <p className="text-[12px] font-semibold">Ajoutez la vidéo du bien — indispensable pour publier.</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-[14px] leading-tight">Ajoutez la vidéo du bien</h3>
-              <p className="text-[11px] text-gray-300 mt-0.5">Indispensable pour une annonce immersive.</p>
-            </div>
-            <button
-              type="button"
-              onClick={handleVideoUpload}
-              className="px-3 py-1.5 rounded-lg bg-white text-[#0a0a0a] text-[12px] font-semibold active:bg-gray-200 flex-shrink-0"
-            >
-              Ajouter
-            </button>
+            <MediaUploader
+              bienId={form.id}
+              type="video"
+              onSuccess={handleVideoUploaded}
+            />
           </div>
         )}
 
@@ -775,107 +771,97 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
         >
           {/* Vidéo */}
           <SubSection title="Vidéo" required>
-            {form.videoUrl ? (
-              <>
-                <div className="flex gap-3">
-                  <div
-                    className="flex-shrink-0 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center text-white"
-                    style={{ width: 80, aspectRatio: '3 / 4' }}
-                  >
-                    <Video size={22} />
-                  </div>
-                  <div className="flex-1 flex flex-col gap-2">
-                    <p className="text-[13px] font-medium text-[#0a0a0a] truncate">{form.videoUrl.split('/').pop()}</p>
-                    <button
-                      type="button"
-                      className="self-start px-3 py-1.5 rounded-lg border border-[#0a0a0a]/20 text-[12px] font-medium text-[#0a0a0a]"
-                    >
-                      Remplacer
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVideoAnalysisStarted(true)}
-                      className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0a0a] text-white text-[12px] font-semibold"
-                    >
-                      <Sparkles size={12} className="text-violet-300" />
-                      Analyse IA
-                    </button>
-                  </div>
+            {form.videoUrl && (
+              <div className="flex gap-3 mb-3">
+                <div
+                  className="flex-shrink-0 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center text-white"
+                  style={{ width: 80, aspectRatio: '3 / 4' }}
+                >
+                  <Video size={22} />
                 </div>
+                <div className="flex-1 flex flex-col gap-2 min-w-0">
+                  <p className="text-[13px] font-medium text-[#0a0a0a] truncate">{form.videoUrl.split('/').pop()}</p>
+                  <button
+                    type="button"
+                    onClick={() => setVideoAnalysisStarted(true)}
+                    className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0a0a] text-white text-[12px] font-semibold"
+                  >
+                    <Sparkles size={12} className="text-violet-300" />
+                    Analyse IA
+                  </button>
+                </div>
+              </div>
+            )}
 
-                {videoAnalysisStarted && (
-                  <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1">
-                      <Sparkles size={11} className="text-violet-500" />
-                      Spécificités extraites
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {form.tags.filter((t) => TAGS_FROM_VIDEO.has(t)).map((t) => (
-                        <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[#0a0a0a]">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#0a0a0a]/20 text-[12px] font-medium text-[#0a0a0a]"
-                    >
-                      <Clock size={13} />
-                      Temps forts de la vidéo
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={handleVideoUpload}
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed border-gray-300 text-[13px] font-medium text-gray-700 active:bg-gray-50"
-              >
-                <Upload size={15} />
-                Déposez votre vidéo ici
-              </button>
+            <MediaUploader
+              bienId={form.id}
+              type="video"
+              onSuccess={handleVideoUploaded}
+            />
+
+            {form.videoUrl && videoAnalysisStarted && (
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1">
+                  <Sparkles size={11} className="text-violet-500" />
+                  Spécificités extraites
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {form.tags.filter((t) => TAGS_FROM_VIDEO.has(t)).map((t) => (
+                    <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[#0a0a0a]">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#0a0a0a]/20 text-[12px] font-medium text-[#0a0a0a]"
+                >
+                  <Clock size={13} />
+                  Temps forts de la vidéo
+                </button>
+              </div>
             )}
           </SubSection>
 
           {/* Photos */}
           <SubSection title="Photos">
-            <div className="grid grid-cols-3 gap-2">
-              {photos.map((url, i) => (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => setPhotos((p) => p.filter((_, idx) => idx !== i))}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center"
-                    aria-label="Supprimer"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-              {photos.length < 25 && (
-                <button
-                  type="button"
-                  className="aspect-square rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 text-gray-500 active:bg-gray-50"
-                >
-                  <Plus size={18} />
-                  <span className="text-[10px]">Ajouter</span>
-                </button>
-              )}
-            </div>
+            {photos.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {photos.map((url, i) => (
+                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setPhotos((p) => p.filter((_, idx) => idx !== i))}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center"
+                      aria-label="Supprimer"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {photos.length < 25 && (
+              <MediaUploader
+                bienId={form.id}
+                type="photo"
+                multiple
+                onSuccess={(url) => setPhotos((p) => [...p, url])}
+              />
+            )}
             <p className="text-[10px] text-gray-400 mt-2">{photos.length} / 25 photos · réorganisation à venir.</p>
           </SubSection>
 
           {/* Plan */}
           <SubSection title="Plan">
-            {plans.length > 0 ? (
-              <div className="flex flex-col gap-2">
+            {plans.length > 0 && (
+              <div className="flex flex-col gap-2 mb-3">
                 {plans.map((url, i) => (
                   <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl p-3">
                     <ImageIcon size={18} className="text-gray-500" />
-                    <span className="flex-1 text-[13px] truncate">{url}</span>
+                    <span className="flex-1 text-[13px] truncate">{url.split('/').pop()}</span>
                     <button
                       type="button"
                       onClick={() => setPlans((p) => p.filter((_, idx) => idx !== i))}
@@ -886,30 +872,41 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-[12px] text-gray-400 mb-2">Aucun plan importé.</p>
             )}
-            <button
-              type="button"
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-gray-300 text-[13px] font-medium text-gray-700 active:bg-gray-50"
-            >
-              <Upload size={15} />
-              Ajouter un plan
-            </button>
+            <MediaUploader
+              bienId={form.id}
+              type="plan"
+              onSuccess={(url) => setPlans((p) => [...p, url])}
+            />
           </SubSection>
 
           {/* Visite virtuelle */}
           <SubSection title="Visite virtuelle">
-            <Field label="Lien Matterport / Giraffe360 / Nodalview" icon={<Globe size={11} className="text-gray-400" />}>
-              <TextInput
-                value={matterportUrl}
-                onChange={(v) => {
-                  setMatterportUrl(v)
-                  update({ matterportUrl: v || undefined })
-                }}
-                placeholder="https://my.matterport.com/show/?m=…"
-              />
-            </Field>
+            {matterportUrl && (
+              <div className="mb-3 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl p-3">
+                <Globe size={14} className="text-gray-500 flex-shrink-0" />
+                <span className="flex-1 text-[12px] text-[#0a0a0a] truncate">{matterportUrl}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMatterportUrl('')
+                    update({ matterportUrl: undefined })
+                  }}
+                  className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center"
+                  aria-label="Retirer"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+            <MediaUploader
+              bienId={form.id}
+              type="visite_virtuelle"
+              onSuccess={(url) => {
+                setMatterportUrl(url)
+                update({ matterportUrl: url })
+              }}
+            />
           </SubSection>
         </Section>
 
