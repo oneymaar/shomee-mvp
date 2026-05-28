@@ -838,7 +838,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                       onChange={setChapters}
                     />
 
-                    <p className="text-[11px] text-gray-400 text-center mt-3 px-2 leading-snug">
+                    <p className="text-[11px] text-gray-400 text-center mt-2 leading-snug">
                       Les temps forts aident les acquéreurs à se repérer dans votre vidéo. Déplacez-les, renommez-les, ajoutez-en ou supprimez-en selon vos besoins.
                     </p>
 

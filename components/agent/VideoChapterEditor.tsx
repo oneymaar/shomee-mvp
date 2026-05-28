@@ -19,8 +19,8 @@ function fmtTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-const CONTAINER_MIN_HEIGHT = 180
-const MARKER_GAP_PX = 4
+const AFTER_MARKER_PX  = 1 // half of the 2px marker width — segment starts right after the marker
+const BEFORE_MARKER_PX = 5 // half marker (1px) + 4px gap before the next marker
 
 export default function VideoChapterEditor({
   videoRef,
@@ -32,16 +32,8 @@ export default function VideoChapterEditor({
   const dragRef = useRef<{ id: string; pointerId: number } | null>(null)
   const movedRef = useRef(false)
 
-  const updateChapter = (id: string, patch: Partial<Chapter>) => {
-    onChange(chapters.map((c) => (c.id === id ? { ...c, ...patch } : c)))
-  }
-
-  const removeChapter = (id: string) => {
-    onChange(chapters.filter((c) => c.id !== id))
-  }
-
-  // ── Sorted view + segments ───────────────────────────────────────────────
-  // Alternate label position by SORTED order so adjacent labels don't collide.
+  // Sort markers by startSec so segments and label alternation follow the
+  // visual order, independent of the user's add order.
   const sortedChapters = useMemo(
     () => [...chapters].sort((a, b) => a.startSec - b.startSec),
     [chapters],
@@ -52,31 +44,42 @@ export default function VideoChapterEditor({
     const pcts = sortedChapters.map((c) =>
       Math.min(100, Math.max(0, (c.startSec / duration) * 100)),
     )
-    const out: Array<{ leftPct: number; rightPct: number; leftHasMarker: boolean; rightHasMarker: boolean }> = []
-    let lastEnd = 0
-    let lastHasMarker = false
-    for (const m of pcts) {
-      if (m > lastEnd) {
-        out.push({
-          leftPct: lastEnd,
-          rightPct: 100 - m,
-          leftHasMarker: lastHasMarker,
-          rightHasMarker: true,
-        })
-      }
-      lastEnd = m
-      lastHasMarker = true
+    if (pcts.length === 0) {
+      return [{ leftPct: 0, rightPct: 0, leftHasMarker: false, rightHasMarker: false }]
     }
-    if (lastEnd < 100) {
+    const out: Array<{ leftPct: number; rightPct: number; leftHasMarker: boolean; rightHasMarker: boolean }> = []
+    // Leading segment — only if the first marker is not at 0%
+    if (pcts[0] > 0) {
+      out.push({ leftPct: 0, rightPct: 100 - pcts[0], leftHasMarker: false, rightHasMarker: true })
+    }
+    // Inter-marker segments
+    for (let i = 0; i < pcts.length - 1; i++) {
       out.push({
-        leftPct: lastEnd,
+        leftPct: pcts[i],
+        rightPct: 100 - pcts[i + 1],
+        leftHasMarker: true,
+        rightHasMarker: true,
+      })
+    }
+    // Trailing segment — only if the last marker is not at 100%
+    if (pcts[pcts.length - 1] < 100) {
+      out.push({
+        leftPct: pcts[pcts.length - 1],
         rightPct: 0,
-        leftHasMarker: lastHasMarker,
+        leftHasMarker: true,
         rightHasMarker: false,
       })
     }
     return out
   }, [sortedChapters, duration])
+
+  const updateChapter = (id: string, patch: Partial<Chapter>) => {
+    onChange(chapters.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+  }
+
+  const removeChapter = (id: string) => {
+    onChange(chapters.filter((c) => c.id !== id))
+  }
 
   // ── Pointer drag ─────────────────────────────────────────────────────────
 
@@ -123,101 +126,92 @@ export default function VideoChapterEditor({
   }
 
   return (
-    <div
-      ref={timelineRef}
-      className="relative w-full select-none"
-      style={{ minHeight: CONTAINER_MIN_HEIGHT, touchAction: 'none' }}
-    >
-      {/* ── Segmented rail (gray, stories-style with 4px gaps around markers) ── */}
-      <div
-        className="absolute left-0 right-0 h-[3px] pointer-events-none"
-        style={{ top: '50%', transform: 'translateY(-50%)' }}
-      >
+    <div className="pt-8 pb-16">
+      {/* 3px line — all chapter satellites position from here */}
+      <div ref={timelineRef} className="relative h-[3px]" style={{ touchAction: 'none' }}>
+        {/* Stories-style segmented rail */}
         {segments.map((s, i) => (
           <div
             key={i}
             className="absolute top-0 bottom-0 bg-gray-200 rounded-full"
             style={{
-              left:  `calc(${s.leftPct}%${s.leftHasMarker ? ` + ${MARKER_GAP_PX}px` : ''})`,
-              right: `calc(${s.rightPct}%${s.rightHasMarker ? ` + ${MARKER_GAP_PX}px` : ''})`,
+              left:  `calc(${s.leftPct}%${s.leftHasMarker ? ` + ${AFTER_MARKER_PX}px` : ''})`,
+              right: `calc(${s.rightPct}%${s.rightHasMarker ? ` + ${BEFORE_MARKER_PX}px` : ''})`,
             }}
           />
         ))}
+
+        {sortedChapters.map((c, sortedIdx) => {
+          const pct = Math.min(100, Math.max(0, (c.startSec / duration) * 100))
+          const isEven = sortedIdx % 2 === 0
+
+          return (
+            <Fragment key={c.id}>
+              {/* × — always 6px above the line, centered on the marker */}
+              <button
+                type="button"
+                onClick={() => removeChapter(c.id)}
+                aria-label="Supprimer ce temps fort"
+                style={{
+                  left: `${pct}%`,
+                  bottom: 'calc(100% + 6px)',
+                  transform: 'translateX(-50%)',
+                }}
+                className="absolute w-4 h-4 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm active:bg-gray-100"
+              >
+                <X size={9} />
+              </button>
+
+              {/* Marker — draggable, on the line */}
+              <div
+                onPointerDown={(e) => startDrag(c.id, e)}
+                onPointerMove={onPointerMove}
+                onPointerUp={endDrag}
+                onPointerCancel={endDrag}
+                style={{
+                  left: `${pct}%`,
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  touchAction: 'none',
+                }}
+                className="absolute w-4 h-9 flex items-center justify-center cursor-ew-resize"
+                role="slider"
+                aria-label={`Temps fort ${c.label}`}
+                aria-valuenow={Math.round(c.startSec)}
+              >
+                <div className="w-[2px] h-[24px] bg-violet-500 rounded-sm pointer-events-none" />
+              </div>
+
+              {/* Timestamp — 4px below the line, centered on the marker */}
+              <span
+                style={{
+                  left: `${pct}%`,
+                  top: 'calc(100% + 4px)',
+                  transform: 'translateX(-50%)',
+                }}
+                className="absolute text-[10px] text-gray-400 tabular-nums pointer-events-none"
+              >
+                {fmtTime(c.startSec)}
+              </span>
+
+              {/* Label — staggered: even index at +20px, odd index at +36px */}
+              <input
+                type="text"
+                value={c.label}
+                onChange={(e) => updateChapter(c.id, { label: e.target.value })}
+                style={{
+                  left: `${pct}%`,
+                  top: `calc(100% + ${isEven ? 20 : 36}px)`,
+                  transform: 'translateX(-50%)',
+                  minWidth: 80,
+                  maxWidth: 100,
+                }}
+                className="absolute text-[11px] text-center bg-transparent text-[#0a0a0a] border-b border-transparent focus:border-violet-400 focus:outline-none px-1 leading-tight"
+              />
+            </Fragment>
+          )
+        })}
       </div>
-
-      {/* ── Per-chapter stack (× → timestamp → marker → alternated label) ── */}
-      {sortedChapters.map((c, sortedIdx) => {
-        const pct = Math.min(100, Math.max(0, (c.startSec / duration) * 100))
-        const isEven = sortedIdx % 2 === 0
-
-        return (
-          <Fragment key={c.id}>
-            {/* × — always above the marker */}
-            <button
-              type="button"
-              onClick={() => removeChapter(c.id)}
-              aria-label="Supprimer ce temps fort"
-              style={{
-                left: `${pct}%`,
-                top: 'calc(50% - 46px)',
-                transform: 'translateX(-50%)',
-              }}
-              className="absolute w-4 h-4 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm active:bg-gray-100"
-            >
-              <X size={9} />
-            </button>
-
-            {/* Timestamp — just above the marker */}
-            <span
-              style={{
-                left: `${pct}%`,
-                top: 'calc(50% - 26px)',
-                transform: 'translateX(-50%)',
-              }}
-              className="absolute text-[10px] text-gray-400 tabular-nums pointer-events-none"
-            >
-              {fmtTime(c.startSec)}
-            </span>
-
-            {/* Marker — draggable, on the rail */}
-            <div
-              onPointerDown={(e) => startDrag(c.id, e)}
-              onPointerMove={onPointerMove}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-              style={{
-                left: `${pct}%`,
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                touchAction: 'none',
-              }}
-              className="absolute w-4 h-9 flex items-center justify-center cursor-ew-resize"
-              role="slider"
-              aria-label={`Temps fort ${c.label}`}
-              aria-valuenow={Math.round(c.startSec)}
-            >
-              <div className="w-[2px] h-[24px] bg-violet-500 rounded-sm pointer-events-none" />
-            </div>
-
-            {/* Label — alternating: even index above, odd index below */}
-            <input
-              type="text"
-              value={c.label}
-              onChange={(e) => updateChapter(c.id, { label: e.target.value })}
-              className="absolute text-[11px] text-center bg-transparent text-[#0a0a0a] border-b border-transparent focus:border-violet-400 focus:outline-none px-1 leading-tight"
-              style={{
-                left: `${pct}%`,
-                transform: 'translateX(-50%)',
-                width: 72,
-                ...(isEven
-                  ? { top: 'calc(50% - 70px)' }
-                  : { top: 'calc(50% + 20px)' }
-                ),
-              }}
-            />
-          </Fragment>
-        )
-      })}
     </div>
   )
 }
