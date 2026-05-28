@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
-  Sparkles, Clock, MapPin, Image as ImageIcon, Cable, Globe, Trash,
+  Sparkles, MapPin, Image as ImageIcon, Cable, Globe, Trash,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import MediaUploader from '@/components/agent/MediaUploader'
+import VideoChapterEditor, { type Chapter } from '@/components/agent/VideoChapterEditor'
 
 const ALL_FEATURES = [
   'Ascenseur', 'Cave', 'Parking', 'Balcon', 'Terrasse', 'Gardien',
@@ -46,21 +47,15 @@ const TAGS_FROM_VIDEO = new Set([
   'Luminosité excellente',
 ])
 
-// Mocked chapters returned by the analysis pipeline.
-const VIDEO_CHAPTERS: Array<{ label: string; startSec: number }> = [
-  { label: 'Hall',              startSec: 0 },
-  { label: 'Salon traversant',  startSec: 8 },
-  { label: 'Cuisine',           startSec: 22 },
-  { label: 'Chambre parentale', startSec: 35 },
-  { label: 'Salle de bain',     startSec: 48 },
-  { label: 'Vue balcon',        startSec: 60 },
+// Mocked chapters used as the initial state — to be replaced by AI-analysed
+// output once that pipeline is wired up.
+const INITIAL_CHAPTERS: Chapter[] = [
+  { id: 'c1', label: 'Hall',              startSec: 0  },
+  { id: 'c2', label: 'Salon traversant',  startSec: 8  },
+  { id: 'c3', label: 'Cuisine',           startSec: 22 },
+  { id: 'c4', label: 'Chambre parentale', startSec: 32 },
+  { id: 'c5', label: 'Salle de bain',     startSec: 40 },
 ]
-
-function fmtTime(sec: number): string {
-  const m = Math.floor(sec / 60)
-  const s = Math.round(sec % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
 
 type SectionKey =
   | 'general' | 'features' | 'specs' | 'composition' | 'copro'
@@ -90,6 +85,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [replacingVideo, setReplacingVideo] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
+  const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
 
   const [copro, setCopro] = useState({
     isCopro: true,
@@ -805,28 +801,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                   style={{ aspectRatio: '9 / 16' }}
                 />
 
-                {/* Chapter markers — visible once analysis has run */}
-                {videoAnalysisStarted && videoDuration > 0 && (
-                  <div className="relative h-6 mt-2 bg-gray-100 rounded">
-                    {VIDEO_CHAPTERS.map((c) => {
-                      const pct = Math.min(100, Math.max(0, (c.startSec / videoDuration) * 100))
-                      return (
-                        <button
-                          key={c.startSec}
-                          type="button"
-                          onClick={() => {
-                            if (videoRef.current) {
-                              videoRef.current.currentTime = c.startSec
-                              videoRef.current.play().catch(() => {})
-                            }
-                          }}
-                          style={{ left: `${pct}%` }}
-                          title={`${c.label} · ${fmtTime(c.startSec)}`}
-                          aria-label={`${c.label} à ${fmtTime(c.startSec)}`}
-                          className="absolute top-0 bottom-0 w-1 -translate-x-1/2 bg-violet-500 hover:bg-violet-600 transition-colors"
-                        />
-                      )
-                    })}
+                {videoAnalysisStarted && (
+                  <div className="mt-3 px-1">
+                    <VideoChapterEditor
+                      videoRef={videoRef}
+                      duration={videoDuration}
+                      chapters={chapters}
+                      onChange={setChapters}
+                    />
                   </div>
                 )}
 
@@ -917,35 +899,6 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                   })()}
                 </div>
 
-                <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2.5">
-                    Temps forts de la vidéo
-                  </p>
-                  <ul className="flex flex-col gap-1.5">
-                    {VIDEO_CHAPTERS.map((c) => (
-                      <li key={c.startSec}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (videoRef.current) {
-                              videoRef.current.currentTime = c.startSec
-                              videoRef.current.play().catch(() => {})
-                            }
-                          }}
-                          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white border border-gray-200 text-[13px] text-[#0a0a0a] active:bg-gray-100 transition-colors"
-                        >
-                          <span className="flex items-center gap-2 min-w-0">
-                            <Clock size={12} className="text-gray-400 flex-shrink-0" />
-                            <span className="truncate">{c.label}</span>
-                          </span>
-                          <span className="text-[11px] text-gray-500 tabular-nums flex-shrink-0">
-                            {fmtTime(c.startSec)}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               </>
             )}
           </SubSection>
