@@ -22,33 +22,55 @@ POST https://shomee-mvp.vercel.app/api/biens/import-llm
 Seul `adresse` est obligatoire. Tout le reste est optionnel — n'envoyez que ce
 que vous avez extrait avec confiance ; SHOMEE complétera le reste depuis l'app.
 
+Chaque champ peut être doublé d'un champ `*_source` qui indique d'où vient la
+donnée ("Mandat de vente", "DDT", "Rédigé par l'assistant", "Estimation PDF",
+etc.). Ces marqueurs sont stockés en base et affichés à l'agent dans
+l'éditeur — ils l'aident à arbitrer rapidement ce qui doit être vérifié.
+
 ```jsonc
 {
-  "adresse":            "12 rue du Faubourg Saint-Honoré, 75008 Paris",
-  "prix":               3500000,
-  "surface":            140,
-  "nb_pieces":          5,
-  "nb_chambres":        3,
-  "type_bien":          "Appartement",
-  "description":        "Haussmannien classique au 4ᵉ étage…",
-  "quartier":           "Faubourg Saint-Honoré — Madeleine",
-  "etage":              4,
-  "nb_etages_total":    6,
-  "annee_construction": 1880,
-  "caracteristiques":   ["Ascenseur", "Cave", "Gardien", "Parquet"],
-  "specificites":       ["Pas de vis-à-vis", "Lumineux", "Hauteur sous plafond > 3m"],
-  "composition":        [
+  "adresse":                   "12 rue du Faubourg Saint-Honoré, 75008 Paris",
+  "location_source":           "Mandat de vente",
+  "prix":                      3500000,
+  "prix_source":               "Mandat de vente",
+  "surface":                   140,
+  "surface_source":            "DDT",
+  "nb_pieces":                 5,
+  "nb_pieces_source":          "DDT",
+  "nb_chambres":               3,
+  "nb_chambres_source":        "DDT",
+  "type_bien":                 "Appartement",
+  "type_bien_source":          "Mandat de vente",
+  "description":               "Haussmannien classique au 4ᵉ étage…",
+  "description_source":        "Rédigé par l'assistant",
+  "quartier":                  "Faubourg Saint-Honoré — Madeleine",
+  "quartier_source":           "Déduit de l'adresse",
+  "etage":                     4,
+  "etage_source":              "Mandat de vente",
+  "nb_etages_total":           6,
+  "annee_construction":        1880,
+  "annee_construction_source": "Estimation PDF",
+  "caracteristiques":          ["Ascenseur", "Cave", "Gardien", "Parquet"],
+  "specificites":              ["Pas de vis-à-vis", "Lumineux", "Hauteur sous plafond > 3m"],
+  "composition":               [
     { "label": "Double salon", "surface": 48 },
     { "label": "Cuisine",      "surface": 14 }
   ],
-  "mandat_type":   "EXCLUSIF",       // "SIMPLE" | "EXCLUSIF"
-  "avant_premiere": true,
-  "ref_interne":   "KRZ-8-FSH-0211",
-  "dpe":           "B",              // "A" .. "G"
-  "ges":           "C",
-  "prix_fai":      3500000,
-  "taxe_fonciere": 5400,
-  "charges_copro": 720
+  "composition_source":   "DDT",
+  "mandat_type":          "EXCLUSIF",       // "SIMPLE" | "EXCLUSIF"
+  "mandat_type_source":   "Mandat de vente",
+  "avant_premiere":       true,
+  "ref_interne":          "KRZ-8-FSH-0211",
+  "ref_interne_source":   "Mandat de vente",
+  "dpe":                  "B",              // "A" .. "G"
+  "dpe_source":           "DDT",
+  "ges":                  "C",
+  "ges_source":           "DDT",
+  "prix_fai":             3500000,
+  "taxe_fonciere":        5400,
+  "taxe_fonciere_source": "Avis d'imposition",
+  "charges_copro":        720,
+  "charges_copro_source": "Décompte de charges"
 }
 ```
 
