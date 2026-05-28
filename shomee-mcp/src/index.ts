@@ -73,7 +73,16 @@ RÈGLES GÉNÉRALES :
 - Ne jamais inventer une adresse, un DPE ou un GES
 - Pour les spécificités, privilégie des observations objectives ("Pas de vis-à-vis", "Orienté sud", "Hauteur sous plafond > 3m") — pas de marketing exagéré
 - Ne crée jamais l'annonce sans confirmation explicite de l'agent
-- Réponds toujours en français`
+- Réponds toujours en français
+
+CITATIONS DE SOURCES
+Pour chaque information extraite d'un document, inclus le champ source correspondant dans le JSON envoyé à shomee_creer_annonce :
+- "surface_source": "DDT" si la surface vient du DDT
+- "prix_source": "Mandat de vente" si le prix vient du mandat
+- "dpe_source": "DDT" si le DPE vient du DDT
+- "description_source": "Rédigé par l'assistant" si tu as rédigé la description
+Les valeurs possibles sont : "DDT", "Mandat de vente", "Estimation", "PV d'AG", "Photos", "Brief oral", "Rédigé par l'assistant".
+Ne crée jamais un champ _source sans son champ de données correspondant.`
 
 const server = new McpServer(
   { name: 'shomee-mcp', version: '0.1.0' },
