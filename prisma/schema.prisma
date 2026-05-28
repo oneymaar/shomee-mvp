@@ -236,6 +236,24 @@ model Property {
   completionRate        Float           @default(0)
   collaborateurIds      String[]        @default([])
 
+  // ── Source fields (populated by LLM import) ──
+  locationSource         String?
+  titleSource            String?
+  priceSource            String?
+  surfaceSource          String?
+  roomsSource            String?
+  bedroomsSource         String?
+  descriptionSource      String?
+  floorSource            String?
+  yearBuiltSource        String?
+  dpeSource              String?
+  gesSource              String?
+  mandatTypeSource       String?
+  refInterneAgenceSource String?
+  monthlyChargesSource   String?
+  propertyTaxSource      String?
+  compositionSource      String?
+
   // Relations
   agencyId              String
   createdByAgentId      String

@@ -1,0 +1,17 @@
+-- AlterTable
+ALTER TABLE "Property" ADD COLUMN     "bedroomsSource" TEXT,
+ADD COLUMN     "compositionSource" TEXT,
+ADD COLUMN     "descriptionSource" TEXT,
+ADD COLUMN     "dpeSource" TEXT,
+ADD COLUMN     "floorSource" TEXT,
+ADD COLUMN     "gesSource" TEXT,
+ADD COLUMN     "locationSource" TEXT,
+ADD COLUMN     "mandatTypeSource" TEXT,
+ADD COLUMN     "monthlyChargesSource" TEXT,
+ADD COLUMN     "priceSource" TEXT,
+ADD COLUMN     "propertyTaxSource" TEXT,
+ADD COLUMN     "refInterneAgenceSource" TEXT,
+ADD COLUMN     "roomsSource" TEXT,
+ADD COLUMN     "surfaceSource" TEXT,
+ADD COLUMN     "titleSource" TEXT,
+ADD COLUMN     "yearBuiltSource" TEXT;
