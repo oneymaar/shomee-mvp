@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -85,6 +85,114 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
+
+  // ── Photo drag & drop ────────────────────────────────────────────────
+  const [dragIndex, setDragIndex]         = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const photoRefs       = useRef<Map<number, HTMLDivElement>>(new Map())
+  const longPressTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchStartPos   = useRef<{ x: number; y: number } | null>(null)
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+    touchStartPos.current = null
+  }
+
+  const findPhotoIndexAtPoint = (clientX: number, clientY: number): number | null => {
+    for (const [idx, el] of photoRefs.current.entries()) {
+      const r = el.getBoundingClientRect()
+      if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) {
+        return idx
+      }
+    }
+    return null
+  }
+
+  const reorderPhotos = (from: number, to: number) => {
+    if (from === to) return
+    setPhotos((prev) => {
+      if (from < 0 || to < 0 || from >= prev.length || to >= prev.length) return prev
+      const arr = [...prev]
+      const [moved] = arr.splice(from, 1)
+      arr.splice(to, 0, moved)
+      return arr
+    })
+  }
+
+  const handlePhotoTouchStart = (i: number, e: React.TouchEvent) => {
+    const t = e.touches[0]
+    if (!t) return
+    touchStartPos.current = { x: t.clientX, y: t.clientY }
+    cancelLongPress()
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null
+      setDragIndex(i)
+      setDragOverIndex(i)
+    }, 250)
+  }
+
+  const handlePhotoTouchMovePending = (e: React.TouchEvent) => {
+    if (dragIndex !== null) return // active drag handled by global listener
+    const t = e.touches[0]
+    const start = touchStartPos.current
+    if (!t || !start) return
+    if (Math.abs(t.clientX - start.x) > 8 || Math.abs(t.clientY - start.y) > 8) {
+      cancelLongPress()
+    }
+  }
+
+  const handlePhotoMouseDown = (i: number) => {
+    setDragIndex(i)
+    setDragOverIndex(i)
+  }
+
+  useEffect(() => {
+    if (dragIndex === null) return
+    const startIdx = dragIndex
+    let currentOver: number | null = dragOverIndex
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      const t = e.touches[0]
+      if (!t) return
+      const idx = findPhotoIndexAtPoint(t.clientX, t.clientY)
+      if (idx !== null && idx !== currentOver) {
+        currentOver = idx
+        setDragOverIndex(idx)
+      }
+    }
+    const onMouseMove = (e: MouseEvent) => {
+      const idx = findPhotoIndexAtPoint(e.clientX, e.clientY)
+      if (idx !== null && idx !== currentOver) {
+        currentOver = idx
+        setDragOverIndex(idx)
+      }
+    }
+    const finishDrag = () => {
+      if (currentOver !== null && currentOver !== startIdx) {
+        reorderPhotos(startIdx, currentOver)
+      }
+      setDragIndex(null)
+      setDragOverIndex(null)
+    }
+
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    window.addEventListener('touchend',    finishDrag)
+    window.addEventListener('touchcancel', finishDrag)
+    window.addEventListener('mousemove',   onMouseMove)
+    window.addEventListener('mouseup',     finishDrag)
+    return () => {
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend',    finishDrag)
+      window.removeEventListener('touchcancel', finishDrag)
+      window.removeEventListener('mousemove',   onMouseMove)
+      window.removeEventListener('mouseup',     finishDrag)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragIndex])
 
   const [copro, setCopro] = useState({
     isCopro: true,
@@ -944,20 +1052,52 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               />
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {photos.map((url, i) => (
-                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setPhotos((p) => p.filter((_, idx) => idx !== i))}
-                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center"
-                      aria-label="Supprimer"
+                {photos.map((url, i) => {
+                  const isDragging = dragIndex === i
+                  const isTarget   = dragIndex !== null && dragOverIndex === i && dragOverIndex !== dragIndex
+                  return (
+                    <div
+                      key={i}
+                      ref={(el) => {
+                        if (el) photoRefs.current.set(i, el)
+                        else    photoRefs.current.delete(i)
+                      }}
+                      onTouchStart={(e) => handlePhotoTouchStart(i, e)}
+                      onTouchMove={handlePhotoTouchMovePending}
+                      onTouchEnd={cancelLongPress}
+                      onTouchCancel={cancelLongPress}
+                      onMouseDown={() => handlePhotoMouseDown(i)}
+                      style={{ touchAction: dragIndex === null ? 'auto' : 'none' }}
+                      className={clsx(
+                        'relative aspect-square rounded-lg overflow-hidden bg-gray-100 transition-transform duration-150 select-none',
+                        dragIndex !== null ? 'cursor-grabbing' : 'cursor-grab',
+                        isDragging && 'opacity-60 scale-105 ring-2 ring-violet-400 z-10',
+                        isTarget && 'border-2 border-dashed border-violet-400',
+                      )}
                     >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={url}
+                        alt={`Photo ${i + 1}`}
+                        draggable={false}
+                        className="w-full h-full object-cover pointer-events-none select-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPhotos((p) => p.filter((_, idx) => idx !== i))
+                        }}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center"
+                        aria-label="Supprimer"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )
+                })}
                 {photos.length < 25 && (
                   <MediaUploader
                     bienId={form.id}
@@ -969,7 +1109,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 )}
               </div>
             )}
-            <p className="text-[10px] text-gray-400 mt-2">{photos.length} / 25 photos · réorganisation à venir.</p>
+            <p className="text-[10px] text-gray-400 mt-2">{photos.length} / 25 photos · Maintenez appuyé pour réorganiser.</p>
           </SubSection>
 
           {/* Plan */}
