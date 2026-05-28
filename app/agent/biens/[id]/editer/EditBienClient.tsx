@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -46,6 +46,22 @@ const TAGS_FROM_VIDEO = new Set([
   'Luminosité excellente',
 ])
 
+// Mocked chapters returned by the analysis pipeline.
+const VIDEO_CHAPTERS: Array<{ label: string; startSec: number }> = [
+  { label: 'Hall',              startSec: 0 },
+  { label: 'Salon traversant',  startSec: 8 },
+  { label: 'Cuisine',           startSec: 22 },
+  { label: 'Chambre parentale', startSec: 35 },
+  { label: 'Salle de bain',     startSec: 48 },
+  { label: 'Vue balcon',        startSec: 60 },
+]
+
+function fmtTime(sec: number): string {
+  const m = Math.floor(sec / 60)
+  const s = Math.round(sec % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 type SectionKey =
   | 'general' | 'features' | 'specs' | 'composition' | 'copro'
   | 'energy' | 'finance' | 'annonce' | 'medias' | 'mandat'
@@ -70,8 +86,10 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [photos, setPhotos]                = useState<string[]>(initialProperty.gallery)
   const [plans, setPlans]                  = useState<string[]>([])
   const [matterportUrl, setMatterportUrl]  = useState<string>(initialProperty.matterportUrl ?? '')
-  const [videoAnalysisStarted, setVideoAnalysisStarted] = useState(!!initialProperty.videoUrl)
+  const [videoAnalysisStarted, setVideoAnalysisStarted] = useState(false)
   const [replacingVideo, setReplacingVideo] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [videoDuration, setVideoDuration] = useState(0)
 
   const [copro, setCopro] = useState({
     isCopro: true,
@@ -775,13 +793,43 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             {form.videoUrl && !replacingVideo ? (
               <>
                 <video
+                  ref={videoRef}
                   src={form.videoUrl}
                   preload="metadata"
                   controls
                   playsInline
-                  className="w-full rounded-xl object-cover bg-black"
+                  onLoadedMetadata={() => {
+                    if (videoRef.current) setVideoDuration(videoRef.current.duration || 0)
+                  }}
+                  className="w-full rounded-xl bg-black"
                   style={{ aspectRatio: '9 / 16' }}
                 />
+
+                {/* Chapter markers — visible once analysis has run */}
+                {videoAnalysisStarted && videoDuration > 0 && (
+                  <div className="relative h-6 mt-2 bg-gray-100 rounded">
+                    {VIDEO_CHAPTERS.map((c) => {
+                      const pct = Math.min(100, Math.max(0, (c.startSec / videoDuration) * 100))
+                      return (
+                        <button
+                          key={c.startSec}
+                          type="button"
+                          onClick={() => {
+                            if (videoRef.current) {
+                              videoRef.current.currentTime = c.startSec
+                              videoRef.current.play().catch(() => {})
+                            }
+                          }}
+                          style={{ left: `${pct}%` }}
+                          title={`${c.label} · ${fmtTime(c.startSec)}`}
+                          aria-label={`${c.label} à ${fmtTime(c.startSec)}`}
+                          className="absolute top-0 bottom-0 w-1 -translate-x-1/2 bg-violet-500 hover:bg-violet-600 transition-colors"
+                        />
+                      )
+                    })}
+                  </div>
+                )}
+
                 <div className="flex gap-2 mt-3 flex-wrap">
                   <button
                     type="button"
@@ -795,19 +843,12 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                     onClick={() => {
                       update({ videoUrl: undefined })
                       setVideoAnalysisStarted(false)
+                      setVideoDuration(0)
                     }}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium text-red-600 active:bg-red-50"
                   >
                     <Trash size={13} />
                     Supprimer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVideoAnalysisStarted(true)}
-                    className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0a0a0a] text-white text-[12px] font-semibold"
-                  >
-                    <Sparkles size={12} className="text-violet-300" />
-                    Analyse IA
                   </button>
                 </div>
               </>
@@ -822,27 +863,90 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               />
             )}
 
-            {form.videoUrl && videoAnalysisStarted && !replacingVideo && (
-              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1">
-                  <Sparkles size={11} className="text-violet-500" />
-                  Spécificités extraites
+            {/* ── Analyse IA CTA (before analysis is started) ──────────── */}
+            {form.videoUrl && !replacingVideo && !videoAnalysisStarted && (
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
+                <h4 className="text-[14px] font-semibold text-[#0a0a0a]">Analyser la vidéo</h4>
+                <p className="text-[12px] text-gray-500 mt-1 max-w-[280px] leading-snug">
+                  Extrait automatiquement les spécificités du bien et marque les temps forts
                 </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {form.tags.filter((t) => TAGS_FROM_VIDEO.has(t)).map((t) => (
-                    <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[#0a0a0a]">
-                      {t}
-                    </span>
-                  ))}
-                </div>
                 <button
                   type="button"
-                  className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#0a0a0a]/20 text-[12px] font-medium text-[#0a0a0a]"
+                  onClick={() => setVideoAnalysisStarted(true)}
+                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0a0a0a] text-white text-[13px] font-semibold active:bg-[#222]"
                 >
-                  <Clock size={13} />
-                  Temps forts de la vidéo
+                  <Sparkles size={13} className="text-violet-300" />
+                  Analyse IA
                 </button>
               </div>
+            )}
+
+            {/* ── Results (after analysis is started) ──────────────────── */}
+            {form.videoUrl && !replacingVideo && videoAnalysisStarted && (
+              <>
+                <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2.5 flex items-center gap-1">
+                    <Sparkles size={11} className="text-violet-500" />
+                    Spécificités extraites
+                  </p>
+                  {(() => {
+                    const extracted = form.tags.filter((t) => TAGS_FROM_VIDEO.has(t))
+                    if (extracted.length === 0) {
+                      return <p className="text-[12px] text-gray-400">Aucune spécificité détectée pour l&apos;instant</p>
+                    }
+                    return (
+                      <div className="flex flex-wrap gap-1.5">
+                        {extracted.map((t) => (
+                          <span
+                            key={t}
+                            className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-full bg-white border border-gray-200 text-[11px] text-[#0a0a0a]"
+                          >
+                            {t}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(t)}
+                              aria-label={`Supprimer ${t}`}
+                              className="w-4 h-4 rounded-full bg-white text-gray-500 flex items-center justify-center active:bg-gray-100"
+                            >
+                              <X size={9} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                <div className="mt-3 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2.5">
+                    Temps forts de la vidéo
+                  </p>
+                  <ul className="flex flex-col gap-1.5">
+                    {VIDEO_CHAPTERS.map((c) => (
+                      <li key={c.startSec}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (videoRef.current) {
+                              videoRef.current.currentTime = c.startSec
+                              videoRef.current.play().catch(() => {})
+                            }
+                          }}
+                          className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white border border-gray-200 text-[13px] text-[#0a0a0a] active:bg-gray-100 transition-colors"
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Clock size={12} className="text-gray-400 flex-shrink-0" />
+                            <span className="truncate">{c.label}</span>
+                          </span>
+                          <span className="text-[11px] text-gray-500 tabular-nums flex-shrink-0">
+                            {fmtTime(c.startSec)}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>
             )}
           </SubSection>
 
