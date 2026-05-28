@@ -1,0 +1,6 @@
+shomee-mcp/
+docs/
+scripts/
+tmp/
+*.mov
+.playwright-cli/
