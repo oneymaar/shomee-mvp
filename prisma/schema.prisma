@@ -117,8 +117,22 @@ model Agent {
 
   agency     Agency     @relation(fields: [agencyId], references: [id], onDelete: Restrict)
   properties Property[] @relation("PropertyCreatedBy")
+  apiKeys    AgentApiKey[]
 
   @@index([agencyId])
+}
+
+model AgentApiKey {
+  id        String    @id @default(cuid())
+  agentId   String
+  key       String    @unique
+  label     String
+  createdAt DateTime  @default(now())
+  lastUsed  DateTime?
+
+  agent     Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId])
 }
 
 // ─── Property ───────────────────────────────────────────────────────────────

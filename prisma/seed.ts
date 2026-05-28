@@ -20,6 +20,7 @@ async function main() {
   await prisma.videoAnalysis.deleteMany()
   await prisma.propertyTag.deleteMany()
   await prisma.property.deleteMany()
+  await prisma.agentApiKey.deleteMany()
   await prisma.agent.deleteMany()
   await prisma.agency.deleteMany()
   await prisma.buyerProfile.deleteMany()
@@ -42,6 +43,15 @@ async function main() {
       email: 'olivier.kretz@kretz-realestate.fr',
       avatar: '/agencies/Logo Kretz.png',
       agencyId: agency.id,
+    },
+  })
+
+  // ── API key (LLM import) ────────────────────────────────────────────────
+  const apiKey = await prisma.agentApiKey.create({
+    data: {
+      agentId: agent.id,
+      key: 'shomee_test_kr3tz_0001',
+      label: 'Token de test',
     },
   })
 
@@ -595,6 +605,7 @@ async function main() {
   console.log('✓ Seed completed:')
   console.log(`  agency:    ${agency.name} (${agency.id})`)
   console.log(`  agent:     ${agent.name} (${agent.id})`)
+  console.log(`  apiKey:    ${apiKey.key} (label="${apiKey.label}")`)
   console.log(`  buyer:     ${buyer.email} (${buyer.id})`)
   console.log(`  property1: ${p1.title} — ${p1.id}`)
   console.log(`  property2: ${p2.title} — ${p2.id}`)
