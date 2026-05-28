@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
-  Sparkles, Clock, MapPin, Image as ImageIcon, Cable, Globe,
+  Sparkles, Clock, MapPin, Image as ImageIcon, Cable, Globe, Trash,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
@@ -71,6 +71,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [plans, setPlans]                  = useState<string[]>([])
   const [matterportUrl, setMatterportUrl]  = useState<string>(initialProperty.matterportUrl ?? '')
   const [videoAnalysisStarted, setVideoAnalysisStarted] = useState(!!initialProperty.videoUrl)
+  const [replacingVideo, setReplacingVideo] = useState(false)
 
   const [copro, setCopro] = useState({
     isCopro: true,
@@ -771,35 +772,57 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
         >
           {/* Vidéo */}
           <SubSection title="Vidéo" required>
-            {form.videoUrl && (
-              <div className="flex gap-3 mb-3">
-                <div
-                  className="flex-shrink-0 rounded-xl overflow-hidden bg-gray-900 flex items-center justify-center text-white"
-                  style={{ width: 80, aspectRatio: '3 / 4' }}
-                >
-                  <Video size={22} />
-                </div>
-                <div className="flex-1 flex flex-col gap-2 min-w-0">
-                  <p className="text-[13px] font-medium text-[#0a0a0a] truncate">{form.videoUrl.split('/').pop()}</p>
+            {form.videoUrl && !replacingVideo ? (
+              <>
+                <video
+                  src={form.videoUrl}
+                  preload="metadata"
+                  controls
+                  playsInline
+                  className="w-full rounded-xl object-cover bg-black"
+                  style={{ aspectRatio: '9 / 16' }}
+                />
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setReplacingVideo(true)}
+                    className="px-3 py-2 rounded-lg border border-[#0a0a0a]/20 text-[12px] font-medium text-[#0a0a0a] active:bg-black/5"
+                  >
+                    Remplacer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      update({ videoUrl: undefined })
+                      setVideoAnalysisStarted(false)
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-medium text-red-600 active:bg-red-50"
+                  >
+                    <Trash size={13} />
+                    Supprimer
+                  </button>
                   <button
                     type="button"
                     onClick={() => setVideoAnalysisStarted(true)}
-                    className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0a0a0a] text-white text-[12px] font-semibold"
+                    className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0a0a0a] text-white text-[12px] font-semibold"
                   >
                     <Sparkles size={12} className="text-violet-300" />
                     Analyse IA
                   </button>
                 </div>
-              </div>
+              </>
+            ) : (
+              <MediaUploader
+                bienId={form.id}
+                type="video"
+                onSuccess={(url) => {
+                  handleVideoUploaded(url)
+                  setReplacingVideo(false)
+                }}
+              />
             )}
 
-            <MediaUploader
-              bienId={form.id}
-              type="video"
-              onSuccess={handleVideoUploaded}
-            />
-
-            {form.videoUrl && videoAnalysisStarted && (
+            {form.videoUrl && videoAnalysisStarted && !replacingVideo && (
               <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1">
                   <Sparkles size={11} className="text-violet-500" />

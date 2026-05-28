@@ -9,6 +9,7 @@ export const runtime = 'nodejs'
 const SignSchema = z.object({
   folder:        z.string().min(1),
   upload_preset: z.string().optional(),
+  eager:         z.string().optional(),
 })
 
 export async function POST(req: Request) {
@@ -37,6 +38,10 @@ export async function POST(req: Request) {
     timestamp,
     folder: parsed.data.folder,
   }
+  if (parsed.data.eager) {
+    paramsToSign.eager = parsed.data.eager
+    paramsToSign.eager_async = 'true'
+  }
   if (parsed.data.upload_preset) {
     paramsToSign.upload_preset = parsed.data.upload_preset
   }
@@ -49,6 +54,7 @@ export async function POST(req: Request) {
     cloud_name: cloudName,
     api_key: apiKey,
     folder: parsed.data.folder,
+    ...(parsed.data.eager ? { eager: parsed.data.eager, eager_async: 'true' } : {}),
     ...(parsed.data.upload_preset ? { upload_preset: parsed.data.upload_preset } : {}),
   })
 }

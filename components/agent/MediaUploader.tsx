@@ -69,116 +69,143 @@ interface CloudinaryResponse {
   public_id:  string
 }
 
+interface SignResponse {
+  signature:     string
+  timestamp:     number
+  cloud_name:    string
+  api_key:       string
+  folder:        string
+  eager?:        string
+  eager_async?:  string
+  upload_preset?: string
+}
+
 export default function MediaUploader({ bienId, type, onSuccess, multiple }: MediaUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
-  const [progress,  setProgress]  = useState(0)
-  const [error,     setError]     = useState<string | null>(null)
-  const [urlDraft,  setUrlDraft]  = useState('')
+  const [activeCount, setActiveCount] = useState(0)
+  const [progress,    setProgress]    = useState(0)
+  const [error,       setError]       = useState<string | null>(null)
+  const [urlDraft,    setUrlDraft]    = useState('')
 
-  async function uploadOne(file: File) {
+  /**
+   * End-to-end upload of a single file. Throws on any failure so that
+   * Promise.allSettled in the multi-upload path can surface the count
+   * of failures. onSuccess is called per file as soon as it completes.
+   */
+  async function performUpload(file: File, onProgress?: (p: number) => void): Promise<void> {
     const limit = SIZE_LIMIT_BYTES[type]
     if (file.size > limit) {
-      setError(`Fichier trop volumineux (max ${Math.round(limit / 1024 / 1024)} Mo)`)
-      return
+      throw new Error(`${file.name} dépasse ${Math.round(limit / 1024 / 1024)} Mo`)
     }
 
-    setUploading(true)
-    setError(null)
-    setProgress(0)
+    // 1. Signature serveur
+    const signRes = await fetch('/api/upload/sign', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${DEMO_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        folder: FOLDER[type],
+        ...(type === 'video' ? { eager: 'so_auto' } : {}),
+      }),
+    })
+    if (!signRes.ok) throw new Error(`Signature ${signRes.status}`)
+    const sig = (await signRes.json()) as SignResponse
 
-    try {
-      const signRes = await fetch('/api/upload/sign', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${DEMO_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ folder: FOLDER[type] }),
-      })
-      if (!signRes.ok) throw new Error(`Signature ${signRes.status}`)
-      const sig = await signRes.json() as {
-        signature: string; timestamp: number; cloud_name: string;
-        api_key: string; folder: string;
+    // 2. Upload signé direct vers Cloudinary
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${sig.cloud_name}/${RESOURCE_TYPE[type]}/upload`
+    const form = new FormData()
+    form.append('file',      file)
+    form.append('api_key',   sig.api_key)
+    form.append('timestamp', String(sig.timestamp))
+    form.append('signature', sig.signature)
+    form.append('folder',    sig.folder)
+    if (sig.eager)       form.append('eager',       sig.eager)
+    if (sig.eager_async) form.append('eager_async', sig.eager_async)
+    if (sig.upload_preset) form.append('upload_preset', sig.upload_preset)
+
+    const cloudinaryRes = await new Promise<CloudinaryResponse>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', uploadUrl)
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100))
       }
-
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${sig.cloud_name}/${RESOURCE_TYPE[type]}/upload`
-      const form = new FormData()
-      form.append('file',      file)
-      form.append('api_key',   sig.api_key)
-      form.append('timestamp', String(sig.timestamp))
-      form.append('signature', sig.signature)
-      form.append('folder',    sig.folder)
-
-      const cloudinaryRes = await new Promise<CloudinaryResponse>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open('POST', uploadUrl)
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100))
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText)) }
+          catch { reject(new Error('Réponse Cloudinary illisible')) }
+        } else {
+          reject(new Error(`Cloudinary ${xhr.status}: ${xhr.responseText.slice(0, 200)}`))
         }
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try { resolve(JSON.parse(xhr.responseText)) }
-            catch { reject(new Error('Réponse Cloudinary illisible')) }
-          } else {
-            reject(new Error(`Cloudinary ${xhr.status}`))
-          }
-        }
-        xhr.onerror = () => reject(new Error('Erreur réseau'))
-        xhr.send(form)
-      })
-
-      const confirmRes = await fetch('/api/upload/confirm', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${DEMO_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bien_id: bienId,
-          type,
-          url:       cloudinaryRes.secure_url,
-          public_id: cloudinaryRes.public_id,
-        }),
-      })
-      if (!confirmRes.ok) {
-        const errBody = await confirmRes.json().catch(() => ({}))
-        throw new Error(`Confirm ${confirmRes.status}: ${JSON.stringify(errBody)}`)
       }
+      xhr.onerror = () => reject(new Error('Erreur réseau'))
+      xhr.send(form)
+    })
 
-      onSuccess(cloudinaryRes.secure_url)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur upload')
-    } finally {
-      setUploading(false)
-      setProgress(0)
+    // 3. Confirmation côté Next (persiste l'URL + recompute completion)
+    const confirmRes = await fetch('/api/upload/confirm', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${DEMO_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        bien_id:   bienId,
+        type,
+        url:       cloudinaryRes.secure_url,
+        public_id: cloudinaryRes.public_id,
+      }),
+    })
+    if (!confirmRes.ok) {
+      const errBody = await confirmRes.json().catch(() => ({}))
+      throw new Error(`Confirm ${confirmRes.status}: ${JSON.stringify(errBody)}`)
     }
+
+    onSuccess(cloudinaryRes.secure_url)
   }
 
   async function handleFiles(files: FileList) {
-    if (multiple) {
-      for (let i = 0; i < files.length; i++) {
-        // sequential to avoid hammering Cloudinary; keep progress UI honest
-        // eslint-disable-next-line no-await-in-loop
-        await uploadOne(files[i])
+    const arr = Array.from(files)
+    if (arr.length === 0) return
+    setError(null)
+
+    if (!multiple || arr.length === 1) {
+      // Single — keep granular progress bar
+      setActiveCount(1)
+      setProgress(0)
+      try {
+        await performUpload(arr[0], setProgress)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur upload')
+      } finally {
+        setActiveCount(0)
+        setProgress(0)
       }
-    } else if (files[0]) {
-      await uploadOne(files[0])
+      return
     }
+
+    // Multiple — parallel; each onSuccess fires independently as each finishes
+    setActiveCount(arr.length)
+    const results = await Promise.allSettled(arr.map((f) => performUpload(f)))
+    const failures = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map((r) => (r.reason instanceof Error ? r.reason.message : 'Erreur'))
+    if (failures.length > 0) {
+      setError(`${failures.length}/${arr.length} échec${failures.length > 1 ? 's' : ''} — ${failures[0]}`)
+    }
+    setActiveCount(0)
   }
 
   async function handleUrlSubmit() {
     const trimmed = urlDraft.trim()
     if (!trimmed) return
-    try {
-      // Sanity-check it's a URL
-      new URL(trimmed)
-    } catch {
+    try { new URL(trimmed) } catch {
       setError('URL invalide')
       return
     }
 
-    setUploading(true)
+    setActiveCount(1)
     setError(null)
     try {
       const res = await fetch('/api/upload/confirm', {
@@ -198,7 +225,7 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple }: Med
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur')
     } finally {
-      setUploading(false)
+      setActiveCount(0)
     }
   }
 
@@ -218,10 +245,10 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple }: Med
           <button
             type="button"
             onClick={handleUrlSubmit}
-            disabled={uploading || !urlDraft.trim()}
+            disabled={activeCount > 0 || !urlDraft.trim()}
             className="px-4 py-2 rounded-xl bg-[#0a0a0a] text-white text-[12px] font-semibold disabled:opacity-50 active:bg-[#222]"
           >
-            {uploading ? '...' : 'Enregistrer'}
+            {activeCount > 0 ? '...' : 'Enregistrer'}
           </button>
         </div>
         <p className="text-[10px] text-gray-400">{meta.hint}</p>
@@ -230,29 +257,40 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple }: Med
     )
   }
 
-  // ── File variant (video / photo / plan) ─────────────────────────────────
+  // ── File variant — upload in progress ──────────────────────────────────
   const { cta, hint, Icon } = LABEL[type]
 
-  if (uploading) {
+  if (activeCount > 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <div className="flex items-center gap-3">
           <Loader2 size={18} className="animate-spin text-[#0a0a0a]" />
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-[#0a0a0a]">Upload en cours…</p>
-            <div className="h-1 bg-gray-100 rounded-full mt-1.5 overflow-hidden">
-              <div
-                className="h-full bg-[#0a0a0a] rounded-full transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            {activeCount === 1 ? (
+              <>
+                <p className="text-[13px] font-medium text-[#0a0a0a]">Upload en cours…</p>
+                <div className="h-1 bg-gray-100 rounded-full mt-1.5 overflow-hidden">
+                  <div
+                    className="h-full bg-[#0a0a0a] rounded-full transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-[13px] font-medium text-[#0a0a0a]">
+                Upload de {activeCount} fichiers en cours…
+              </p>
+            )}
           </div>
-          <span className="text-[11px] font-semibold tabular-nums text-[#0a0a0a]">{progress}%</span>
+          {activeCount === 1 && (
+            <span className="text-[11px] font-semibold tabular-nums text-[#0a0a0a]">{progress}%</span>
+          )}
         </div>
       </div>
     )
   }
 
+  // ── File variant — idle (drop zone) ────────────────────────────────────
   return (
     <>
       <button
