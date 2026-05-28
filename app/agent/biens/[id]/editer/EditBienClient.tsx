@@ -848,8 +848,15 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 
           {/* Photos */}
           <SubSection title="Photos">
-            {photos.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mb-3">
+            {photos.length === 0 ? (
+              <MediaUploader
+                bienId={form.id}
+                type="photo"
+                multiple
+                onSuccess={(url) => setPhotos((p) => [...p, url])}
+              />
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
                 {photos.map((url, i) => (
                   <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -864,15 +871,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                     </button>
                   </div>
                 ))}
+                {photos.length < 25 && (
+                  <MediaUploader
+                    bienId={form.id}
+                    type="photo"
+                    multiple
+                    variant="tile"
+                    onSuccess={(url) => setPhotos((p) => [...p, url])}
+                  />
+                )}
               </div>
-            )}
-            {photos.length < 25 && (
-              <MediaUploader
-                bienId={form.id}
-                type="photo"
-                multiple
-                onSuccess={(url) => setPhotos((p) => [...p, url])}
-              />
             )}
             <p className="text-[10px] text-gray-400 mt-2">{photos.length} / 25 photos · réorganisation à venir.</p>
           </SubSection>

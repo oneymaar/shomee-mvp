@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Upload, Video, Image as ImageIcon, FileText, Loader2, X, Link as LinkIcon } from 'lucide-react'
+import { Upload, Video, Image as ImageIcon, FileText, Loader2, X, Link as LinkIcon, Plus } from 'lucide-react'
 import clsx from 'clsx'
 
 // MVP: hardcoded demo Bearer token. Tied to the seeded Kretz agent.
@@ -15,6 +15,8 @@ interface MediaUploaderProps {
   type: MediaType
   onSuccess: (url: string) => void
   multiple?: boolean
+  /** 'default' = full-width dashed drop zone (initial state); 'tile' = aspect-square grid cell with just a + */
+  variant?: 'default' | 'tile'
 }
 
 const SIZE_LIMIT_BYTES: Record<MediaType, number> = {
@@ -80,7 +82,7 @@ interface SignResponse {
   upload_preset?: string
 }
 
-export default function MediaUploader({ bienId, type, onSuccess, multiple }: MediaUploaderProps) {
+export default function MediaUploader({ bienId, type, onSuccess, multiple, variant = 'default' }: MediaUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [activeCount, setActiveCount] = useState(0)
   const [progress,    setProgress]    = useState(0)
@@ -254,6 +256,47 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple }: Med
         <p className="text-[10px] text-gray-400">{meta.hint}</p>
         {error && <p className="text-[11px] text-red-600">{error}</p>}
       </div>
+    )
+  }
+
+  // ── Tile variant (grid cell — used once at least one photo exists) ─────
+  if (variant === 'tile') {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={activeCount > 0}
+          className={clsx(
+            'aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-white',
+            'flex flex-col items-center justify-center gap-1 px-2',
+            'text-[#0a0a0a] active:bg-gray-50 transition-colors disabled:opacity-60',
+          )}
+          aria-label="Ajouter d'autres photos"
+        >
+          {activeCount > 0 ? (
+            <Loader2 size={18} className="animate-spin text-[#0a0a0a]" />
+          ) : (
+            <>
+              <Plus size={20} strokeWidth={1.8} />
+              <span className="text-[10px] text-gray-500 text-center leading-tight">
+                Ajouter d&apos;autres photos
+              </span>
+            </>
+          )}
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={ACCEPT[type]}
+          multiple={multiple}
+          onChange={(e) => {
+            if (e.target.files) handleFiles(e.target.files)
+            e.target.value = ''
+          }}
+          className="hidden"
+        />
+      </>
     )
   }
 
