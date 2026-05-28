@@ -86,6 +86,25 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
 
+  // ── Per-field source markers (populated by LLM import) ──────────────
+  const [sources] = useState<Record<string, string | null>>({
+    location:         initialProperty.locationSource ?? null,
+    price:            initialProperty.priceSource ?? null,
+    surface:          initialProperty.surfaceSource ?? null,
+    rooms:            initialProperty.roomsSource ?? null,
+    bedrooms:         initialProperty.bedroomsSource ?? null,
+    description:      initialProperty.descriptionSource ?? null,
+    floor:            initialProperty.floorSource ?? null,
+    yearBuilt:        initialProperty.yearBuiltSource ?? null,
+    dpe:              initialProperty.dpeSource ?? null,
+    ges:              initialProperty.gesSource ?? null,
+    mandatType:       initialProperty.mandatTypeSource ?? null,
+    refInterneAgence: initialProperty.refInterneAgenceSource ?? null,
+    monthlyCharges:   initialProperty.monthlyChargesSource ?? null,
+    propertyTax:      initialProperty.propertyTaxSource ?? null,
+    composition:      initialProperty.compositionSource ?? null,
+  })
+
   // ── Photo drag & drop ────────────────────────────────────────────────
   const [dragIndex, setDragIndex]         = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -419,7 +438,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           open={openSection === 'general'}
           onToggle={() => toggleSection('general')}
         >
-          <Field label="Adresse" icon={<MapPin size={11} className="text-gray-400" />}>
+          <Field label="Adresse" icon={<MapPin size={11} className="text-gray-400" />} source={sources.location}>
             <TextInput
               value={form.location}
               onChange={(v) => update({ location: v })}
@@ -455,16 +474,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             </select>
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Surface (m²)">
+            <Field label="Surface (m²)" source={sources.surface}>
               <NumberInput value={form.surface} onChange={(v) => update({ surface: v ?? 0 })} />
             </Field>
-            <Field label="Pièces">
+            <Field label="Pièces" source={sources.rooms}>
               <NumberInput value={form.rooms} onChange={(v) => update({ rooms: v ?? 0 })} />
             </Field>
-            <Field label="Chambres">
+            <Field label="Chambres" source={sources.bedrooms}>
               <NumberInput value={form.bedrooms} onChange={(v) => update({ bedrooms: v })} />
             </Field>
-            <Field label="Étage">
+            <Field label="Étage" source={sources.floor}>
               <NumberInput value={form.floor} onChange={(v) => update({ floor: v })} />
             </Field>
             <Field label="Sur étages">
@@ -585,6 +604,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           summary={sumComposition}
           open={openSection === 'composition'}
           onToggle={() => toggleSection('composition')}
+          source={sources.composition}
         >
           <div className="flex flex-col gap-2">
             {(form.composition ?? []).map((row, i) => (
@@ -667,7 +687,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Année de construction">
+                <Field label="Année de construction" source={sources.yearBuilt}>
                   <NumberInput
                     value={copro.anneeConstruction}
                     onChange={(v) => setCopro((c) => ({ ...c, anneeConstruction: v ?? 0 }))}
@@ -680,7 +700,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                   />
                 </Field>
               </div>
-              <Field label="Charges de copropriété">
+              <Field label="Charges de copropriété" source={sources.monthlyCharges}>
                 <SuffixedNumberInput
                   value={copro.chargesCopro}
                   onChange={(v) => setCopro((c) => ({ ...c, chargesCopro: v ?? 0 }))}
@@ -768,7 +788,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 suffix="kWh/m²/an"
               />
             </Field>
-            <Field label="DPE — Étiquette">
+            <Field label="DPE — Étiquette" source={sources.dpe}>
               <DpeLabelSelect
                 value={energy.consoLabel}
                 onChange={(v) => {
@@ -784,7 +804,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 suffix="kg CO²/m²/an"
               />
             </Field>
-            <Field label="GES — Étiquette">
+            <Field label="GES — Étiquette" source={sources.ges}>
               <DpeLabelSelect
                 value={energy.gesLabel}
                 onChange={(v) => {
@@ -826,7 +846,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           open={openSection === 'finance'}
           onToggle={() => toggleSection('finance')}
         >
-          <Field label="Prix de vente FAI">
+          <Field label="Prix de vente FAI" source={sources.price}>
             <SuffixedNumberInput
               value={finance.prixFAI}
               onChange={(v) => {
@@ -851,7 +871,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               suffix="€"
             />
           </Field>
-          <Field label="Taxe foncière">
+          <Field label="Taxe foncière" source={sources.propertyTax}>
             <SuffixedNumberInput
               value={finance.taxeFonciere}
               onChange={(v) => {
@@ -884,7 +904,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] text-[#0a0a0a] focus:outline-none focus:border-[#0a0a0a]/40 placeholder-gray-400"
             />
           </Field>
-          <Field label="Corps de l'annonce">
+          <Field label="Corps de l'annonce" source={sources.description}>
             <textarea
               value={form.description}
               onChange={(e) => update({ description: e.target.value })}
@@ -1175,7 +1195,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           open={openSection === 'mandat'}
           onToggle={() => toggleSection('mandat')}
         >
-          <Field label="Type de mandat">
+          <Field label="Type de mandat" source={sources.mandatType}>
             <SimpleSelect
               value={form.mandatType === 'COEXCLUSIF' ? 'EXCLUSIF' : (form.mandatType ?? 'SIMPLE')}
               onChange={(v) => update({ mandatType: v as MandatType })}
@@ -1188,7 +1208,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             value={!!form.avantPremiere}
             onChange={(v) => update({ avantPremiere: v })}
           />
-          <Field label="Référence interne">
+          <Field label="Référence interne" source={sources.refInterneAgence}>
             <TextInput
               value={form.refInterneAgence ?? ''}
               onChange={(v) => update({ refInterneAgence: v || undefined })}
@@ -1282,9 +1302,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 // ─── Sub-components ────────────────────────────────────────────────────────
 
 function Section({
-  title, summary, open, onToggle, children,
+  title, summary, open, onToggle, source, children,
 }: {
-  title: string; summary?: string; open: boolean; onToggle: () => void; children: React.ReactNode
+  title: string
+  summary?: string
+  open: boolean
+  onToggle: () => void
+  source?: string | null
+  children: React.ReactNode
 }) {
   return (
     <section className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -1294,7 +1319,10 @@ function Section({
         className="w-full flex items-center justify-between gap-3 px-4 py-4 text-left active:bg-gray-50"
       >
         <div className="min-w-0">
-          <h2 className="text-[14px] font-semibold text-[#0a0a0a]">{title}</h2>
+          <h2 className="text-[14px] font-semibold text-[#0a0a0a] flex items-center">
+            {title}
+            <SourceBadge source={source ?? null} />
+          </h2>
           {!open && summary && (
             <p className="text-[11px] text-gray-500 mt-0.5 truncate">{summary}</p>
           )}
@@ -1346,23 +1374,47 @@ function SubSection({
 }
 
 function Field({
-  label, icon, sources, children,
+  label, icon, sources: sourceBadges, children, source,
 }: {
   label: string
   icon?: React.ReactNode
   sources?: React.ReactNode[]
   children: React.ReactNode
+  source?: string | null
 }) {
   return (
     <div>
       <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
         <span>{label}</span>
         {icon}
-        {sources && sources.length > 0 && (
-          <span className="inline-flex items-center gap-1">{sources}</span>
+        {sourceBadges && sourceBadges.length > 0 && (
+          <span className="inline-flex items-center gap-1">{sourceBadges}</span>
         )}
+        <SourceBadge source={source ?? null} />
       </label>
       {children}
+    </div>
+  )
+}
+
+function SourceBadge({ source }: { source: string | null }) {
+  const [open, setOpen] = useState(false)
+  if (!source) return null
+  return (
+    <div className="relative inline-flex items-center">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center ml-1 flex-shrink-0"
+        aria-label="Source"
+      >
+        <Sparkles size={9} />
+      </button>
+      {open && (
+        <div className="absolute left-5 top-0 z-50 bg-[#0a0a0a] text-white text-[11px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg">
+          Source : {source}
+        </div>
+      )}
     </div>
   )
 }

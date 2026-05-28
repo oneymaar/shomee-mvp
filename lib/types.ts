@@ -161,4 +161,22 @@ export interface Property {
   spaciousness?: number
   livingQuality?: number
   outdoorUsability?: number
+
+  // ─── Source markers (populated by the LLM importer) ─────────────────────
+  locationSource?: string | null
+  titleSource?: string | null
+  priceSource?: string | null
+  surfaceSource?: string | null
+  roomsSource?: string | null
+  bedroomsSource?: string | null
+  descriptionSource?: string | null
+  floorSource?: string | null
+  yearBuiltSource?: string | null
+  dpeSource?: string | null
+  gesSource?: string | null
+  mandatTypeSource?: string | null
+  refInterneAgenceSource?: string | null
+  monthlyChargesSource?: string | null
+  propertyTaxSource?: string | null
+  compositionSource?: string | null
 }
