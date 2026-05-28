@@ -126,7 +126,7 @@ export default function VideoChapterEditor({
   }
 
   return (
-    <div className="pt-8 pb-16">
+    <div className="pt-8 pb-20">
       {/* 3px line — all chapter satellites position from here */}
       <div ref={timelineRef} className="relative h-[3px]" style={{ touchAction: 'none' }}>
         {/* Stories-style segmented rail */}
@@ -154,7 +154,7 @@ export default function VideoChapterEditor({
                 aria-label="Supprimer ce temps fort"
                 style={{
                   left: `${pct}%`,
-                  bottom: 'calc(100% + 6px)',
+                  bottom: 'calc(100% + 10px)',
                   transform: 'translateX(-50%)',
                 }}
                 className="absolute w-4 h-4 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm active:bg-gray-100"
@@ -186,7 +186,7 @@ export default function VideoChapterEditor({
               <span
                 style={{
                   left: `${pct}%`,
-                  top: 'calc(100% + 4px)',
+                  top: 'calc(100% + 10px)',
                   transform: 'translateX(-50%)',
                 }}
                 className="absolute text-[10px] text-gray-400 tabular-nums pointer-events-none"
@@ -201,7 +201,7 @@ export default function VideoChapterEditor({
                 onChange={(e) => updateChapter(c.id, { label: e.target.value })}
                 style={{
                   left: `${pct}%`,
-                  top: `calc(100% + ${isEven ? 20 : 36}px)`,
+                  top: `calc(100% + ${isEven ? 26 : 42}px)`,
                   transform: 'translateX(-50%)',
                   minWidth: 80,
                   maxWidth: 100,
