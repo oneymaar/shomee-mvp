@@ -33,6 +33,7 @@ enum MandatType {
 enum PropertyStatus {
   DRAFT
   PUBLISHED
+  UNPUBLISHED
   ARCHIVED
 }
 

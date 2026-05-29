@@ -132,7 +132,7 @@ export interface Property {
   mandatType?: 'EXCLUSIF' | 'SIMPLE' | 'COEXCLUSIF'
   avantPremiere?: boolean
   refInterneAgence?: string
-  statut?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  statut?: 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED' | 'ARCHIVED'
   completionRate?: number
   agencyId?: string
   createdByAgentId?: string
