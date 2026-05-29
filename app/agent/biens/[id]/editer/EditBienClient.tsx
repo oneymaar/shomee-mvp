@@ -87,10 +87,10 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
 
   // ── List of Property-side field keys the LLM pre-filled ─────────────
-  const [llmFields] = useState<string[]>(initialProperty.llmFilledFields ?? [])
+  const [llmFields, setLlmFields] = useState<string[]>(initialProperty.llmFilledFields ?? [])
 
   // ── Per-field source markers (populated by LLM import) ──────────────
-  const [sources] = useState<Record<string, string | null>>({
+  const [sources, setSources] = useState<Record<string, string | null>>({
     location:         initialProperty.locationSource ?? null,
     price:            initialProperty.priceSource ?? null,
     surface:          initialProperty.surfaceSource ?? null,
@@ -107,6 +107,12 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     propertyTax:      initialProperty.propertyTaxSource ?? null,
     composition:      initialProperty.compositionSource ?? null,
   })
+
+  // Once the agent edits a field that came from the LLM, drop the marker.
+  const clearLlm = (key: string) => {
+    setLlmFields((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : prev))
+    setSources((prev) => (prev[key] ? { ...prev, [key]: null } : prev))
+  }
 
   // ── Photo drag & drop ────────────────────────────────────────────────
   const [dragIndex, setDragIndex]         = useState<number | null>(null)
@@ -284,11 +290,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     const arr = [...(form.composition ?? [])]
     arr[i] = { ...arr[i], ...patch }
     update({ composition: arr })
+    clearLlm('composition')
   }
-  const removeCompositionRow = (i: number) =>
+  const removeCompositionRow = (i: number) => {
     update({ composition: (form.composition ?? []).filter((_, idx) => idx !== i) })
-  const addCompositionRow = () =>
+    clearLlm('composition')
+  }
+  const addCompositionRow = () => {
     update({ composition: [...(form.composition ?? []), { label: '', surface: 0 }] })
+    clearLlm('composition')
+  }
 
   // ── Computed: annex composition entries ─────────────────────────────────
   const annexEntries = useMemo(() => {
@@ -444,7 +455,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           <Field label="Adresse" icon={<MapPin size={11} className="text-gray-400" />} source={sources.location} fieldKey="location" llmFields={llmFields}>
             <TextInput
               value={form.location}
-              onChange={(v) => update({ location: v })}
+              onChange={(v) => { update({ location: v }); clearLlm('location') }}
               placeholder="Saisissez une adresse…"
             />
             <p className="text-[10px] text-gray-400 mt-1">Adresse validée via Google Maps.</p>
@@ -478,16 +489,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Surface (m²)" source={sources.surface} fieldKey="surface" llmFields={llmFields}>
-              <NumberInput value={form.surface} onChange={(v) => update({ surface: v ?? 0 })} />
+              <NumberInput value={form.surface} onChange={(v) => { update({ surface: v ?? 0 }); clearLlm('surface') }} />
             </Field>
             <Field label="Pièces" source={sources.rooms} fieldKey="rooms" llmFields={llmFields}>
-              <NumberInput value={form.rooms} onChange={(v) => update({ rooms: v ?? 0 })} />
+              <NumberInput value={form.rooms} onChange={(v) => { update({ rooms: v ?? 0 }); clearLlm('rooms') }} />
             </Field>
             <Field label="Chambres" source={sources.bedrooms} fieldKey="bedrooms" llmFields={llmFields}>
-              <NumberInput value={form.bedrooms} onChange={(v) => update({ bedrooms: v })} />
+              <NumberInput value={form.bedrooms} onChange={(v) => { update({ bedrooms: v }); clearLlm('bedrooms') }} />
             </Field>
             <Field label="Étage" source={sources.floor} fieldKey="floor" llmFields={llmFields}>
-              <NumberInput value={form.floor} onChange={(v) => update({ floor: v })} />
+              <NumberInput value={form.floor} onChange={(v) => { update({ floor: v }); clearLlm('floor') }} />
             </Field>
             <Field label="Sur étages">
               <NumberInput value={form.totalFloors} onChange={(v) => update({ totalFloors: v })} />
@@ -608,6 +619,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           open={openSection === 'composition'}
           onToggle={() => toggleSection('composition')}
           source={sources.composition}
+          aiActive={llmFields.includes('composition')}
         >
           <div className="flex flex-col gap-2">
             {(form.composition ?? []).map((row, i) => (
@@ -797,6 +809,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 onChange={(v) => {
                   setEnergy((e) => ({ ...e, consoLabel: v }))
                   if (v) update({ dpe: v })
+                  clearLlm('dpe')
                 }}
               />
             </Field>
@@ -813,6 +826,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 onChange={(v) => {
                   setEnergy((e) => ({ ...e, gesLabel: v }))
                   if (v) update({ ges: v })
+                  clearLlm('ges')
                 }}
               />
             </Field>
@@ -910,7 +924,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           <Field label="Corps de l'annonce" source={sources.description} fieldKey="description" llmFields={llmFields}>
             <textarea
               value={form.description}
-              onChange={(e) => update({ description: e.target.value })}
+              onChange={(e) => { update({ description: e.target.value }); clearLlm('description') }}
               rows={7}
               className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] text-[#0a0a0a] focus:outline-none focus:border-[#0a0a0a]/40 leading-relaxed"
             />
@@ -1305,13 +1319,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 // ─── Sub-components ────────────────────────────────────────────────────────
 
 function Section({
-  title, summary, open, onToggle, source, children,
+  title, summary, open, onToggle, source, aiActive, children,
 }: {
   title: string
   summary?: string
   open: boolean
   onToggle: () => void
   source?: string | null
+  aiActive?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -1324,7 +1339,7 @@ function Section({
         <div className="min-w-0">
           <h2 className="text-[14px] font-semibold text-[#0a0a0a] flex items-center">
             {title}
-            <SourceBadge source={source ?? null} />
+            <LlmBadge llmActive={!!aiActive} source={source ?? null} />
           </h2>
           {!open && summary && (
             <p className="text-[11px] text-gray-500 mt-0.5 truncate">{summary}</p>
@@ -1393,35 +1408,46 @@ function Field({
       <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
         <span>{label}</span>
         {icon}
-        {isLlmFilled && <Sparkles size={10} className="text-violet-500" />}
         {sourceBadges && sourceBadges.length > 0 && (
           <span className="inline-flex items-center gap-1">{sourceBadges}</span>
         )}
-        <SourceBadge source={source ?? null} />
+        <LlmBadge llmActive={isLlmFilled} source={source ?? null} />
       </label>
       {children}
     </div>
   )
 }
 
-function SourceBadge({ source }: { source: string | null }) {
+function LlmBadge({ llmActive, source }: { llmActive: boolean; source: string | null }) {
   const [open, setOpen] = useState(false)
-  if (!source) return null
+  const visible = llmActive || !!source
+  if (!visible) return null
+  const tooltipText = source ? `Source : ${source}` : "Rempli par l'IA"
   return (
     <div className="relative inline-flex items-center">
-      <button
+      <motion.button
         type="button"
         onClick={() => setOpen((o) => !o)}
+        whileTap={{ scale: 0.88 }}
+        transition={{ duration: 0.12 }}
         className="w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center ml-1 flex-shrink-0"
-        aria-label="Source"
+        aria-label={source ? 'Source de la donnée' : 'Donnée pré-remplie par l\'IA'}
       >
         <Sparkles size={9} />
-      </button>
-      {open && (
-        <div className="absolute left-5 top-0 z-50 bg-[#0a0a0a] text-white text-[11px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg">
-          Source : {source}
-        </div>
-      )}
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, x: -4 }}
+            animate={{ opacity: 1, scale: 1,   x: 0  }}
+            exit   ={{ opacity: 0, scale: 0.9, x: -4 }}
+            transition={{ duration: 0.14, ease: 'easeOut' }}
+            className="absolute left-5 top-0 z-50 bg-[#0a0a0a] text-white text-[11px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg"
+          >
+            {tooltipText}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

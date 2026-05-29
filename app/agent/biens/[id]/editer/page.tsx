@@ -116,7 +116,6 @@ export default async function EditBienPage({
   if (id !== 'draft-001') {
     const dbProp = await prisma.property.findUnique({ where: { id } })
     if (dbProp) initial = toViewProperty(dbProp)
-    console.log('[editer] llmFilledFields du bien:', dbProp?.llmFilledFields)
   }
 
   return <EditBienClient initialProperty={initial} />
