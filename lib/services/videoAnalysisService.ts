@@ -5,6 +5,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk'
+import cloudinary from '@/lib/cloudinary'
 
 const MODEL = 'claude-sonnet-4-20250514'
 const MAX_FRAMES = 20
@@ -126,8 +127,24 @@ export async function analyzeVideo(
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return { tags: [], chapters: [] }
 
+  let durationSec: number | null = null
+  try {
+    const resource = (await cloudinary.api.resource(publicId, {
+      resource_type: 'video',
+      media_metadata: false,
+    })) as { duration?: number }
+    if (typeof resource.duration === 'number') durationSec = resource.duration
+  } catch (err) {
+    console.error('[analyzeVideo] cloudinary.api.resource failed:', err)
+  }
+  console.log('[analyzeVideo] durationSec:', durationSec)
+
+  const maxFrames = durationSec
+    ? Math.min(MAX_FRAMES, Math.max(1, Math.floor(durationSec / FRAME_INTERVAL_SEC)))
+    : MAX_FRAMES
+
   const frames: Array<{ sec: number; url: string }> = []
-  for (let i = 0; i < MAX_FRAMES; i++) {
+  for (let i = 0; i < maxFrames; i++) {
     const sec = i * FRAME_INTERVAL_SEC
     frames.push({ sec, url: frameUrl(cloud, publicId, sec) })
   }
