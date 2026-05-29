@@ -1,17 +1,11 @@
 import { prisma } from '@/lib/prisma'
 import { PropertyStatus } from '@prisma/client'
-import PropertyCardAgent from '@/components/agent/PropertyCardAgent'
-import DashboardFilterPills, { type DashboardFilter } from '@/components/agent/DashboardFilterPills'
-import { Eye, FileText, CheckCircle2, Crown, Archive } from 'lucide-react'
+import DashboardListClient from '@/components/agent/DashboardListClient'
+import type { DashboardFilter } from '@/components/agent/DashboardFilterPills'
+import { Eye, FileText, CheckCircle2, Crown } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
-
-const FILTER_TO_STATUT: Record<Exclude<DashboardFilter, 'all'>, PropertyStatus> = {
-  draft:       PropertyStatus.DRAFT,
-  published:   PropertyStatus.PUBLISHED,
-  unpublished: PropertyStatus.UNPUBLISHED,
-}
 
 function parseFilter(raw: string | string[] | undefined): DashboardFilter {
   const v = Array.isArray(raw) ? raw[0] : raw
@@ -25,7 +19,7 @@ export default async function AgentDashboardPage({
   searchParams: Promise<{ filter?: string | string[] }>
 }) {
   const { filter: filterParam } = await searchParams
-  const filter = parseFilter(filterParam)
+  const initialFilter = parseFilter(filterParam)
 
   const agent = await prisma.agent.findFirst({ include: { agency: true } })
 
@@ -64,16 +58,11 @@ export default async function AgentDashboardPage({
     where: { createdByAgentId: agent.id, statut: PropertyStatus.ARCHIVED },
   })
 
-  const draftsCount      = properties.filter((p) => p.statut === PropertyStatus.DRAFT).length
-  const publishedCount   = properties.filter((p) => p.statut === PropertyStatus.PUBLISHED).length
-  const unpublishedCount = properties.filter((p) => p.statut === PropertyStatus.UNPUBLISHED).length
-  const activeCount      = properties.length
-  const weeklyViews      = 1247 // mock
-  const quotaReached     = activeCount >= agent.agency.maxProperties
-
-  const filteredProperties = filter === 'all'
-    ? properties
-    : properties.filter((p) => p.statut === FILTER_TO_STATUT[filter])
+  const draftsCount    = properties.filter((p) => p.statut === PropertyStatus.DRAFT).length
+  const publishedCount = properties.filter((p) => p.statut === PropertyStatus.PUBLISHED).length
+  const activeCount    = properties.length
+  const weeklyViews    = 1247 // mock
+  const quotaReached   = activeCount >= agent.agency.maxProperties
 
   return (
     <main className="px-5 pt-6">
@@ -142,66 +131,11 @@ export default async function AgentDashboardPage({
         </div>
       </section>
 
-      {/* Properties list */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[15px] font-semibold text-[#0a0a0a]">Mes biens</h3>
-          <span className="text-[11px] text-gray-500">{activeCount} {activeCount > 1 ? 'biens' : 'bien'}</span>
-        </div>
-
-        <DashboardFilterPills
-          active={filter}
-          counts={{
-            all:         activeCount,
-            draft:       draftsCount,
-            published:   publishedCount,
-            unpublished: unpublishedCount,
-          }}
-        />
-
-        {filteredProperties.length === 0 ? (
-          <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-6 text-center">
-            <p className="text-sm text-gray-500">
-              {filter === 'all'
-                ? "Aucun bien pour l'instant."
-                : 'Aucun bien dans cette catégorie.'}
-            </p>
-            {filter === 'all' && (
-              <p className="text-[11px] text-gray-400 mt-1">Appuyez sur le bouton « + » pour créer votre premier bien.</p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredProperties.map((p) => (
-              <PropertyCardAgent
-                key={p.id}
-                id={p.id}
-                title={p.title}
-                arrondissement={p.arrondissement}
-                surface={p.surface}
-                price={p.price}
-                statut={p.statut}
-                completionRate={p.completionRate}
-                videoUrl={p.videoUrl}
-                imageUrlFallback={p.imageUrlFallback}
-                avantPremiere={p.avantPremiere}
-                mandatType={p.mandatType}
-                badges={p.badges}
-              />
-            ))}
-          </div>
-        )}
-
-        {archivedCount > 0 && (
-          <Link
-            href="/agent/biens/archives"
-            className="mt-5 flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-gray-300 text-[13px] font-medium text-gray-600 active:bg-gray-50"
-          >
-            <Archive size={14} />
-            Voir les biens archivés ({archivedCount})
-          </Link>
-        )}
-      </section>
+      <DashboardListClient
+        properties={properties}
+        initialFilter={initialFilter}
+        archivedCount={archivedCount}
+      />
 
       {/* Quota banner (sticky above bottom nav) */}
       {quotaReached && (

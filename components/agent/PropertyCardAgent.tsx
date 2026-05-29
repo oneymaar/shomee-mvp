@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Video, Pencil, EyeOff, Check, Trash2, Archive, ArchiveRestore } from 'lucide-react'
 import type { PropertyStatus, MandatType } from '@prisma/client'
 
@@ -288,17 +289,20 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
         )}
       </div>
 
-      {confirmKind && (
-        <ConfirmDialog
-          kind={confirmKind}
-          busy={busy}
-          onCancel={() => setConfirmKind(null)}
-          onConfirm={() => {
-            if (confirmKind === 'delete') hardDelete()
-            else setStatut('ARCHIVED').then(() => setConfirmKind(null))
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {confirmKind && (
+          <ConfirmDialog
+            key="confirm"
+            kind={confirmKind}
+            busy={busy}
+            onCancel={() => setConfirmKind(null)}
+            onConfirm={() => {
+              if (confirmKind === 'delete') hardDelete()
+              else setStatut('ARCHIVED').then(() => setConfirmKind(null))
+            }}
+          />
+        )}
+      </AnimatePresence>
     </article>
   )
 }
@@ -313,14 +317,22 @@ function ConfirmDialog({
 }) {
   const isDelete = kind === 'delete'
   return (
-    <div
+    <motion.div
       role="dialog"
       aria-modal="true"
       onClick={onCancel}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
       className="fixed inset-0 z-[180] bg-black/50 flex items-center justify-center px-6"
     >
-      <div
+      <motion.div
         onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1,    y: 0 }}
+        exit   ={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
         className="w-full max-w-sm bg-white rounded-2xl p-5 shadow-xl"
       >
         <h3 className="text-[15px] font-semibold text-[#0a0a0a]">
@@ -352,7 +364,7 @@ function ConfirmDialog({
             {isDelete ? 'Supprimer' : 'Archiver'}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

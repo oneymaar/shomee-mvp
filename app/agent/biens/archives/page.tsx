@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { PropertyStatus } from '@prisma/client'
-import PropertyCardAgent from '@/components/agent/PropertyCardAgent'
+import ArchivesListClient from '@/components/agent/ArchivesListClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,34 +53,7 @@ export default async function AgentArchivesPage() {
         </div>
       </header>
 
-      {properties.length === 0 ? (
-        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-6 text-center">
-          <p className="text-sm text-gray-500">Aucun bien archivé.</p>
-          <p className="text-[11px] text-gray-400 mt-1">
-            Les biens archivés depuis votre dashboard apparaissent ici.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {properties.map((p) => (
-            <PropertyCardAgent
-              key={p.id}
-              id={p.id}
-              title={p.title}
-              arrondissement={p.arrondissement}
-              surface={p.surface}
-              price={p.price}
-              statut={p.statut}
-              completionRate={p.completionRate}
-              videoUrl={p.videoUrl}
-              imageUrlFallback={p.imageUrlFallback}
-              avantPremiere={p.avantPremiere}
-              mandatType={p.mandatType}
-              badges={p.badges}
-            />
-          ))}
-        </div>
-      )}
+      <ArchivesListClient properties={properties} />
     </main>
   )
 }
