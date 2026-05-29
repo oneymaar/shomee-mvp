@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
-  Sparkles, MapPin, Image as ImageIcon, Cable, Globe,
+  Sparkles, MapPin, Image as ImageIcon, Cable, Globe, Loader2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
@@ -82,9 +82,81 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [plans, setPlans]                  = useState<string[]>([])
   const [matterportUrl, setMatterportUrl]  = useState<string>(initialProperty.matterportUrl ?? '')
   const [videoAnalysisStarted, setVideoAnalysisStarted] = useState(false)
+  const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false)
+  const [analysisMessageIndex, setAnalysisMessageIndex] = useState(0)
+  const [analysisJustDone, setAnalysisJustDone] = useState<number | null>(null)
+  const [aiTagLabels, setAiTagLabels] = useState<Set<string>>(new Set())
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
+
+  const ANALYSIS_MESSAGES = [
+    'Analyse en cours...',
+    'Extraction des images...',
+    'Identification des pièces...',
+    'Détection des caractéristiques...',
+    'Finalisation...',
+  ]
+
+  useEffect(() => {
+    if (!isAnalyzingVideo) return
+    setAnalysisMessageIndex(0)
+    const interval = setInterval(() => {
+      setAnalysisMessageIndex((i) => (i + 1) % ANALYSIS_MESSAGES.length)
+    }, 4000)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAnalyzingVideo])
+
+  useEffect(() => {
+    if (analysisJustDone === null) return
+    const t = setTimeout(() => setAnalysisJustDone(null), 2000)
+    return () => clearTimeout(t)
+  }, [analysisJustDone])
+
+  const startVideoAnalysis = async () => {
+    if (isAnalyzingVideo) return
+    setIsAnalyzingVideo(true)
+    try {
+      const res = await fetch(`/api/biens/${form.id}/analyze-video`, {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer shomee_test_kr3tz_0001',
+        },
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = (await res.json()) as {
+        tags: Array<{ label: string; category: string; confidence: number }>
+        chapters: Array<{ label: string; startSec: number }>
+      }
+
+      const newLabels = data.tags.map((t) => t.label)
+      const mergedTags = Array.from(new Set([...form.tags, ...newLabels]))
+      update({ tags: mergedTags })
+      setAiTagLabels((prev) => {
+        const next = new Set(prev)
+        newLabels.forEach((l) => next.add(l))
+        return next
+      })
+
+      if (data.chapters.length > 0) {
+        const mapped: Chapter[] = data.chapters.map((c, i) => ({
+          id: `ai-${Date.now()}-${i}`,
+          label: c.label,
+          startSec: c.startSec,
+        }))
+        setChapters(mapped)
+      }
+
+      setAnalysisJustDone(newLabels.length)
+      setVideoAnalysisStarted(true)
+    } catch (err) {
+      console.error('analyze-video failed:', err)
+      setVideoAnalysisStarted(true)
+    } finally {
+      setIsAnalyzingVideo(false)
+    }
+  }
 
   // ── List of Property-side field keys the LLM pre-filled ─────────────
   const [llmFields, setLlmFields] = useState<string[]>(initialProperty.llmFilledFields ?? [])
@@ -569,7 +641,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
         >
           <div className="flex flex-wrap gap-2 mb-3">
             {form.tags.map((tag) => {
-              const isFromVideo = TAGS_FROM_VIDEO.has(tag)
+              const isFromVideo = TAGS_FROM_VIDEO.has(tag) || aiTagLabels.has(tag)
               return (
                 <span
                   key={tag}
@@ -1021,7 +1093,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             )}
 
             {/* ── Analyse IA CTA (before analysis is started) ──────────── */}
-            {form.videoUrl && !videoAnalysisStarted && (
+            {form.videoUrl && !videoAnalysisStarted && !isAnalyzingVideo && (
               <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-6 flex flex-col items-center text-center">
                 <h4 className="text-[14px] font-semibold text-[#0a0a0a]">Analyser la vidéo</h4>
                 <p className="text-[12px] text-gray-500 mt-1 max-w-[280px] leading-snug">
@@ -1029,7 +1101,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 </p>
                 <button
                   type="button"
-                  onClick={() => setVideoAnalysisStarted(true)}
+                  onClick={startVideoAnalysis}
                   className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0a0a0a] text-white text-[13px] font-semibold active:bg-[#222]"
                 >
                   <Sparkles size={13} className="text-violet-300" />
@@ -1038,8 +1110,54 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               </div>
             )}
 
+            {/* ── Analysing in progress ────────────────────────────────── */}
+            {form.videoUrl && isAnalyzingVideo && (
+              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                  className="text-[#0a0a0a]"
+                >
+                  <Loader2 size={32} strokeWidth={2.25} />
+                </motion.div>
+                <div className="mt-4 h-5 relative w-full">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={analysisMessageIndex}
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0 text-[14px] font-semibold text-[#0a0a0a]"
+                    >
+                      {ANALYSIS_MESSAGES[analysisMessageIndex]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+                <p className="mt-2 text-[12px] text-gray-500">
+                  L&apos;analyse peut durer jusqu&apos;à 1 minute
+                </p>
+              </div>
+            )}
+
+            {/* ── Success flash ────────────────────────────────────────── */}
+            <AnimatePresence>
+              {analysisJustDone !== null && (
+                <motion.div
+                  key="analysis-success"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[13px] font-semibold"
+                >
+                  <Sparkles size={13} />
+                  {analysisJustDone} caractéristique{analysisJustDone > 1 ? 's' : ''} détectée{analysisJustDone > 1 ? 's' : ''}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* ── Results (after analysis is started) ──────────────────── */}
-            {form.videoUrl && videoAnalysisStarted && (
+            {form.videoUrl && videoAnalysisStarted && !isAnalyzingVideo && analysisJustDone === null && (
               <>
                 <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2.5 flex items-center gap-1">
@@ -1047,7 +1165,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                     Spécificités extraites
                   </p>
                   {(() => {
-                    const extracted = form.tags.filter((t) => TAGS_FROM_VIDEO.has(t))
+                    const extracted = form.tags.filter((t) => TAGS_FROM_VIDEO.has(t) || aiTagLabels.has(t))
                     if (extracted.length === 0) {
                       return <p className="text-[12px] text-gray-400">Aucune spécificité détectée pour l&apos;instant</p>
                     }
