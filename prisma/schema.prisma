@@ -237,6 +237,8 @@ model Property {
   completionRate        Float           @default(0)
   collaborateurIds      String[]        @default([])
 
+  llmFilledFields        String[]        @default([])
+
   // ── Source fields (populated by LLM import) ──
   locationSource         String?
   titleSource            String?

@@ -69,6 +69,44 @@ const COMPLETION_FIELDS: Array<keyof ImportPayload> = [
   'specificites', 'composition', 'dpe', 'taxe_fonciere',
 ]
 
+// Payload key → Property field key (the editor reads Property-side names).
+const PAYLOAD_TO_PROPERTY_KEY: Partial<Record<keyof ImportPayload, string>> = {
+  adresse:            'location',
+  prix:               'price',
+  surface:            'surface',
+  nb_pieces:          'rooms',
+  nb_chambres:        'bedrooms',
+  type_bien:          'subtitle',
+  description:        'description',
+  quartier:           'district',
+  etage:              'floor',
+  annee_construction: 'yearBuilt',
+  caracteristiques:   'features',
+  specificites:       'tags',
+  composition:        'composition',
+  dpe:                'dpe',
+  ges:                'ges',
+  taxe_fonciere:      'propertyTax',
+  charges_copro:      'monthlyCharges',
+  mandat_type:        'mandatType',
+  ref_interne:        'refInterneAgence',
+}
+
+function deriveLlmFilledFields(payload: ImportPayload): string[] {
+  const seen = new Set<string>()
+  for (const f of COMPLETION_FIELDS) {
+    if (!isFilled(payload, f)) continue
+    const key = PAYLOAD_TO_PROPERTY_KEY[f]
+    if (key) seen.add(key)
+  }
+  // Extras not in COMPLETION_FIELDS but worth marking.
+  if (payload.ges)             seen.add('ges')
+  if (payload.charges_copro)   seen.add('monthlyCharges')
+  if (payload.mandat_type)     seen.add('mandatType')
+  if (payload.ref_interne)     seen.add('refInterneAgence')
+  return Array.from(seen)
+}
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 type AuthResult =
@@ -215,6 +253,7 @@ export async function POST(req: Request) {
         refInterneAgence: payload.ref_interne,
         statut:           PropertyStatus.DRAFT,
         completionRate,
+        llmFilledFields:  deriveLlmFilledFields(payload),
 
         // ── Source markers (per field) ──
         locationSource:         payload.location_source,

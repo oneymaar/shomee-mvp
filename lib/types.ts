@@ -162,6 +162,9 @@ export interface Property {
   livingQuality?: number
   outdoorUsability?: number
 
+  // ─── LLM-filled marker (list of Property-side field keys) ───────────────
+  llmFilledFields?: string[]
+
   // ─── Source markers (populated by the LLM importer) ─────────────────────
   locationSource?: string | null
   titleSource?: string | null

@@ -86,6 +86,9 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
 
+  // ── List of Property-side field keys the LLM pre-filled ─────────────
+  const [llmFields] = useState<string[]>(initialProperty.llmFilledFields ?? [])
+
   // ── Per-field source markers (populated by LLM import) ──────────────
   const [sources] = useState<Record<string, string | null>>({
     location:         initialProperty.locationSource ?? null,
@@ -438,7 +441,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           open={openSection === 'general'}
           onToggle={() => toggleSection('general')}
         >
-          <Field label="Adresse" icon={<MapPin size={11} className="text-gray-400" />} source={sources.location}>
+          <Field label="Adresse" icon={<MapPin size={11} className="text-gray-400" />} source={sources.location} fieldKey="location" llmFields={llmFields}>
             <TextInput
               value={form.location}
               onChange={(v) => update({ location: v })}
@@ -474,16 +477,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             </select>
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Surface (m²)" source={sources.surface}>
+            <Field label="Surface (m²)" source={sources.surface} fieldKey="surface" llmFields={llmFields}>
               <NumberInput value={form.surface} onChange={(v) => update({ surface: v ?? 0 })} />
             </Field>
-            <Field label="Pièces" source={sources.rooms}>
+            <Field label="Pièces" source={sources.rooms} fieldKey="rooms" llmFields={llmFields}>
               <NumberInput value={form.rooms} onChange={(v) => update({ rooms: v ?? 0 })} />
             </Field>
-            <Field label="Chambres" source={sources.bedrooms}>
+            <Field label="Chambres" source={sources.bedrooms} fieldKey="bedrooms" llmFields={llmFields}>
               <NumberInput value={form.bedrooms} onChange={(v) => update({ bedrooms: v })} />
             </Field>
-            <Field label="Étage" source={sources.floor}>
+            <Field label="Étage" source={sources.floor} fieldKey="floor" llmFields={llmFields}>
               <NumberInput value={form.floor} onChange={(v) => update({ floor: v })} />
             </Field>
             <Field label="Sur étages">
@@ -788,7 +791,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 suffix="kWh/m²/an"
               />
             </Field>
-            <Field label="DPE — Étiquette" source={sources.dpe}>
+            <Field label="DPE — Étiquette" source={sources.dpe} fieldKey="dpe" llmFields={llmFields}>
               <DpeLabelSelect
                 value={energy.consoLabel}
                 onChange={(v) => {
@@ -804,7 +807,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 suffix="kg CO²/m²/an"
               />
             </Field>
-            <Field label="GES — Étiquette" source={sources.ges}>
+            <Field label="GES — Étiquette" source={sources.ges} fieldKey="ges" llmFields={llmFields}>
               <DpeLabelSelect
                 value={energy.gesLabel}
                 onChange={(v) => {
@@ -904,7 +907,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] text-[#0a0a0a] focus:outline-none focus:border-[#0a0a0a]/40 placeholder-gray-400"
             />
           </Field>
-          <Field label="Corps de l'annonce" source={sources.description}>
+          <Field label="Corps de l'annonce" source={sources.description} fieldKey="description" llmFields={llmFields}>
             <textarea
               value={form.description}
               onChange={(e) => update({ description: e.target.value })}
@@ -1374,19 +1377,23 @@ function SubSection({
 }
 
 function Field({
-  label, icon, sources: sourceBadges, children, source,
+  label, icon, sources: sourceBadges, children, source, fieldKey, llmFields,
 }: {
   label: string
   icon?: React.ReactNode
   sources?: React.ReactNode[]
   children: React.ReactNode
   source?: string | null
+  fieldKey?: string
+  llmFields?: string[]
 }) {
+  const isLlmFilled = !!fieldKey && !!llmFields && llmFields.includes(fieldKey)
   return (
     <div>
       <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
         <span>{label}</span>
         {icon}
+        {isLlmFilled && <Sparkles size={10} className="text-violet-500" />}
         {sourceBadges && sourceBadges.length > 0 && (
           <span className="inline-flex items-center gap-1">{sourceBadges}</span>
         )}
