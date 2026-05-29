@@ -117,6 +117,7 @@ export async function analyzeVideo(
 ): Promise<VideoAnalysisResult> {
   void _propertyId
 
+  console.log('[analyzeVideo] videoUrl:', videoUrl)
   const parsed = parseCloudinaryUrl(videoUrl)
   console.log('[analyzeVideo] parsed:', JSON.stringify(parsed))
   if (!parsed) return { tags: [], chapters: [] }
