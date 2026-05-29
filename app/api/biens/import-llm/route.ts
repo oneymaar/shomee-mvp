@@ -211,6 +211,9 @@ export async function POST(req: Request) {
   const fieldsTotal  = COMPLETION_FIELDS.length
   const completionRate = +(fieldsFilled / fieldsTotal).toFixed(2)
 
+  const llmFilledFields = deriveLlmFilledFields(payload)
+  console.log('[llmFilledFields]', JSON.stringify(llmFilledFields))
+
   // 5. Map payload → Prisma Property
   try {
     const created = await prisma.property.create({
@@ -253,7 +256,7 @@ export async function POST(req: Request) {
         refInterneAgence: payload.ref_interne,
         statut:           PropertyStatus.DRAFT,
         completionRate,
-        llmFilledFields:  deriveLlmFilledFields(payload),
+        llmFilledFields,
 
         // ── Source markers (per field) ──
         locationSource:         payload.location_source,

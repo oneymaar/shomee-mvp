@@ -125,5 +125,24 @@ export function toViewProperty(p: PrismaProperty): Property {
     spaciousness: nullToUndef(p.spaciousness),
     livingQuality: nullToUndef(p.livingQuality),
     outdoorUsability: nullToUndef(p.outdoorUsability),
+
+    // LLM-fill marker + per-field source markers
+    llmFilledFields:        p.llmFilledFields,
+    locationSource:         p.locationSource,
+    titleSource:            p.titleSource,
+    priceSource:            p.priceSource,
+    surfaceSource:          p.surfaceSource,
+    roomsSource:            p.roomsSource,
+    bedroomsSource:         p.bedroomsSource,
+    descriptionSource:      p.descriptionSource,
+    floorSource:            p.floorSource,
+    yearBuiltSource:        p.yearBuiltSource,
+    dpeSource:              p.dpeSource,
+    gesSource:              p.gesSource,
+    mandatTypeSource:       p.mandatTypeSource,
+    refInterneAgenceSource: p.refInterneAgenceSource,
+    monthlyChargesSource:   p.monthlyChargesSource,
+    propertyTaxSource:      p.propertyTaxSource,
+    compositionSource:      p.compositionSource,
   }
 }
