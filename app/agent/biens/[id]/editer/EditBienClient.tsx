@@ -1419,36 +1419,14 @@ function Field({
 }
 
 function LlmBadge({ llmActive, source }: { llmActive: boolean; source: string | null }) {
-  const [open, setOpen] = useState(false)
-  const visible = llmActive || !!source
-  if (!visible) return null
-  const tooltipText = source ? `Source : ${source}` : "Rempli par l'IA"
+  if (!llmActive && !source) return null
   return (
-    <div className="relative inline-flex items-center">
-      <motion.button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        whileTap={{ scale: 0.88 }}
-        transition={{ duration: 0.12 }}
-        className="w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center ml-1 flex-shrink-0"
-        aria-label={source ? 'Source de la donnée' : 'Donnée pré-remplie par l\'IA'}
-      >
-        <Sparkles size={9} />
-      </motion.button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, x: -4 }}
-            animate={{ opacity: 1, scale: 1,   x: 0  }}
-            exit   ={{ opacity: 0, scale: 0.9, x: -4 }}
-            transition={{ duration: 0.14, ease: 'easeOut' }}
-            className="absolute left-5 top-0 z-50 bg-[#0a0a0a] text-white text-[11px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg"
-          >
-            {tooltipText}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <span
+      className="w-4 h-4 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center ml-1 flex-shrink-0"
+      aria-label="Donnée pré-remplie par l'IA"
+    >
+      <Sparkles size={9} />
+    </span>
   )
 }
 
