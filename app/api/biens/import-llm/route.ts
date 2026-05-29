@@ -150,6 +150,7 @@ export async function POST(req: Request) {
   }
 
   const payload = parsed.data
+  console.log('[import-llm] payload reçu:', JSON.stringify(payload, null, 2))
 
   // 3. Quota check (active = non-ARCHIVED)
   const activeCount = await prisma.property.count({
