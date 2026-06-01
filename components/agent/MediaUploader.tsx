@@ -25,6 +25,31 @@ const SIZE_LIMIT_BYTES: Record<MediaType, number> = {
   plan:             20 * 1024 * 1024,
   visite_virtuelle: 0,
 }
+
+const VIDEO_MAX_DURATION_SEC = 80
+
+function probeVideoDuration(file: File): Promise<number | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    const cleanup = () => {
+      URL.revokeObjectURL(url)
+      video.removeAttribute('src')
+      video.load()
+    }
+    video.onloadedmetadata = () => {
+      const d = Number.isFinite(video.duration) ? video.duration : null
+      cleanup()
+      resolve(d)
+    }
+    video.onerror = () => {
+      cleanup()
+      resolve(null)
+    }
+    video.src = url
+  })
+}
 const ACCEPT: Record<MediaType, string> = {
   video:            'video/mp4,video/quicktime,video/webm',
   photo:            'image/jpeg,image/png,image/webp',
@@ -46,7 +71,7 @@ const FOLDER: Record<MediaType, string> = {
 const LABEL: Record<MediaType, { cta: string; hint: string; Icon: typeof Upload }> = {
   video: {
     cta:  'Déposer une vidéo',
-    hint: 'MP4, MOV, WEBM · max 500 Mo',
+    hint: 'MP4, MOV, WEBM · max 80 secondes',
     Icon: Video,
   },
   photo: {
@@ -98,6 +123,13 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
     const limit = SIZE_LIMIT_BYTES[type]
     if (file.size > limit) {
       throw new Error(`${file.name} dépasse ${Math.round(limit / 1024 / 1024)} Mo`)
+    }
+
+    if (type === 'video') {
+      const duration = await probeVideoDuration(file)
+      if (duration !== null && duration > VIDEO_MAX_DURATION_SEC) {
+        throw new Error(`Vidéo trop longue — maximum ${VIDEO_MAX_DURATION_SEC} secondes`)
+      }
     }
 
     // 1. Signature serveur

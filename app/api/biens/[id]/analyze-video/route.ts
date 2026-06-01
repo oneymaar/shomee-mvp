@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { TagSource, VideoAnalysisStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { authenticateBearer } from '@/lib/auth/bearer'
-import { analyzeVideo } from '@/lib/services/videoAnalysisService'
+import { analyzeVideo, getVideoDuration, VIDEO_MAX_DURATION_SEC } from '@/lib/services/videoAnalysisService'
 import { computeCompletionRate } from '@/lib/completion'
 
 export const dynamic = 'force-dynamic'
@@ -27,6 +27,17 @@ export async function POST(
   }
   if (!property.videoUrl) {
     return NextResponse.json({ error: 'Aucune vidéo à analyser' }, { status: 400 })
+  }
+
+  // Optional duration guard — refuse videos longer than 80s. If Cloudinary
+  // doesn't return a duration we let the request through and analyzeVideo
+  // will cap frames internally.
+  const durationSec = await getVideoDuration(property.videoUrl)
+  if (durationSec !== null && durationSec > VIDEO_MAX_DURATION_SEC) {
+    return NextResponse.json(
+      { error: `Vidéo trop longue (${Math.round(durationSec)}s) — maximum ${VIDEO_MAX_DURATION_SEC} secondes` },
+      { status: 400 },
+    )
   }
 
   const { tags, chapters } = await analyzeVideo(property.videoUrl, property.id)

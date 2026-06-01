@@ -8,10 +8,9 @@ import Anthropic from '@anthropic-ai/sdk'
 import cloudinary from '@/lib/cloudinary'
 
 const MODEL = 'claude-sonnet-4-20250514'
-const MAX_FRAMES = 20
-const FRAME_INTERVAL_SEC = 2
+const FRAME_INTERVAL_SEC = 1
+const MAX_VIDEO_DURATION_SEC = 80
 const MAX_TOKENS = 2000
-const DEFAULT_DURATION_SEC = 60
 const MIN_FRAME_BYTES = 1000
 
 const SYSTEM_PROMPT = `Tu es un expert immobilier parisien qui analyse des frames extraites d'une vidéo de visite immobilière.
@@ -103,6 +102,23 @@ function frameUrl(cloud: string, publicId: string, sec: number): string {
   return `https://res.cloudinary.com/${cloud}/video/upload/so_${sec},w_800,h_600,c_fill,f_jpg/${publicId}.jpg`
 }
 
+export const VIDEO_MAX_DURATION_SEC = MAX_VIDEO_DURATION_SEC
+
+/** Fetch the video duration from Cloudinary. Returns null if unavailable. */
+export async function getVideoDuration(videoUrl: string): Promise<number | null> {
+  const parsed = parseCloudinaryUrl(videoUrl)
+  if (!parsed) return null
+  try {
+    const resource = (await cloudinary.api.resource(parsed.publicId, {
+      resource_type: 'video',
+      media_metadata: true,
+    })) as { duration?: number; video?: { duration?: number } }
+    return resource.duration ?? resource.video?.duration ?? null
+  } catch {
+    return null
+  }
+}
+
 function parseClaudeJson(text: string): VideoAnalysisResult {
   // Tolerate stray text around the JSON body.
   const match = text.match(/\{[\s\S]*\}/)
@@ -157,7 +173,7 @@ export async function analyzeVideo(
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return { tags: [], chapters: [] }
 
-  let durationSec: number = DEFAULT_DURATION_SEC
+  let durationSec: number | null = null
   try {
     const resource = (await cloudinary.api.resource(publicId, {
       resource_type: 'video',
@@ -167,17 +183,15 @@ export async function analyzeVideo(
       video?: { duration?: number }
     }
     console.log('[analyzeVideo] cloudinary resource keys:', Object.keys(resource))
-    durationSec = resource.duration ?? resource.video?.duration ?? DEFAULT_DURATION_SEC
+    durationSec = resource.duration ?? resource.video?.duration ?? null
   } catch (err) {
     console.error('[analyzeVideo] cloudinary.api.resource failed:', err)
   }
-  const maxSec = Math.floor(durationSec)
-  console.log('[analyzeVideo] durationSec:', durationSec, 'maxSec:', maxSec)
+  const effectiveDuration = Math.min(durationSec ?? MAX_VIDEO_DURATION_SEC, MAX_VIDEO_DURATION_SEC)
+  console.log('[analyzeVideo] durationSec:', durationSec, 'effectiveDuration:', effectiveDuration)
 
   const frames: Array<{ sec: number; url: string }> = []
-  for (let i = 0; i < MAX_FRAMES; i++) {
-    const sec = i * FRAME_INTERVAL_SEC
-    if (sec > maxSec) break
+  for (let sec = 0; sec <= effectiveDuration; sec += FRAME_INTERVAL_SEC) {
     frames.push({ sec, url: frameUrl(cloud, publicId, sec) })
   }
   console.log('[analyzeVideo] frames générées:', frames.length, 'première URL:', frames[0]?.url)
