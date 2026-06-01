@@ -390,6 +390,9 @@ export default function VideoChapterEditor({
 
     const onMouseDown = (e: MouseEvent) => {
       if (editingId) return
+      // Any interaction with the frise pauses playback so the agent can
+      // edit precisely without the playhead drifting under their hand.
+      videoRef?.current?.pause()
       const rect = cv.getBoundingClientRect()
       const ex = e.clientX - rect.left, ey = e.clientY - rect.top
       const hit = hitTest(ex, ey)
@@ -426,6 +429,7 @@ export default function VideoChapterEditor({
 
     const onTouchStart = (e: TouchEvent) => {
       if (editingId) return
+      videoRef?.current?.pause()
       const rect = cv.getBoundingClientRect()
       const ex = e.touches[0].clientX - rect.left, ey = e.touches[0].clientY - rect.top
       const hit = hitTest(ex, ey)
