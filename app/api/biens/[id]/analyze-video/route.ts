@@ -52,7 +52,18 @@ export async function POST(
     description: property.description ?? undefined,
   }
 
-  const { tags, chapters } = await analyzeVideo(property.videoUrl, property.id, context)
+  const { tags, chapters, error: analysisError } = await analyzeVideo(
+    property.videoUrl,
+    property.id,
+    context,
+  )
+
+  if (analysisError) {
+    return NextResponse.json(
+      { error: 'Analyse indisponible, réessayez dans quelques instants.' },
+      { status: 503 },
+    )
+  }
 
   await prisma.$transaction(async (tx) => {
     if (tags.length > 0) {

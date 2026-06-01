@@ -86,6 +86,8 @@ export type VideoChapter = { label: string; startSec: number }
 export type VideoAnalysisResult = {
   tags: VideoTag[]
   chapters: VideoChapter[]
+  /** true when at least one of the two Claude calls failed (network, 5xx, etc.). */
+  error?: boolean
 }
 
 export type PropertyContext = {
@@ -193,7 +195,7 @@ function pickTagFrames(validFrames: Frame[]): Frame[] {
   return indices.map((i) => validFrames[i])
 }
 
-async function callTags(client: Anthropic, validFrames: Frame[]): Promise<VideoTag[]> {
+async function callTags(client: Anthropic, validFrames: Frame[]): Promise<VideoTag[] | null> {
   const tagFrames = pickTagFrames(validFrames)
   const imageBlocks = tagFrames.map((f) => ({
     type: 'image' as const,
@@ -219,14 +221,14 @@ async function callTags(client: Anthropic, validFrames: Frame[]): Promise<VideoT
       ],
     })
     const block = res.content[0]
-    if (!block || block.type !== 'text') return []
+    if (!block || block.type !== 'text') return null
     const parsed = parseTagsJson(block.text)
     console.log('[analyzeVideo] tags raw (1000c):', block.text.slice(0, 1000))
     console.log('[analyzeVideo] tags parsed:', parsed.length, JSON.stringify(parsed))
     return parsed
   } catch (err) {
     console.error('[analyzeVideo] tags call failed:', err)
-    return []
+    return null
   }
 }
 
@@ -235,7 +237,7 @@ async function callChapters(
   validFrames: Frame[],
   effectiveDuration: number,
   context?: PropertyContext,
-): Promise<VideoChapter[]> {
+): Promise<VideoChapter[] | null> {
   const content = validFrames.flatMap((f, i) => [
     { type: 'text' as const, text: `=== FRAME ${i + 1} — ${f.sec}s ===` },
     {
@@ -261,14 +263,14 @@ async function callChapters(
       ],
     })
     const block = res.content[0]
-    if (!block || block.type !== 'text') return []
+    if (!block || block.type !== 'text') return null
     const parsed = parseChaptersJson(block.text, effectiveDuration)
     console.log('[analyzeVideo] chapters raw (1500c):', block.text.slice(0, 1500))
     console.log('[analyzeVideo] chapters parsed:', parsed.length, JSON.stringify(parsed))
     return parsed
   } catch (err) {
     console.error('[analyzeVideo] chapters call failed:', err)
-    return []
+    return null
   }
 }
 
@@ -320,10 +322,15 @@ export async function analyzeVideo(
   if (validFrames.length === 0) return { tags: [], chapters: [] }
 
   const client = new Anthropic({ apiKey })
-  const [tags, chapters] = await Promise.all([
+  const [tagsResult, chaptersResult] = await Promise.all([
     callTags(client, validFrames),
     callChapters(client, validFrames, effectiveDuration, context),
   ])
 
-  return { tags, chapters }
+  const error = tagsResult === null || chaptersResult === null
+  return {
+    tags: tagsResult ?? [],
+    chapters: chaptersResult ?? [],
+    error,
+  }
 }

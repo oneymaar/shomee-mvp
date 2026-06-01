@@ -85,6 +85,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false)
   const [analysisMessageIndex, setAnalysisMessageIndex] = useState(0)
   const [analysisJustDone, setAnalysisJustDone] = useState<number | null>(null)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [aiTagLabels, setAiTagLabels] = useState<Set<string>>(new Set())
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
@@ -117,6 +118,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const startVideoAnalysis = async () => {
     if (isAnalyzingVideo) return
     setIsAnalyzingVideo(true)
+    setAnalysisError(null)
     try {
       const res = await fetch(`/api/biens/${form.id}/analyze-video`, {
         method: 'POST',
@@ -124,7 +126,12 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           Authorization: 'Bearer shomee_test_kr3tz_0001',
         },
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        const body = await res.json().catch(() => null) as { error?: string } | null
+        const message = body?.error ?? `Analyse indisponible (HTTP ${res.status}).`
+        setAnalysisError(message)
+        return
+      }
       const data = (await res.json()) as {
         tags: Array<{ label: string; category: string; confidence: number }>
         chapters: Array<{ label: string; startSec: number }>
@@ -139,20 +146,20 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
         return next
       })
 
-      if (data.chapters.length > 0) {
-        const mapped: Chapter[] = data.chapters.map((c, i) => ({
-          id: `ai-${Date.now()}-${i}`,
-          label: c.label,
-          startSec: c.startSec,
-        }))
-        setChapters(mapped)
-      }
+      // Always replace chapters with the analysis output — even when empty,
+      // so the mock INITIAL_CHAPTERS don't linger after a real analysis.
+      const mapped: Chapter[] = data.chapters.map((c, i) => ({
+        id: `ai-${Date.now()}-${i}`,
+        label: c.label,
+        startSec: c.startSec,
+      }))
+      setChapters(mapped)
 
       setAnalysisJustDone(newLabels.length)
       setVideoAnalysisStarted(true)
     } catch (err) {
       console.error('analyze-video failed:', err)
-      setVideoAnalysisStarted(true)
+      setAnalysisError('Analyse indisponible, réessayez dans quelques instants.')
     } finally {
       setIsAnalyzingVideo(false)
     }
@@ -426,6 +433,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     setVideoAnalysisStarted(false)
     setChapters(INITIAL_CHAPTERS)
     setAnalysisJustDone(null)
+    setAnalysisError(null)
     if (aiTagLabels.size > 0) {
       update({ tags: form.tags.filter((t) => !aiTagLabels.has(t)) })
     }
@@ -1166,6 +1174,23 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* ── Analysis error ─────────────────────────────────────────── */}
+            {analysisError && !isAnalyzingVideo && (
+              <div className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-[13px]">
+                <X size={14} className="mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-semibold">{analysisError}</p>
+                  <button
+                    type="button"
+                    onClick={startVideoAnalysis}
+                    className="mt-1 underline text-[12px] font-medium text-red-700 active:text-red-900"
+                  >
+                    Réessayer
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* ── Results (after analysis is started) ──────────────────── */}
             {form.videoUrl && videoAnalysisStarted && !isAnalyzingVideo && analysisJustDone === null && (
