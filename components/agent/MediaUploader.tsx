@@ -134,14 +134,26 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
         if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100))
       }
       xhr.onload = () => {
+        console.log('[upload] cloudinary onload', { status: xhr.status, statusText: xhr.statusText, bodySnippet: xhr.responseText?.slice(0, 300) })
         if (xhr.status >= 200 && xhr.status < 300) {
           try { resolve(JSON.parse(xhr.responseText)) }
           catch { reject(new Error('Réponse Cloudinary illisible')) }
         } else {
-          reject(new Error(`Cloudinary ${xhr.status}: ${xhr.responseText.slice(0, 200)}`))
+          reject(new Error(`Cloudinary ${xhr.status} ${xhr.statusText}: ${xhr.responseText.slice(0, 200)}`))
         }
       }
-      xhr.onerror = () => reject(new Error('Erreur réseau'))
+      xhr.onerror = () => {
+        console.error('[upload] cloudinary onerror', { status: xhr.status, statusText: xhr.statusText, readyState: xhr.readyState, bodySnippet: xhr.responseText?.slice(0, 300) })
+        reject(new Error(`Erreur réseau (status=${xhr.status} state=${xhr.readyState})`))
+      }
+      xhr.ontimeout = () => {
+        console.error('[upload] cloudinary ontimeout')
+        reject(new Error('Upload timeout'))
+      }
+      xhr.onabort = () => {
+        console.error('[upload] cloudinary onabort')
+        reject(new Error('Upload annulé'))
+      }
       xhr.send(form)
     })
 
