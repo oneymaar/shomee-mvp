@@ -37,6 +37,7 @@ RÈGLES CRITIQUES :
 - Ne fusionne JAMAIS deux apparitions distinctes d'une même pièce.
 - Si tu n'es pas sûr d'une pièce, préfère ne pas la mentionner plutôt que d'inventer.
 - Sois précis sur les timestamps — si la cuisine apparaît clairement à la frame 5 (10s), mets startSec: 10, pas 8 ni 12.
+- IMPORTANT : tous les timestamps (startSec) doivent être compris entre 0 et la durée totale de la vidéo indiquée dans le message. Ne jamais inventer un timestamp au-delà de la durée réelle.
 
 Labels autorisés : Extérieur, Entrée, Couloir, Salon, Séjour, Cuisine, Chambre parentale, Chambre 1, Chambre 2, Chambre 3, Chambre enfant, Salle de bain, Salle d'eau, WC, Bureau, Dressing, Terrasse, Balcon, Cave.
 
@@ -119,7 +120,7 @@ export async function getVideoDuration(videoUrl: string): Promise<number | null>
   }
 }
 
-function parseClaudeJson(text: string): VideoAnalysisResult {
+function parseClaudeJson(text: string, maxSec: number): VideoAnalysisResult {
   // Tolerate stray text around the JSON body.
   const match = text.match(/\{[\s\S]*\}/)
   const body = match ? match[0] : text
@@ -149,7 +150,7 @@ function parseClaudeJson(text: string): VideoAnalysisResult {
             const startSec = typeof o.startSec === 'number' ? o.startSec : 0
             return { label: o.label, startSec }
           })
-          .filter((c): c is VideoChapter => c !== null)
+          .filter((c): c is VideoChapter => c !== null && c.startSec <= maxSec)
       : []
 
     return { tags, chapters }
@@ -224,8 +225,12 @@ export async function analyzeVideo(
     },
   }))
 
-  const frameList = validFrames.map((f, i) => `Frame ${i + 1} = ${f.sec}s`).join(', ')
-  const userText = `Voici ${validFrames.length} frames extraites de la vidéo (${frameList}). Analyse-les et retourne le JSON demandé.`
+  const frameTimestamps = validFrames.map((f) => `${f.sec}s`).join(', ')
+  const totalSec = Math.round(effectiveDuration)
+  const userText = `Vidéo de ${totalSec} secondes au total.
+Frames disponibles aux timestamps suivants : ${frameTimestamps}.
+TOUS les startSec des chapters doivent être compris entre 0 et ${totalSec}.
+Analyse et retourne le JSON.`
 
   console.log('[analyzeVideo] avant Claude — nbFrames:', validFrames.length,
     'first3sec:', validFrames.slice(0, 3).map((f) => f.sec),
@@ -251,7 +256,7 @@ export async function analyzeVideo(
     console.log('[analyzeVideo] réponse Claude brute (1000 char):', block?.type,
       rawText ? rawText.slice(0, 1000) : 'non-text')
     if (!block || block.type !== 'text') return { tags: [], chapters: [] }
-    const parsedResult = parseClaudeJson(block.text)
+    const parsedResult = parseClaudeJson(block.text, effectiveDuration)
     console.log('[analyzeVideo] parseClaudeJson result:',
       'tags=', parsedResult.tags.length,
       'chapters=', parsedResult.chapters.length,
