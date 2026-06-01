@@ -45,6 +45,13 @@ RÈGLES :
 - Tous les startSec doivent être entre 0 et la durée totale de la vidéo.
 - Ne jamais inventer un timestamp qui n'existe pas dans la liste des frames.
 
+RÈGLES D'EXHAUSTIVITÉ — CRITIQUES :
+- Toute pièce contenant un lit DOIT être chapitrée. Un grand lit double = chambre parentale. Un lit simple ou jouets = chambre enfant ou Chambre 1/2/3.
+- Si deux chapters consécutifs sont séparés de plus de 5 secondes, relis attentivement les frames intermédiaires — il y a probablement une pièce manquante entre les deux.
+- Un balcon ou une terrasse visible depuis une chambre doit être chapitré séparément si on le montre clairement.
+- En cas de doute sur une pièce, chapitres-la quand même avec le label le plus probable — il vaut mieux un chapter approximatif qu'une pièce manquante.
+- Une cuisine se reconnaît aux placards, plan de travail, évier ou appareils électroménagers. Ne la confonds pas avec un séjour même si elle est ouverte.
+
 Labels autorisés : Extérieur, Entrée, Couloir, Salon, Séjour, Cuisine, Chambre parentale, Chambre 1, Chambre 2, Chambre 3, Chambre enfant, Salle de bain, Salle d'eau, WC, Bureau, Dressing, Terrasse, Balcon, Cave.`
 
 export type VideoTag = { label: string; category: string; confidence: number }
