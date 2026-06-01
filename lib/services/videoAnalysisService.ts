@@ -5,11 +5,14 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk'
+import cloudinary from '@/lib/cloudinary'
 
 const MODEL = 'claude-sonnet-4-20250514'
-const MAX_FRAMES = 10
-const FRAME_INTERVAL_SEC = 4
+const MAX_FRAMES = 20
+const FRAME_INTERVAL_SEC = 2
 const MAX_TOKENS = 2000
+const DEFAULT_DURATION_SEC = 60
+const MIN_FRAME_BYTES = 1000
 
 const SYSTEM_PROMPT = `Tu es un expert immobilier parisien qui analyse des frames extraites d'une vidéo de visite immobilière.
 
@@ -154,32 +157,51 @@ export async function analyzeVideo(
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return { tags: [], chapters: [] }
 
+  let durationSec: number = DEFAULT_DURATION_SEC
+  try {
+    const resource = (await cloudinary.api.resource(publicId, {
+      resource_type: 'video',
+      media_metadata: true,
+    })) as Record<string, unknown> & {
+      duration?: number
+      video?: { duration?: number }
+    }
+    console.log('[analyzeVideo] cloudinary resource keys:', Object.keys(resource))
+    durationSec = resource.duration ?? resource.video?.duration ?? DEFAULT_DURATION_SEC
+  } catch (err) {
+    console.error('[analyzeVideo] cloudinary.api.resource failed:', err)
+  }
+  const maxSec = Math.floor(durationSec)
+  console.log('[analyzeVideo] durationSec:', durationSec, 'maxSec:', maxSec)
+
   const frames: Array<{ sec: number; url: string }> = []
   for (let i = 0; i < MAX_FRAMES; i++) {
     const sec = i * FRAME_INTERVAL_SEC
+    if (sec > maxSec) break
     frames.push({ sec, url: frameUrl(cloud, publicId, sec) })
   }
   console.log('[analyzeVideo] frames générées:', frames.length, 'première URL:', frames[0]?.url)
 
-  const downloads = await Promise.all(
+  const results = await Promise.all(
     frames.map(async (f) => {
       try {
-        const r = await fetch(f.url)
-        if (!r.ok) return null
-        const ab = await r.arrayBuffer()
-        return { sec: f.sec, data: Buffer.from(ab).toString('base64') }
+        const res = await fetch(f.url)
+        if (!res.ok) return null
+        const buffer = await res.arrayBuffer()
+        if (buffer.byteLength < MIN_FRAME_BYTES) return null
+        return { sec: f.sec, data: Buffer.from(buffer).toString('base64') }
       } catch {
         return null
       }
     }),
   )
-  const fetched = downloads.filter((d): d is { sec: number; data: string } => d !== null)
-  console.log('[analyzeVideo] frames téléchargées:', fetched.length, '/', frames.length)
-  if (fetched.length === 0) return { tags: [], chapters: [] }
+  const validFrames = results.filter((r): r is NonNullable<typeof r> => r !== null)
+  console.log('[analyzeVideo] frames téléchargées:', validFrames.length, '/', frames.length)
+  if (validFrames.length === 0) return { tags: [], chapters: [] }
 
   const client = new Anthropic({ apiKey })
 
-  const imageBlocks = fetched.map((f) => ({
+  const imageBlocks = validFrames.map((f) => ({
     type: 'image' as const,
     source: {
       type: 'base64' as const,
@@ -188,10 +210,11 @@ export async function analyzeVideo(
     },
   }))
 
-  const userText = `Voici ${fetched.length} frames extraites toutes les ${FRAME_INTERVAL_SEC}s à partir de la seconde 0 (frame 1 = 0s, frame 2 = ${FRAME_INTERVAL_SEC}s, etc.). Analyse-les et retourne le JSON demandé.`
+  const frameList = validFrames.map((f, i) => `Frame ${i + 1} = ${f.sec}s`).join(', ')
+  const userText = `Voici ${validFrames.length} frames extraites de la vidéo (${frameList}). Analyse-les et retourne le JSON demandé.`
 
-  console.log('[analyzeVideo] avant Claude — nbFrames:', fetched.length,
-    'first3sec:', fetched.slice(0, 3).map((f) => f.sec),
+  console.log('[analyzeVideo] avant Claude — nbFrames:', validFrames.length,
+    'first3sec:', validFrames.slice(0, 3).map((f) => f.sec),
     'systemPromptChars:', SYSTEM_PROMPT.length)
 
   try {
