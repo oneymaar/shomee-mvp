@@ -422,15 +422,25 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const sumAutresMedias = `${photos.length} photo${photos.length > 1 ? 's' : ''}${plans.length > 0 ? ` · ${plans.length} plan(s)` : ''}${matterportUrl ? ' · Visite virtuelle' : ''}`
   const sumMandat     = `${MANDAT_OPTIONS.find((o) => o.value === form.mandatType)?.label ?? '—'}${form.avantPremiere ? ' · Avant-première' : ''}`
 
+  const resetVideoAnalysis = () => {
+    setVideoAnalysisStarted(false)
+    setChapters(INITIAL_CHAPTERS)
+    setAnalysisJustDone(null)
+    if (aiTagLabels.size > 0) {
+      update({ tags: form.tags.filter((t) => !aiTagLabels.has(t)) })
+    }
+    setAiTagLabels(new Set())
+  }
+
   const handleVideoUploaded = (url: string) => {
+    resetVideoAnalysis()
     update({ videoUrl: url })
-    setVideoAnalysisStarted(true)
     setOpenSection('video')
   }
 
   const removeVideo = () => {
+    resetVideoAnalysis()
     update({ videoUrl: undefined })
-    setVideoAnalysisStarted(false)
     setVideoDuration(0)
   }
 
