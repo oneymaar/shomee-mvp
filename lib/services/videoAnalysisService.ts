@@ -131,9 +131,14 @@ export async function analyzeVideo(
   try {
     const resource = (await cloudinary.api.resource(publicId, {
       resource_type: 'video',
-      media_metadata: false,
-    })) as { duration?: number }
+    })) as Record<string, unknown> & {
+      duration?: number
+      video?: { duration?: number }
+    }
+    console.log('[analyzeVideo] cloudinary resource keys:', Object.keys(resource))
+    console.log('[analyzeVideo] cloudinary resource.duration:', resource.duration, 'resource.video?.duration:', resource.video?.duration)
     if (typeof resource.duration === 'number') durationSec = resource.duration
+    else if (typeof resource.video?.duration === 'number') durationSec = resource.video.duration
   } catch (err) {
     console.error('[analyzeVideo] cloudinary.api.resource failed:', err)
   }
