@@ -452,27 +452,6 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     setVideoDuration(0)
   }
 
-  const addChapter = () => {
-    if (videoDuration <= 0) return
-    // Place the new marker at the centre of the largest section between
-    // existing markers (with 0 and videoDuration as virtual boundaries).
-    const boundaries = [0, ...chapters.map((c) => c.startSec), videoDuration].sort((a, b) => a - b)
-    let bestStart = videoDuration / 2
-    let bestSize = -1
-    for (let i = 0; i < boundaries.length - 1; i++) {
-      const size = boundaries[i + 1] - boundaries[i]
-      if (size > bestSize) {
-        bestSize = size
-        bestStart = (boundaries[i] + boundaries[i + 1]) / 2
-      }
-    }
-    const startSec = Math.max(0, Math.min(videoDuration, bestStart))
-    setChapters((prev) => [
-      ...prev,
-      { id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, label: 'Nouveau', startSec },
-    ])
-  }
-
   return (
     <div>
       {/* ── Sticky header + progress bar ─────────────────────────────── */}
@@ -1085,21 +1064,6 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                       chapters={chapters}
                       onChange={setChapters}
                     />
-
-                    <p className="text-[11px] text-gray-400 text-center mt-2 leading-snug">
-                      Les temps forts aident les acquéreurs à se repérer dans votre vidéo. Déplacez-les, renommez-les, ajoutez-en ou supprimez-en selon vos besoins.
-                    </p>
-
-                    <div className="flex justify-center mt-3">
-                      <button
-                        type="button"
-                        onClick={addChapter}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-[12px] font-medium text-[#0a0a0a] active:bg-gray-50"
-                      >
-                        <Plus size={13} />
-                        Ajouter un temps fort
-                      </button>
-                    </div>
                   </div>
                 )}
               </>
