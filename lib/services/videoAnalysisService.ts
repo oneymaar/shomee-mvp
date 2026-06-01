@@ -30,7 +30,7 @@ RÈGLE CRITIQUE pour le style architectural : base-toi UNIQUEMENT sur l'intérie
 
 Ne mets que des tags avec confidence > 0.7. Préfère ne pas taguer plutôt que d'inventer.`
 
-const CHAPTERS_SYSTEM_PROMPT = `Tu es un expert immobilier. Analyse cette séquence de frames d'une visite immobilière pour identifier les changements de pièce.
+const CHAPTERS_PROMPT_HEAD = `Tu es un expert immobilier. Analyse cette séquence de frames d'une visite immobilière pour identifier les changements de pièce.
 
 Chaque frame est précédée de son timestamp exact (ex: "=== FRAME 5 — 4s ===").
 
@@ -43,9 +43,9 @@ RÈGLES :
 - Si la même pièce apparaît à nouveau plus tard, crée un nouveau chapter avec le nouveau timestamp.
 - Pour les chambres multiples : "Chambre parentale", "Chambre 1", "Chambre 2", "Chambre enfant".
 - Tous les startSec doivent être entre 0 et la durée totale de la vidéo.
-- Ne jamais inventer un timestamp qui n'existe pas dans la liste des frames.
+- Ne jamais inventer un timestamp qui n'existe pas dans la liste des frames.`
 
-RÈGLES D'EXHAUSTIVITÉ — CRITIQUES :
+const CHAPTERS_PROMPT_TAIL = `RÈGLES D'EXHAUSTIVITÉ — CRITIQUES :
 - Toute pièce contenant un lit DOIT être chapitrée. Un grand lit double = chambre parentale. Un lit simple ou jouets = chambre enfant ou Chambre 1/2/3.
 - Si deux chapters consécutifs sont séparés de plus de 5 secondes, relis attentivement les frames intermédiaires — il y a probablement une pièce manquante entre les deux.
 - Un balcon ou une terrasse visible depuis une chambre doit être chapitré séparément si on le montre clairement.
@@ -54,12 +54,45 @@ RÈGLES D'EXHAUSTIVITÉ — CRITIQUES :
 
 Labels autorisés : Extérieur, Entrée, Couloir, Salon, Séjour, Cuisine, Chambre parentale, Chambre 1, Chambre 2, Chambre 3, Chambre enfant, Salle de bain, Salle d'eau, WC, Bureau, Dressing, Terrasse, Balcon, Cave.`
 
+function buildContextBlock(context?: PropertyContext): string {
+  if (!context) return ''
+  const lines: string[] = []
+  if (context.rooms != null) lines.push(`- Nombre de pièces : ${context.rooms}`)
+  if (context.bedrooms != null) lines.push(`- Nombre de chambres : ${context.bedrooms}`)
+  if (context.composition && context.composition.length > 0) {
+    const summary = context.composition.map((p) => `${p.label} (${p.surface}m²)`).join(', ')
+    lines.push(`- Composition connue : ${summary}`)
+  }
+  if (context.description) {
+    lines.push(`- Description : ${context.description.slice(0, 200)}`)
+  }
+  if (lines.length === 0) return ''
+  const target = context.bedrooms != null ? `${context.bedrooms}` : 'plusieurs'
+  return `
+CONTEXTE DU BIEN (utilise-le comme référence, pas comme vérité absolue) :
+${lines.join('\n')}
+
+Si le bien a ${target} chambre(s), cherche activement ces pièces dans la vidéo même si la transition est rapide.
+`
+}
+
+function buildChaptersSystemPrompt(context?: PropertyContext): string {
+  return `${CHAPTERS_PROMPT_HEAD}\n${buildContextBlock(context)}\n${CHAPTERS_PROMPT_TAIL}`
+}
+
 export type VideoTag = { label: string; category: string; confidence: number }
 export type VideoChapter = { label: string; startSec: number }
 
 export type VideoAnalysisResult = {
   tags: VideoTag[]
   chapters: VideoChapter[]
+}
+
+export type PropertyContext = {
+  rooms?: number
+  bedrooms?: number
+  composition?: Array<{ label: string; surface: number }>
+  description?: string
 }
 
 type Frame = { sec: number; data: string }
@@ -201,6 +234,7 @@ async function callChapters(
   client: Anthropic,
   validFrames: Frame[],
   effectiveDuration: number,
+  context?: PropertyContext,
 ): Promise<VideoChapter[]> {
   const content = validFrames.flatMap((f, i) => [
     { type: 'text' as const, text: `=== FRAME ${i + 1} — ${f.sec}s ===` },
@@ -218,7 +252,7 @@ async function callChapters(
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      system: CHAPTERS_SYSTEM_PROMPT,
+      system: buildChaptersSystemPrompt(context),
       messages: [
         {
           role: 'user',
@@ -241,6 +275,7 @@ async function callChapters(
 export async function analyzeVideo(
   videoUrl: string,
   _propertyId: string,
+  context?: PropertyContext,
 ): Promise<VideoAnalysisResult> {
   void _propertyId
 
@@ -287,7 +322,7 @@ export async function analyzeVideo(
   const client = new Anthropic({ apiKey })
   const [tags, chapters] = await Promise.all([
     callTags(client, validFrames),
-    callChapters(client, validFrames, effectiveDuration),
+    callChapters(client, validFrames, effectiveDuration, context),
   ])
 
   return { tags, chapters }

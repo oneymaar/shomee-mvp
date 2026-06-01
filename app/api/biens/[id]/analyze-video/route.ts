@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server'
 import { TagSource, VideoAnalysisStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { authenticateBearer } from '@/lib/auth/bearer'
-import { analyzeVideo, getVideoDuration, VIDEO_MAX_DURATION_SEC } from '@/lib/services/videoAnalysisService'
+import {
+  analyzeVideo,
+  getVideoDuration,
+  VIDEO_MAX_DURATION_SEC,
+  type PropertyContext,
+} from '@/lib/services/videoAnalysisService'
 import { computeCompletionRate } from '@/lib/completion'
 
 export const dynamic = 'force-dynamic'
@@ -40,7 +45,14 @@ export async function POST(
     )
   }
 
-  const { tags, chapters } = await analyzeVideo(property.videoUrl, property.id)
+  const context: PropertyContext = {
+    rooms: property.rooms ?? undefined,
+    bedrooms: property.bedrooms ?? undefined,
+    composition: (property.composition as Array<{ label: string; surface: number }> | null) ?? undefined,
+    description: property.description ?? undefined,
+  }
+
+  const { tags, chapters } = await analyzeVideo(property.videoUrl, property.id, context)
 
   await prisma.$transaction(async (tx) => {
     if (tags.length > 0) {
