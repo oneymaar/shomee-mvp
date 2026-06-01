@@ -180,7 +180,10 @@ async function callTags(client: Anthropic, validFrames: Frame[]): Promise<VideoT
     })
     const block = res.content[0]
     if (!block || block.type !== 'text') return []
-    return parseTagsJson(block.text)
+    const parsed = parseTagsJson(block.text)
+    console.log('[analyzeVideo] tags raw (1000c):', block.text.slice(0, 1000))
+    console.log('[analyzeVideo] tags parsed:', parsed.length, JSON.stringify(parsed))
+    return parsed
   } catch (err) {
     console.error('[analyzeVideo] tags call failed:', err)
     return []
@@ -218,7 +221,10 @@ async function callChapters(
     })
     const block = res.content[0]
     if (!block || block.type !== 'text') return []
-    return parseChaptersJson(block.text, effectiveDuration)
+    const parsed = parseChaptersJson(block.text, effectiveDuration)
+    console.log('[analyzeVideo] chapters raw (1500c):', block.text.slice(0, 1500))
+    console.log('[analyzeVideo] chapters parsed:', parsed.length, JSON.stringify(parsed))
+    return parsed
   } catch (err) {
     console.error('[analyzeVideo] chapters call failed:', err)
     return []
