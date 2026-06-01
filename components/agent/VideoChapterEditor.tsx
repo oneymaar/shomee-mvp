@@ -126,7 +126,7 @@ export default function VideoChapterEditor({
   }
 
   return (
-    <div className="pt-8 pb-20">
+    <div className="pt-8 pb-32">
       {/* 3px line — all chapter satellites position from here */}
       <div ref={timelineRef} className="relative h-[3px]" style={{ touchAction: 'none' }}>
         {/* Stories-style segmented rail */}
@@ -141,9 +141,8 @@ export default function VideoChapterEditor({
           />
         ))}
 
-        {sortedChapters.map((c, sortedIdx) => {
+        {sortedChapters.map((c) => {
           const pct = Math.min(100, Math.max(0, (c.startSec / duration) * 100))
-          const isEven = sortedIdx % 2 === 0
 
           return (
             <Fragment key={c.id}>
@@ -194,20 +193,35 @@ export default function VideoChapterEditor({
                 {fmtTime(c.startSec)}
               </span>
 
-              {/* Label — staggered: even index at +20px, odd index at +36px */}
-              <input
-                type="text"
-                value={c.label}
-                onChange={(e) => updateChapter(c.id, { label: e.target.value })}
+              {/* Label — vertical (bottom-to-top), aligned to top of the
+                  label band right below the timestamp, centered on the marker. */}
+              <div
                 style={{
                   left: `${pct}%`,
-                  top: `calc(100% + ${isEven ? 26 : 42}px)`,
+                  top: 'calc(100% + 24px)',
                   transform: 'translateX(-50%)',
-                  minWidth: 80,
-                  maxWidth: 100,
+                  height: 80,
+                  width: 18,
                 }}
-                className="absolute text-[11px] text-center bg-transparent text-[#0a0a0a] border-b border-transparent focus:border-violet-400 focus:outline-none px-1 leading-tight"
-              />
+                className="absolute pointer-events-none"
+              >
+                <input
+                  type="text"
+                  value={c.label}
+                  onChange={(e) => updateChapter(c.id, { label: e.target.value })}
+                  style={{
+                    width: 80,
+                    transform: 'rotate(-90deg)',
+                    transformOrigin: 'center',
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginLeft: -40,
+                    marginTop: -10,
+                  }}
+                  className="text-[11px] text-center bg-transparent text-[#0a0a0a] border-b border-transparent focus:border-violet-400 focus:outline-none px-1 leading-tight pointer-events-auto"
+                />
+              </div>
             </Fragment>
           )
         })}
