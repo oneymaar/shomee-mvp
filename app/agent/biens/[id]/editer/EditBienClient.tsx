@@ -59,7 +59,7 @@ const INITIAL_CHAPTERS: Chapter[] = [
 
 type SectionKey =
   | 'general' | 'features' | 'specs' | 'composition' | 'copro'
-  | 'energy' | 'finance' | 'annonce' | 'medias' | 'mandat'
+  | 'energy' | 'finance' | 'annonce' | 'video' | 'autres_medias' | 'mandat'
 
 export default function EditBienClient({ initialProperty }: { initialProperty: Property }) {
   const router = useRouter()
@@ -418,13 +418,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const sumEnergy     = `DPE ${energy.consoLabel || '—'} · GES ${energy.gesLabel || '—'}`
   const sumFinance    = priceFmt
   const sumAnnonce    = `${form.description.length} caractères`
-  const sumMedias     = `${form.videoUrl ? '1 vidéo · ' : 'Pas de vidéo · '}${photos.length} photo${photos.length > 1 ? 's' : ''}`
+  const sumVideo      = form.videoUrl ? 'Vidéo uploadée' : 'Aucune vidéo'
+  const sumAutresMedias = `${photos.length} photo${photos.length > 1 ? 's' : ''}${plans.length > 0 ? ` · ${plans.length} plan(s)` : ''}${matterportUrl ? ' · Visite virtuelle' : ''}`
   const sumMandat     = `${MANDAT_OPTIONS.find((o) => o.value === form.mandatType)?.label ?? '—'}${form.avantPremiere ? ' · Avant-première' : ''}`
 
   const handleVideoUploaded = (url: string) => {
     update({ videoUrl: url })
     setVideoAnalysisStarted(true)
-    setOpenSection('medias')
+    setOpenSection('video')
   }
 
   const removeVideo = () => {
@@ -1020,12 +1021,12 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           </button>
         </Section>
 
-        {/* ─── 9. Médias ──────────────────────────────────────────────── */}
+        {/* ─── 9. Vidéo ───────────────────────────────────────────────── */}
         <Section
-          title="Médias"
-          summary={sumMedias}
-          open={openSection === 'medias'}
-          onToggle={() => toggleSection('medias')}
+          title="Vidéo"
+          summary={sumVideo}
+          open={openSection === 'video'}
+          onToggle={() => toggleSection('video')}
         >
           {/* Vidéo */}
           <SubSection
@@ -1195,7 +1196,15 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               </>
             )}
           </SubSection>
+        </Section>
 
+        {/* ─── 10. Médias ─────────────────────────────────────────────── */}
+        <Section
+          title="Médias"
+          summary={sumAutresMedias}
+          open={openSection === 'autres_medias'}
+          onToggle={() => toggleSection('autres_medias')}
+        >
           {/* Photos */}
           <SubSection title="Photos">
             {photos.length === 0 ? (
@@ -1323,7 +1332,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           </SubSection>
         </Section>
 
-        {/* ─── 10. Mandat ─────────────────────────────────────────────── */}
+        {/* ─── 11. Mandat ─────────────────────────────────────────────── */}
         <Section
           title="Mandat"
           summary={sumMandat}
