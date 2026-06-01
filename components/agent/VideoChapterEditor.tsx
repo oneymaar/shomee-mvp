@@ -21,7 +21,7 @@ const LABEL_Y1 = TRACK_Y + TRACK_H + 16
 const LABEL_Y2 = LABEL_Y1 + ROW_OFFSET
 const TS_Y1 = TRACK_Y + TRACK_H + 27
 const TS_Y2 = TS_Y1 + ROW_OFFSET
-const CANVAS_H = 155
+const CANVAS_H = 135
 const LABEL_GAP = 6
 
 export default function VideoChapterEditor({
@@ -38,6 +38,7 @@ export default function VideoChapterEditor({
   const [editorPos, setEditorPos] = useState({ x: 0, y: 0 })
   const [editorVal, setEditorVal] = useState('')
   const [nextId, setNextId] = useState(100)
+  const [pendingFocusId, setPendingFocusId] = useState<string | null>(null)
 
   const pxPerSec = useRef(28)
   const W = useRef(0)
@@ -260,20 +261,63 @@ export default function VideoChapterEditor({
     draw(curSecRef.current)
   }, [chapters, draw])
 
-  // Video → timeline : keep the playhead in sync while the buyer/agent plays
-  // the video. We avoid setting video.currentTime here to prevent feedback
-  // loops (timeupdate fires while the video is playing on its own).
+  // Video → timeline : drive the playhead with requestAnimationFrame while
+  // the video is playing. `timeupdate` only fires ~4×/sec which makes the
+  // canvas jerk; rAF gives us 60fps smoothness, matching the native video
+  // progress bar.
   useEffect(() => {
     const video = videoRef?.current
     if (!video) return
-    const onTimeUpdate = () => {
-      const t = video.currentTime
+
+    let rafId: number | null = null
+    let lastT = -1
+
+    const applyTime = (t: number) => {
       curSecRef.current = t
       setCurSec(t)
       draw(t)
     }
-    video.addEventListener('timeupdate', onTimeUpdate)
-    return () => video.removeEventListener('timeupdate', onTimeUpdate)
+
+    const tick = () => {
+      const t = video.currentTime
+      if (Math.abs(t - lastT) > 0.0005) {
+        lastT = t
+        applyTime(t)
+      }
+      rafId = requestAnimationFrame(tick)
+    }
+
+    const startLoop = () => {
+      if (rafId === null) rafId = requestAnimationFrame(tick)
+    }
+    const stopLoop = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId)
+        rafId = null
+      }
+      // Final sync to capture the resting position.
+      applyTime(video.currentTime)
+    }
+    const onSeeked = () => {
+      if (rafId === null) applyTime(video.currentTime)
+    }
+
+    video.addEventListener('play', startLoop)
+    video.addEventListener('playing', startLoop)
+    video.addEventListener('pause', stopLoop)
+    video.addEventListener('ended', stopLoop)
+    video.addEventListener('seeked', onSeeked)
+
+    if (!video.paused) startLoop()
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      video.removeEventListener('play', startLoop)
+      video.removeEventListener('playing', startLoop)
+      video.removeEventListener('pause', stopLoop)
+      video.removeEventListener('ended', stopLoop)
+      video.removeEventListener('seeked', onSeeked)
+    }
   }, [videoRef, draw])
 
   const updateCurSec = (s: number) => {
@@ -308,8 +352,28 @@ export default function VideoChapterEditor({
     setEditorPos({ x, y: TRACK_Y + TRACK_H + 2 + (row === 0 ? 0 : ROW_OFFSET) })
     setEditorVal(ch.label)
     setEditingId(ch.id)
-    setTimeout(() => { editorRef.current?.focus(); editorRef.current?.select() }, 10)
+    setTimeout(() => {
+      const el = editorRef.current
+      if (!el) return
+      el.focus()
+      el.select()
+      // Make sure the input stays visible above the on-screen keyboard.
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
+    }, 50)
   }
+
+  // After adding a chapter, the new chapter only exists in `chapters` once
+  // the parent re-renders. This effect picks up that re-render and opens the
+  // editor on the freshly added marker.
+  useEffect(() => {
+    if (!pendingFocusId) return
+    const ch = chapters.find((c) => c.id === pendingFocusId)
+    if (ch) {
+      openEditor(ch)
+      setPendingFocusId(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapters, pendingFocusId])
 
   const commitEdit = () => {
     if (editingId) {
@@ -403,13 +467,15 @@ export default function VideoChapterEditor({
   }, [chapters, duration, editingId, onChange])
 
   const addChapter = () => {
+    const id = String(nextId)
     const newChapter: Chapter = {
-      id: String(nextId),
+      id,
       label: 'Nouvelle pièce',
       startSec: parseFloat(curSecRef.current.toFixed(2))
     }
     setNextId(n => n + 1)
     onChange([...chapters, newChapter])
+    setPendingFocusId(id)
   }
 
   return (
