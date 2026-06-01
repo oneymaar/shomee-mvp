@@ -32,7 +32,14 @@ Pour les tags, extrais des caractéristiques objectives et qualitatives :
 Ne mets que des tags avec confidence > 0.7.
 
 Pour les chapters, identifie chaque changement de pièce avec son timestamp estimé en secondes.
-Les labels de pièces doivent être : Entrée, Salon, Séjour, Cuisine, Chambre, Salle de bain, Salle d'eau, Bureau, Dressing, Terrasse, Balcon, Cave, Extérieur.`
+Règles importantes :
+- Si la même pièce apparaît plusieurs fois dans la vidéo à des moments différents, crée un chapter distinct pour chaque apparition.
+- Pour les chambres multiples, numérote-les : "Chambre 1", "Chambre 2", "Chambre 3"...
+- Si tu détectes des indices d'une chambre parentale (grand lit double, dressing attenant, salle de bain privative), nomme-la "Chambre parentale".
+- Si tu détectes une chambre d'enfant (lit simple, jouets, décoration enfant), nomme-la "Chambre enfant".
+- Si le salon apparaît en début et en fin de vidéo, crée deux chapters "Salon" avec leurs timestamps respectifs.
+- Ne fusionne jamais deux apparitions distinctes d'une pièce en un seul chapter.
+- Les labels autorisés sont : Entrée, Salon, Séjour, Cuisine, Chambre parentale, Chambre 1, Chambre 2, Chambre 3, Chambre enfant, Salle de bain, Salle d'eau, Bureau, Dressing, Terrasse, Balcon, Cave, Extérieur, Couloir, WC.`
 
 export type VideoTag = { label: string; category: string; confidence: number }
 export type VideoChapter = { label: string; startSec: number }
