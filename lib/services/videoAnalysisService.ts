@@ -159,8 +159,11 @@ export async function analyzeVideo(
 
   const userText = `Voici ${frames.length} frames extraites toutes les ${FRAME_INTERVAL_SEC}s à partir de la seconde 0 (frame 1 = 0s, frame 2 = ${FRAME_INTERVAL_SEC}s, etc.). Analyse-les et retourne le JSON demandé.`
 
+  console.log('[analyzeVideo] avant Claude — nbFrames:', frames.length,
+    'first3:', frames.slice(0, 3).map((f) => f.url),
+    'systemPromptChars:', SYSTEM_PROMPT.length)
+
   try {
-    console.log('[analyzeVideo] envoi à Claude, nb images:', imageBlocks.length)
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
@@ -176,9 +179,19 @@ export async function analyzeVideo(
       ],
     })
     const block = res.content[0]
-    console.log('[analyzeVideo] réponse Claude brute:', block?.type, block?.type === 'text' ? block.text.slice(0, 500) : 'non-text')
+    const rawText = block?.type === 'text' ? block.text : ''
+    console.log('[analyzeVideo] réponse Claude brute (1000 char):', block?.type,
+      rawText ? rawText.slice(0, 1000) : 'non-text')
     if (!block || block.type !== 'text') return { tags: [], chapters: [] }
-    return parseClaudeJson(block.text)
+    const parsedResult = parseClaudeJson(block.text)
+    console.log('[analyzeVideo] parseClaudeJson result:',
+      'tags=', parsedResult.tags.length,
+      'chapters=', parsedResult.chapters.length,
+      'sample:', JSON.stringify({
+        tag0: parsedResult.tags[0],
+        chapter0: parsedResult.chapters[0],
+      }))
+    return parsedResult
   } catch (err) {
     console.error('[analyzeVideo] Anthropic error:', err)
     return { tags: [], chapters: [] }
