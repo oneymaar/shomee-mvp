@@ -260,6 +260,22 @@ export default function VideoChapterEditor({
     draw(curSecRef.current)
   }, [chapters, draw])
 
+  // Video → timeline : keep the playhead in sync while the buyer/agent plays
+  // the video. We avoid setting video.currentTime here to prevent feedback
+  // loops (timeupdate fires while the video is playing on its own).
+  useEffect(() => {
+    const video = videoRef?.current
+    if (!video) return
+    const onTimeUpdate = () => {
+      const t = video.currentTime
+      curSecRef.current = t
+      setCurSec(t)
+      draw(t)
+    }
+    video.addEventListener('timeupdate', onTimeUpdate)
+    return () => video.removeEventListener('timeupdate', onTimeUpdate)
+  }, [videoRef, draw])
+
   const updateCurSec = (s: number) => {
     const clamped = Math.max(0, Math.min(duration, s))
     curSecRef.current = clamped
