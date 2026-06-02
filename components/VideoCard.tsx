@@ -137,11 +137,12 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const handleTap = (clientX: number, rect: DOMRect) => {
     const video = videoRef.current
     if (!video) return
+    if (normalizedChapters.length === 0) return // no chapters → tap is inert; hold still pauses
 
     const ratio = (clientX - rect.left) / rect.width
 
-    if (ratio < 0.3 && normalizedChapters.length > 0) {
-      // Tap left — previous chapter (or restart current if > 1.5s in)
+    if (ratio < 0.5) {
+      // Left half — previous chapter (or restart current if > 1.5s in)
       const t = video.currentTime
       let curIdx = 0
       for (let i = 0; i < normalizedChapters.length; i++) {
@@ -158,18 +159,14 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         video.currentTime = target.startSec
         showChapterLabel(target.label)
       }
-    } else if (ratio > 0.7 && normalizedChapters.length > 0) {
-      // Tap right — next chapter
+    } else {
+      // Right half — next chapter
       const t = video.currentTime
       const next = normalizedChapters.find((c) => c.startSec > t + 0.5)
       if (next) {
         video.currentTime = next.startSec
         showChapterLabel(next.label)
       }
-    } else {
-      // Center zone — play / pause
-      if (video.paused) video.play().catch(() => {})
-      else video.pause()
     }
   }
 

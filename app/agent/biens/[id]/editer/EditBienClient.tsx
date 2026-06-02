@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
   Sparkles, MapPin, Image as ImageIcon, Cable, Globe, Loader2,
+  Volume2, VolumeX,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
@@ -105,6 +106,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [aiTagLabels, setAiTagLabels] = useState<Set<string>>(new Set())
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
+  const [editorVideoMuted, setEditorVideoMuted] = useState(false)
   const [chapters, setChapters] = useState<Chapter[]>(() => chaptersFromProperty(initialProperty))
   const [showChapterModal, setShowChapterModal] = useState(false)
 
@@ -1133,18 +1135,35 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           >
             {form.videoUrl ? (
               <>
-                <video
-                  ref={videoRef}
-                  src={form.videoUrl}
-                  preload="metadata"
-                  controls
-                  playsInline
-                  onLoadedMetadata={() => {
-                    if (videoRef.current) setVideoDuration(videoRef.current.duration || 0)
-                  }}
-                  className="w-full rounded-xl bg-black"
-                  style={{ aspectRatio: '9 / 16' }}
-                />
+                <div className="relative">
+                  <video
+                    ref={videoRef}
+                    src={form.videoUrl}
+                    preload="metadata"
+                    controls
+                    playsInline
+                    onLoadedMetadata={() => {
+                      if (videoRef.current) setVideoDuration(videoRef.current.duration || 0)
+                    }}
+                    onVolumeChange={(e) => setEditorVideoMuted(e.currentTarget.muted)}
+                    className="w-full rounded-xl bg-black"
+                    style={{ aspectRatio: '9 / 16' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = videoRef.current
+                      if (!v) return
+                      v.muted = !v.muted
+                    }}
+                    aria-label={editorVideoMuted ? 'Activer le son' : 'Couper le son'}
+                    className="absolute top-2 right-2 w-9 h-9 z-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 active:scale-95 transition-transform"
+                  >
+                    {editorVideoMuted
+                      ? <VolumeX size={15} className="text-white" />
+                      : <Volume2 size={15} className="text-white" />}
+                  </button>
+                </div>
 
                 {videoAnalysisStarted && (
                   <div className="mt-4">
