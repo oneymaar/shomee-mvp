@@ -46,7 +46,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
     <div
       className={clsx(
         'absolute right-3 z-20 flex flex-col items-center gap-6',
-        previewMode && 'pointer-events-none opacity-50',
+        previewMode && 'pointer-events-none grayscale brightness-75',
       )}
       style={{ bottom: 'calc(var(--nav-h) + 112px)' }}
     >

@@ -25,6 +25,7 @@ const DPE_COLORS: Record<string, string> = {
 const BADGE_LETTER_STYLE: React.CSSProperties = {
   color: 'white',
   WebkitTextStroke: '1.2px black',
+  paintOrder: 'stroke fill',
   fontWeight: 900,
   fontSize: 20,
   lineHeight: 1,
@@ -491,7 +492,7 @@ export default function PropertyDetailSheet({
                     </div>
 
                     {/* Quartier */}
-                    {property.mapLat && property.mapLng && (
+                    {(previewMode || (property.mapLat && property.mapLng)) && (
                       <div>
                         <SectionTitle>Quartier</SectionTitle>
                         {property.irisZone && (
@@ -502,15 +503,28 @@ export default function PropertyDetailSheet({
                             )}
                           </div>
                         )}
+                        {previewMode && !property.irisZone && (
+                          <div className="mb-3">
+                            <p className="text-neutral-300 italic text-sm">— Quartier non renseigné</p>
+                          </div>
+                        )}
 
                         <GreyBox className="overflow-hidden mb-3" style={{ height: 200, isolation: 'isolate' }}>
-                          <MapZone
-                            lat={property.mapLat}
-                            lng={property.mapLng}
-                            polygon={property.irisPolygon}
-                            transports={property.mapTransports}
-                            pois={property.mapPois}
-                          />
+                          {property.mapLat && property.mapLng ? (
+                            <MapZone
+                              lat={property.mapLat}
+                              lng={property.mapLng}
+                              polygon={property.irisPolygon}
+                              transports={property.mapTransports}
+                              pois={property.mapPois}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center w-full h-full text-center px-6">
+                              <Map size={28} className="text-neutral-300 mb-2" />
+                              <p className="text-neutral-400 text-xs">Carte non disponible</p>
+                              <p className="text-neutral-300 text-[11px] mt-0.5">Sera générée à la publication.</p>
+                            </div>
+                          )}
                         </GreyBox>
 
                         {/* Transports groupés par type */}
@@ -724,7 +738,7 @@ export default function PropertyDetailSheet({
                 {!hideBottomBar && <div
                   className={clsx(
                     'absolute left-0 right-0 px-3 flex gap-2 items-center z-20',
-                    previewMode && 'pointer-events-none opacity-50',
+                    previewMode && 'pointer-events-none grayscale brightness-90',
                   )}
                   style={{ bottom: 8, filter: 'drop-shadow(0 -2px 12px rgba(0,0,0,0.12))' }}
                 >

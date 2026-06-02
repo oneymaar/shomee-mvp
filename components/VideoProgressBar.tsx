@@ -1,46 +1,27 @@
 'use client'
 
-import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useEffect, useCallback, forwardRef } from 'react'
 
 export interface Chapter {
   label: string
   fraction: number
 }
 
-export interface VideoProgressBarHandle {
-  flashLabel: (label: string, fraction: number) => void
-}
+/** Empty handle kept for backwards compatibility with existing refs. */
+export type VideoProgressBarHandle = Record<string, never>
 
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement | null>
   chapters?: Chapter[]
 }
 
-const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters }, ref) {
-  const trackRef   = useRef<HTMLDivElement>(null)
-  const tooltipRef = useRef<HTMLDivElement>(null)
-  const labelRef   = useRef<HTMLSpanElement>(null)
-  const fillRefs   = useRef<(HTMLDivElement | null)[]>([])
-  const rafId      = useRef<number>(0)
-  const scrubbing  = useRef(false)
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const fillRefs = useRef<(HTMLDivElement | null)[]>([])
+  const rafId    = useRef<number>(0)
+  const scrubbing = useRef(false)
 
   const segs = chapters && chapters.length >= 2 ? chapters : null
-
-  useImperativeHandle(ref, () => ({
-    flashLabel: (label: string, fraction: number) => {
-      const el = tooltipRef.current
-      const lb = labelRef.current
-      if (!el || !lb) return
-      el.style.left    = `${Math.max(5, Math.min(90, fraction * 100))}%`
-      el.style.opacity = '1'
-      lb.textContent   = label
-      if (flashTimer.current) clearTimeout(flashTimer.current)
-      flashTimer.current = setTimeout(() => {
-        if (tooltipRef.current) tooltipRef.current.style.opacity = '0'
-      }, 1000)
-    },
-  }))
 
   /* ─── Paint fills from 0-1 fraction (pure DOM, no re-renders) ─────────── */
   const paint = useCallback((f: number) => {
@@ -80,40 +61,18 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
     return Math.max(0, Math.min(1, (clientX - r.left) / r.width))
   }, [])
 
-  const chapterAt = useCallback((f: number): Chapter | null => {
-    if (!segs) return null
-    let cur = segs[0]
-    for (const ch of segs) if (f >= ch.fraction) cur = ch
-    return cur
-  }, [segs])
-
-  const moveTooltip = useCallback((f: number) => {
-    const ch = chapterAt(f)
-    const el = tooltipRef.current
-    const lb = labelRef.current
-    if (!el || !lb || !ch) return
-    el.style.left    = `${Math.max(5, Math.min(90, f * 100))}%`
-    el.style.opacity = '1'
-    lb.textContent   = ch.label
-  }, [chapterAt])
-
-  const hideTooltip = () => { if (tooltipRef.current) tooltipRef.current.style.opacity = '0' }
-
   /* Touch */
   const onTouchStart = (e: React.TouchEvent) => {
     scrubbing.current = true
-    const f = fractionFromX(e.touches[0].clientX)
-    paint(f); moveTooltip(f)
+    paint(fractionFromX(e.touches[0].clientX))
   }
   const onTouchMove = (e: React.TouchEvent) => {
     if (!scrubbing.current) return
-    const f = fractionFromX(e.touches[0].clientX)
-    paint(f); moveTooltip(f)
+    paint(fractionFromX(e.touches[0].clientX))
   }
   const onTouchEnd = (e: React.TouchEvent) => {
     if (!scrubbing.current) return
     scrubbing.current = false
-    hideTooltip()
     const f = fractionFromX(e.changedTouches[0].clientX)
     paint(f)
     const v = videoRef.current
@@ -123,18 +82,15 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
   /* Mouse (desktop preview) */
   const onMouseDown = (e: React.MouseEvent) => {
     scrubbing.current = true
-    const f = fractionFromX(e.clientX)
-    paint(f); moveTooltip(f)
+    paint(fractionFromX(e.clientX))
   }
   const onMouseMove = (e: React.MouseEvent) => {
     if (!scrubbing.current) return
-    const f = fractionFromX(e.clientX)
-    paint(f); moveTooltip(f)
+    paint(fractionFromX(e.clientX))
   }
   const onMouseUp = (e: React.MouseEvent) => {
     if (!scrubbing.current) return
     scrubbing.current = false
-    hideTooltip()
     const f = fractionFromX(e.clientX)
     paint(f)
     const v = videoRef.current
@@ -143,11 +99,6 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
 
   /* ─── Render ──────────────────────────────────────────────────────────── */
   return (
-    /*
-      Outer wrapper: 28px tall touch target anchored at bottom-10 (40px above
-      the card's bottom edge so it clears the BottomNav border and is easy to tap).
-      The 4px visual bar sits at the very bottom of this wrapper.
-    */
     <div
       className="absolute left-0 right-0 z-40 flex flex-col justify-end cursor-pointer select-none"
       style={{ bottom: 'calc(var(--nav-h) + 8px)', height: 28, touchAction: 'none' }}
@@ -159,15 +110,6 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
     >
-      {/* Chapter-name tooltip */}
-      <div
-        ref={tooltipRef}
-        className="absolute -translate-x-1/2 bg-black/85 backdrop-blur-sm text-white text-[11px] font-semibold px-3 py-1 rounded-full whitespace-nowrap border border-white/20 pointer-events-none"
-        style={{ opacity: 0, bottom: 10, transition: 'opacity 0.12s' }}
-      >
-        <span ref={labelRef} />
-      </div>
-
       {/* Track: segmented if chapters, simple otherwise */}
       <div ref={trackRef} className="flex gap-[3px]" style={{ height: 4 }}>
         {segs ? (

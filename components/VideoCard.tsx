@@ -2,8 +2,11 @@
 
 import { useRef, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
+import { Poppins } from 'next/font/google'
 import type { Property } from '@/lib/types'
 import VideoProgressBar, { type VideoProgressBarHandle } from './VideoProgressBar'
+
+const poppinsBlack = Poppins({ subsets: ['latin'], weight: '900', display: 'swap' })
 
 interface VideoCardProps {
   property: Property
@@ -69,10 +72,12 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       .sort((a, b) => a.fraction - b.fraction)
   }, [property.chapters, videoDuration])
 
+  /** Big centered chapter label — only triggered by explicit tap navigation,
+   *  never by automatic playback transitions. */
   const showChapterLabel = (label: string) => {
     setChapterLabel(label)
     if (chapterTimerRef.current) clearTimeout(chapterTimerRef.current)
-    chapterTimerRef.current = setTimeout(() => setChapterLabel(null), 2000)
+    chapterTimerRef.current = setTimeout(() => setChapterLabel(null), 1600)
   }
 
   /* ── Play / pause on active state ── */
@@ -93,7 +98,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     if (videoRef.current) videoRef.current.muted = muted
   }, [muted])
 
-  /* ── Detect chapter transitions during playback ── */
+  /* ── Track current chapter index during playback (no label flash) ── */
   const onTimeUpdate = () => {
     if (!videoRef.current || normalizedChapters.length === 0) return
     const t = videoRef.current.currentTime
@@ -103,9 +108,6 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     }
     if (idx !== lastChapterIdxRef.current) {
       lastChapterIdxRef.current = idx
-      // Don't flash the label automatically on the very first chapter at t=0
-      // — only on subsequent transitions.
-      if (t > 0.5) showChapterLabel(normalizedChapters[idx].label)
     }
   }
 
@@ -155,7 +157,6 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       if (target) {
         video.currentTime = target.startSec
         showChapterLabel(target.label)
-        progressRef.current?.flashLabel(target.label, video.duration ? target.startSec / video.duration : 0)
       }
     } else if (ratio > 0.7 && normalizedChapters.length > 0) {
       // Tap right — next chapter
@@ -164,7 +165,6 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       if (next) {
         video.currentTime = next.startSec
         showChapterLabel(next.label)
-        progressRef.current?.flashLabel(next.label, video.duration ? next.startSec / video.duration : 0)
       }
     } else {
       // Center zone — play / pause
@@ -245,16 +245,19 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
         sizes="430px"
       />
 
-      {/* Chapter badge overlay (top, fades in/out) */}
+      {/* Centered chapter label — only shows on explicit tap navigation */}
       {chapterLabel && (
         <div
           // eslint-disable-next-line react-hooks/purity
           key={chapterLabel + Date.now()}
-          className="absolute top-3 left-0 right-0 z-[16] flex justify-center pointer-events-none animate-fade-in-out"
+          className={`absolute inset-0 z-[18] flex items-center justify-center pointer-events-none animate-fade-in-out px-6 ${poppinsBlack.className}`}
         >
-          <div className="bg-black/65 text-white text-[13px] font-medium px-3.5 py-1 rounded-full">
+          <span
+            className="text-center uppercase tracking-wider text-white/75 drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+            style={{ fontSize: 'clamp(2.25rem, 11vw, 4rem)', lineHeight: 1 }}
+          >
             {chapterLabel}
-          </div>
+          </span>
         </div>
       )}
 

@@ -51,15 +51,23 @@ const TAGS_FROM_VIDEO = new Set([
   'Luminosité excellente',
 ])
 
-// Mocked chapters used as the initial state — to be replaced by AI-analysed
-// output once that pipeline is wired up.
-const INITIAL_CHAPTERS: Chapter[] = [
-  { id: 'c1', label: 'Hall',              startSec: 0  },
-  { id: 'c2', label: 'Salon traversant',  startSec: 8  },
-  { id: 'c3', label: 'Cuisine',           startSec: 22 },
-  { id: 'c4', label: 'Chambre parentale', startSec: 32 },
-  { id: 'c5', label: 'Salle de bain',     startSec: 40 },
-]
+// Chapters only exist once the video has been analysed — no mock defaults
+// so a freshly uploaded video shows a single uninterrupted progress bar.
+const INITIAL_CHAPTERS: Chapter[] = []
+
+/** Rehydrate the local Chapter[] from whatever the API returns. */
+function chaptersFromProperty(p: Property): Chapter[] {
+  if (!p.chapters || p.chapters.length === 0) return []
+  return (p.chapters as unknown as Array<{ id?: string; label: string; startSec?: number; fraction?: number }>)
+    .map((c, i) => ({
+      id: c.id ?? `chap-${i}`,
+      label: c.label,
+      startSec:
+        typeof c.startSec === 'number'
+          ? c.startSec
+          : 0, // fraction-shape gets converted later once we know the video duration
+    }))
+}
 
 type SectionKey =
   | 'general' | 'features' | 'specs' | 'composition' | 'copro'
@@ -84,7 +92,12 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [photos, setPhotos]                = useState<string[]>(initialProperty.gallery)
   const [plans, setPlans]                  = useState<string[]>([])
   const [matterportUrl, setMatterportUrl]  = useState<string>(initialProperty.matterportUrl ?? '')
-  const [videoAnalysisStarted, setVideoAnalysisStarted] = useState(false)
+  // The bien is considered analysed as soon as the database returned chapters
+  // for it — otherwise the agent would see the "Analyser la vidéo" CTA again
+  // after every navigation away from the editor.
+  const [videoAnalysisStarted, setVideoAnalysisStarted] = useState<boolean>(
+    Boolean(initialProperty.chapters && initialProperty.chapters.length > 0),
+  )
   const [isAnalyzingVideo, setIsAnalyzingVideo] = useState(false)
   const [analysisMessageIndex, setAnalysisMessageIndex] = useState(0)
   const [analysisJustDone, setAnalysisJustDone] = useState<number | null>(null)
@@ -92,7 +105,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const [aiTagLabels, setAiTagLabels] = useState<Set<string>>(new Set())
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
-  const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
+  const [chapters, setChapters] = useState<Chapter[]>(() => chaptersFromProperty(initialProperty))
   const [showChapterModal, setShowChapterModal] = useState(false)
 
   const ANALYSIS_MESSAGES = [

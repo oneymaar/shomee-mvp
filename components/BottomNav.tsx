@@ -26,7 +26,7 @@ export default function BottomNav({ previewMode = false }: BottomNavProps = {}) 
     <nav
       className={clsx(
         'bottom-0 left-0 right-0 z-50 border-t border-black/10',
-        previewMode ? 'absolute pointer-events-none opacity-50' : 'fixed',
+        previewMode ? 'absolute pointer-events-none grayscale brightness-90' : 'fixed',
       )}
       style={{ backgroundColor: '#FDF5F2' }}
     >

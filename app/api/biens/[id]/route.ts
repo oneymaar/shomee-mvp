@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { PropertyStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
@@ -227,6 +228,12 @@ export async function PATCH(
     data,
     select: { id: true, statut: true, updatedAt: true },
   })
+
+  // Drop the Router Cache so when the agent goes editor → preview → back the
+  // editor re-renders with the freshly-saved data instead of the stale RSC
+  // payload from its initial mount.
+  revalidatePath(`/agent/biens/${id}/editer`)
+  revalidatePath(`/agent/biens/${id}/preview`)
 
   return NextResponse.json({ success: true, ...updated })
 }
