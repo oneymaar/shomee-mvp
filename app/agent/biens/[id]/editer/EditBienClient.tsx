@@ -14,6 +14,7 @@ import MediaUploader from '@/components/agent/MediaUploader'
 import type { Chapter } from '@/components/agent/VideoChapterEditor'
 import VideoChapterEditorModal from '@/components/agent/VideoChapterEditorModal'
 import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
+import VideoProgressBar from '@/components/VideoProgressBar'
 import { useAutoSave } from '@/lib/hooks/useAutoSave'
 
 const AGENT_BEARER_TOKEN = 'shomee_test_kr3tz_0001'
@@ -540,6 +541,20 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     setVideoDuration(0)
     void saveNow()
   }
+
+  // Chapters projected to {label, fraction} for the Stories-style progress
+  // bar over the inline video. Undefined while the video duration is unknown
+  // or the bien has no chapters yet — the bar then renders as a single
+  // continuous segment.
+  const inlineFractionalChapters = useMemo(() => {
+    if (chapters.length === 0 || !videoDuration) return undefined
+    return [...chapters]
+      .sort((a, b) => a.startSec - b.startSec)
+      .map((c) => ({
+        label: c.label,
+        fraction: Math.min(1, Math.max(0, c.startSec / videoDuration)),
+      }))
+  }, [chapters, videoDuration])
 
   return (
     <div>
@@ -1163,6 +1178,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                       ? <VolumeX size={15} className="text-white" />
                       : <Volume2 size={15} className="text-white" />}
                   </button>
+                  {/* Stories-style chapter bar — sits above the native controls. */}
+                  {inlineFractionalChapters && (
+                    <VideoProgressBar
+                      videoRef={videoRef}
+                      chapters={inlineFractionalChapters}
+                      bottom="44px"
+                    />
+                  )}
                 </div>
 
                 {videoAnalysisStarted && (

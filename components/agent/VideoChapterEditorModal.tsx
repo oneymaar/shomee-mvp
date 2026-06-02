@@ -1,10 +1,14 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Poppins } from 'next/font/google'
 import { ChevronLeft, Plus, Check, Loader2, RefreshCw } from 'lucide-react'
 import VideoChapterEditor, { type Chapter } from './VideoChapterEditor'
+import VideoProgressBar from '@/components/VideoProgressBar'
 import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
+
+const poppinsBlack = Poppins({ subsets: ['latin'], weight: '900', display: 'swap' })
 
 interface VideoChapterEditorModalProps {
   isOpen: boolean
@@ -44,6 +48,11 @@ function ModalContent({
   const [renameId, setRenameId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [currentTime, setCurrentTime] = useState(0)
+  // Big centered label that flashes briefly each time the playhead enters a
+  // new chapter — replaces the old violet pill at the top.
+  const [flashLabel, setFlashLabel] = useState<string | null>(null)
+  const lastChapterIdRef = useRef<string | null>(null)
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const v = videoRef.current
@@ -70,6 +79,28 @@ function ModalContent({
   const sorted = [...chapters].sort((a, b) => a.startSec - b.startSec)
   let currentChapter: Chapter | undefined = sorted[0]
   for (const c of sorted) if (c.startSec <= currentTime) currentChapter = c
+
+  // Flash the centered label whenever the playhead crosses into a new chapter.
+  useEffect(() => {
+    if (!currentChapter) return
+    if (currentChapter.id === lastChapterIdRef.current) return
+    lastChapterIdRef.current = currentChapter.id
+    setFlashLabel(currentChapter.label)
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current)
+    flashTimerRef.current = setTimeout(() => setFlashLabel(null), 1700)
+  }, [currentChapter])
+
+  // Chapters projected to {label, fraction} for the Stories-style progress
+  // bar — recomputed live as the agent reorders / adds / removes chapters.
+  const fractionalChapters = useMemo(() => {
+    if (chapters.length === 0 || !internalDuration) return undefined
+    return [...chapters]
+      .sort((a, b) => a.startSec - b.startSec)
+      .map((c) => ({
+        label: c.label,
+        fraction: Math.min(1, Math.max(0, c.startSec / internalDuration)),
+      }))
+  }, [chapters, internalDuration])
 
   // Label tap on the canvas opens the rename bar. Pausing here keeps the
   // playhead still while the agent types.
@@ -155,24 +186,32 @@ function ModalContent({
           />
         </div>
 
-        {/* Pill: chapter actuel */}
-        <AnimatePresence mode="wait">
-          {currentChapter && (
-            <motion.div
-              key={currentChapter.id}
-              layoutId="current-chapter-pill"
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.18 }}
-              className="absolute top-14 left-1/2 -translate-x-1/2 z-10"
+        {/* Big centered chapter label — flashes on each new chapter the
+            playhead enters (no continuous pill, no auto-loop trigger). */}
+        {flashLabel && (
+          <div
+            // eslint-disable-next-line react-hooks/purity
+            key={flashLabel + Date.now()}
+            className={`absolute inset-0 z-[18] flex items-center justify-center pointer-events-none animate-fade-in-out px-6 ${poppinsBlack.className}`}
+          >
+            <span
+              className="text-center uppercase tracking-wider text-white/75 drop-shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
+              style={{ fontSize: 'clamp(2.25rem, 11vw, 4rem)', lineHeight: 1 }}
             >
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-violet-500/90 text-white text-[12px] font-medium shadow-md backdrop-blur-sm">
-                {currentChapter.label}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {flashLabel}
+            </span>
+          </div>
+        )}
+
+        {/* Stories-style chapter progress bar — sits just above the native
+            controls and follows chapter edits live. */}
+        {fractionalChapters && (
+          <VideoProgressBar
+            videoRef={videoRef}
+            chapters={fractionalChapters}
+            bottom="44px"
+          />
+        )}
       </div>
 
       {/* Editor panel */}

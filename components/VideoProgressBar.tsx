@@ -13,9 +13,15 @@ export type VideoProgressBarHandle = Record<string, never>
 interface Props {
   videoRef: React.RefObject<HTMLVideoElement | null>
   chapters?: Chapter[]
+  /**
+   * CSS `bottom` value for the bar wrapper — defaults to the feed offset
+   * above the buyer bottom nav. Override when embedding the bar elsewhere
+   * (editor video, modal, …) so it clears the surrounding chrome.
+   */
+  bottom?: string
 }
 
-const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters }) {
+const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters, bottom }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const fillRefs = useRef<(HTMLDivElement | null)[]>([])
   const rafId    = useRef<number>(0)
@@ -101,7 +107,7 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
   return (
     <div
       className="absolute left-0 right-0 z-40 flex flex-col justify-end cursor-pointer select-none"
-      style={{ bottom: 'calc(var(--nav-h) + 8px)', height: 28, touchAction: 'none' }}
+      style={{ bottom: bottom ?? 'calc(var(--nav-h) + 8px)', height: 28, touchAction: 'none' }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
