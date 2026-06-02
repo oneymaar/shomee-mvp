@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Poppins } from 'next/font/google'
-import { ChevronLeft, Plus, Check, Loader2, RefreshCw, Play, Pause } from 'lucide-react'
+import { ChevronLeft, Plus, Check, Loader2, RefreshCw, Play, Pause, RotateCcw } from 'lucide-react'
 import VideoChapterEditor, { type Chapter } from './VideoChapterEditor'
 import VideoProgressBar from '@/components/VideoProgressBar'
 import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
@@ -59,6 +59,14 @@ function ModalContent({
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const controlFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Snapshot of the chapters at modal open — used to decide whether any
+  // modification has been made and to power the Réinitialiser action.
+  const [chaptersSnapshot] = useState<Chapter[]>(() => chapters)
+  const hasModifs = useMemo(
+    () => JSON.stringify(chaptersSnapshot) !== JSON.stringify(chapters),
+    [chaptersSnapshot, chapters],
+  )
+
   useEffect(() => {
     if (controlFadeTimerRef.current) {
       clearTimeout(controlFadeTimerRef.current)
@@ -69,7 +77,6 @@ function ModalContent({
       setControlVisible(true)
       return
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setControlVisible(true)
     controlFadeTimerRef.current = setTimeout(() => setControlVisible(false), 2000)
     return () => {
@@ -224,7 +231,7 @@ function ModalContent({
         </button>
 
         {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
+        <div className="absolute top-0 left-0 right-0 flex items-center gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
           <button
             type="button"
             onClick={onClose}
@@ -233,6 +240,18 @@ function ModalContent({
           >
             <ChevronLeft size={20} />
           </button>
+          <div className="flex-1 flex justify-center">
+            {hasModifs && (
+              <button
+                type="button"
+                onClick={() => onChange(chaptersSnapshot)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white text-[11px] font-medium active:bg-black/60"
+              >
+                <RotateCcw size={12} />
+                Réinitialiser
+              </button>
+            )}
+          </div>
           <CompactAutoSaveBadge
             status={autoSaveStatus}
             isDirty={autoSaveIsDirty}
@@ -345,6 +364,32 @@ function CompactAutoSaveBadge({
   error?: string | null
   onRetry: () => void
 }) {
+  // Show "Sauvegardé" for 5 s after a save lands, then fade out. The agent
+  // never sees an explicit "Sauvegarder" CTA here — auto-save handles every
+  // persistence and idle/dirty states stay quiet.
+  const [savedVisible, setSavedVisible] = useState(false)
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (fadeTimerRef.current) {
+      clearTimeout(fadeTimerRef.current)
+      fadeTimerRef.current = null
+    }
+    if (status === 'saved' && !isDirty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSavedVisible(true)
+      fadeTimerRef.current = setTimeout(() => setSavedVisible(false), 5000)
+    } else {
+      setSavedVisible(false)
+    }
+    return () => {
+      if (fadeTimerRef.current) {
+        clearTimeout(fadeTimerRef.current)
+        fadeTimerRef.current = null
+      }
+    }
+  }, [status, isDirty])
+
   if (status === 'saving') {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-white text-[11px] font-medium">
@@ -366,21 +411,15 @@ function CompactAutoSaveBadge({
       </button>
     )
   }
-  if (status === 'saved' && !isDirty) {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-white text-[11px] font-medium">
-        <Check size={12} className="text-emerald-400" />
-        Sauvegardé
-      </span>
-    )
-  }
   return (
-    <button
-      type="button"
-      onClick={onRetry}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 text-[#0a0a0a] text-[11px] font-semibold active:bg-white"
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-white text-[11px] font-medium transition-opacity duration-500 ${
+        savedVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      aria-hidden={!savedVisible}
     >
-      Sauvegarder
-    </button>
+      <Check size={12} className="text-emerald-400" />
+      Sauvegardé
+    </span>
   )
 }
