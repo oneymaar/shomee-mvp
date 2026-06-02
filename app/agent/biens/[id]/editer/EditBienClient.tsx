@@ -12,6 +12,7 @@ import type { Property, DpeRating, MandatType } from '@/lib/types'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import MediaUploader from '@/components/agent/MediaUploader'
 import VideoChapterEditor, { type Chapter } from '@/components/agent/VideoChapterEditor'
+import VideoChapterEditorModal from '@/components/agent/VideoChapterEditorModal'
 import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
 import { useAutoSave } from '@/lib/hooks/useAutoSave'
 
@@ -94,6 +95,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapters, setChapters] = useState<Chapter[]>(INITIAL_CHAPTERS)
+  const [showChapterModal, setShowChapterModal] = useState(false)
 
   const ANALYSIS_MESSAGES = [
     'Analyse en cours...',
@@ -161,6 +163,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 
       setAnalysisJustDone(newLabels.length)
       setVideoAnalysisStarted(true)
+      setShowChapterModal(true)
     } catch (err) {
       console.error('analyze-video failed:', err)
       setAnalysisError('Analyse indisponible, réessayez dans quelques instants.')
@@ -1489,6 +1492,18 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           onToggleFavorite={() => {}}
         />
       </div>
+
+      {/* ── Video chapter editor modal ───────────────────────────── */}
+      {form.videoUrl && (
+        <VideoChapterEditorModal
+          isOpen={showChapterModal}
+          videoUrl={form.videoUrl}
+          duration={videoDuration}
+          chapters={chapters}
+          onSave={(updated) => setChapters(updated)}
+          onClose={() => setShowChapterModal(false)}
+        />
+      )}
     </div>
   )
 }

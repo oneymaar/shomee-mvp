@@ -10,6 +10,8 @@ interface VideoChapterEditorProps {
   chapters: Chapter[]
   onChange: (chapters: Chapter[]) => void
   videoRef?: React.RefObject<HTMLVideoElement | null>
+  onLabelClick?: (ch: Chapter) => void
+  hideAddButton?: boolean
 }
 
 const WINDOW_SEC = 13
@@ -29,6 +31,8 @@ export default function VideoChapterEditor({
   chapters,
   onChange,
   videoRef,
+  onLabelClick,
+  hideAddButton,
 }: VideoChapterEditorProps) {
   const cvRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -400,7 +404,8 @@ export default function VideoChapterEditor({
         if (hit.zone === 'delete') {
           onChange(chapters.filter(c => c.id !== hit.ch.id))
         } else if (hit.zone === 'label') {
-          openEditor(hit.ch)
+          if (onLabelClick) onLabelClick(hit.ch)
+          else openEditor(hit.ch)
         } else {
           dragMarkerId.current = hit.ch.id
           dmStartX.current = e.clientX
@@ -435,7 +440,10 @@ export default function VideoChapterEditor({
       const hit = hitTest(ex, ey)
       if (hit) {
         if (hit.zone === 'delete') onChange(chapters.filter(c => c.id !== hit.ch.id))
-        else if (hit.zone === 'label') openEditor(hit.ch)
+        else if (hit.zone === 'label') {
+          if (onLabelClick) onLabelClick(hit.ch)
+          else openEditor(hit.ch)
+        }
         else { dragMarkerId.current = hit.ch.id; dmStartX.current = e.touches[0].clientX; dmStartSec.current = hit.ch.startSec }
       } else { dStartX.current = e.touches[0].clientX; dStartSec.current = curSecRef.current }
     }
@@ -498,18 +506,22 @@ export default function VideoChapterEditor({
           />
         )}
       </div>
-      <div className="flex justify-center mt-2.5">
-        <button
-          onClick={addChapter}
-          className="flex items-center gap-1.5 text-[13px] text-gray-500 border border-dashed border-gray-300 rounded-lg px-4 py-1.5 hover:bg-gray-50"
-        >
-          <span className="text-base">+</span> Ajouter une pièce
-        </button>
-      </div>
-      <p className="text-[11px] text-gray-400 text-center mt-2 leading-relaxed px-2">
-        Les marqueurs de pièces aident les acquéreurs à se repérer dans votre vidéo.<br />
-        Déplacez-les, renommez-les, ajoutez-en ou supprimez-en selon vos besoins.
-      </p>
+      {!hideAddButton && (
+        <div className="flex justify-center mt-2.5">
+          <button
+            onClick={addChapter}
+            className="flex items-center gap-1.5 text-[13px] text-gray-500 border border-dashed border-gray-300 rounded-lg px-4 py-1.5 hover:bg-gray-50"
+          >
+            <span className="text-base">+</span> Ajouter une pièce
+          </button>
+        </div>
+      )}
+      {!hideAddButton && (
+        <p className="text-[11px] text-gray-400 text-center mt-2 leading-relaxed px-2">
+          Les marqueurs de pièces aident les acquéreurs à se repérer dans votre vidéo.<br />
+          Déplacez-les, renommez-les, ajoutez-en ou supprimez-en selon vos besoins.
+        </p>
+      )}
     </div>
   )
 }
