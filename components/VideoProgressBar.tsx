@@ -19,9 +19,15 @@ interface Props {
    * (editor video, modal, …) so it clears the surrounding chrome.
    */
   bottom?: string
+  /**
+   * CSS value applied to both `left` and `right` so the bar can be inset
+   * from the edges of its container (e.g. to clear the rounded corners of
+   * the editor video). Defaults to 0 — feed-style edge-to-edge.
+   */
+  inset?: string
 }
 
-const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters, bottom }) {
+const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function VideoProgressBar({ videoRef, chapters, bottom, inset }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const fillRefs = useRef<(HTMLDivElement | null)[]>([])
   const rafId    = useRef<number>(0)
@@ -106,8 +112,14 @@ const VideoProgressBar = forwardRef<VideoProgressBarHandle, Props>(function Vide
   /* ─── Render ──────────────────────────────────────────────────────────── */
   return (
     <div
-      className="absolute left-0 right-0 z-40 flex flex-col justify-end cursor-pointer select-none"
-      style={{ bottom: bottom ?? 'calc(var(--nav-h) + 8px)', height: 28, touchAction: 'none' }}
+      className="absolute z-40 flex flex-col justify-end cursor-pointer select-none"
+      style={{
+        bottom: bottom ?? 'calc(var(--nav-h) + 8px)',
+        left: inset ?? 0,
+        right: inset ?? 0,
+        height: 28,
+        touchAction: 'none',
+      }}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

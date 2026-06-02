@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Poppins } from 'next/font/google'
-import { ChevronLeft, Plus, Check, Loader2, RefreshCw } from 'lucide-react'
+import { ChevronLeft, Plus, Check, Loader2, RefreshCw, Play, Pause } from 'lucide-react'
 import VideoChapterEditor, { type Chapter } from './VideoChapterEditor'
 import VideoProgressBar from '@/components/VideoProgressBar'
 import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
@@ -51,6 +51,7 @@ function ModalContent({
   // Big centered label that flashes briefly each time the playhead enters a
   // new chapter — replaces the old violet pill at the top.
   const [flashLabel, setFlashLabel] = useState<string | null>(null)
+  const [videoPaused, setVideoPaused] = useState(true)
   const lastChapterIdRef = useRef<string | null>(null)
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -164,6 +165,8 @@ function ModalContent({
             const d = videoRef.current?.duration
             if (d && Number.isFinite(d)) setInternalDuration(d)
           }}
+          onPlay={() => setVideoPaused(false)}
+          onPause={() => setVideoPaused(true)}
           onClick={() => {
             const v = videoRef.current
             if (!v) return
@@ -172,6 +175,24 @@ function ModalContent({
           }}
           className="absolute inset-0 w-full h-full object-contain cursor-pointer"
         />
+
+        {/* Persistent play/pause control — replaces the native button that
+            disappeared with the `controls` attribute. */}
+        <button
+          type="button"
+          onClick={() => {
+            const v = videoRef.current
+            if (!v) return
+            if (v.paused) v.play().catch(() => {})
+            else v.pause()
+          }}
+          aria-label={videoPaused ? 'Lecture' : 'Pause'}
+          className="absolute bottom-3 left-3 w-9 h-9 z-30 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 active:scale-95 transition-transform"
+        >
+          {videoPaused
+            ? <Play size={15} className="text-white translate-x-px" />
+            : <Pause size={15} className="text-white" />}
+        </button>
 
         {/* Top bar */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
@@ -214,7 +235,8 @@ function ModalContent({
         <VideoProgressBar
           videoRef={videoRef}
           chapters={fractionalChapters}
-          bottom="8px"
+          bottom="12px"
+          inset="12px"
         />
       </div>
 

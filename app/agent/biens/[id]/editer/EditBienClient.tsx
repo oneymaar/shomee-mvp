@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowLeft, Eye, ChevronDown, Plus, X, RefreshCw, Trash2, Video,
   Sparkles, MapPin, Image as ImageIcon, Cable, Globe, Loader2,
-  Volume2, VolumeX,
+  Volume2, VolumeX, Play, Pause,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
@@ -108,6 +108,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
   const [editorVideoMuted, setEditorVideoMuted] = useState(false)
+  const [editorVideoPaused, setEditorVideoPaused] = useState(true)
   const [chapters, setChapters] = useState<Chapter[]>(() => chaptersFromProperty(initialProperty))
   const [showChapterModal, setShowChapterModal] = useState(false)
 
@@ -1160,6 +1161,8 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                       if (videoRef.current) setVideoDuration(videoRef.current.duration || 0)
                     }}
                     onVolumeChange={(e) => setEditorVideoMuted(e.currentTarget.muted)}
+                    onPlay={() => setEditorVideoPaused(false)}
+                    onPause={() => setEditorVideoPaused(true)}
                     onClick={() => {
                       const v = videoRef.current
                       if (!v) return
@@ -1183,13 +1186,31 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                       ? <VolumeX size={15} className="text-white" />
                       : <Volume2 size={15} className="text-white" />}
                   </button>
+                  {/* Persistent play/pause control — replaces the native
+                      button that disappeared with the `controls` attribute. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = videoRef.current
+                      if (!v) return
+                      if (v.paused) v.play().catch(() => {})
+                      else v.pause()
+                    }}
+                    aria-label={editorVideoPaused ? 'Lecture' : 'Pause'}
+                    className="absolute top-2 left-2 w-9 h-9 z-10 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 active:scale-95 transition-transform"
+                  >
+                    {editorVideoPaused
+                      ? <Play size={15} className="text-white translate-x-px" />
+                      : <Pause size={15} className="text-white" />}
+                  </button>
                   {/* Stories-style progress bar — REPLACES the native progress
                       bar. Falls back to a single fill segment when the bien
                       has no chapters yet. */}
                   <VideoProgressBar
                     videoRef={videoRef}
                     chapters={inlineFractionalChapters}
-                    bottom="8px"
+                    bottom="12px"
+                    inset="12px"
                   />
                 </div>
 
