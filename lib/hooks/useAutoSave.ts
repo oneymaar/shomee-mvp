@@ -13,7 +13,7 @@ interface UseAutoSaveOptions<T> {
 
 interface UseAutoSaveResult {
   status: AutoSaveStatus
-  lastSavedAt: Date | null
+  isDirty: boolean
   error: string | null
   saveNow: () => Promise<void>
 }
@@ -41,7 +41,7 @@ export function useAutoSave<T>({
   enabled = true,
 }: UseAutoSaveOptions<T>): UseAutoSaveResult {
   const [status, setStatus] = useState<AutoSaveStatus>('idle')
-  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+  const [isDirty, setIsDirty] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -64,7 +64,7 @@ export function useAutoSave<T>({
     try {
       await onSaveRef.current(lastDataRef.current)
       lastSavedSnapshot.current = snapshot
-      setLastSavedAt(new Date())
+      setIsDirty(false)
       setStatus('saved')
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Erreur inconnue'
@@ -90,7 +90,11 @@ export function useAutoSave<T>({
     if (!enabled) return
 
     const snapshot = stableStringify(data)
-    if (snapshot === lastSavedSnapshot.current) return
+    if (snapshot === lastSavedSnapshot.current) {
+      setIsDirty(false)
+      return
+    }
+    setIsDirty(true)
 
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {
@@ -106,5 +110,5 @@ export function useAutoSave<T>({
     }
   }, [data, debounceMs, enabled, flush])
 
-  return { status, lastSavedAt, error, saveNow }
+  return { status, isDirty, error, saveNow }
 }

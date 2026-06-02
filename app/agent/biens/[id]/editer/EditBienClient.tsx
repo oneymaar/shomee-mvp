@@ -477,7 +477,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 
   const {
     status: autoSaveStatus,
-    lastSavedAt: autoSaveLastSavedAt,
+    isDirty: autoSaveIsDirty,
     error: autoSaveError,
     saveNow,
   } = useAutoSave({
@@ -1418,7 +1418,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
         <div className="flex-1">
           <AutoSaveIndicator
             status={autoSaveStatus}
-            lastSavedAt={autoSaveLastSavedAt}
+            isDirty={autoSaveIsDirty}
             error={autoSaveError}
             onRetry={() => { void saveNow() }}
           />
