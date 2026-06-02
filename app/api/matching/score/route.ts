@@ -1,12 +1,14 @@
 /**
- * POST /api/matching/score
+ * /api/matching/score
  *
- * Stateless scoring endpoint. Given a user brief and a batch of property
- * profiles, runs the deterministic matching engine on each property,
- * filters out excluded ones, sorts the survivors by descending
- * `global_score`, and returns the result list.
+ * Two modes:
+ *  - POST: stateless. Caller supplies brief + property profiles; engine
+ *    runs over the payload, no DB hit.
+ *  - GET ?buyerProfileId=…: convenience. Loads the BuyerProfile and all
+ *    PUBLISHED properties from the DB, builds the brief / profiles via
+ *    the mappers, runs the engine, returns the same shape as POST.
  *
- * No persistence. No LLM calls. Pure computation over the request payload.
+ * No LLM calls in either mode. No persistence of results.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,6 +16,9 @@ import { z } from 'zod'
 import { matchProperty } from '@/lib/matching/engine'
 import type { MatchResult, PropertyProfile } from '@/lib/matching/types'
 import type { UserCriteriaBrief, ParsedCriterion } from '@/lib/criteria/types'
+import { prisma } from '@/lib/prisma'
+import { toPropertyProfile } from '@/lib/matching/propertyProfileBuilder'
+import { toBuyerBrief } from '@/lib/matching/buyerBriefBuilder'
 
 // ─── Zod schemas ─────────────────────────────────────────────────────────
 
@@ -162,6 +167,56 @@ export async function POST(req: NextRequest) {
       results,
       excluded_count,
       total_scored: results.length,
+    },
+  })
+}
+
+/**
+ * GET /api/matching/score?buyerProfileId=...
+ *
+ * DB-backed scoring. Loads the buyer profile, all PUBLISHED properties,
+ * runs each through `toPropertyProfile` + the engine. Same response shape
+ * as POST so downstream consumers can switch transparently.
+ */
+export async function GET(req: NextRequest) {
+  const buyerProfileId = req.nextUrl.searchParams.get('buyerProfileId')
+  if (!buyerProfileId) {
+    return NextResponse.json(
+      { success: false, error: 'buyerProfileId required' },
+      { status: 400 },
+    )
+  }
+
+  const profile = await prisma.buyerProfile.findUnique({
+    where: { id: buyerProfileId },
+  })
+  if (!profile) {
+    return NextResponse.json(
+      { success: false, error: 'buyer_profile_not_found' },
+      { status: 404 },
+    )
+  }
+
+  const properties = await prisma.property.findMany({
+    where: { statut: 'PUBLISHED' },
+  })
+
+  const brief = toBuyerBrief(profile)
+  const profiles: PropertyProfile[] = properties.map(toPropertyProfile)
+
+  const allResults: MatchResult[] = profiles.map((p) => matchProperty(p, brief))
+  const excluded_count = allResults.filter((r) => r.is_excluded).length
+  const results = allResults
+    .filter((r) => !r.is_excluded)
+    .sort((a, b) => b.global_score - a.global_score)
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      results,
+      excluded_count,
+      total_scored: results.length,
+      total_candidates: properties.length,
     },
   })
 }
