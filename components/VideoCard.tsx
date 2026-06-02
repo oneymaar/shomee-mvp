@@ -44,6 +44,31 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       .sort((a, b) => a.startSec - b.startSec)
   }, [property.chapters, videoDuration])
 
+  /** Chapters projected to the {label, fraction} shape VideoProgressBar
+   *  expects. Returns undefined until videoDuration is known so the bar
+   *  falls back to a single segment in the meantime. */
+  const fractionalChapters = useMemo(() => {
+    if (!property.chapters || property.chapters.length === 0) return undefined
+    const raw = property.chapters as unknown as RawChapter[]
+    // Native fraction shape (mock data) — keep as-is.
+    if (raw.every((c) => typeof c.fraction === 'number')) {
+      return raw.map((c) => ({ label: c.label, fraction: c.fraction as number }))
+    }
+    // startSec-based — needs the video duration to compute a fraction.
+    if (!videoDuration) return undefined
+    return raw
+      .map((c) => ({
+        label: c.label,
+        fraction:
+          typeof c.fraction === 'number'
+            ? c.fraction
+            : typeof c.startSec === 'number'
+              ? Math.min(1, Math.max(0, c.startSec / videoDuration))
+              : 0,
+      }))
+      .sort((a, b) => a.fraction - b.fraction)
+  }, [property.chapters, videoDuration])
+
   const showChapterLabel = (label: string) => {
     setChapterLabel(label)
     if (chapterTimerRef.current) clearTimeout(chapterTimerRef.current)
@@ -223,6 +248,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       {/* Chapter badge overlay (top, fades in/out) */}
       {chapterLabel && (
         <div
+          // eslint-disable-next-line react-hooks/purity
           key={chapterLabel + Date.now()}
           className="absolute top-3 left-0 right-0 z-[16] flex justify-center pointer-events-none animate-fade-in-out"
         >
@@ -233,7 +259,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
       )}
 
       {/* Progress bar */}
-      <VideoProgressBar ref={progressRef} videoRef={videoRef} chapters={property.chapters} />
+      <VideoProgressBar ref={progressRef} videoRef={videoRef} chapters={fractionalChapters} />
     </div>
   )
 }
