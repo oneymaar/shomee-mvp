@@ -44,9 +44,131 @@ const ALLOWED_TRANSITIONS: Record<PropertyStatus, PropertyStatus[]> = {
   ARCHIVED:    [PropertyStatus.UNPUBLISHED],
 }
 
-const PatchSchema = z.object({
-  statut: z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED']),
+const DpeSchema = z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
+const StatutSchema = z.enum(['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'])
+const MandatSchema = z.enum(['EXCLUSIF', 'SIMPLE', 'COEXCLUSIF'])
+const OrientationSchema = z.enum(['north', 'south', 'east', 'west'])
+const BadgeSchema = z.enum(['AVANT_PREMIERE', 'EXCLUSIVITE'])
+
+const CompositionRowSchema = z.object({
+  label: z.string(),
+  surface: z.number(),
 })
+
+// Front model emits {label, fraction} OR {label, startSec}. Accept both shapes.
+const ChapterSchema = z.object({
+  label: z.string(),
+  fraction: z.number().min(0).max(1).optional(),
+  startSec: z.number().optional(),
+}).passthrough()
+
+const MapTransportSchema = z.object({
+  name: z.string(),
+  line: z.string(),
+  lat: z.number(),
+  lng: z.number(),
+})
+
+const MapPoiSchema = z.object({
+  name: z.string(),
+  lat: z.number(),
+  lng: z.number(),
+})
+
+// Partial schema — every key optional, so any subset can be sent.
+const PropertyPatchSchema = z.object({
+  // Status (kept separate from content for transition guard)
+  statut: StatutSchema,
+
+  // Feed display
+  arrondissement: z.string(),
+  subtitle: z.string(),
+  agentName: z.string(),
+  agentAvatar: z.string().nullable(),
+
+  // Core
+  title: z.string(),
+  price: z.number().int(),
+  pricePerSqm: z.number().int().nullable(),
+  surface: z.number(),
+  rooms: z.number().int(),
+  bedrooms: z.number().int().nullable(),
+  location: z.string(),
+  district: z.string(),
+  description: z.string(),
+  tags: z.array(z.string()),
+  features: z.array(z.string()),
+  dpe: DpeSchema,
+  ges: DpeSchema.nullable(),
+
+  // Physical
+  floor: z.number().int().nullable(),
+  totalFloors: z.number().int().nullable(),
+  orientation: z.string().nullable(),
+  exteriorType: z.string().nullable(),
+  heatingType: z.string().nullable(),
+  hotWaterType: z.string().nullable(),
+  yearBuilt: z.number().int().nullable(),
+  lotCount: z.number().int().nullable(),
+  proceduresEnCours: z.boolean().nullable(),
+  monthlyCharges: z.number().int().nullable(),
+  propertyTax: z.number().int().nullable(),
+
+  // Composition / IRIS / map / market
+  composition: z.array(CompositionRowSchema).nullable(),
+  irisZone: z.string().nullable(),
+  irisDescription: z.string().nullable(),
+  irisPolygon: z.array(z.tuple([z.number(), z.number()])).nullable(),
+  mapLat: z.number().nullable(),
+  mapLng: z.number().nullable(),
+  transports: z.array(z.string()),
+  nearbyPlaces: z.array(z.string()),
+  neighborhoodVibe: z.string().nullable(),
+  mapTransports: z.array(MapTransportSchema).nullable(),
+  mapPois: z.array(MapPoiSchema).nullable(),
+  marketAvgPricePerSqm: z.number().int().nullable(),
+  marketEvolution10y: z.string().nullable(),
+  marketHighPrice: z.number().int().nullable(),
+  marketLowPrice: z.number().int().nullable(),
+
+  // Media
+  videoUrl: z.string().nullable(),
+  matterportUrl: z.string().nullable(),
+  imageUrlFallback: z.string(),
+  gallery: z.array(z.string()),
+  chapters: z.array(ChapterSchema).nullable(),
+
+  // Sprint
+  mandatType: MandatSchema,
+  avantPremiere: z.boolean(),
+  refInterneAgence: z.string().nullable(),
+  completionRate: z.number(),
+  badges: z.array(BadgeSchema),
+
+  // Structured attributes
+  hasElevator: z.boolean(),
+  hasTerrace: z.boolean(),
+  terraceSurfaceM2: z.number().nullable(),
+  hasBalcony: z.boolean(),
+  balconySurfaceM2: z.number().nullable(),
+  hasGarden: z.boolean(),
+  gardenSurfaceM2: z.number().nullable(),
+  hasCellar: z.boolean(),
+  hasParking: z.boolean(),
+  hasConcierge: z.boolean(),
+  isGroundFloor: z.boolean(),
+  bedroomStreetSide: z.boolean().nullable(),
+  isQuietStreet: z.boolean().nullable(),
+  orientationStructured: z.array(OrientationSchema),
+
+  // Semantic
+  luminosity: z.number().nullable(),
+  quietness: z.number().nullable(),
+  charm: z.number().nullable(),
+  spaciousness: z.number().nullable(),
+  livingQuality: z.number().nullable(),
+  outdoorUsability: z.number().nullable(),
+}).partial()
 
 export async function PATCH(
   req: Request,
@@ -62,7 +184,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'JSON invalide' }, { status: 400 })
   }
 
-  const parsed = PatchSchema.safeParse(raw)
+  const parsed = PropertyPatchSchema.safeParse(raw)
   if (!parsed.success) {
     return NextResponse.json({ error: 'Validation', details: parsed.error.issues }, { status: 400 })
   }
@@ -75,18 +197,35 @@ export async function PATCH(
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
 
-  const next = parsed.data.statut as PropertyStatus
-  if (next !== existing.statut && !ALLOWED_TRANSITIONS[existing.statut].includes(next)) {
+  const { statut: nextStatut, ...contentPatch } = parsed.data
+  const hasContentChanges = Object.keys(contentPatch).length > 0
+
+  // Auto-save / content edits are only allowed while the bien is in DRAFT —
+  // publishing happens through an explicit statut transition.
+  if (hasContentChanges && existing.statut !== PropertyStatus.DRAFT) {
     return NextResponse.json(
-      { error: `Transition interdite : ${existing.statut} → ${next}` },
-      { status: 409 },
+      { error: 'Édition interdite : le bien doit être en brouillon' },
+      { status: 403 },
     )
   }
 
+  // Status transition guard.
+  if (nextStatut !== undefined && nextStatut !== existing.statut) {
+    if (!ALLOWED_TRANSITIONS[existing.statut].includes(nextStatut)) {
+      return NextResponse.json(
+        { error: `Transition interdite : ${existing.statut} → ${nextStatut}` },
+        { status: 409 },
+      )
+    }
+  }
+
+  const data: Record<string, unknown> = { ...contentPatch }
+  if (nextStatut !== undefined) data.statut = nextStatut
+
   const updated = await prisma.property.update({
     where: { id },
-    data:  { statut: next },
-    select: { id: true, statut: true },
+    data,
+    select: { id: true, statut: true, updatedAt: true },
   })
 
   return NextResponse.json({ success: true, ...updated })

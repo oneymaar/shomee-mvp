@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -12,6 +12,10 @@ import type { Property, DpeRating, MandatType } from '@/lib/types'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import MediaUploader from '@/components/agent/MediaUploader'
 import VideoChapterEditor, { type Chapter } from '@/components/agent/VideoChapterEditor'
+import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
+import { useAutoSave } from '@/lib/hooks/useAutoSave'
+
+const AGENT_BEARER_TOKEN = 'shomee_test_kr3tz_0001'
 
 const ALL_FEATURES = [
   'Ascenseur', 'Cave', 'Parking', 'Balcon', 'Terrasse', 'Gardien',
@@ -440,16 +444,60 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
     setAiTagLabels(new Set())
   }
 
+  // ── Auto-save ──────────────────────────────────────────────────────────
+  // The aggregated snapshot is the source of truth sent to PATCH. We only
+  // include serialisable fields that map onto the Property schema; pure UI
+  // state (open section, drag indices, picker open, …) is excluded.
+  const autoSaveSnapshot = useMemo(() => ({
+    ...form,
+    gallery: photos,
+    matterportUrl: matterportUrl ? matterportUrl : null,
+    chapters: chapters.length > 0 ? chapters : null,
+  }), [form, photos, matterportUrl, chapters])
+
+  const persistSnapshot = useCallback(async (data: typeof autoSaveSnapshot) => {
+    const res = await fetch(`/api/biens/${form.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${AGENT_BEARER_TOKEN}`,
+      },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => null) as { error?: string } | null
+      throw new Error(body?.error ?? `HTTP ${res.status}`)
+    }
+  }, [form.id])
+
+  // Disable auto-save on the mock draft and on already-published biens —
+  // the PATCH endpoint rejects content edits once a bien leaves DRAFT.
+  const autoSaveEnabled =
+    form.id !== 'draft-001' && (form.statut ?? 'DRAFT') === 'DRAFT'
+
+  const {
+    status: autoSaveStatus,
+    lastSavedAt: autoSaveLastSavedAt,
+    error: autoSaveError,
+    saveNow,
+  } = useAutoSave({
+    data: autoSaveSnapshot,
+    onSave: persistSnapshot,
+    enabled: autoSaveEnabled,
+  })
+
   const handleVideoUploaded = (url: string) => {
     resetVideoAnalysis()
     update({ videoUrl: url })
     setOpenSection('video')
+    void saveNow()
   }
 
   const removeVideo = () => {
     resetVideoAnalysis()
     update({ videoUrl: undefined })
     setVideoDuration(0)
+    void saveNow()
   }
 
   return (
@@ -468,7 +516,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           >
             <ArrowLeft size={22} />
           </button>
-          <h1 className="text-[16px] font-semibold flex-1 text-[#0a0a0a]">Modifier le bien</h1>
+          <h1 className="text-[16px] font-semibold text-[#0a0a0a]">Modifier le bien</h1>
+          <div className="flex-1 flex justify-end">
+            <AutoSaveIndicator
+              status={autoSaveStatus}
+              lastSavedAt={autoSaveLastSavedAt}
+              error={autoSaveError}
+            />
+          </div>
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
@@ -1211,7 +1266,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                 bienId={form.id}
                 type="photo"
                 multiple
-                onSuccess={(url) => setPhotos((p) => [...p, url])}
+                onSuccess={(url) => { setPhotos((p) => [...p, url]); void saveNow() }}
               />
             ) : (
               <div className="grid grid-cols-3 gap-2">
@@ -1267,7 +1322,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                     type="photo"
                     multiple
                     variant="tile"
-                    onSuccess={(url) => setPhotos((p) => [...p, url])}
+                    onSuccess={(url) => { setPhotos((p) => [...p, url]); void saveNow() }}
                   />
                 )}
               </div>
@@ -1297,7 +1352,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             <MediaUploader
               bienId={form.id}
               type="plan"
-              onSuccess={(url) => setPlans((p) => [...p, url])}
+              onSuccess={(url) => { setPlans((p) => [...p, url]); void saveNow() }}
             />
           </SubSection>
 
@@ -1326,6 +1381,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
               onSuccess={(url) => {
                 setMatterportUrl(url)
                 update({ matterportUrl: url })
+                void saveNow()
               }}
             />
           </SubSection>
