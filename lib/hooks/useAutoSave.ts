@@ -47,40 +47,67 @@ export function useAutoSave<T>({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSavedSnapshot = useRef<string>(stableStringify(data))
   const lastDataRef = useRef<T>(data)
+  const inFlightRef = useRef<boolean>(false)
   const onSaveRef = useRef(onSave)
+  const debounceMsRef = useRef(debounceMs)
+  // flushRef lets the scheduled timer self-reference the latest flush
+  // without TDZ issues — initialised right after flush is declared.
+  const flushRef = useRef<() => Promise<void>>(async () => {})
 
-  useEffect(() => {
-    onSaveRef.current = onSave
-  }, [onSave])
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
+  useEffect(() => { debounceMsRef.current = debounceMs }, [debounceMs])
 
-  const flush = useCallback(async () => {
-    const snapshot = stableStringify(lastDataRef.current)
-    if (snapshot === lastSavedSnapshot.current) {
-      // Nothing changed since the last successful save.
-      return
-    }
-    setStatus('saving')
-    setError(null)
-    try {
-      await onSaveRef.current(lastDataRef.current)
-      lastSavedSnapshot.current = snapshot
-      setIsDirty(false)
-      setStatus('saved')
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Erreur inconnue'
-      setError(message)
-      setStatus('error')
-    }
+  const scheduleFlush = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null
+      void flushRef.current()
+    }, debounceMsRef.current)
   }, [])
 
-  const saveNow = useCallback(async () => {
+  const flush = useCallback(async () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current)
       timerRef.current = null
     }
+    // Single in-flight save at a time — the post-save check picks up any
+    // edits that happened while the previous save was running.
+    if (inFlightRef.current) return
+
+    const dataToSave = lastDataRef.current
+    const snapshot = stableStringify(dataToSave)
+    if (snapshot === lastSavedSnapshot.current) {
+      setIsDirty(false)
+      return
+    }
+
+    inFlightRef.current = true
+    setStatus('saving')
+    setError(null)
+    try {
+      await onSaveRef.current(dataToSave)
+      lastSavedSnapshot.current = snapshot
+      inFlightRef.current = false
+      // Did the agent edit something while the PATCH was in flight?
+      const latestSnapshot = stableStringify(lastDataRef.current)
+      const stillDirty = latestSnapshot !== snapshot
+      setIsDirty(stillDirty)
+      setStatus('saved')
+      if (stillDirty) scheduleFlush()
+    } catch (e) {
+      inFlightRef.current = false
+      const message = e instanceof Error ? e.message : 'Erreur inconnue'
+      setError(message)
+      setStatus('error')
+    }
+  }, [scheduleFlush])
+
+  useEffect(() => { flushRef.current = flush }, [flush])
+
+  const saveNow = useCallback(async () => {
     if (!enabled) return
-    // Yield one tick so React-flushed state updates land in lastDataRef before
-    // we serialise — callers can `setState(...); saveNow()` safely.
+    // Yield one tick so React-flushed state updates land in lastDataRef
+    // before we serialise — callers can `setState(...); saveNow()` safely.
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     await flush()
   }, [enabled, flush])
@@ -91,24 +118,21 @@ export function useAutoSave<T>({
 
     const snapshot = stableStringify(data)
     if (snapshot === lastSavedSnapshot.current) {
-      setIsDirty(false)
+      // Don't reset dirty while a save is mid-flight — the post-save
+      // check owns the dirty flag in that window.
+      if (!inFlightRef.current) setIsDirty(false)
       return
     }
     setIsDirty(true)
+    scheduleFlush()
+  }, [data, enabled, scheduleFlush])
 
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
+  useEffect(() => () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
       timerRef.current = null
-      void flush()
-    }, debounceMs)
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-        timerRef.current = null
-      }
     }
-  }, [data, debounceMs, enabled, flush])
+  }, [])
 
   return { status, isDirty, error, saveNow }
 }
