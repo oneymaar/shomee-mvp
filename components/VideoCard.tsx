@@ -77,7 +77,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const showChapterLabel = (label: string) => {
     setChapterLabel(label)
     if (chapterTimerRef.current) clearTimeout(chapterTimerRef.current)
-    chapterTimerRef.current = setTimeout(() => setChapterLabel(null), 1600)
+    chapterTimerRef.current = setTimeout(() => setChapterLabel(null), 1700)
   }
 
   /* ── Play / pause on active state ── */
