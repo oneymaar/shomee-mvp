@@ -12,6 +12,7 @@ interface VideoChapterEditorProps {
   videoRef?: React.RefObject<HTMLVideoElement | null>
   onLabelClick?: (ch: Chapter) => void
   hideAddButton?: boolean
+  theme?: 'light' | 'dark'
 }
 
 const WINDOW_SEC = 13
@@ -33,6 +34,7 @@ export default function VideoChapterEditor({
   videoRef,
   onLabelClick,
   hideAddButton,
+  theme = 'light',
 }: VideoChapterEditorProps) {
   const cvRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -133,12 +135,13 @@ export default function VideoChapterEditor({
     const pps = pxPerSec.current
     const secToX = (s: number) => cxPx + (s - sec) * pps
 
+    const dark = theme === 'dark'
     const trackBg = '#f4f3f0'
     const borderCol = 'rgba(0,0,0,0.1)'
-    const mutedColor = 'rgba(0,0,0,0.3)'
-    const textColor = 'rgba(0,0,0,0.85)'
-    const bgSolid = 'rgba(255,255,255,1)'
-    const bgTrans = 'rgba(255,255,255,0)'
+    const mutedColor = dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'
+    const textColor = dark ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.85)'
+    const bgSolid = dark ? 'rgba(10,10,10,1)' : 'rgba(255,255,255,1)'
+    const bgTrans = dark ? 'rgba(10,10,10,0)' : 'rgba(255,255,255,0)'
 
     const trackLeft = secToX(0)
     const trackRight = secToX(duration)
@@ -183,9 +186,9 @@ export default function VideoChapterEditor({
       const delA = fadeAlpha(x, cxPx)
       if (delA > 0) {
         ctx.globalAlpha = delA
-        ctx.fillStyle = '#e8e8e8'
+        ctx.fillStyle = dark ? '#2a2a2a' : '#e8e8e8'
         ctx.beginPath(); ctx.arc(x, DEL_Y, 8, 0, Math.PI * 2); ctx.fill()
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 0.5
+        ctx.strokeStyle = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'; ctx.lineWidth = 0.5
         ctx.beginPath(); ctx.arc(x, DEL_Y, 8, 0, Math.PI * 2); ctx.stroke()
         ctx.fillStyle = mutedColor; ctx.font = '11px system-ui'; ctx.textAlign = 'center'
         ctx.fillText('×', x, DEL_Y + 4)
@@ -240,7 +243,7 @@ export default function VideoChapterEditor({
     if (sec < duration - 0.05) { ctx.fillStyle = mutedColor; ctx.fillText('›', W.current - 16, TRACK_Y + TRACK_H / 2 + 7) }
 
     ctx.restore()
-  }, [chapters, duration, editingId])
+  }, [chapters, duration, editingId, theme])
 
   const setup = useCallback(() => {
     const cv = cvRef.current

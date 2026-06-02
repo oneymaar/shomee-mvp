@@ -2,37 +2,27 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Plus } from 'lucide-react'
+import { ChevronLeft, Plus, Check, Loader2, RefreshCw } from 'lucide-react'
 import VideoChapterEditor, { type Chapter } from './VideoChapterEditor'
+import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
 
 interface VideoChapterEditorModalProps {
   isOpen: boolean
   videoUrl: string
   duration: number
   chapters: Chapter[]
-  onSave: (chapters: Chapter[]) => void
+  onChange: (chapters: Chapter[]) => void
   onClose: () => void
+  autoSaveStatus: AutoSaveStatus
+  autoSaveIsDirty: boolean
+  autoSaveError?: string | null
+  onSaveNow: () => void
 }
 
-export default function VideoChapterEditorModal({
-  isOpen,
-  videoUrl,
-  duration,
-  chapters: initialChapters,
-  onSave,
-  onClose,
-}: VideoChapterEditorModalProps) {
+export default function VideoChapterEditorModal(props: VideoChapterEditorModalProps) {
   return (
     <AnimatePresence>
-      {isOpen && (
-        <ModalContent
-          videoUrl={videoUrl}
-          duration={duration}
-          initialChapters={initialChapters}
-          onSave={onSave}
-          onClose={onClose}
-        />
-      )}
+      {props.isOpen && <ModalContent {...props} />}
     </AnimatePresence>
   )
 }
@@ -40,25 +30,21 @@ export default function VideoChapterEditorModal({
 function ModalContent({
   videoUrl,
   duration,
-  initialChapters,
-  onSave,
+  chapters,
+  onChange,
   onClose,
-}: {
-  videoUrl: string
-  duration: number
-  initialChapters: Chapter[]
-  onSave: (chapters: Chapter[]) => void
-  onClose: () => void
-}) {
+  autoSaveStatus,
+  autoSaveIsDirty,
+  autoSaveError,
+  onSaveNow,
+}: VideoChapterEditorModalProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
-  const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
   const [internalDuration, setInternalDuration] = useState(duration)
   const [renameId, setRenameId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [currentTime, setCurrentTime] = useState(0)
 
-  // Follow the video clock so the "current chapter" pill updates live.
   useEffect(() => {
     const v = videoRef.current
     if (!v) return
@@ -85,6 +71,8 @@ function ModalContent({
   let currentChapter: Chapter | undefined = sorted[0]
   for (const c of sorted) if (c.startSec <= currentTime) currentChapter = c
 
+  // Label tap on the canvas opens the rename bar. Pausing here keeps the
+  // playhead still while the agent types.
   const handleLabelClick = (ch: Chapter) => {
     videoRef.current?.pause()
     setRenameId(ch.id)
@@ -93,9 +81,7 @@ function ModalContent({
 
   const commitRename = () => {
     if (renameId && renameValue.trim()) {
-      setChapters((prev) =>
-        prev.map((c) => (c.id === renameId ? { ...c, label: renameValue.trim() } : c)),
-      )
+      onChange(chapters.map((c) => (c.id === renameId ? { ...c, label: renameValue.trim() } : c)))
     }
     setRenameId(null)
     setRenameValue('')
@@ -116,14 +102,9 @@ function ModalContent({
       label: 'Nouvelle pièce',
       startSec: parseFloat(t.toFixed(2)),
     }
-    setChapters((prev) => [...prev, newCh])
+    onChange([...chapters, newCh])
     setRenameId(id)
     setRenameValue('Nouvelle pièce')
-  }
-
-  const handleSave = () => {
-    onSave(chapters)
-    onClose()
   }
 
   return (
@@ -157,23 +138,21 @@ function ModalContent({
         />
 
         {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 flex items-center gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label="Retour"
             className="w-9 h-9 rounded-full flex items-center justify-center bg-black/40 text-white active:bg-black/60"
           >
-            <X size={18} />
+            <ChevronLeft size={20} />
           </button>
-          <h2 className="flex-1 text-[14px] font-semibold text-white">Marqueurs de pièces</h2>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-3 py-1.5 rounded-full bg-white text-[#0a0a0a] text-[12px] font-semibold active:bg-white/80"
-          >
-            Enregistrer
-          </button>
+          <CompactAutoSaveBadge
+            status={autoSaveStatus}
+            isDirty={autoSaveIsDirty}
+            error={autoSaveError}
+            onRetry={onSaveNow}
+          />
         </div>
 
         {/* Pill: chapter actuel */}
@@ -197,16 +176,16 @@ function ModalContent({
       </div>
 
       {/* Editor panel */}
-      <div className="flex-shrink-0 bg-[#0a0a0a]">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-            Pièces
-          </span>
+      <div className="flex-shrink-0 bg-black">
+        {/* Header: left-aligned hint + add button */}
+        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-2">
+          <p className="text-[11px] text-gray-400 leading-snug">
+            Déplacez-les, renommez-les, ajoutez ou supprimez-en selon vos besoins.
+          </p>
           <button
             type="button"
             onClick={handleAddChapter}
-            className="flex items-center gap-1 py-1.5 px-3 rounded-full bg-violet-900/30 border border-violet-500/40 text-violet-400 text-[11px] font-medium active:bg-violet-900/50"
+            className="flex-shrink-0 flex items-center gap-1 py-1.5 px-3 rounded-full bg-violet-900/30 border border-violet-500/40 text-violet-400 text-[11px] font-medium active:bg-violet-900/50"
           >
             <Plus size={11} />
             Ajouter une pièce
@@ -244,22 +223,70 @@ function ModalContent({
           )}
         </AnimatePresence>
 
-        {/* Timeline editor (light surface inside the dark panel) */}
-        <div className="bg-white mx-3 mt-2 mb-3 rounded-xl px-2 py-2">
+        {/* Timeline editor — dark theme so labels render white */}
+        <div className="px-3 pt-2 pb-4">
           <VideoChapterEditor
             videoRef={videoRef}
             duration={internalDuration}
             chapters={chapters}
-            onChange={setChapters}
+            onChange={onChange}
             onLabelClick={handleLabelClick}
             hideAddButton
+            theme="dark"
           />
         </div>
-
-        <p className="text-[11px] text-gray-500 text-center px-4 pb-4 leading-relaxed">
-          Déplacez les marqueurs pour ajuster les temps. Touchez un nom pour le renommer.
-        </p>
       </div>
     </motion.div>
+  )
+}
+
+function CompactAutoSaveBadge({
+  status,
+  isDirty,
+  error,
+  onRetry,
+}: {
+  status: AutoSaveStatus
+  isDirty: boolean
+  error?: string | null
+  onRetry: () => void
+}) {
+  if (status === 'saving') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-white text-[11px] font-medium">
+        <Loader2 size={12} className="animate-spin" />
+        Sauvegarde…
+      </span>
+    )
+  }
+  if (status === 'error') {
+    return (
+      <button
+        type="button"
+        onClick={onRetry}
+        title={error ?? undefined}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/80 text-white text-[11px] font-semibold active:bg-red-500"
+      >
+        <RefreshCw size={12} />
+        Réessayer
+      </button>
+    )
+  }
+  if (status === 'saved' && !isDirty) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-white text-[11px] font-medium">
+        <Check size={12} className="text-emerald-400" />
+        Sauvegardé
+      </span>
+    )
+  }
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/90 text-[#0a0a0a] text-[11px] font-semibold active:bg-white"
+    >
+      Sauvegarder
+    </button>
   )
 }

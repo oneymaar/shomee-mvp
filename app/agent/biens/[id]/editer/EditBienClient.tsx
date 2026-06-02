@@ -11,7 +11,7 @@ import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import MediaUploader from '@/components/agent/MediaUploader'
-import VideoChapterEditor, { type Chapter } from '@/components/agent/VideoChapterEditor'
+import type { Chapter } from '@/components/agent/VideoChapterEditor'
 import VideoChapterEditorModal from '@/components/agent/VideoChapterEditorModal'
 import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
 import { useAutoSave } from '@/lib/hooks/useAutoSave'
@@ -1109,12 +1109,16 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
 
                 {videoAnalysisStarted && (
                   <div className="mt-4">
-                    <VideoChapterEditor
-                      videoRef={videoRef}
-                      duration={videoDuration}
-                      chapters={chapters}
-                      onChange={setChapters}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowChapterModal(true)}
+                      className="w-full py-2.5 rounded-xl border border-[#0a0a0a]/15 bg-white text-[13px] font-semibold text-[#0a0a0a] active:bg-gray-50"
+                    >
+                      Éditer les chapitres
+                    </button>
+                    <p className="text-[11px] text-gray-500 text-center mt-2 leading-relaxed">
+                      Les marqueurs de pièces aident les acquéreurs à se repérer dans votre vidéo.
+                    </p>
                   </div>
                 )}
               </>
@@ -1500,8 +1504,12 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           videoUrl={form.videoUrl}
           duration={videoDuration}
           chapters={chapters}
-          onSave={(updated) => setChapters(updated)}
+          onChange={setChapters}
           onClose={() => setShowChapterModal(false)}
+          autoSaveStatus={autoSaveStatus}
+          autoSaveIsDirty={autoSaveIsDirty}
+          autoSaveError={autoSaveError}
+          onSaveNow={() => { void saveNow() }}
         />
       )}
     </div>
