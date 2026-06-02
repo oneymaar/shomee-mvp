@@ -13,13 +13,23 @@ const tabs = [
   { label: 'Profil', href: '/profile', icon: User },
 ]
 
-export default function BottomNav() {
+interface BottomNavProps {
+  previewMode?: boolean
+}
+
+export default function BottomNav({ previewMode = false }: BottomNavProps = {}) {
   const pathname = usePathname()
   const conversations = useShomeeStore(s => s.conversations)
   const unreadCount = conversations.filter(hasUnread).length
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/10" style={{ backgroundColor: '#FDF5F2' }}>
+    <nav
+      className={clsx(
+        'bottom-0 left-0 right-0 z-50 border-t border-black/10',
+        previewMode ? 'absolute pointer-events-none opacity-50' : 'fixed',
+      )}
+      style={{ backgroundColor: '#FDF5F2' }}
+    >
       <div className="flex items-center justify-around px-2 h-[60px]">
         {tabs.map(({ label, href, icon: Icon }) => {
           const active = pathname.startsWith(href)

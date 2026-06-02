@@ -12,6 +12,7 @@ interface ActionRailProps {
   isFavorite: boolean
   onToggleFavorite: (rect: DOMRect) => void
   onMessage: () => void
+  previewMode?: boolean
 }
 
 interface RailButtonProps {
@@ -31,7 +32,7 @@ function RailButton({ icon, label, onClick }: RailButtonProps) {
   )
 }
 
-export default function ActionRail({ property, isFavorite, onToggleFavorite, onMessage }: ActionRailProps) {
+export default function ActionRail({ property, isFavorite, onToggleFavorite, onMessage, previewMode = false }: ActionRailProps) {
   const heartRef = useRef<HTMLButtonElement>(null)
   const [callOpen, setCallOpen] = useState(false)
 
@@ -42,7 +43,13 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
 
   return (
     <>
-    <div className="absolute right-3 z-20 flex flex-col items-center gap-6" style={{ bottom: 'calc(var(--nav-h) + 112px)' }}>
+    <div
+      className={clsx(
+        'absolute right-3 z-20 flex flex-col items-center gap-6',
+        previewMode && 'pointer-events-none opacity-50',
+      )}
+      style={{ bottom: 'calc(var(--nav-h) + 112px)' }}
+    >
       <RailButton
         icon={<MessageCircle size={28} strokeWidth={1.5} className="text-white" />}
         onClick={onMessage}

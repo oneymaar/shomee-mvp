@@ -175,6 +175,25 @@ interface PropertyDetailSheetProps {
   onToggleFavorite: () => void
   onMessage?: () => void
   hideBottomBar?: boolean
+  previewMode?: boolean
+}
+
+const EMPTY_VALUE = <span className="text-neutral-300 italic">—</span>
+
+function PreviewRow({
+  label,
+  hasValue,
+  value,
+  previewMode,
+}: {
+  label: string
+  hasValue: boolean
+  value: React.ReactNode
+  previewMode: boolean
+}) {
+  if (hasValue) return <TableRow label={label} value={value} />
+  if (previewMode) return <TableRow label={label} value={EMPTY_VALUE} />
+  return null
 }
 
 export default function PropertyDetailSheet({
@@ -185,6 +204,7 @@ export default function PropertyDetailSheet({
   onToggleFavorite,
   onMessage,
   hideBottomBar,
+  previewMode = false,
 }: PropertyDetailSheetProps) {
   const [mediaTab, setMediaTab] = useState<MediaTab>('photos')
   const [photoState, setPhotoState] = useState({ index: 0, dir: 0 })
@@ -193,10 +213,12 @@ export default function PropertyDetailSheet({
   const touchStartX = useRef<number | null>(null)
   const didSwipe = useRef(false)
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMediaTab('photos')
       setPhotoState({ index: 0, dir: 0 })
       setLightbox(false)
@@ -536,24 +558,90 @@ export default function PropertyDetailSheet({
                         <TableRow label="Type de bien" value="Appartement" />
                         <TableRow label="Surface Carrez" value={`${property.surface} m²`} />
                         <TableRow label="Pièces" value={`${property.rooms}`} />
-                        {property.bedrooms !== undefined && <TableRow label="Chambres" value={`${property.bedrooms}`} />}
-                        {property.floor !== undefined && (
-                          <TableRow label="Étage" value={property.totalFloors ? `${property.floor} / ${property.totalFloors}` : `${property.floor}`} />
-                        )}
-                        {property.orientation && <TableRow label="Orientation" value={property.orientation} />}
-                        {property.exteriorType && <TableRow label="Extérieur" value={property.exteriorType} />}
-                        {property.features?.includes('Ascenseur') && <TableRow label="Ascenseur" value="Oui" />}
-                        {property.features?.includes('Gardien') && <TableRow label="Gardien" value="Oui" />}
-                        {property.features?.includes('Cave') && <TableRow label="Cave" value="Oui" />}
-                        {property.heatingType && <TableRow label="Chauffage" value={property.heatingType} />}
-                        {property.hotWaterType && <TableRow label="Eau chaude" value={property.hotWaterType} />}
-                        {property.yearBuilt && <TableRow label="Année de construction" value={`${property.yearBuilt}`} />}
-                        {property.lotCount !== undefined && <TableRow label="Nombre de lots" value={`${property.lotCount}`} />}
-                        {property.proceduresEnCours !== undefined && (
-                          <TableRow label="Procédures en cours" value={property.proceduresEnCours ? 'Oui' : 'Non'} />
-                        )}
-                        {property.monthlyCharges !== undefined && <TableRow label="Charges mensuelles" value={`${property.monthlyCharges} €`} />}
-                        {property.propertyTax !== undefined && <TableRow label="Taxe foncière" value={`${property.propertyTax} €`} />}
+                        <PreviewRow
+                          label="Chambres"
+                          hasValue={property.bedrooms !== undefined}
+                          value={`${property.bedrooms}`}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Étage"
+                          hasValue={property.floor !== undefined}
+                          value={property.totalFloors ? `${property.floor} / ${property.totalFloors}` : `${property.floor}`}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Orientation"
+                          hasValue={Boolean(property.orientation)}
+                          value={property.orientation}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Extérieur"
+                          hasValue={Boolean(property.exteriorType)}
+                          value={property.exteriorType}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Ascenseur"
+                          hasValue={Boolean(property.features?.includes('Ascenseur'))}
+                          value="Oui"
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Gardien"
+                          hasValue={Boolean(property.features?.includes('Gardien'))}
+                          value="Oui"
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Cave"
+                          hasValue={Boolean(property.features?.includes('Cave'))}
+                          value="Oui"
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Chauffage"
+                          hasValue={Boolean(property.heatingType)}
+                          value={property.heatingType}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Eau chaude"
+                          hasValue={Boolean(property.hotWaterType)}
+                          value={property.hotWaterType}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Année de construction"
+                          hasValue={Boolean(property.yearBuilt)}
+                          value={`${property.yearBuilt}`}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Nombre de lots"
+                          hasValue={property.lotCount !== undefined}
+                          value={`${property.lotCount}`}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Procédures en cours"
+                          hasValue={property.proceduresEnCours !== undefined}
+                          value={property.proceduresEnCours ? 'Oui' : 'Non'}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Charges mensuelles"
+                          hasValue={property.monthlyCharges !== undefined}
+                          value={`${property.monthlyCharges} €`}
+                          previewMode={previewMode}
+                        />
+                        <PreviewRow
+                          label="Taxe foncière"
+                          hasValue={property.propertyTax !== undefined}
+                          value={`${property.propertyTax} €`}
+                          previewMode={previewMode}
+                        />
                       </GreyBox>
                     </div>
 
@@ -634,7 +722,10 @@ export default function PropertyDetailSheet({
 
                 {/* ── FLOATING PILLS ──────────────────────────────────── */}
                 {!hideBottomBar && <div
-                  className="absolute left-0 right-0 px-3 flex gap-2 items-center z-20"
+                  className={clsx(
+                    'absolute left-0 right-0 px-3 flex gap-2 items-center z-20',
+                    previewMode && 'pointer-events-none opacity-50',
+                  )}
                   style={{ bottom: 8, filter: 'drop-shadow(0 -2px 12px rgba(0,0,0,0.12))' }}
                 >
                   {/* Left pill — 3 CTAs */}

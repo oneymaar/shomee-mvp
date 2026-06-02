@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property, DpeRating, MandatType } from '@/lib/types'
-import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import MediaUploader from '@/components/agent/MediaUploader'
 import type { Chapter } from '@/components/agent/VideoChapterEditor'
 import VideoChapterEditorModal from '@/components/agent/VideoChapterEditorModal'
@@ -70,7 +69,6 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   const router = useRouter()
   const [form, setForm] = useState<Property>(initialProperty)
   const [openSection, setOpenSection] = useState<SectionKey | null>('general')
-  const [previewOpen, setPreviewOpen] = useState(false)
 
   // Extra form state (not in Property model)
   const [displayAddress, setDisplayAddress] = useState(true)
@@ -547,7 +545,10 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           <h1 className="text-[16px] font-semibold flex-1 text-[#0a0a0a]">Modifier le bien</h1>
           <button
             type="button"
-            onClick={() => setPreviewOpen(true)}
+            onClick={async () => {
+              await saveNow()
+              router.push(`/agent/biens/${form.id}/preview`)
+            }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#0a0a0a]/20 text-[#0a0a0a] text-[12px] font-medium active:bg-black/5"
           >
             <Eye size={15} />
@@ -1505,22 +1506,6 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           </>
         )}
       </AnimatePresence>
-
-      {/* ── Preview modal ─────────────────────────────────────────── */}
-      <div
-        className={clsx(
-          'fixed inset-0 z-[200] bg-black transition-opacity duration-200',
-          previewOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-        )}
-      >
-        <PropertyDetailSheet
-          property={form}
-          open={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-          isFavorite={false}
-          onToggleFavorite={() => {}}
-        />
-      </div>
 
       {/* ── Video chapter editor modal ───────────────────────────── */}
       {form.videoUrl && (
