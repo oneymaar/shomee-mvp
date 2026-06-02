@@ -52,8 +52,33 @@ function ModalContent({
   // new chapter — replaces the old violet pill at the top.
   const [flashLabel, setFlashLabel] = useState<string | null>(null)
   const [videoPaused, setVideoPaused] = useState(true)
+  // Mirror behaviour of the inline editor: centered play/pause button stays
+  // on while paused, lingers 2s after resuming, then fades out.
+  const [controlVisible, setControlVisible] = useState(true)
   const lastChapterIdRef = useRef<string | null>(null)
   const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const controlFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (controlFadeTimerRef.current) {
+      clearTimeout(controlFadeTimerRef.current)
+      controlFadeTimerRef.current = null
+    }
+    if (videoPaused) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setControlVisible(true)
+      return
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setControlVisible(true)
+    controlFadeTimerRef.current = setTimeout(() => setControlVisible(false), 2000)
+    return () => {
+      if (controlFadeTimerRef.current) {
+        clearTimeout(controlFadeTimerRef.current)
+        controlFadeTimerRef.current = null
+      }
+    }
+  }, [videoPaused])
 
   useEffect(() => {
     const v = videoRef.current
@@ -176,8 +201,8 @@ function ModalContent({
           className="absolute inset-0 w-full h-full object-contain cursor-pointer"
         />
 
-        {/* Persistent play/pause control — replaces the native button that
-            disappeared with the `controls` attribute. */}
+        {/* Centered play/pause control — replaces the native one. Stays put
+            while paused, lingers 2s and fades out once playback resumes. */}
         <button
           type="button"
           onClick={() => {
@@ -187,11 +212,15 @@ function ModalContent({
             else v.pause()
           }}
           aria-label={videoPaused ? 'Lecture' : 'Pause'}
-          className="absolute bottom-3 left-3 w-9 h-9 z-30 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 active:scale-95 transition-transform"
+          className={`absolute inset-0 m-auto w-16 h-16 z-30 bg-black/55 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 transition-opacity duration-500 ${
+            controlVisible
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none'
+          }`}
         >
           {videoPaused
-            ? <Play size={15} className="text-white translate-x-px" />
-            : <Pause size={15} className="text-white" />}
+            ? <Play size={26} className="text-white translate-x-0.5" />
+            : <Pause size={26} className="text-white" />}
         </button>
 
         {/* Top bar */}
