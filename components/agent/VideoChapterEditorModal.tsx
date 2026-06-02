@@ -231,7 +231,7 @@ function ModalContent({
         </button>
 
         {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 flex items-center gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between gap-2 px-3 py-3 bg-gradient-to-b from-black/70 to-transparent z-10">
           <button
             type="button"
             onClick={onClose}
@@ -240,18 +240,16 @@ function ModalContent({
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="flex-1 flex justify-center">
-            {hasModifs && (
-              <button
-                type="button"
-                onClick={() => onChange(chaptersSnapshot)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white text-[11px] font-medium active:bg-black/60"
-              >
-                <RotateCcw size={12} />
-                Réinitialiser
-              </button>
-            )}
-          </div>
+          {hasModifs && (
+            <button
+              type="button"
+              onClick={() => onChange(chaptersSnapshot)}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white text-[11px] font-medium active:bg-black/60"
+            >
+              <RotateCcw size={12} />
+              Réinitialiser
+            </button>
+          )}
           <CompactAutoSaveBadge
             status={autoSaveStatus}
             isDirty={autoSaveIsDirty}
