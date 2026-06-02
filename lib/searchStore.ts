@@ -21,6 +21,9 @@ export interface LocationIntent {
 
 export type PropertyType = 'appartement' | 'maison' | 'loft' | 'atelier'
 
+/** 3-state chip: 0 = unselected, 1 = desired, 2 = mandatory. */
+export type ChipState = 0 | 1 | 2
+
 export interface SearchPreferences {
   locationQuery: string
   locationLabel: string
@@ -38,12 +41,11 @@ export interface SearchPreferences {
   minRooms: number | null
   minSurface: number | null
   maxSurface: number | null
-  /** Selected chips in the "Le bien" category of the Autres critères step. */
-  propertyTags: string[]
-  /** Selected chips in the "L'immeuble" category — hidden for maison-only. */
-  buildingTags: string[]
-  /** AI-parsed free-text criteria. Positive = wanted; negative = excluded. */
-  customCriteria: Array<{ id: string; label: string; type: 'positive' | 'negative' }>
+  /** 3-state per chip — keyed by chip label. Covers both "Le bien" and
+   *  "L'immeuble" chips. Absent = state 0 (unselected). */
+  chipStates: Record<string, ChipState>
+  /** User-added criteria. Same 3-state semantics; default state 1 on add. */
+  customCriteria: Array<{ id: string; label: string; state: ChipState }>
   onboardingCompleted: boolean
 }
 
@@ -68,9 +70,12 @@ interface SearchStore extends SearchPreferences {
   togglePropertyType: (type: PropertyType) => void
   setMinRooms: (min: number | null) => void
   setSurface: (min: number | null, max: number | null) => void
-  togglePropertyTag: (tag: string) => void
-  toggleBuildingTag: (tag: string) => void
-  addCustomCriteria: (items: Array<{ label: string; type: 'positive' | 'negative' }>) => void
+  /** Cycle a chip 0 → 1 → 2 → 0. */
+  cycleChipState: (label: string) => void
+  /** Cycle a custom criterion 0 → 1 → 2 → 0. */
+  cycleCustomCriteriaState: (id: string) => void
+  /** Add new custom criteria — created at state 1 (desired) by default. */
+  addCustomCriteria: (items: Array<{ label: string }>) => void
   removeCustomCriteria: (id: string) => void
   clearCustomCriteria: () => void
   completeOnboarding: () => void
@@ -96,8 +101,7 @@ export const useSearchStore = create<SearchStore>()(
       minRooms: null,
       minSurface: null,
       maxSurface: null,
-      propertyTags: [],
-      buildingTags: [],
+      chipStates: {},
       customCriteria: [],
       onboardingCompleted: false,
 
@@ -219,10 +223,21 @@ export const useSearchStore = create<SearchStore>()(
         set((s) => ({ propertyTypes: s.propertyTypes.includes(type) ? s.propertyTypes.filter((t) => t !== type) : [...s.propertyTypes, type] })),
       setMinRooms: (min) => set({ minRooms: min }),
       setSurface: (min, max) => set({ minSurface: min, maxSurface: max }),
-      togglePropertyTag: (tag) =>
-        set((s) => ({ propertyTags: s.propertyTags.includes(tag) ? s.propertyTags.filter((t) => t !== tag) : [...s.propertyTags, tag] })),
-      toggleBuildingTag: (tag) =>
-        set((s) => ({ buildingTags: s.buildingTags.includes(tag) ? s.buildingTags.filter((t) => t !== tag) : [...s.buildingTags, tag] })),
+      cycleChipState: (label) =>
+        set((s) => {
+          const current = s.chipStates[label] ?? 0
+          const next = ((current + 1) % 3) as ChipState
+          const nextStates = { ...s.chipStates }
+          if (next === 0) delete nextStates[label]
+          else nextStates[label] = next
+          return { chipStates: nextStates }
+        }),
+      cycleCustomCriteriaState: (id) =>
+        set((s) => ({
+          customCriteria: s.customCriteria.map((c) =>
+            c.id === id ? { ...c, state: ((c.state + 1) % 3) as ChipState } : c,
+          ),
+        })),
       addCustomCriteria: (items) =>
         set((s) => ({
           customCriteria: [
@@ -230,7 +245,7 @@ export const useSearchStore = create<SearchStore>()(
             ...items.map((it) => ({
               id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
               label: it.label,
-              type: it.type,
+              state: 1 as ChipState,
             })),
           ],
         })),
@@ -243,7 +258,7 @@ export const useSearchStore = create<SearchStore>()(
           locationQuery: '', locationLabel: '', locationLat: null, locationLng: null, locationRadius: 2,
           locationIntent: null, selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [],
           budgetMin: null, budgetMax: null, propertyTypes: [], minRooms: null, minSurface: null, maxSurface: null,
-          propertyTags: [], buildingTags: [], customCriteria: [], onboardingCompleted: false,
+          chipStates: {}, customCriteria: [], onboardingCompleted: false,
         }),
     }),
     {
@@ -255,8 +270,7 @@ export const useSearchStore = create<SearchStore>()(
         minRooms: state.minRooms,
         minSurface: state.minSurface,
         maxSurface: state.maxSurface,
-        propertyTags: state.propertyTags,
-        buildingTags: state.buildingTags,
+        chipStates: state.chipStates,
         customCriteria: state.customCriteria,
         onboardingCompleted: state.onboardingCompleted,
       }),

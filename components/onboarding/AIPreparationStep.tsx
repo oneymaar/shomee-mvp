@@ -17,8 +17,10 @@ interface AIPreparationStepProps {
 }
 
 export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
-  const { locationLabel, propertyTags, buildingTags, customCriteria, completeOnboarding } = useSearchStore()
-  const criteriaCount = propertyTags.length + buildingTags.length + customCriteria.length
+  const { locationLabel, chipStates, customCriteria, completeOnboarding } = useSearchStore()
+  const criteriaCount =
+    Object.values(chipStates).filter((s) => s > 0).length +
+    customCriteria.filter((c) => c.state > 0).length
   const [visibleSteps, setVisibleSteps] = useState<number[]>([])
   const [done, setDone] = useState(false)
 

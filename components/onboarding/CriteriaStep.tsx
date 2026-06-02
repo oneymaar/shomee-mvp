@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ArrowRight, Check, X, Loader2 } from 'lucide-react'
-import { useSearchStore } from '@/lib/searchStore'
+import { ChevronRight, ArrowRight, Check, X, Loader2, Plus } from 'lucide-react'
+import { useSearchStore, type ChipState } from '@/lib/searchStore'
 
 const PROPERTY_TAGS: string[] = [
   'Extérieur',
@@ -31,9 +31,34 @@ const BUILDING_TAGS: string[] = [
   'Parties communes rénovées',
 ]
 
-// Single-line, single-example placeholder — invites the user to add one
-// criterion at a time (each one validated individually).
 const PLACEHOLDER = 'Séjour orienté ouest'
+
+// 3-state visual palette.
+const CHIP_STYLE: Record<ChipState, React.CSSProperties> = {
+  0: {
+    background: '#fff',
+    color: '#1a1a1a',
+    borderColor: 'rgba(0, 0, 0, 0.09)',
+  },
+  1: {
+    background: '#fdf0ed',
+    color: '#9b4a2e',
+    borderColor: '#e8907a',
+  },
+  2: {
+    background: '#a84632',
+    color: '#fff',
+    borderColor: '#a84632',
+  },
+}
+
+const TOOLTIP_DURATION_MS = 3500
+
+interface TooltipState {
+  text: string
+  x: number
+  y: number
+}
 
 interface CriteriaStepProps {
   onNext: () => void
@@ -45,11 +70,10 @@ interface CriteriaStepProps {
 export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProps) {
   const {
     propertyTypes,
-    propertyTags,
-    togglePropertyTag,
-    buildingTags,
-    toggleBuildingTag,
+    chipStates,
+    cycleChipState,
     customCriteria,
+    cycleCustomCriteriaState,
     addCustomCriteria,
     removeCustomCriteria,
   } = useSearchStore()
@@ -59,12 +83,6 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
     return propertyTypes.some((t) => t === 'appartement' || t === 'loft' || t === 'atelier')
   }, [propertyTypes])
 
-  // ── Focus mode state ─────────────────────────────────────────────────────
-  // The textarea instance MUST stay mounted across mode switches so iOS
-  // never sees a focus blip → keyboard stays open. Each conditionally
-  // rendered child carries an explicit `key` so React tracks the textarea
-  // by identity, not by sibling index. Without keys, removing a sibling
-  // above the textarea would shift its index and force a remount.
   const [isFocused, setIsFocused] = useState(false)
   useEffect(() => {
     onFocusChange?.(isFocused)
@@ -76,6 +94,52 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
   const [text, setText] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // ── Tooltip state ───────────────────────────────────────────────────────
+  // Each tooltip shows at most once per page mount. `shownTip` tracks which
+  // ones have already fired; `activeTip` is the one currently rendered.
+  const [shownTip, setShownTip] = useState<{ s1: boolean; s2: boolean }>({ s1: false, s2: false })
+  const [activeTip, setActiveTip] = useState<TooltipState | null>(null)
+  const tipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (tipTimerRef.current) clearTimeout(tipTimerRef.current)
+  }, [])
+
+  function maybeShowTooltip(nextState: ChipState, anchor: HTMLElement) {
+    if (nextState === 0) return
+    if (nextState === 1 && shownTip.s1) return
+    if (nextState === 2 && shownTip.s2) return
+
+    const rect = anchor.getBoundingClientRect()
+    const tip: TooltipState = {
+      text:
+        nextState === 1
+          ? 'Souhaité — cliquer à nouveau pour le rendre obligatoire'
+          : 'Obligatoire — cliquer pour désélectionner',
+      // Anchor center, the tooltip will translate-x by -50% for centering.
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+    }
+    setActiveTip(tip)
+    setShownTip((prev) => (nextState === 1 ? { ...prev, s1: true } : { ...prev, s2: true }))
+
+    if (tipTimerRef.current) clearTimeout(tipTimerRef.current)
+    tipTimerRef.current = setTimeout(() => setActiveTip(null), TOOLTIP_DURATION_MS)
+  }
+
+  function handleChipClick(label: string, e: React.MouseEvent<HTMLButtonElement>) {
+    const current = chipStates[label] ?? 0
+    const next = ((current + 1) % 3) as ChipState
+    cycleChipState(label)
+    maybeShowTooltip(next, e.currentTarget)
+  }
+
+  function handleCustomChipClick(id: string, currentState: ChipState, e: React.MouseEvent<HTMLButtonElement>) {
+    const next = ((currentState + 1) % 3) as ChipState
+    cycleCustomCriteriaState(id)
+    maybeShowTooltip(next, e.currentTarget)
+  }
 
   const canValidate = text.trim().length >= 3 && !analyzing
 
@@ -92,8 +156,10 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || 'analyze failed')
-      const items: Array<{ label: string; type: 'positive' | 'negative' }> = Array.isArray(data?.criteria)
-        ? data.criteria
+      const items: Array<{ label: string }> = Array.isArray(data?.criteria)
+        ? (data.criteria as Array<{ label?: unknown }>)
+            .filter((c): c is { label: string } => typeof c.label === 'string' && c.label.trim().length > 0)
+            .map((c) => ({ label: c.label }))
         : []
       if (items.length === 0) {
         setError("Je n'ai pas réussi à interpréter. Reformulez en une phrase.")
@@ -121,36 +187,49 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
   }
 
   // ── Sub-renders ─────────────────────────────────────────────────────────
-  const criteriaChipsList = (
+
+  const renderChipContent = (label: string, state: ChipState) => (
+    <>
+      {state === 1 && <Plus size={11} strokeWidth={2.6} />}
+      {state === 2 && <Check size={11} strokeWidth={2.6} />}
+      <span>{label}</span>
+    </>
+  )
+
+  const chipBaseClass =
+    'inline-flex items-center gap-[5px] px-[11px] py-[5px] rounded-full text-[12.5px] font-medium leading-[1.25] border whitespace-nowrap select-none cursor-pointer transition-[background-color,color,border-color] duration-150 ease-out active:scale-[0.96]'
+
+  const customChipsList = (
     <div className="flex flex-wrap gap-1.5">
       <AnimatePresence initial={false}>
         {customCriteria.map((c) => (
-          <motion.span
+          <motion.div
             key={c.id}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="shomee-chip"
-            data-tone={c.type}
+            className="inline-flex"
           >
-            {c.type === 'positive' ? (
-              <Check size={11} strokeWidth={2.6} />
-            ) : (
-              <X size={11} strokeWidth={2.6} />
-            )}
-            <span>{c.label}</span>
             <button
               type="button"
-              aria-label="Supprimer"
-              onMouseDown={keepFocus}
-              onPointerDown={keepFocus}
-              onClick={() => removeCustomCriteria(c.id)}
-              className="shomee-chip-close"
+              onClick={(e) => handleCustomChipClick(c.id, c.state, e)}
+              className={chipBaseClass}
+              style={{ ...CHIP_STYLE[c.state], paddingRight: 6 }}
             >
-              <X size={11} strokeWidth={2.6} />
+              {renderChipContent(c.label, c.state)}
+              <button
+                type="button"
+                aria-label="Supprimer"
+                onMouseDown={keepFocus}
+                onPointerDown={keepFocus}
+                onClick={(e) => { e.stopPropagation(); removeCustomCriteria(c.id) }}
+                className="inline-flex items-center justify-center w-[14px] h-[14px] rounded-full ml-[2px] -mr-[1px] opacity-60 hover:opacity-100"
+              >
+                <X size={11} strokeWidth={2.6} />
+              </button>
             </button>
-          </motion.span>
+          </motion.div>
         ))}
       </AnimatePresence>
     </div>
@@ -161,9 +240,6 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
       className="relative rounded-full bg-white border transition-colors"
       style={{ borderColor: isFocused ? 'rgba(166,75,39,0.45)' : 'rgba(0,0,0,0.09)' }}
     >
-      {/* Single-line input — implies one-criterion-per-validation. iOS
-          Safari zooms inputs below 16px on focus, so we keep 16px to
-          prevent viewport jump. Placeholder inherits the same size. */}
       <input
         ref={inputRef}
         type="text"
@@ -212,6 +288,14 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
     </div>
   )
 
+  // Continue → build the canonical { label, importance } list expected by
+  // downstream consumers and persist it into the store before advancing.
+  // (Persistence is local — Zustand persist; DB write happens later when
+  // an authenticated buyer-profile flow is wired in.)
+  const handleContinue = () => {
+    onNext()
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* ─── Top region ──────────────────────────────────────────────────── */}
@@ -256,18 +340,37 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
         )}
       </div>
 
-      {/* ─── Scrollable body ─────────────────────────────────────────────
-          Three sibling sections in normal mode: Le bien / L'immeuble /
-          Critères personnalisés. The third section contains the textarea
-          itself — same visual rhythm as the first two.
-          In focus mode, the first two sections are removed; the textarea
-          (still inside the scrollable body) pins to the bottom via
-          justify-end. Explicit keys ensure the textarea DOM node persists. */}
+      {/* ─── Scrollable body ─────────────────────────────────────────────── */}
       <div
         className={`flex-1 min-h-0 overflow-y-auto shomee-scroll-shadow flex flex-col px-6 pb-2 ${
           isFocused ? 'justify-end' : ''
         }`}
       >
+        {!isFocused && (
+          <motion.div
+            key="legend"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
+            className="flex gap-3 mb-6"
+          >
+            <div
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border"
+              style={CHIP_STYLE[1]}
+            >
+              <Plus size={11} strokeWidth={2.8} />
+              <span>Souhaité</span>
+            </div>
+            <div
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border"
+              style={CHIP_STYLE[2]}
+            >
+              <Check size={11} strokeWidth={2.8} />
+              <span>Obligatoire</span>
+            </div>
+          </motion.div>
+        )}
+
         {!isFocused && (
           <motion.section
             key="cat-bien"
@@ -281,16 +384,16 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
             </p>
             <div className="flex flex-wrap gap-1.5">
               {PROPERTY_TAGS.map((tag) => {
-                const isSelected = propertyTags.includes(tag)
+                const state = (chipStates[tag] ?? 0) as ChipState
                 return (
                   <button
                     key={tag}
                     type="button"
-                    onClick={() => togglePropertyTag(tag)}
-                    className="shomee-chip"
-                    data-selected={isSelected}
+                    onClick={(e) => handleChipClick(tag, e)}
+                    className={chipBaseClass}
+                    style={CHIP_STYLE[state]}
                   >
-                    {tag}
+                    {renderChipContent(tag, state)}
                   </button>
                 )
               })}
@@ -311,16 +414,16 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
             </p>
             <div className="flex flex-wrap gap-1.5">
               {BUILDING_TAGS.map((tag) => {
-                const isSelected = buildingTags.includes(tag)
+                const state = (chipStates[tag] ?? 0) as ChipState
                 return (
                   <button
                     key={tag}
                     type="button"
-                    onClick={() => toggleBuildingTag(tag)}
-                    className="shomee-chip"
-                    data-selected={isSelected}
+                    onClick={(e) => handleChipClick(tag, e)}
+                    className={chipBaseClass}
+                    style={CHIP_STYLE[state]}
                   >
-                    {tag}
+                    {renderChipContent(tag, state)}
                   </button>
                 )
               })}
@@ -328,9 +431,6 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
           </motion.section>
         )}
 
-        {/* Section 3: Critères personnalisés — same label style as above
-            sections so the textarea reads as a coherent third category, not
-            as a floating element attached to the CTA below. */}
         {!isFocused && (
           <motion.p
             key="cat-custom-label"
@@ -345,7 +445,7 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
 
         {customCriteria.length > 0 && (
           <div key="chips" className={isFocused ? 'pb-1.5' : 'mb-2'}>
-            {criteriaChipsList}
+            {customChipsList}
           </div>
         )}
 
@@ -355,7 +455,6 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
 
         <div
           key="textarea"
-          className={isFocused ? '' : ''}
           style={isFocused ? { paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' } : undefined}
         >
           {textareaBlock}
@@ -372,7 +471,7 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 28px)' }}
         >
           <button
-            onClick={onNext}
+            onClick={handleContinue}
             className="w-full py-3.5 rounded-2xl font-semibold text-[15.5px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{ backgroundColor: '#A64B27' }}
           >
@@ -381,6 +480,58 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
           </button>
         </motion.div>
       )}
+
+      {/* ─── Tooltip overlay ─────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {activeTip && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed z-[10000] pointer-events-none"
+            style={{
+              left: activeTip.x,
+              top: activeTip.y,
+              transform: 'translate(-50%, calc(-100% - 8px))',
+            }}
+          >
+            <div
+              className="px-2.5 py-1.5 rounded-md text-white text-[11px] leading-snug text-center"
+              style={{
+                background: 'rgba(15,15,15,0.9)',
+                maxWidth: 240,
+              }}
+            >
+              {activeTip.text}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
+}
+
+/**
+ * Derive the canonical { label, importance } list from the chip-state map +
+ * custom criteria. Exposed for downstream consumers (matching engine glue,
+ * AI summary screen). State 0 entries are dropped.
+ */
+export function buildSelectedCriteria(
+  chipStates: Record<string, ChipState>,
+  customCriteria: Array<{ label: string; state: ChipState }>,
+): Array<{ label: string; importance: 'desired' | 'mandatory' }> {
+  const fromChips = Object.entries(chipStates)
+    .filter(([, state]) => state > 0)
+    .map(([label, state]) => ({
+      label,
+      importance: state === 2 ? ('mandatory' as const) : ('desired' as const),
+    }))
+  const fromCustom = customCriteria
+    .filter((c) => c.state > 0)
+    .map((c) => ({
+      label: c.label,
+      importance: c.state === 2 ? ('mandatory' as const) : ('desired' as const),
+    }))
+  return [...fromChips, ...fromCustom]
 }
