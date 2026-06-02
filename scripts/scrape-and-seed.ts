@@ -389,17 +389,18 @@ async function insertProperty(
 // Step 6 — optional video analysis (mirrors /api/biens/[id]/analyze-video)
 // ─────────────────────────────────────────────────────────────────────────────
 
+interface AnalysisContext {
+  rooms?: number
+  bedrooms?: number
+  description?: string
+}
+
 async function runAnalysis(
   prisma: PrismaClient,
   propertyId: string,
   videoUrl: string,
-  info: ExtractedInfo,
+  ctx: AnalysisContext,
 ): Promise<void> {
-  const ctx = {
-    rooms: info.rooms ?? undefined,
-    bedrooms: info.bedrooms ?? undefined,
-    description: info.description,
-  }
   const { tags, chapters, error } = await analyzeVideo(videoUrl, propertyId, ctx)
   if (error) throw new Error('analyzeVideo a échoué')
 
@@ -451,7 +452,6 @@ async function processUrl(
   prisma: PrismaClient,
   anthropic: Anthropic,
   pool: AgencyWithAgent[],
-  analyze: boolean,
 ): Promise<RunOutcome> {
   const tag = `[${idx + 1}/${total}]`
   const prefix = urlHash(url)
@@ -503,17 +503,6 @@ async function processUrl(
   }
   console.log(`${tag} ✓ bien créé: ${propertyId} — ${attrib.agency.name}`)
 
-  if (analyze) {
-    try {
-      await runAnalysis(prisma, propertyId, upload.videoUrl, extracted)
-      console.log(`${tag} ✓ analyse IA terminée`)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.log(`${tag} ⚠ analyse IA échouée: ${msg}`)
-      // Ne pas marquer le bien comme erreur global — il est créé.
-    }
-  }
-
   // Best-effort local cleanup so /tmp doesn't grow unbounded.
   try { unlinkSync(info.localPath) } catch { /* ignore */ }
   try { unlinkSync(join(TMP_DIR, `${prefix}.info.json`)) } catch { /* ignore */ }
@@ -534,6 +523,11 @@ async function main() {
   if (!process.env.CLOUDINARY_API_KEY) throw new Error('CLOUDINARY_API_KEY non défini')
   if (!process.env.CLOUDINARY_API_SECRET) throw new Error('CLOUDINARY_API_SECRET non défini')
 
+  // Configure cloudinary up-front for both modes. lib/cloudinary.ts also
+  // calls cloudinary.config at module-load with empty env (imports are
+  // hoisted above our dotenv loaders), so this call overrides that bad
+  // initial state on the shared cloudinary v2 singleton — important for
+  // analyzeVideo's `cloudinary.api.resource` duration probe in --analyze.
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key:    process.env.CLOUDINARY_API_KEY,
@@ -541,17 +535,34 @@ async function main() {
     secure:     true,
   })
 
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+  const prisma = new PrismaClient({ adapter })
+
+  try {
+    if (analyze) {
+      await runAnalysisMode(prisma)
+    } else {
+      await runScrapeMode(prisma)
+    }
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mode 1 — scrape (default)
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function runScrapeMode(prisma: PrismaClient) {
   ensureTmpDir()
   const urls = loadUrls()
   if (urls.length === 0) {
     console.log('Aucune URL dans scripts/urls-to-scrape.txt — rien à faire.')
     return
   }
-  console.log(`→ ${urls.length} URLs à traiter${analyze ? ' (avec analyse IA)' : ''}`)
+  console.log(`→ ${urls.length} URLs à traiter`)
   console.log('')
 
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-  const prisma = new PrismaClient({ adapter })
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   const pool = await loadAgencyPool(prisma)
@@ -562,17 +573,12 @@ async function main() {
   console.log('')
 
   const outcomes: RunOutcome[] = []
-  try {
-    for (let i = 0; i < urls.length; i++) {
-      const outcome = await processUrl(urls[i], i, urls.length, prisma, anthropic, pool, analyze)
-      outcomes.push(outcome)
-      console.log('')
-    }
-  } finally {
-    await prisma.$disconnect()
+  for (let i = 0; i < urls.length; i++) {
+    const outcome = await processUrl(urls[i], i, urls.length, prisma, anthropic, pool)
+    outcomes.push(outcome)
+    console.log('')
   }
 
-  // ─── Summary ──────────────────────────────────────────────────────────
   const success = outcomes.filter((o) => o.ok).length
   const failed = outcomes.length - success
   console.log('───────────────────────────────────────────')
@@ -585,6 +591,77 @@ async function main() {
       const key = o.error.split(':')[0]
       reasons[key] = (reasons[key] ?? 0) + 1
     }
+    for (const [reason, count] of Object.entries(reasons)) {
+      console.log(`  ${reason} × ${count}`)
+    }
+  }
+  console.log('───────────────────────────────────────────')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mode 2 — analyze existing PUBLISHED properties with a videoUrl but no
+// VideoAnalysis row yet. Re-runs are safe: properties whose analysis has
+// already landed are filtered out by the relation predicate.
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function runAnalysisMode(prisma: PrismaClient) {
+  const candidates = await prisma.property.findMany({
+    where: {
+      statut: PropertyStatus.PUBLISHED,
+      videoUrl: { not: null },
+      videoAnalysis: null,
+    },
+    select: {
+      id: true,
+      title: true,
+      videoUrl: true,
+      rooms: true,
+      bedrooms: true,
+      description: true,
+      agencyId: true,
+    },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  if (candidates.length === 0) {
+    console.log('Aucun bien à analyser — tous les biens PUBLISHED ont déjà une VideoAnalysis.')
+    return
+  }
+  console.log(`→ ${candidates.length} biens à analyser`)
+  console.log('')
+
+  let success = 0
+  const reasons: Record<string, number> = {}
+
+  for (let i = 0; i < candidates.length; i++) {
+    const p = candidates[i]
+    const tag = `[${i + 1}/${candidates.length}]`
+    console.log(`${tag} ${p.title} — analyse IA…`)
+    const t0 = Date.now()
+    try {
+      // Non-null asserted: the `videoUrl: { not: null }` filter above already
+      // restricts to rows with a non-null URL.
+      await runAnalysis(prisma, p.id, p.videoUrl as string, {
+        rooms: p.rooms ?? undefined,
+        bedrooms: p.bedrooms ?? undefined,
+        description: p.description,
+      })
+      console.log(`${tag} ✓ analysé (${formatDuration(Date.now() - t0)})`)
+      success++
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.log(`${tag} ✗ ${msg}`)
+      const key = msg.split(':')[0].trim() || 'unknown'
+      reasons[key] = (reasons[key] ?? 0) + 1
+    }
+    console.log('')
+  }
+
+  const failed = candidates.length - success
+  console.log('───────────────────────────────────────────')
+  console.log(`✓ ${success}/${candidates.length} biens analysés`)
+  if (failed > 0) {
+    console.log(`✗ ${failed} erreurs`)
     for (const [reason, count] of Object.entries(reasons)) {
       console.log(`  ${reason} × ${count}`)
     }
