@@ -1155,13 +1155,18 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                     ref={videoRef}
                     src={form.videoUrl}
                     preload="metadata"
-                    controls
                     playsInline
                     onLoadedMetadata={() => {
                       if (videoRef.current) setVideoDuration(videoRef.current.duration || 0)
                     }}
                     onVolumeChange={(e) => setEditorVideoMuted(e.currentTarget.muted)}
-                    className="w-full rounded-xl bg-black"
+                    onClick={() => {
+                      const v = videoRef.current
+                      if (!v) return
+                      if (v.paused) v.play().catch(() => {})
+                      else v.pause()
+                    }}
+                    className="w-full rounded-xl bg-black cursor-pointer"
                     style={{ aspectRatio: '9 / 16' }}
                   />
                   <button
@@ -1178,14 +1183,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
                       ? <VolumeX size={15} className="text-white" />
                       : <Volume2 size={15} className="text-white" />}
                   </button>
-                  {/* Stories-style chapter bar — sits above the native controls. */}
-                  {inlineFractionalChapters && (
-                    <VideoProgressBar
-                      videoRef={videoRef}
-                      chapters={inlineFractionalChapters}
-                      bottom="44px"
-                    />
-                  )}
+                  {/* Stories-style progress bar — REPLACES the native progress
+                      bar. Falls back to a single fill segment when the bien
+                      has no chapters yet. */}
+                  <VideoProgressBar
+                    videoRef={videoRef}
+                    chapters={inlineFractionalChapters}
+                    bottom="8px"
+                  />
                 </div>
 
                 {videoAnalysisStarted && (

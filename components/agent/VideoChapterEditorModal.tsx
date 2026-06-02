@@ -159,13 +159,18 @@ function ModalContent({
           ref={videoRef}
           src={videoUrl}
           preload="metadata"
-          controls
           playsInline
           onLoadedMetadata={() => {
             const d = videoRef.current?.duration
             if (d && Number.isFinite(d)) setInternalDuration(d)
           }}
-          className="absolute inset-0 w-full h-full object-contain"
+          onClick={() => {
+            const v = videoRef.current
+            if (!v) return
+            if (v.paused) v.play().catch(() => {})
+            else v.pause()
+          }}
+          className="absolute inset-0 w-full h-full object-contain cursor-pointer"
         />
 
         {/* Top bar */}
@@ -203,15 +208,14 @@ function ModalContent({
           </div>
         )}
 
-        {/* Stories-style chapter progress bar — sits just above the native
-            controls and follows chapter edits live. */}
-        {fractionalChapters && (
-          <VideoProgressBar
-            videoRef={videoRef}
-            chapters={fractionalChapters}
-            bottom="44px"
-          />
-        )}
+        {/* Stories-style progress bar — REPLACES the native progress bar.
+            Updates live as the agent reorders / adds / removes chapters,
+            falls back to a single fill segment when none are defined. */}
+        <VideoProgressBar
+          videoRef={videoRef}
+          chapters={fractionalChapters}
+          bottom="8px"
+        />
       </div>
 
       {/* Editor panel */}
