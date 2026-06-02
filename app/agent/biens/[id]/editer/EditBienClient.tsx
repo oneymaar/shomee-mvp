@@ -448,24 +448,49 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
   }
 
   // ── Auto-save ──────────────────────────────────────────────────────────
-  // The aggregated snapshot is the source of truth sent to PATCH. We only
-  // include serialisable fields that map onto the Property schema; pure UI
-  // state (open section, drag indices, picker open, …) is excluded.
+  // Many editor fields write to local state (copro, finance, energy,
+  // displayAddress, quartier, …) without flowing through `form`. To make
+  // sure the Sauvegarder button re-arms on every interaction we include
+  // those states under a __uiState wrapper for change detection. The
+  // wrapper is stripped before the PATCH so the server only ever sees
+  // valid Property fields.
   const autoSaveSnapshot = useMemo(() => ({
     ...form,
     gallery: photos,
     matterportUrl: matterportUrl ? matterportUrl : null,
     chapters: chapters.length > 0 ? chapters : null,
-  }), [form, photos, matterportUrl, chapters])
+    __uiState: {
+      displayAddress,
+      displayPrice,
+      quartier,
+      propertyType,
+      featureCounts,
+      annexSurfaces,
+      annoncePrefix,
+      annonceSuffix,
+      plans,
+      copro,
+      finance,
+      energy,
+    },
+  }), [
+    form, photos, matterportUrl, chapters,
+    displayAddress, displayPrice, quartier, propertyType,
+    featureCounts, annexSurfaces,
+    annoncePrefix, annonceSuffix,
+    plans, copro, finance, energy,
+  ])
 
   const persistSnapshot = useCallback(async (data: typeof autoSaveSnapshot) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { __uiState, ...payload } = data
     const res = await fetch(`/api/biens/${form.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${AGENT_BEARER_TOKEN}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => null) as { error?: string } | null
