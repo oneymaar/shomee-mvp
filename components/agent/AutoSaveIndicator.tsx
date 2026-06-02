@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, Loader2, AlertCircle } from 'lucide-react'
+import { Check, Loader2, RefreshCw } from 'lucide-react'
 import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
 
 function formatAgo(date: Date, now: number): string {
@@ -18,9 +18,20 @@ interface AutoSaveIndicatorProps {
   status: AutoSaveStatus
   lastSavedAt: Date | null
   error?: string | null
+  onRetry: () => void
 }
 
-export default function AutoSaveIndicator({ status, lastSavedAt, error }: AutoSaveIndicatorProps) {
+/**
+ * Full-width slot that replaces the "Sauvegarder" button on the editor bottom
+ * bar. Morphs between idle / saving / saved / error and exposes a retry
+ * affordance when a save has failed.
+ */
+export default function AutoSaveIndicator({
+  status,
+  lastSavedAt,
+  error,
+  onRetry,
+}: AutoSaveIndicatorProps) {
   const [now, setNow] = useState<number>(() => Date.now())
 
   useEffect(() => {
@@ -29,37 +40,45 @@ export default function AutoSaveIndicator({ status, lastSavedAt, error }: AutoSa
     return () => clearInterval(id)
   }, [status, lastSavedAt])
 
-  if (status === 'idle' && !lastSavedAt) return null
-
   if (status === 'saving') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
-        <Loader2 size={12} className="animate-spin" />
+      <div className="w-full py-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 text-gray-500 text-[13px]">
+        <Loader2 size={14} className="animate-spin" />
         Sauvegarde…
-      </span>
+      </div>
     )
   }
 
   if (status === 'error') {
     return (
-      <span
-        className="inline-flex items-center gap-1.5 text-[11px] text-red-600"
+      <button
+        type="button"
+        onClick={onRetry}
         title={error ?? undefined}
+        className="w-full py-3 rounded-xl border border-red-300 text-red-600 font-semibold text-[14px] flex items-center justify-center gap-2 active:bg-red-50"
       >
-        <AlertCircle size={12} />
-        Erreur de sauvegarde
-      </span>
+        <RefreshCw size={14} />
+        Réessayer
+      </button>
     )
   }
 
-  if (lastSavedAt) {
+  if (status === 'saved' && lastSavedAt) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
-        <Check size={12} className="text-emerald-600" />
+      <div className="w-full py-3 rounded-xl border border-gray-200 flex items-center justify-center gap-2 text-gray-500 text-[13px]">
+        <Check size={14} className="text-emerald-600" />
         Sauvegardé {formatAgo(lastSavedAt, now)}
-      </span>
+      </div>
     )
   }
 
-  return null
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      className="w-full py-3 rounded-xl border border-[#0a0a0a] text-[#0a0a0a] font-semibold text-[14px] active:bg-[#0a0a0a]/[0.03]"
+    >
+      Sauvegarder
+    </button>
+  )
 }

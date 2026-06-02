@@ -516,14 +516,7 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
           >
             <ArrowLeft size={22} />
           </button>
-          <h1 className="text-[16px] font-semibold text-[#0a0a0a]">Modifier le bien</h1>
-          <div className="flex-1 flex justify-end">
-            <AutoSaveIndicator
-              status={autoSaveStatus}
-              lastSavedAt={autoSaveLastSavedAt}
-              error={autoSaveError}
-            />
-          </div>
+          <h1 className="text-[16px] font-semibold flex-1 text-[#0a0a0a]">Modifier le bien</h1>
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
@@ -1422,12 +1415,14 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
         className="fixed left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex gap-3"
         style={{ bottom: 0, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
       >
-        <button
-          type="button"
-          className="flex-1 py-3 rounded-xl border border-[#0a0a0a] text-[#0a0a0a] font-semibold text-[14px] active:bg-[#0a0a0a]/[0.03]"
-        >
-          Sauvegarder
-        </button>
+        <div className="flex-1">
+          <AutoSaveIndicator
+            status={autoSaveStatus}
+            lastSavedAt={autoSaveLastSavedAt}
+            error={autoSaveError}
+            onRetry={() => { void saveNow() }}
+          />
+        </div>
         <button
           type="button"
           className="flex-1 py-3 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[14px] active:bg-[#222]"
