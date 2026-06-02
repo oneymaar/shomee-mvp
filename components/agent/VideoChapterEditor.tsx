@@ -138,8 +138,9 @@ export default function VideoChapterEditor({
     const dark = theme === 'dark'
     const trackBg = '#f4f3f0'
     const borderCol = 'rgba(0,0,0,0.1)'
-    const mutedColor = dark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'
+    const mutedColor = dark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.3)'
     const textColor = dark ? 'rgba(255,255,255,0.95)' : 'rgba(0,0,0,0.85)'
+    const timestampColor = dark ? 'rgba(255,255,255,0.7)' : '#7c3aed'
     const bgSolid = dark ? 'rgba(10,10,10,1)' : 'rgba(255,255,255,1)'
     const bgTrans = dark ? 'rgba(10,10,10,0)' : 'rgba(255,255,255,0)'
 
@@ -186,9 +187,9 @@ export default function VideoChapterEditor({
       const delA = fadeAlpha(x, cxPx)
       if (delA > 0) {
         ctx.globalAlpha = delA
-        ctx.fillStyle = dark ? '#2a2a2a' : '#e8e8e8'
+        ctx.fillStyle = dark ? '#4a4a4a' : '#e8e8e8'
         ctx.beginPath(); ctx.arc(x, DEL_Y, 8, 0, Math.PI * 2); ctx.fill()
-        ctx.strokeStyle = dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'; ctx.lineWidth = 0.5
+        ctx.strokeStyle = dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.12)'; ctx.lineWidth = 0.5
         ctx.beginPath(); ctx.arc(x, DEL_Y, 8, 0, Math.PI * 2); ctx.stroke()
         ctx.fillStyle = mutedColor; ctx.font = '11px system-ui'; ctx.textAlign = 'center'
         ctx.fillText('×', x, DEL_Y + 4)
@@ -199,7 +200,7 @@ export default function VideoChapterEditor({
         const row = labelRows[ch.id] ?? 0
         ctx.font = '11px system-ui, sans-serif'; ctx.fillStyle = textColor; ctx.textAlign = 'center'
         ctx.fillText(ch.label, x, row === 0 ? LABEL_Y1 : LABEL_Y2)
-        ctx.font = '10px system-ui'; ctx.fillStyle = '#7c3aed'
+        ctx.font = '10px system-ui'; ctx.fillStyle = timestampColor
         ctx.fillText(fmtS(ch.startSec), x, row === 0 ? TS_Y1 : TS_Y2)
       }
     })
