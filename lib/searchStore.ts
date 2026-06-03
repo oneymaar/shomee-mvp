@@ -110,8 +110,15 @@ interface SearchStore extends SearchPreferences {
   cycleChipState: (label: string) => void
   /** Cycle a custom criterion 0 → 1 → 2 → 3 → 0. */
   cycleCustomCriteriaState: (id: string) => void
-  /** Add new custom criteria — created at state 1 (desired) by default. */
-  addCustomCriteria: (items: Array<{ label: string }>) => void
+  /** Add new custom criteria. Without overrides: state defaults to 1 (desired),
+   *  or 3 (dealbreaker) if the label starts with a negative prefix.
+   *  Pass `state` / `polarity` to bypass auto-detection (used by the AI
+   *  import flow where the brief already carries explicit values). */
+  addCustomCriteria: (items: Array<{
+    label: string
+    state?: ChipState
+    polarity?: 'positive' | 'negative'
+  }>) => void
   removeCustomCriteria: (id: string) => void
   clearCustomCriteria: () => void
   completeOnboarding: () => void
@@ -279,12 +286,19 @@ export const useSearchStore = create<SearchStore>()(
           customCriteria: [
             ...s.customCriteria,
             ...items.map((it) => {
-              const { isNegative, cleanLabel } = detectNegative(it.label)
+              // Auto-detection runs only when the caller didn't provide
+              // explicit overrides. The AI import flow passes both fields
+              // so the brief's structured intent is preserved verbatim.
+              const auto = detectNegative(it.label)
+              const useAuto = it.state === undefined && it.polarity === undefined
+              const label = useAuto ? auto.cleanLabel : it.label
+              const state = (it.state ?? (auto.isNegative ? 3 : 1)) as ChipState
+              const polarity = (it.polarity ?? (auto.isNegative ? 'negative' : 'positive')) as 'positive' | 'negative'
               return {
                 id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                label: cleanLabel,
-                state: (isNegative ? 3 : 1) as ChipState,
-                polarity: (isNegative ? 'negative' : 'positive') as 'positive' | 'negative',
+                label,
+                state,
+                polarity,
               }
             }),
           ],

@@ -13,6 +13,7 @@ import BienStep from '@/components/onboarding/BienStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
 import CriteriaStep from '@/components/onboarding/CriteriaStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
+import AIImportRecap from '@/components/onboarding/AIImportRecap'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
 
@@ -46,10 +47,19 @@ const variants = {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { onboardingCompleted, setLocation } = useSearchStore()
+  const { onboardingCompleted, setLocation, completeOnboarding } = useSearchStore()
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
+  // ── AI import flow ─────────────────────────────────────────────────────
+  // aiRecapOpen: the recap screen overlays the normal step UI when true.
+  // editingFromRecap: when true, the next/back actions of an edited step
+  //   bounce back to the recap instead of advancing the linear onboarding.
+  // aiGeoResolved: pass-through from the import service so the recap can
+  //   surface a warning when IRIS resolution failed.
+  const [aiRecapOpen, setAiRecapOpen] = useState(false)
+  const [editingFromRecap, setEditingFromRecap] = useState(false)
+  const [aiGeoResolved, setAiGeoResolved] = useState(true)
   // Sub-state of step 1 — when set, the dedicated ClarificationStep screen
   // renders instead of LocationStep (textarea). The originalQuery is kept so
   // the clarification screen can echo "votre recherche : …" and the
@@ -157,7 +167,16 @@ export default function OnboardingPage() {
     setStep(next)
   }, [])
 
-  const handleNext = useCallback(() => goTo(step + 1, 1), [step, goTo])
+  const handleNext = useCallback(() => {
+    // When editing a single block from the AI recap, advancing must return
+    // to the recap rather than walking the linear onboarding.
+    if (editingFromRecap) {
+      setEditingFromRecap(false)
+      setAiRecapOpen(true)
+      return
+    }
+    goTo(step + 1, 1)
+  }, [step, goTo, editingFromRecap])
   const handleBack = useCallback(() => {
     if (locationMapOpen) {
       setLocationMapOpen(false)
@@ -172,11 +191,43 @@ export default function OnboardingPage() {
       setClarificationData(null)
       return
     }
+    if (editingFromRecap) {
+      setEditingFromRecap(false)
+      setAiRecapOpen(true)
+      return
+    }
     if (step === 0) return
     goTo(step - 1, -1)
-  }, [step, locationMapOpen, clarificationData, goTo])
+  }, [step, locationMapOpen, clarificationData, editingFromRecap, goTo])
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
+
+  // ── AI import handlers ──────────────────────────────────────────────────
+  const handleAIImported = useCallback(
+    ({ geoResolved }: { locationLabel: string; geoResolved: boolean }) => {
+      setAiGeoResolved(geoResolved)
+      setEditingFromRecap(false)
+      setAiRecapOpen(true)
+    },
+    [],
+  )
+  const handleRecapEditBlock = useCallback(
+    (target: 1 | 2 | 3 | 4) => {
+      setAiRecapOpen(false)
+      setEditingFromRecap(true)
+      goTo(target, 1)
+    },
+    [goTo],
+  )
+  const handleRecapEditManual = useCallback(() => {
+    setAiRecapOpen(false)
+    setEditingFromRecap(false)
+    goTo(1, 1)
+  }, [goTo])
+  const handleRecapLaunch = useCallback(() => {
+    completeOnboarding()
+    router.replace('/feed')
+  }, [completeOnboarding, router])
 
   // Called by LocationStep synchronously on button click — BEFORE the async
   // analysis starts. The overlay appears in the same paint so the user never
@@ -376,7 +427,11 @@ export default function OnboardingPage() {
             className="absolute inset-0"
           >
             {step === 0 && (
-              <IntroStep onStart={handleNext} onQuick={handleQuick} />
+              <IntroStep
+                onStart={handleNext}
+                onQuick={handleQuick}
+                onAIImported={handleAIImported}
+              />
             )}
 
             {step === 1 && !locationMapOpen && !clarificationData && (
@@ -435,6 +490,30 @@ export default function OnboardingPage() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* AI import recap — full-viewport overlay rendered above the step UI.
+          Stays under the map loader (z-9999) so any in-flight resolution still
+          covers it correctly. Mounted unconditionally so the slide-in animation
+          can play; visibility is gated by `aiRecapOpen`. */}
+      <AnimatePresence>
+        {aiRecapOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute inset-0 z-[100]"
+            style={{ background: '#FDF5F2' }}
+          >
+            <AIImportRecap
+              geoResolved={aiGeoResolved}
+              onEditBlock={handleRecapEditBlock}
+              onEditManual={handleRecapEditManual}
+              onLaunch={handleRecapLaunch}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Atomic-reveal overlay — covers the whole viewport from the very click
           (mapWillOpen is set BEFORE LocationStep starts its async analysis) and
