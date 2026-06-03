@@ -174,11 +174,25 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || 'analyze failed')
-      const items: Array<{ label: string }> = Array.isArray(data?.criteria)
-        ? (data.criteria as Array<{ label?: unknown }>)
-            .filter((c): c is { label: string } => typeof c.label === 'string' && c.label.trim().length > 0)
-            .map((c) => ({ label: c.label }))
-        : []
+      // The analyze API tags each item as 'positive' | 'negative' and
+      // already strips the negation prefix server-side. We propagate
+      // `type` into an explicit { state, polarity } override so
+      // "Pas de vis-à-vis" → chip "Vis-à-vis" en état 3 (rédhibitoire).
+      const items: Array<{ label: string; state?: ChipState; polarity?: 'positive' | 'negative' }> =
+        Array.isArray(data?.criteria)
+          ? (data.criteria as Array<{ label?: unknown; type?: unknown }>)
+              .filter(
+                (c): c is { label: string; type: 'positive' | 'negative' } =>
+                  typeof c.label === 'string' &&
+                  c.label.trim().length > 0 &&
+                  (c.type === 'positive' || c.type === 'negative'),
+              )
+              .map((c) =>
+                c.type === 'negative'
+                  ? { label: c.label, state: 3 as ChipState, polarity: 'negative' as const }
+                  : { label: c.label, state: 1 as ChipState, polarity: 'positive' as const },
+              )
+          : []
       if (items.length === 0) {
         setError("Je n'ai pas réussi à interpréter. Reformulez en une phrase.")
       } else {
