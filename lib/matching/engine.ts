@@ -144,6 +144,9 @@ function scoreStructured(
     }
   }
   const evalRes = evaluateStructured(criterion.rule, profile)
+  // Structured rules already bake negation into the rule shape (e.g.
+  // `floor.is_ground = false`), so polarity is metadata here — the
+  // engine reads satisfaction as-is.
   const matched = evalRes.satisfied
   return {
     score: matched ? 1 : 0,
@@ -223,10 +226,17 @@ function scoreSemantic(
       explanation: `${criterion.display_label} — donnée sémantique "${key}" manquante (neutre 0.5)`,
     }
   }
+  const raw = clamp01(value)
+  // Negative polarity ⇒ we want a LOW raw score to mean "matched" (the
+  // unwanted attribute is absent). Flip both the surface score and the
+  // matched cutoff so dealbreakers exclude properties where the bad
+  // attribute is present.
+  const effectiveScore = criterion.polarity === 'negative' ? 1 - raw : raw
+  const matched = criterion.polarity === 'negative' ? raw < 0.5 : raw >= 0.5
   return {
-    score: clamp01(value),
-    matched: value >= 0.5,
-    explanation: `${criterion.display_label} — score sémantique "${key}" = ${value.toFixed(2)}`,
+    score: effectiveScore,
+    matched,
+    explanation: `${criterion.display_label} — score sémantique "${key}" = ${raw.toFixed(2)} (polarité ${criterion.polarity})`,
   }
 }
 

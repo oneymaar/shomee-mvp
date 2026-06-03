@@ -21,8 +21,36 @@ export interface LocationIntent {
 
 export type PropertyType = 'appartement' | 'maison' | 'loft' | 'atelier'
 
-/** 3-state chip: 0 = unselected, 1 = desired, 2 = mandatory. */
-export type ChipState = 0 | 1 | 2
+/** 4-state chip: 0 = unselected, 1 = desired, 2 = mandatory, 3 = dealbreaker. */
+export type ChipState = 0 | 1 | 2 | 3
+
+/** Prefixes triggering automatic negative/dealbreaker creation when an
+ *  AI-parsed custom criterion is added. Order matters: longest first so
+ *  "pas de " strips fully before "pas " can hit. */
+const NEGATIVE_PREFIXES = [
+  'pas de ',
+  'sans le ',
+  'sans la ',
+  'aucun ',
+  'aucune ',
+  'pas ',
+  'sans ',
+  'ni ',
+  'no ',
+]
+
+function detectNegative(label: string): { isNegative: boolean; cleanLabel: string } {
+  const lower = label.toLowerCase()
+  for (const p of NEGATIVE_PREFIXES) {
+    if (lower.startsWith(p)) {
+      const rest = label.slice(p.length).trim()
+      if (rest.length === 0) return { isNegative: false, cleanLabel: label }
+      const cleanLabel = rest.charAt(0).toUpperCase() + rest.slice(1)
+      return { isNegative: true, cleanLabel }
+    }
+  }
+  return { isNegative: false, cleanLabel: label }
+}
 
 export interface SearchPreferences {
   locationQuery: string
@@ -41,11 +69,19 @@ export interface SearchPreferences {
   minRooms: number | null
   minSurface: number | null
   maxSurface: number | null
-  /** 3-state per chip — keyed by chip label. Covers both "Le bien" and
+  /** 4-state per chip — keyed by chip label. Covers both "Le bien" and
    *  "L'immeuble" chips. Absent = state 0 (unselected). */
   chipStates: Record<string, ChipState>
-  /** User-added criteria. Same 3-state semantics; default state 1 on add. */
-  customCriteria: Array<{ id: string; label: string; state: ChipState }>
+  /** User-added criteria. Same 4-state semantics; default state 1 on add,
+   *  or state 3 (dealbreaker) when the original input started with a
+   *  negative prefix like "pas de" / "sans". `polarity` is fixed at add
+   *  time and travels with the criterion into the matching brief. */
+  customCriteria: Array<{
+    id: string
+    label: string
+    state: ChipState
+    polarity: 'positive' | 'negative'
+  }>
   onboardingCompleted: boolean
 }
 
@@ -70,9 +106,9 @@ interface SearchStore extends SearchPreferences {
   togglePropertyType: (type: PropertyType) => void
   setMinRooms: (min: number | null) => void
   setSurface: (min: number | null, max: number | null) => void
-  /** Cycle a chip 0 → 1 → 2 → 0. */
+  /** Cycle a chip 0 → 1 → 2 → 3 → 0. */
   cycleChipState: (label: string) => void
-  /** Cycle a custom criterion 0 → 1 → 2 → 0. */
+  /** Cycle a custom criterion 0 → 1 → 2 → 3 → 0. */
   cycleCustomCriteriaState: (id: string) => void
   /** Add new custom criteria — created at state 1 (desired) by default. */
   addCustomCriteria: (items: Array<{ label: string }>) => void
@@ -226,7 +262,7 @@ export const useSearchStore = create<SearchStore>()(
       cycleChipState: (label) =>
         set((s) => {
           const current = s.chipStates[label] ?? 0
-          const next = ((current + 1) % 3) as ChipState
+          const next = ((current + 1) % 4) as ChipState
           const nextStates = { ...s.chipStates }
           if (next === 0) delete nextStates[label]
           else nextStates[label] = next
@@ -235,18 +271,22 @@ export const useSearchStore = create<SearchStore>()(
       cycleCustomCriteriaState: (id) =>
         set((s) => ({
           customCriteria: s.customCriteria.map((c) =>
-            c.id === id ? { ...c, state: ((c.state + 1) % 3) as ChipState } : c,
+            c.id === id ? { ...c, state: ((c.state + 1) % 4) as ChipState } : c,
           ),
         })),
       addCustomCriteria: (items) =>
         set((s) => ({
           customCriteria: [
             ...s.customCriteria,
-            ...items.map((it) => ({
-              id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-              label: it.label,
-              state: 1 as ChipState,
-            })),
+            ...items.map((it) => {
+              const { isNegative, cleanLabel } = detectNegative(it.label)
+              return {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                label: cleanLabel,
+                state: (isNegative ? 3 : 1) as ChipState,
+                polarity: (isNegative ? 'negative' : 'positive') as 'positive' | 'negative',
+              }
+            }),
           ],
         })),
       removeCustomCriteria: (id) =>
@@ -277,3 +317,55 @@ export const useSearchStore = create<SearchStore>()(
     }
   )
 )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildSelectedCriteria — canonical shape consumed by the matching brief.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SelectedCriterion {
+  label: string
+  importance: 'desired' | 'mandatory' | 'dealbreaker'
+  polarity: 'positive' | 'negative'
+}
+
+/**
+ * Derive the canonical { label, importance, polarity } list expected by
+ * downstream consumers (matching engine glue, AI summary screen) from the
+ * chip-state map + custom criteria. State 0 entries are dropped.
+ *
+ *  - state 1 → desired     / positive
+ *  - state 2 → mandatory   / positive
+ *  - state 3 → dealbreaker / negative  ← exclusion when attribute present
+ *
+ * Custom criteria carry their own polarity (set at add-time via the
+ * negative-prefix detection), so their state-3 entries inherit the
+ * polarity they were created with.
+ */
+export function buildSelectedCriteria(
+  chipStates: Record<string, ChipState>,
+  customCriteria: Array<{ label: string; state: ChipState; polarity?: 'positive' | 'negative' }>,
+): SelectedCriterion[] {
+  const fromChips: SelectedCriterion[] = Object.entries(chipStates)
+    .filter(([, state]) => state > 0)
+    .map(([label, state]) => mapState(label, state as ChipState, 'positive'))
+  const fromCustom: SelectedCriterion[] = customCriteria
+    .filter((c) => c.state > 0)
+    .map((c) => mapState(c.label, c.state, c.polarity ?? 'positive'))
+  return [...fromChips, ...fromCustom]
+}
+
+function mapState(
+  label: string,
+  state: ChipState,
+  polarity: 'positive' | 'negative',
+): SelectedCriterion {
+  switch (state) {
+    case 3:
+      return { label, importance: 'dealbreaker', polarity: 'negative' }
+    case 2:
+      return { label, importance: 'mandatory', polarity }
+    case 1:
+    default:
+      return { label, importance: 'desired', polarity }
+  }
+}

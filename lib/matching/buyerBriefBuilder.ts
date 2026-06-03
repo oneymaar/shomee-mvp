@@ -31,7 +31,8 @@ import { tagsToCriteria } from '../criteria/tags'
 
 interface PrefsCriterion {
   label: string
-  importance: 'desired' | 'mandatory'
+  importance: CriterionImportance
+  polarity: 'positive' | 'negative'
 }
 
 const ALLOWED_IMPORTANCES: ReadonlySet<CriterionImportance> = new Set([
@@ -88,9 +89,11 @@ function extractPrefsCriteria(prefs: PrismaBuyerProfile['searchPreferences']): P
     if (!item || typeof item !== 'object') continue
     const label = (item as { label?: unknown }).label
     const importance = (item as { importance?: unknown }).importance
+    const polarity = (item as { polarity?: unknown }).polarity
     if (typeof label !== 'string' || label.trim().length === 0) continue
-    if (importance !== 'desired' && importance !== 'mandatory') continue
-    out.push({ label: label.trim(), importance })
+    if (importance !== 'desired' && importance !== 'mandatory' && importance !== 'dealbreaker') continue
+    const pol: 'positive' | 'negative' = polarity === 'negative' ? 'negative' : 'positive'
+    out.push({ label: label.trim(), importance, polarity: pol })
   }
   return out
 }
@@ -100,7 +103,7 @@ function prefsCriterionToParsed(c: PrefsCriterion): ParsedCriterion {
     id: randomUUID(),
     display_label: c.label,
     category: 'ambiance',
-    polarity: 'positive',
+    polarity: c.polarity,
     importance: c.importance,
     match_type: 'semantic',
     rule: null,

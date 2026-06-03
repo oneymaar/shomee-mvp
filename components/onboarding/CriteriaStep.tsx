@@ -33,7 +33,7 @@ const BUILDING_TAGS: string[] = [
 
 const PLACEHOLDER = 'Séjour orienté ouest'
 
-// 3-state visual palette.
+// 4-state visual palette.
 const CHIP_STYLE: Record<ChipState, React.CSSProperties> = {
   0: {
     background: '#fff',
@@ -49,6 +49,11 @@ const CHIP_STYLE: Record<ChipState, React.CSSProperties> = {
     background: '#a84632',
     color: '#fff',
     borderColor: '#a84632',
+  },
+  3: {
+    background: '#5C1010',
+    color: '#fff',
+    borderColor: '#5C1010',
   },
 }
 
@@ -98,7 +103,11 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
   // ── Tooltip state ───────────────────────────────────────────────────────
   // Each tooltip shows at most once per page mount. `shownTip` tracks which
   // ones have already fired; `activeTip` is the one currently rendered.
-  const [shownTip, setShownTip] = useState<{ s1: boolean; s2: boolean }>({ s1: false, s2: false })
+  const [shownTip, setShownTip] = useState<{ s1: boolean; s2: boolean; s3: boolean }>({
+    s1: false,
+    s2: false,
+    s3: false,
+  })
   const [activeTip, setActiveTip] = useState<TooltipState | null>(null)
   const tipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -110,19 +119,28 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
     if (nextState === 0) return
     if (nextState === 1 && shownTip.s1) return
     if (nextState === 2 && shownTip.s2) return
+    if (nextState === 3 && shownTip.s3) return
 
     const rect = anchor.getBoundingClientRect()
     const tip: TooltipState = {
       text:
         nextState === 1
-          ? 'Souhaité — cliquer à nouveau pour le rendre obligatoire'
-          : 'Obligatoire — cliquer pour désélectionner',
+          ? 'Souhaité — cliquer pour rendre obligatoire'
+          : nextState === 2
+          ? 'Obligatoire — cliquer pour rendre rédhibitoire'
+          : 'Rédhibitoire — exclut les biens qui ne correspondent pas. Cliquer pour désélectionner',
       // Anchor center, the tooltip will translate-x by -50% for centering.
       x: rect.left + rect.width / 2,
       y: rect.top,
     }
     setActiveTip(tip)
-    setShownTip((prev) => (nextState === 1 ? { ...prev, s1: true } : { ...prev, s2: true }))
+    setShownTip((prev) =>
+      nextState === 1
+        ? { ...prev, s1: true }
+        : nextState === 2
+        ? { ...prev, s2: true }
+        : { ...prev, s3: true },
+    )
 
     if (tipTimerRef.current) clearTimeout(tipTimerRef.current)
     tipTimerRef.current = setTimeout(() => setActiveTip(null), TOOLTIP_DURATION_MS)
@@ -130,13 +148,13 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
 
   function handleChipClick(label: string, e: React.MouseEvent<HTMLButtonElement>) {
     const current = chipStates[label] ?? 0
-    const next = ((current + 1) % 3) as ChipState
+    const next = ((current + 1) % 4) as ChipState
     cycleChipState(label)
     maybeShowTooltip(next, e.currentTarget)
   }
 
   function handleCustomChipClick(id: string, currentState: ChipState, e: React.MouseEvent<HTMLButtonElement>) {
-    const next = ((currentState + 1) % 3) as ChipState
+    const next = ((currentState + 1) % 4) as ChipState
     cycleCustomCriteriaState(id)
     maybeShowTooltip(next, e.currentTarget)
   }
@@ -192,7 +210,8 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
     <>
       {state === 1 && <Plus size={11} strokeWidth={2.6} />}
       {state === 2 && <Check size={11} strokeWidth={2.6} />}
-      <span>{label}</span>
+      {state === 3 && <X size={11} strokeWidth={2.6} />}
+      <span style={state === 3 ? { textDecoration: 'line-through' } : undefined}>{label}</span>
     </>
   )
 
@@ -352,21 +371,25 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
-            className="flex gap-3 mb-6"
+            className="flex gap-2 mb-6"
           >
             <div
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border"
-              style={CHIP_STYLE[1]}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border bg-[#fdf0ed] text-[#9b4a2e] border-[#e8907a]"
             >
-              <Plus size={11} strokeWidth={2.8} />
+              <Plus size={9} strokeWidth={2.8} />
               <span>Souhaité</span>
             </div>
             <div
-              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border"
-              style={CHIP_STYLE[2]}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border bg-[#a84632] text-white border-[#a84632]"
             >
-              <Check size={11} strokeWidth={2.8} />
+              <Check size={9} strokeWidth={2.8} />
               <span>Obligatoire</span>
+            </div>
+            <div
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border bg-[#5C1010] text-white border-[#5C1010]"
+            >
+              <X size={9} strokeWidth={2.8} />
+              <span>Rédhibitoire</span>
             </div>
           </motion.div>
         )}
@@ -512,26 +535,6 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
   )
 }
 
-/**
- * Derive the canonical { label, importance } list from the chip-state map +
- * custom criteria. Exposed for downstream consumers (matching engine glue,
- * AI summary screen). State 0 entries are dropped.
- */
-export function buildSelectedCriteria(
-  chipStates: Record<string, ChipState>,
-  customCriteria: Array<{ label: string; state: ChipState }>,
-): Array<{ label: string; importance: 'desired' | 'mandatory' }> {
-  const fromChips = Object.entries(chipStates)
-    .filter(([, state]) => state > 0)
-    .map(([label, state]) => ({
-      label,
-      importance: state === 2 ? ('mandatory' as const) : ('desired' as const),
-    }))
-  const fromCustom = customCriteria
-    .filter((c) => c.state > 0)
-    .map((c) => ({
-      label: c.label,
-      importance: c.state === 2 ? ('mandatory' as const) : ('desired' as const),
-    }))
-  return [...fromChips, ...fromCustom]
-}
+// `buildSelectedCriteria` lives in `lib/searchStore.ts` — re-exported there
+// so the matching brief glue can derive `{ label, importance, polarity }`
+// from the chip-state map + custom criteria.
