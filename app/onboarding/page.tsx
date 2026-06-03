@@ -296,19 +296,24 @@ function OnboardingPageInner() {
         )
         if (cancelled) return
         if (!res.ok) {
-          // 404 / 410 / 400 — all surfaced as a friendly French message.
-          const isGone = res.status === 410 || res.status === 404
-          setBriefError(
-            isGone
-              ? 'Ce lien a expiré ou a déjà été utilisé.'
-              : 'Impossible de charger votre brief. Réessayez plus tard.',
-          )
+          // 410 = expired, 404 = unknown token, anything else = transient.
+          // Tokens are no longer single-use, so "déjà utilisé" is gone from
+          // the messaging — only expiry is surfaced explicitly.
+          const message =
+            res.status === 410
+              ? "Ce lien a expiré. Relancez une conversation avec l'assistant SHOMEE pour en générer un nouveau."
+              : res.status === 404
+                ? "Ce lien est introuvable. Demandez un nouveau lien à l'assistant SHOMEE."
+                : 'Impossible de charger votre brief. Réessayez plus tard.'
+          setBriefError(message)
           setBriefLoading(false)
           return
         }
         const json = (await res.json()) as { success: boolean; brief?: AIOnboardingBrief }
         if (!json.success || !json.brief) {
-          setBriefError('Ce lien a expiré ou a déjà été utilisé.')
+          setBriefError(
+            "Ce lien a expiré. Relancez une conversation avec l'assistant SHOMEE pour en générer un nouveau.",
+          )
           setBriefLoading(false)
           return
         }

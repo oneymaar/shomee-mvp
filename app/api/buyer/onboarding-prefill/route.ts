@@ -1,13 +1,14 @@
 /**
  * POST /api/buyer/onboarding-prefill
  *   Receives an AI-generated buyer brief, validates it, persists it as a
- *   one-shot magic-link token, and returns the URL the acquéreur must open.
+ *   magic-link token (24h TTL), and returns the URL the acquéreur must open.
  *   Bearer auth via lib/auth/bearer.ts.
  *
  * GET  /api/buyer/onboarding-prefill?token=<uuid>
- *   Consumes a token: returns the stored brief and marks the row as used
- *   so the link cannot be replayed. Returns 404 if unknown, 410 if expired
- *   or already consumed.
+ *   Returns the stored brief. The token stays valid until `expiresAt` —
+ *   it is NOT single-use. This lets the acquéreur reopen the link from
+ *   email/messaging history if they refresh, share devices, etc.
+ *   Returns 404 if unknown, 410 if expired.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -130,26 +131,12 @@ export async function GET(req: NextRequest) {
       { status: 404 },
     )
   }
-  if (record.used) {
-    return NextResponse.json(
-      { success: false, error: 'Lien déjà utilisé.' },
-      { status: 410 },
-    )
-  }
   if (record.expiresAt.getTime() < Date.now()) {
     return NextResponse.json(
       { success: false, error: 'Lien expiré.' },
       { status: 410 },
     )
   }
-
-  // One-shot consumption: mark used BEFORE returning so a concurrent replay
-  // can never re-read the brief. Worst case the client crashes mid-render
-  // and the user has to ask the LLM for a fresh link — acceptable.
-  await prisma.buyerBriefToken.update({
-    where: { id: record.id },
-    data: { used: true },
-  })
 
   return NextResponse.json({ success: true, brief: record.briefJson })
 }
