@@ -18,15 +18,15 @@ import { useSearchStore, type ChipState } from '@/lib/searchStore'
 import { SURFACE_UNLIMITED } from './BienStep'
 import { BUDGET_UNLIMITED } from './BudgetStep'
 
-interface AIImportRecapProps {
+interface AIBriefRecapProps {
   /** Hint shown when the geo resolver couldn't narrow to any IRIS. */
   geoResolved: boolean
   /** Navigate to onboarding step (1=Quartiers, 2=Bien, 3=Budget, 4=Critères),
    *  with a flag telling the page to return here on next/back. */
   onEditBlock: (step: 1 | 2 | 3 | 4) => void
-  /** Standard "Modifier manuellement" — drops the user into the normal flow. */
+  /** "Modifier manuellement" — drops the user into the linear flow at step 1. */
   onEditManual: () => void
-  /** "Lancer ma recherche" — completes onboarding + goes to /feed. */
+  /** "Lancer ma recherche" — completes onboarding + redirects to /feed. */
   onLaunch: () => void
 }
 
@@ -62,13 +62,18 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   atelier: 'Atelier',
 }
 
-function formatBien(propertyTypes: string[], minRooms: number | null, minSurface: number | null, maxSurface: number | null): string {
+function formatBien(
+  propertyTypes: string[],
+  minRooms: number | null,
+  minSurface: number | null,
+  maxSurface: number | null,
+): string {
   const parts: string[] = []
-  if (propertyTypes.length > 0) {
-    parts.push(propertyTypes.map((t) => PROPERTY_TYPE_LABELS[t] ?? t).join(', '))
-  } else {
-    parts.push('Tous types')
-  }
+  parts.push(
+    propertyTypes.length > 0
+      ? propertyTypes.map((t) => PROPERTY_TYPE_LABELS[t] ?? t).join(', ')
+      : 'Tous types',
+  )
   if (minRooms != null) {
     parts.push(minRooms === 1 ? 'Studio' : minRooms >= 4 ? '4 pièces +' : `${minRooms} pièces`)
   }
@@ -76,7 +81,7 @@ function formatBien(propertyTypes: string[], minRooms: number | null, minSurface
   return parts.join(' · ')
 }
 
-// ─── Chip visual — mirrors CriteriaStep for visual continuity ─────────────
+// ─── Chip badge — read-only mirror of CriteriaStep visuals ────────────────
 
 const CHIP_STYLE: Record<ChipState, React.CSSProperties> = {
   0: { background: '#fff', color: '#1a1a1a', borderColor: 'rgba(0,0,0,0.09)' },
@@ -94,9 +99,7 @@ function ChipBadge({ label, state }: { label: string; state: ChipState }) {
       {state === 1 && <Plus size={10} strokeWidth={2.6} />}
       {state === 2 && <Check size={10} strokeWidth={2.6} />}
       {state === 3 && <XIcon size={10} strokeWidth={2.6} />}
-      <span style={state === 3 ? { textDecoration: 'line-through' } : undefined}>
-        {label}
-      </span>
+      <span style={state === 3 ? { textDecoration: 'line-through' } : undefined}>{label}</span>
     </span>
   )
 }
@@ -140,7 +143,12 @@ function BlockCard({ icon, title, delay, onEdit, children }: BlockCardProps) {
 
 // ─── Recap ─────────────────────────────────────────────────────────────────
 
-export default function AIImportRecap({ geoResolved, onEditBlock, onEditManual, onLaunch }: AIImportRecapProps) {
+export default function AIBriefRecap({
+  geoResolved,
+  onEditBlock,
+  onEditManual,
+  onLaunch,
+}: AIBriefRecapProps) {
   const {
     locationLabel,
     locationQuery,
@@ -162,15 +170,10 @@ export default function AIImportRecap({ geoResolved, onEditBlock, onEditManual, 
 
   const chipEntries = useMemo(
     () =>
-      (Object.entries(chipStates) as Array<[string, ChipState]>).filter(
-        ([, state]) => state > 0,
-      ),
+      (Object.entries(chipStates) as Array<[string, ChipState]>).filter(([, state]) => state > 0),
     [chipStates],
   )
-  const customEntries = useMemo(
-    () => customCriteria.filter((c) => c.state > 0),
-    [customCriteria],
-  )
+  const customEntries = useMemo(() => customCriteria.filter((c) => c.state > 0), [customCriteria])
   const hasAnyCriteria = chipEntries.length > 0 || customEntries.length > 0
 
   const locationText = locationLabel || locationQuery || 'Localisation non renseignée'
@@ -215,8 +218,8 @@ export default function AIImportRecap({ geoResolved, onEditBlock, onEditManual, 
           >
             <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#a16207' }} />
             <p className="text-[12px] leading-snug" style={{ color: '#854d0e' }}>
-              Impossible de résoudre la localisation automatiquement.
-              Touchez le bloc <strong>Quartiers</strong> pour préciser la zone.
+              Impossible de résoudre la localisation automatiquement. Touchez le bloc{' '}
+              <strong>Quartiers</strong> pour préciser la zone.
             </p>
           </motion.div>
         )}
@@ -236,15 +239,8 @@ export default function AIImportRecap({ geoResolved, onEditBlock, onEditManual, 
             </p>
           </BlockCard>
 
-          <BlockCard
-            icon={<Home size={16} />}
-            title="Bien"
-            delay={0.10}
-            onEdit={() => onEditBlock(2)}
-          >
-            <p className="text-[14.5px] font-semibold text-neutral-900 leading-snug">
-              {bienText}
-            </p>
+          <BlockCard icon={<Home size={16} />} title="Bien" delay={0.10} onEdit={() => onEditBlock(2)}>
+            <p className="text-[14.5px] font-semibold text-neutral-900 leading-snug">{bienText}</p>
           </BlockCard>
 
           <BlockCard
@@ -253,9 +249,7 @@ export default function AIImportRecap({ geoResolved, onEditBlock, onEditManual, 
             delay={0.15}
             onEdit={() => onEditBlock(3)}
           >
-            <p className="text-[14.5px] font-semibold text-neutral-900 leading-snug">
-              {budgetText}
-            </p>
+            <p className="text-[14.5px] font-semibold text-neutral-900 leading-snug">{budgetText}</p>
           </BlockCard>
 
           <BlockCard

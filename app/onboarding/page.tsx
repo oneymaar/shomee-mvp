@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useCallback, useEffect, useRef } from 'react'
+import Image from 'next/image'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
@@ -13,8 +14,9 @@ import BienStep from '@/components/onboarding/BienStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
 import CriteriaStep from '@/components/onboarding/CriteriaStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
-import AIImportRecap from '@/components/onboarding/AIImportRecap'
+import AIBriefRecap from '@/components/onboarding/AIBriefRecap'
 import { parseLocationIntent } from '@/lib/services/locationIntentParser'
+import { injectBrief, type AIOnboardingBrief } from '@/lib/services/aiBriefInjector'
 import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
 
 function MapLoadingScreen() {
@@ -27,6 +29,65 @@ function MapLoadingScreen() {
         <Loader2 size={32} style={{ color: '#A64B27', opacity: 0.7 }} />
       </motion.div>
       <p className="text-[15px] text-neutral-600 font-medium">SHOMEE réfléchit…</p>
+    </div>
+  )
+}
+
+// Brief-import landing screen: logo + discrete spinner. Shown while the
+// magic-link token is fetched and the geo resolver runs.
+function BriefLoadingScreen() {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6"
+      style={{ background: '#FDF5F2' }}
+    >
+      <Image
+        src="/logo terracotta.png"
+        alt="SHOMEE"
+        width={72}
+        height={80}
+        priority
+        className="object-contain"
+      />
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
+      >
+        <Loader2 size={20} style={{ color: '#A64B27', opacity: 0.7 }} />
+      </motion.div>
+      <p className="text-[13px] text-neutral-500 font-medium">
+        Préparation de votre recherche…
+      </p>
+    </div>
+  )
+}
+
+// Token expired / consumed / unknown — graceful fallback to manual start.
+function BriefErrorScreen({ message, onStart }: { message: string; onStart: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-5 px-8"
+      style={{ background: '#FDF5F2' }}
+    >
+      <Image
+        src="/logo terracotta.png"
+        alt="SHOMEE"
+        width={72}
+        height={80}
+        priority
+        className="object-contain"
+      />
+      <p className="text-[15px] text-neutral-700 font-medium text-center max-w-[280px]">
+        {message}
+      </p>
+      <button
+        type="button"
+        onClick={onStart}
+        className="mt-2 w-full max-w-[280px] py-3.5 rounded-2xl font-semibold text-[15px] text-white active:opacity-90 transition-opacity"
+        style={{ backgroundColor: '#A64B27' }}
+      >
+        Commencer manuellement
+      </button>
     </div>
   )
 }
@@ -45,18 +106,37 @@ const variants = {
   exit: (dir: Direction) => ({ x: dir > 0 ? '-55%' : '55%', opacity: 0 }),
 }
 
+// Default export wraps the inner page in Suspense so `useSearchParams()`
+// stays within a Suspense boundary, as required by Next.js 16 App Router.
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<BriefLoadingScreen />}>
+      <OnboardingPageInner />
+    </Suspense>
+  )
+}
+
+function OnboardingPageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const briefToken = searchParams.get('brief')
   const { onboardingCompleted, setLocation, completeOnboarding } = useSearchStore()
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
-  // ── AI import flow ─────────────────────────────────────────────────────
-  // aiRecapOpen: the recap screen overlays the normal step UI when true.
-  // editingFromRecap: when true, the next/back actions of an edited step
-  //   bounce back to the recap instead of advancing the linear onboarding.
-  // aiGeoResolved: pass-through from the import service so the recap can
-  //   surface a warning when IRIS resolution failed.
+  // ── AI brief magic-link flow ───────────────────────────────────────────
+  // briefLoading: covers the screen with the BriefLoadingScreen while we
+  //   fetch + inject. Defaults to true when ?brief=… is in the URL so the
+  //   IntroStep never flashes before we know what to render.
+  // briefError: when the token is 404/410/etc., we surface a friendly
+  //   message + a "start manually" button.
+  // aiRecapOpen: the recap overlays the linear onboarding when true.
+  // editingFromRecap: rewires next/back so the user bounces back to the
+  //   recap instead of advancing through the linear flow.
+  // aiGeoResolved: false when the geo resolver couldn't narrow to any
+  //   IRIS; surfaced as a warning in the recap.
+  const [briefLoading, setBriefLoading] = useState<boolean>(!!briefToken)
+  const [briefError, setBriefError] = useState<string | null>(null)
   const [aiRecapOpen, setAiRecapOpen] = useState(false)
   const [editingFromRecap, setEditingFromRecap] = useState(false)
   const [aiGeoResolved, setAiGeoResolved] = useState(true)
@@ -202,15 +282,63 @@ export default function OnboardingPage() {
   const handleQuick = useCallback(() => router.replace('/feed'), [router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
-  // ── AI import handlers ──────────────────────────────────────────────────
-  const handleAIImported = useCallback(
-    ({ geoResolved }: { locationLabel: string; geoResolved: boolean }) => {
-      setAiGeoResolved(geoResolved)
-      setEditingFromRecap(false)
-      setAiRecapOpen(true)
-    },
-    [],
-  )
+  // ── AI brief magic-link handlers ────────────────────────────────────────
+  // Triggered once on mount when ?brief=<uuid> is present. Fetches the
+  // brief from /api/buyer/onboarding-prefill (which consumes the token),
+  // injects it into the store, then surfaces the recap.
+  useEffect(() => {
+    if (!briefToken) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(
+          `/api/buyer/onboarding-prefill?token=${encodeURIComponent(briefToken)}`,
+        )
+        if (cancelled) return
+        if (!res.ok) {
+          // 404 / 410 / 400 — all surfaced as a friendly French message.
+          const isGone = res.status === 410 || res.status === 404
+          setBriefError(
+            isGone
+              ? 'Ce lien a expiré ou a déjà été utilisé.'
+              : 'Impossible de charger votre brief. Réessayez plus tard.',
+          )
+          setBriefLoading(false)
+          return
+        }
+        const json = (await res.json()) as { success: boolean; brief?: AIOnboardingBrief }
+        if (!json.success || !json.brief) {
+          setBriefError('Ce lien a expiré ou a déjà été utilisé.')
+          setBriefLoading(false)
+          return
+        }
+        await injectBrief(json.brief)
+        if (cancelled) return
+        // geoResolved = at least one IRIS was selected by the resolver
+        const { selectedIrisIds } = useSearchStore.getState()
+        setAiGeoResolved(selectedIrisIds.length > 0)
+        setAiRecapOpen(true)
+        setBriefLoading(false)
+      } catch (e) {
+        console.error('[onboarding] brief import failed:', e)
+        if (cancelled) return
+        setBriefError('Impossible de charger votre brief. Réessayez plus tard.')
+        setBriefLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [briefToken])
+
+  // Fallback CTA on the brief-error screen — drop the user into the normal
+  // onboarding without the ?brief= param so a refresh doesn't refetch.
+  const handleBriefErrorStart = useCallback(() => {
+    setBriefError(null)
+    setBriefLoading(false)
+    router.replace('/onboarding')
+  }, [router])
+
   const handleRecapEditBlock = useCallback(
     (target: 1 | 2 | 3 | 4) => {
       setAiRecapOpen(false)
@@ -427,11 +555,7 @@ export default function OnboardingPage() {
             className="absolute inset-0"
           >
             {step === 0 && (
-              <IntroStep
-                onStart={handleNext}
-                onQuick={handleQuick}
-                onAIImported={handleAIImported}
-              />
+              <IntroStep onStart={handleNext} onQuick={handleQuick} />
             )}
 
             {step === 1 && !locationMapOpen && !clarificationData && (
@@ -491,10 +615,10 @@ export default function OnboardingPage() {
         </AnimatePresence>
       </div>
 
-      {/* AI import recap — full-viewport overlay rendered above the step UI.
+      {/* AI brief recap — full-viewport overlay rendered above the step UI.
           Stays under the map loader (z-9999) so any in-flight resolution still
-          covers it correctly. Mounted unconditionally so the slide-in animation
-          can play; visibility is gated by `aiRecapOpen`. */}
+          covers it correctly. Mounted only when open so each fresh import
+          plays its entrance animation. */}
       <AnimatePresence>
         {aiRecapOpen && (
           <motion.div
@@ -505,7 +629,7 @@ export default function OnboardingPage() {
             className="absolute inset-0 z-[100]"
             style={{ background: '#FDF5F2' }}
           >
-            <AIImportRecap
+            <AIBriefRecap
               geoResolved={aiGeoResolved}
               onEditBlock={handleRecapEditBlock}
               onEditManual={handleRecapEditManual}
@@ -514,6 +638,13 @@ export default function OnboardingPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Brief magic-link landing screens — render OVER everything else so
+          the IntroStep never flashes when the URL carries a ?brief= token. */}
+      {briefLoading && <BriefLoadingScreen />}
+      {briefError && (
+        <BriefErrorScreen message={briefError} onStart={handleBriefErrorStart} />
+      )}
 
       {/* Atomic-reveal overlay — covers the whole viewport from the very click
           (mapWillOpen is set BEFORE LocationStep starts its async analysis) and
