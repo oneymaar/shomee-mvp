@@ -343,7 +343,20 @@ function OnboardingPageInner() {
     (target: 1 | 2 | 3 | 4) => {
       setAiRecapOpen(false)
       setEditingFromRecap(true)
-      goTo(target, 1)
+      // Quartiers from recap → land directly on the Leaflet map so the
+      // user sees the pre-resolved IRIS rather than the empty textarea.
+      // LocationMapStep.initMap re-runs resolveConstraints from the stored
+      // locationIntent and ends up with the same selection — the atomic-
+      // reveal loader covers the re-resolve so the UI stays clean.
+      if (target === 1) {
+        goTo(1, 1)
+        mapLoadingStartedAtRef.current = Date.now()
+        setMapUiReady(false)
+        setMapWillOpen(true)
+        setLocationMapOpen(true)
+      } else {
+        goTo(target, 1)
+      }
     },
     [goTo],
   )

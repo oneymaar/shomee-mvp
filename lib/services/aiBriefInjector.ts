@@ -16,6 +16,7 @@
  */
 
 import { useSearchStore, type ChipState } from '@/lib/searchStore'
+import { SURFACE_UNLIMITED } from '@/components/onboarding/BienStep'
 import {
   fetchParisArrondissements,
   fetchParisQuartiers,
@@ -115,7 +116,10 @@ export async function injectBrief(brief: AIOnboardingBrief): Promise<void> {
     propertyTypes: brief.propertyTypes,
     minRooms: brief.minRooms,
     minSurface: brief.minSurface,
-    maxSurface: brief.maxSurface,
+    // When the brief omits maxSurface, default to the "no upper limit"
+    // sentinel so downstream consumers (Budget step, matching engine)
+    // treat it as unbounded rather than as "any surface ≥ minSurface".
+    maxSurface: brief.maxSurface ?? SURFACE_UNLIMITED,
     budgetMin: brief.budgetMin,
     budgetMax: brief.budgetMax,
     chipStates: brief.chipStates as Record<string, ChipState>,

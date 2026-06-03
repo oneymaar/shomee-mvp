@@ -36,10 +36,11 @@ function buildSurfaceScale(): number[] {
 }
 const SURFACE_SCALE = buildSurfaceScale()
 const SURFACE_SCALE_MAX_INDEX = SURFACE_SCALE.length - 1
-// Defaults: 30 m² → 70 m² — covers the median Paris flat without locking
-// the user into studio-only or large-only territory.
+// Defaults: 30 m² → no upper limit. Min anchored at a realistic Paris
+// entry size; max defaults to unbounded (mirrors BudgetStep where the
+// minimum thumb starts at the absolute floor of the scale).
 const SURFACE_DEFAULT_MIN_INDEX = SURFACE_SCALE.indexOf(30)
-const SURFACE_DEFAULT_MAX_INDEX = SURFACE_SCALE.indexOf(70)
+const SURFACE_DEFAULT_MAX_INDEX = SURFACE_SCALE_MAX_INDEX
 
 function formatSurface(v: number): string {
   if (v >= SURFACE_UNLIMITED) return '500 m²+'
