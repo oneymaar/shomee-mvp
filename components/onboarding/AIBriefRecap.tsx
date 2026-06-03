@@ -86,8 +86,8 @@ function formatBien(
 const CHIP_STYLE: Record<ChipState, React.CSSProperties> = {
   0: { background: '#fff', color: '#1a1a1a', borderColor: 'rgba(0,0,0,0.09)' },
   1: { background: '#fdf0ed', color: '#9b4a2e', borderColor: '#e8907a' },
-  2: { background: '#a84632', color: '#fff', borderColor: '#a84632' },
-  3: { background: '#1a1a1a', color: '#fff', borderColor: '#1a1a1a' },
+  2: { background: '#C1533A', color: '#fff', borderColor: '#C1533A' },
+  3: { background: '#f3f0ee', color: '#9a9a9a', borderColor: 'rgba(0,0,0,0.10)' },
 }
 
 function ChipBadge({ label, state }: { label: string; state: ChipState }) {

@@ -114,6 +114,10 @@ interface SearchStore extends SearchPreferences {
   cycleChipState: (label: string) => void
   /** Cycle a custom criterion 0 → 1 → 2 → 3 → 0. */
   cycleCustomCriteriaState: (id: string) => void
+  /** Set a chip to a specific state. State 0 removes the entry. */
+  setChipState: (label: string, state: ChipState) => void
+  /** Set a custom criterion to a specific state. */
+  setCustomCriteriaState: (id: string, state: ChipState) => void
   /** Add new custom criteria. Without overrides: state defaults to 1 (desired),
    *  or 3 (dealbreaker) if the label starts with a negative prefix.
    *  Pass `state` / `polarity` to bypass auto-detection (used by the AI
@@ -285,6 +289,17 @@ export const useSearchStore = create<SearchStore>()(
           customCriteria: s.customCriteria.map((c) =>
             c.id === id ? { ...c, state: ((c.state + 1) % 4) as ChipState } : c,
           ),
+        })),
+      setChipState: (label, state) =>
+        set((s) => {
+          const nextStates = { ...s.chipStates }
+          if (state === 0) delete nextStates[label]
+          else nextStates[label] = state
+          return { chipStates: nextStates }
+        }),
+      setCustomCriteriaState: (id, state) =>
+        set((s) => ({
+          customCriteria: s.customCriteria.map((c) => (c.id === id ? { ...c, state } : c)),
         })),
       addCustomCriteria: (items) =>
         set((s) => ({
