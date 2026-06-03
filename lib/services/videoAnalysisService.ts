@@ -7,7 +7,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import cloudinary from '@/lib/cloudinary'
 
-const MODEL = 'claude-sonnet-4-20250514'
+const MODEL = 'claude-haiku-4-5-20251001'
 const FRAME_INTERVAL_SEC = 1
 const MAX_VIDEO_DURATION_SEC = 80
 const MAX_TOKENS = 2000
