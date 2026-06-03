@@ -407,19 +407,28 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-wrap gap-x-3 gap-y-1 mb-5 text-[11px]"
+            className="flex flex-wrap gap-1.5 mb-5"
           >
-            <span className="inline-flex items-center gap-1" style={{ color: '#9b4a2e' }}>
+            <span
+              className="inline-flex items-center gap-[4px] px-[9px] py-[3px] rounded-full text-[11px] font-medium leading-[1.2] border"
+              style={SELECTED_STYLE[1]}
+            >
               <Plus size={10} strokeWidth={2.8} />
               <span>Souhaité</span>
             </span>
-            <span className="inline-flex items-center gap-1" style={{ color: '#C1533A' }}>
+            <span
+              className="inline-flex items-center gap-[4px] px-[9px] py-[3px] rounded-full text-[11px] font-medium leading-[1.2] border"
+              style={SELECTED_STYLE[2]}
+            >
               <Check size={10} strokeWidth={2.8} />
               <span>Obligatoire</span>
             </span>
-            <span className="inline-flex items-center gap-1 text-neutral-500">
+            <span
+              className="inline-flex items-center gap-[4px] px-[9px] py-[3px] rounded-full text-[11px] font-medium leading-[1.2] border"
+              style={SELECTED_STYLE[3]}
+            >
               <X size={10} strokeWidth={2.8} />
-              <span>Rédhibitoire</span>
+              <span style={{ textDecoration: 'line-through' }}>Rédhibitoire</span>
             </span>
           </motion.div>
         )}

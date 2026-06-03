@@ -4,6 +4,7 @@
     "name": "Châtelet",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-1",
     "aliases": [],
     "normalized_aliases": [
       "chatelet"
@@ -28,6 +29,7 @@
     "name": "Beaubourg",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-4",
     "aliases": [],
     "normalized_aliases": [
       "beaubourg"
@@ -50,6 +52,7 @@
     "name": "Louvre",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-1",
     "aliases": [],
     "normalized_aliases": [
       "louvre"
@@ -75,6 +78,7 @@
     "name": "Sentier",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-2",
     "aliases": [],
     "normalized_aliases": [
       "sentier"
@@ -103,6 +107,7 @@
     "name": "Haut-Marais",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-3",
     "aliases": [],
     "normalized_aliases": [
       "haut-marais"
@@ -131,6 +136,7 @@
     "name": "Etienne Marcel",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-2",
     "aliases": [],
     "normalized_aliases": [
       "etienne-marcel"
@@ -155,6 +161,7 @@
     "name": "Le Marais",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-4",
     "aliases": [],
     "normalized_aliases": [
       "le-marais"
@@ -187,6 +194,7 @@
     "name": "Île Saint-Louis",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-4",
     "aliases": [],
     "normalized_aliases": [
       "ile-saint-louis"
@@ -207,6 +215,7 @@
     "name": "Place des Vosges",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-4",
     "aliases": [],
     "normalized_aliases": [
       "place-des-vosges"
@@ -227,6 +236,7 @@
     "name": "Hôtel de Ville",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-4",
     "aliases": [],
     "normalized_aliases": [
       "hotel-de-ville"
@@ -253,6 +263,7 @@
     "name": "Mouffetard",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "mouffetard"
@@ -274,6 +285,7 @@
     "name": "Jussieu",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "jussieu"
@@ -299,6 +311,7 @@
     "name": "Jardin des Plantes",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "jardin-des-plantes"
@@ -328,6 +341,7 @@
     "name": "Monge",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "monge"
@@ -353,6 +367,7 @@
     "name": "Val de Grâce",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "val-de-grace"
@@ -379,6 +394,7 @@
     "name": "Port Royal",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-14",
     "aliases": [],
     "normalized_aliases": [
       "port-royal"
@@ -405,6 +421,7 @@
     "name": "Sorbonne",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "sorbonne"
@@ -428,6 +445,7 @@
     "name": "Quartier Latin",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "quartier-latin"
@@ -456,6 +474,7 @@
     "name": "Saint-Germain-des-Prés",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-6",
     "aliases": [
       "Saint-Germain"
     ],
@@ -489,6 +508,7 @@
     "name": "Odéon",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-6",
     "aliases": [],
     "normalized_aliases": [
       "odeon"
@@ -514,6 +534,7 @@
     "name": "Luxembourg",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-6",
     "aliases": [],
     "normalized_aliases": [
       "luxembourg"
@@ -542,6 +563,7 @@
     "name": "Saint-Michel",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-5",
     "aliases": [],
     "normalized_aliases": [
       "saint-michel"
@@ -565,6 +587,7 @@
     "name": "Ile de la Cité",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-4",
     "aliases": [],
     "normalized_aliases": [
       "ile-de-la-cite"
@@ -588,6 +611,7 @@
     "name": "Notre-Dame-des-Champs",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-6",
     "aliases": [],
     "normalized_aliases": [
       "notre-dame-des-champs"
@@ -617,6 +641,7 @@
     "name": "Raspail",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-6",
     "aliases": [],
     "normalized_aliases": [
       "raspail"
@@ -645,6 +670,7 @@
     "name": "Invalides",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-7",
     "aliases": [],
     "normalized_aliases": [
       "invalides"
@@ -677,6 +703,7 @@
     "name": "Champs de Mars",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-7",
     "aliases": [],
     "normalized_aliases": [
       "champs-de-mars"
@@ -707,6 +734,7 @@
     "name": "École Militaire",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-7",
     "aliases": [],
     "normalized_aliases": [
       "ecole-militaire"
@@ -733,6 +761,7 @@
     "name": "Necker",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "necker"
@@ -765,6 +794,7 @@
     "name": "Tour Eiffel",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-7",
     "aliases": [],
     "normalized_aliases": [
       "tour-eiffel"
@@ -791,6 +821,7 @@
     "name": "Europe",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-8",
     "aliases": [],
     "normalized_aliases": [
       "europe"
@@ -817,6 +848,7 @@
     "name": "Madeleine",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-8",
     "aliases": [],
     "normalized_aliases": [
       "madeleine"
@@ -843,6 +875,7 @@
     "name": "Triangle d’or",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-8",
     "aliases": [],
     "normalized_aliases": [
       "triangle-d-or"
@@ -867,6 +900,7 @@
     "name": "Champs-Élysées",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-8",
     "aliases": [],
     "normalized_aliases": [
       "champs-elysees"
@@ -894,6 +928,7 @@
     "name": "Saint-Lazare",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-8",
     "aliases": [],
     "normalized_aliases": [
       "saint-lazare"
@@ -919,6 +954,7 @@
     "name": "Opéra",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-9",
     "aliases": [],
     "normalized_aliases": [
       "opera"
@@ -948,6 +984,7 @@
     "name": "Parc Monceau",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "parc-monceau"
@@ -969,6 +1006,7 @@
     "name": "Ternes",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "ternes"
@@ -997,6 +1035,7 @@
     "name": "Martyrs",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-9",
     "aliases": [],
     "normalized_aliases": [
       "martyrs"
@@ -1023,6 +1062,7 @@
     "name": "Saint-Georges",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-9",
     "aliases": [],
     "normalized_aliases": [
       "saint-georges"
@@ -1051,6 +1091,7 @@
     "name": "SoPi",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-9",
     "aliases": [],
     "normalized_aliases": [
       "sopi"
@@ -1081,6 +1122,7 @@
     "name": "Trudaine",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-9",
     "aliases": [],
     "normalized_aliases": [
       "trudaine"
@@ -1101,6 +1143,7 @@
     "name": "Pigalle",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-9",
     "aliases": [],
     "normalized_aliases": [
       "pigalle"
@@ -1129,6 +1172,7 @@
     "name": "Canal Saint-Martin",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-10",
     "aliases": [],
     "normalized_aliases": [
       "canal-saint-martin"
@@ -1159,6 +1203,7 @@
     "name": "Hôpital Saint-Louis",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-10",
     "aliases": [],
     "normalized_aliases": [
       "hopital-saint-louis"
@@ -1187,6 +1232,7 @@
     "name": "Gare de l'Est",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-10",
     "aliases": [],
     "normalized_aliases": [
       "gare-de-l-est"
@@ -1210,6 +1256,7 @@
     "name": "Oberkampf",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "oberkampf"
@@ -1238,6 +1285,7 @@
     "name": "Voltaire",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "voltaire"
@@ -1263,6 +1311,7 @@
     "name": "Ledru-Rollin",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "ledru-rollin"
@@ -1289,6 +1338,7 @@
     "name": "Maurice Gardette",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "maurice-gardette"
@@ -1308,6 +1358,7 @@
     "name": "Faubourg Saint-Antoine",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "faubourg-saint-antoine"
@@ -1339,6 +1390,7 @@
     "name": "Faidherbe",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "faidherbe"
@@ -1364,6 +1416,7 @@
     "name": "Bastille",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-11",
     "aliases": [],
     "normalized_aliases": [
       "bastille"
@@ -1396,6 +1449,7 @@
     "name": "Aligre",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "aligre"
@@ -1419,6 +1473,7 @@
     "name": "Quinze-Vingt",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "quinze-vingt"
@@ -1448,6 +1503,7 @@
     "name": "Gare de Lyon",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "gare-de-lyon"
@@ -1474,6 +1530,7 @@
     "name": "Reuilly-Diderot",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "reuilly-diderot"
@@ -1499,6 +1556,7 @@
     "name": "Picpus",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "picpus"
@@ -1524,6 +1582,7 @@
     "name": "Bel-Air",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "bel-air"
@@ -1557,6 +1616,7 @@
     "name": "Daumesnil",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "daumesnil"
@@ -1584,6 +1644,7 @@
     "name": "Bercy Village",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "bercy-village"
@@ -1604,6 +1665,7 @@
     "name": "Bercy",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-12",
     "aliases": [],
     "normalized_aliases": [
       "bercy"
@@ -1628,6 +1690,7 @@
     "name": "Butte-aux-Cailles",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-13",
     "aliases": [],
     "normalized_aliases": [
       "butte-aux-cailles"
@@ -1650,6 +1713,7 @@
     "name": "Gobelins",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-13",
     "aliases": [],
     "normalized_aliases": [
       "gobelins"
@@ -1674,6 +1738,7 @@
     "name": "Place d’Italie",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-13",
     "aliases": [],
     "normalized_aliases": [
       "place-d-italie"
@@ -1701,6 +1766,7 @@
     "name": "Tolbiac",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-13",
     "aliases": [],
     "normalized_aliases": [
       "tolbiac"
@@ -1729,6 +1795,7 @@
     "name": "Jeanne d'Arc",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-13",
     "aliases": [],
     "normalized_aliases": [
       "jeanne-d-arc"
@@ -1755,6 +1822,7 @@
     "name": "BNF",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-13",
     "aliases": [
       "Bibliothèque François-Mitterrand"
     ],
@@ -1781,6 +1849,7 @@
     "name": "Parc Montsouris",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-14",
     "aliases": [],
     "normalized_aliases": [
       "parc-montsouris"
@@ -1801,6 +1870,7 @@
     "name": "Denfert-Rochereau",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-14",
     "aliases": [],
     "normalized_aliases": [
       "denfert-rochereau"
@@ -1825,6 +1895,7 @@
     "name": "Montparnasse",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-14",
     "aliases": [],
     "normalized_aliases": [
       "montparnasse"
@@ -1856,6 +1927,7 @@
     "name": "Alésia",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-14",
     "aliases": [],
     "normalized_aliases": [
       "alesia"
@@ -1883,6 +1955,7 @@
     "name": "Plaisance",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-14",
     "aliases": [],
     "normalized_aliases": [
       "plaisance"
@@ -1910,6 +1983,7 @@
     "name": "Beaugrenelle",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "beaugrenelle"
@@ -1937,6 +2011,7 @@
     "name": "Commerce",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "commerce"
@@ -1963,6 +2038,7 @@
     "name": "Vaugirard",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "vaugirard"
@@ -1985,6 +2061,7 @@
     "name": "Porte de Versailles",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "porte-de-versailles"
@@ -2008,6 +2085,7 @@
     "name": "Convention",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "convention"
@@ -2032,6 +2110,7 @@
     "name": "La Motte Piquet",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-15",
     "aliases": [],
     "normalized_aliases": [
       "la-motte-piquet"
@@ -2056,6 +2135,7 @@
     "name": "Passy",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "passy"
@@ -2084,6 +2164,7 @@
     "name": "Auteuil",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "auteuil"
@@ -2119,6 +2200,7 @@
     "name": "Trocadéro",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "trocadero"
@@ -2144,6 +2226,7 @@
     "name": "Victor Hugo",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "victor-hugo"
@@ -2167,6 +2250,7 @@
     "name": "Foch",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "foch"
@@ -2191,6 +2275,7 @@
     "name": "Ranelagh",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "ranelagh"
@@ -2217,6 +2302,7 @@
     "name": "Porte Maillot",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "porte-maillot"
@@ -2242,6 +2328,7 @@
     "name": "Porte Dauphine",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-16",
     "aliases": [],
     "normalized_aliases": [
       "porte-dauphine"
@@ -2265,6 +2352,7 @@
     "name": "Batignolles",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "batignolles"
@@ -2294,6 +2382,7 @@
     "name": "Martin Luther King",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [
       "MLK"
     ],
@@ -2319,6 +2408,7 @@
     "name": "Saint-Ferdinand",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "saint-ferdinand"
@@ -2340,6 +2430,7 @@
     "name": "Villiers",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "villiers"
@@ -2364,6 +2455,7 @@
     "name": "Pereire",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "pereire"
@@ -2396,6 +2488,7 @@
     "name": "Épinettes",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "epinettes"
@@ -2427,6 +2520,7 @@
     "name": "Montmartre",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-18",
     "aliases": [],
     "normalized_aliases": [
       "montmartre"
@@ -2460,6 +2554,7 @@
     "name": "Abbesses",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-18",
     "aliases": [],
     "normalized_aliases": [
       "abbesses"
@@ -2485,6 +2580,7 @@
     "name": "Grandes Carrières",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-18",
     "aliases": [],
     "normalized_aliases": [
       "grandes-carrieres"
@@ -2518,6 +2614,7 @@
     "name": "Guy Moquet",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-17",
     "aliases": [],
     "normalized_aliases": [
       "guy-moquet"
@@ -2543,6 +2640,7 @@
     "name": "Jules Joffrin",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-18",
     "aliases": [],
     "normalized_aliases": [
       "jules-joffrin"
@@ -2569,6 +2667,7 @@
     "name": "La Mouzaïa",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-19",
     "aliases": [],
     "normalized_aliases": [
       "la-mouzaia"
@@ -2593,6 +2692,7 @@
     "name": "Buttes-Chaumont",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-19",
     "aliases": [],
     "normalized_aliases": [
       "buttes-chaumont"
@@ -2624,6 +2724,7 @@
     "name": "La Villette",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-19",
     "aliases": [],
     "normalized_aliases": [
       "la-villette"
@@ -2653,6 +2754,7 @@
     "name": "Canal de l'Ourcq",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-19",
     "aliases": [],
     "normalized_aliases": [
       "canal-de-l-ourcq"
@@ -2685,6 +2787,7 @@
     "name": "Jourdain",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "jourdain"
@@ -2711,6 +2814,7 @@
     "name": "Belleville",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "belleville"
@@ -2738,6 +2842,7 @@
     "name": "Gambetta",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "gambetta"
@@ -2762,6 +2867,7 @@
     "name": "Père Lachaise",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "pere-lachaise"
@@ -2788,6 +2894,7 @@
     "name": "Réunion",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "reunion"
@@ -2811,6 +2918,7 @@
     "name": "Pyrénées",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "pyrenees"
@@ -2834,6 +2942,7 @@
     "name": "Charonne",
     "type": "quartier",
     "city": "Paris",
+    "arr": "arr-20",
     "aliases": [],
     "normalized_aliases": [
       "charonne"
