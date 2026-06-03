@@ -1024,19 +1024,63 @@ export function resolveConstraints(
   }
 
   // ── Step 1: Build union pool from all "inside" constraints ─────────────────
-  const seen = new Set<string>()
-  const unionIris: GeoZone[] = []
+  //
+  // Precision rule: when the query mixes an arrondissement (administrative_area
+  // covering a whole arr) with a more precise scope (semantic_neighborhood, or
+  // a quartier administratif passed as administrative_area with a quartier
+  // zoneId), the arrondissement is downgraded to disambiguation context — its
+  // IRIS do NOT enter the union. Example: "Paris 12 quartier Aligre" must
+  // return only Aligre's IRIS, not all of Paris 12.
+  //
+  // The arrondissement still acts as the anti-leak guardrail (Step 3 below):
+  // any IRIS in the final pool must belong to one of the admin zones. That
+  // matches the user intent — "narrow within Paris 12 to Aligre" — without
+  // letting a stray neighborhood resolution drag in zones outside arr-12.
+  //
+  // Fallback: if the precise constraints all resolve to 0 IRIS, the
+  // arrondissement IRIS are reinstated so the query still returns something.
+  const isQuartierAdmin = (c: GeoConstraint): boolean =>
+    c.type === 'administrative_area' &&
+    !!c.zoneId &&
+    quartiers.some((q) => q.id === c.zoneId)
+  const isPreciseInside = (c: GeoConstraint): boolean =>
+    c.type === 'semantic_neighborhood' ||
+    c.type === ('neighborhood' as ConstraintType) ||
+    isQuartierAdmin(c)
+  const isArrondissementInside = (c: GeoConstraint): boolean =>
+    c.type === 'administrative_area' && !!c.zoneId && !isQuartierAdmin(c)
+
+  const preciseSets: GeoZone[][] = []
+  const arrSets: GeoZone[][] = []
+  const otherSets: GeoZone[][] = []
+
   const hasDirectional = includeConstraints.some(c => c.direction)
 
   for (const c of includeConstraints) {
     const zoneIris = resolveInsideToIris(c, iris, quartiers)
-    for (const z of zoneIris) {
+    if (zoneIris.length > 0) summary.push(c.label)
+    if (isPreciseInside(c))            preciseSets.push(zoneIris)
+    else if (isArrondissementInside(c)) arrSets.push(zoneIris)
+    else                                otherSets.push(zoneIris)
+  }
+
+  // Arrondissement IRIS are kept only when no precise scope landed any IRIS.
+  // `otherSets` (transport_station / poi inside, etc.) always contribute —
+  // they are themselves precise spatial entities.
+  const preciseHadHits = preciseSets.some((s) => s.length > 0)
+  const sourceSets: GeoZone[][] = preciseHadHits
+    ? [...preciseSets, ...otherSets]
+    : [...preciseSets, ...arrSets, ...otherSets]
+
+  const seen = new Set<string>()
+  const unionIris: GeoZone[] = []
+  for (const set of sourceSets) {
+    for (const z of set) {
       if (!seen.has(z.id)) {
         seen.add(z.id)
         unionIris.push(z)
       }
     }
-    if (zoneIris.length > 0) summary.push(c.label)
   }
 
   // No "inside" constraints: union ALL "near" neighborhoods and stations independently.
