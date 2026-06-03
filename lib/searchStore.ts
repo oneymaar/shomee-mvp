@@ -82,6 +82,10 @@ export interface SearchPreferences {
     state: ChipState
     polarity: 'positive' | 'negative'
   }>
+  /** BuyerProfile.id used to fetch a scored feed via /api/properties.
+   *  Hardcoded to the demo profile in DB until auth lands. `null` disables
+   *  scoring server-side. */
+  buyerProfileId: string | null
   onboardingCompleted: boolean
 }
 
@@ -146,6 +150,7 @@ export const useSearchStore = create<SearchStore>()(
       maxSurface: null,
       chipStates: {},
       customCriteria: [],
+      buyerProfileId: 'cmppap3t00004co288tpeh0xh',
       onboardingCompleted: false,
 
       setLocation: ({ query, label, lat, lng, intent }) =>

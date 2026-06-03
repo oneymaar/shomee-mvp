@@ -67,6 +67,10 @@ export interface Conversation {
 
 export interface Property {
   id: string
+  // Matching engine — attached by /api/properties when buyerProfileId is set.
+  // Score is in 0..1 (engine produces 0..100 → normalised in the route).
+  matchScore?: number
+  isExcluded?: boolean
   // Feed display
   arrondissement: string   // e.g. "PARIS 4e"
   subtitle: string         // e.g. "Appartement haussmannien"

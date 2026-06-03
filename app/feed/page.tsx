@@ -14,8 +14,27 @@ import EndOfFeedCard from '@/components/EndOfFeedCard'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
 import { useShomeeStore } from '@/lib/store'
+import { useSearchStore } from '@/lib/searchStore'
 import { properties as mockProperties } from '@/lib/mockData'
 import type { Property } from '@/lib/types'
+
+/** Subtle top-right colour dot — green / orange / red — keyed on the 0..1
+ *  match score. Pure visual, no number shown. */
+function MatchScoreDot({ score }: { score: number }) {
+  const color = score >= 0.7 ? '#22c55e' : score >= 0.4 ? '#f97316' : '#ef4444'
+  return (
+    <div
+      className="absolute right-4 z-30 w-3 h-3 rounded-full"
+      style={{
+        top: 'calc(env(safe-area-inset-top, 16px) + 18px)',
+        backgroundColor: color,
+        boxShadow: `0 0 0 1.5px rgba(255,255,255,0.55), 0 1px 6px rgba(0,0,0,0.35)`,
+      }}
+      aria-label={`Score de match: ${Math.round(score * 100)}%`}
+      title={`Match ${Math.round(score * 100)}%`}
+    />
+  )
+}
 
 type FeedItem =
   | { type: 'property';     property: Property }
@@ -35,10 +54,14 @@ export default function FeedPage() {
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
   const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
   const [properties, setProperties] = useState<Property[]>(mockProperties)
+  const buyerProfileId = useSearchStore((s) => s.buyerProfileId)
 
   useEffect(() => {
     let cancelled = false
-    fetch('/api/properties')
+    const url = buyerProfileId
+      ? `/api/properties?buyerProfileId=${encodeURIComponent(buyerProfileId)}`
+      : '/api/properties'
+    fetch(url)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
@@ -54,7 +77,7 @@ export default function FeedPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [buyerProfileId])
 
   interface FlyHeart { id: number; from: { x: number; y: number }; to: { x: number; y: number } }
   const [flyHearts, setFlyHearts] = useState<FlyHeart[]>([])
@@ -263,12 +286,26 @@ export default function FeedPage() {
               style={{ height: '100%', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
             >
               <VideoCard property={property} isActive={isActive} muted={muted} />
-              <PropertyOverlay
-                property={property}
-                onMore={() => setDetailProperty(property)}
-                matchScore={Math.max(80, 95 - propIndex * 4)}
-                isActive={isActive}
-              />
+              {/* Real match score (0..1) when the API ran the engine;
+                  otherwise fall back to the previous synthetic value so
+                  the existing UI keeps animating. */}
+              {(() => {
+                const score01 =
+                  typeof property.matchScore === 'number'
+                    ? property.matchScore
+                    : Math.max(0.8, 0.95 - propIndex * 0.04)
+                return (
+                  <>
+                    {typeof property.matchScore === 'number' && <MatchScoreDot score={score01} />}
+                    <PropertyOverlay
+                      property={property}
+                      onMore={() => setDetailProperty(property)}
+                      matchScore={Math.round(score01 * 100)}
+                      isActive={isActive}
+                    />
+                  </>
+                )
+              })()}
               <ActionRail
                 property={property}
                 isFavorite={isFavorite}
