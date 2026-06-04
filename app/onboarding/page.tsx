@@ -24,9 +24,7 @@ import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services
 // these steps are purely cosmetic: they advance on their own timer and hold on
 // the last one if the analysis runs longer — never gating the reveal.
 const MAP_STEPS = [
-  'Analyse de votre recherche',
-  'Repérage des secteurs',
-  'Préparation de la carte',
+  'Analyse de votre recherche et préparation de la carte',
 ]
 const MAP_STEP_DURATION = 1000
 
