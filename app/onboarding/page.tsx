@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
-import IntroStep from '@/components/onboarding/IntroStep'
 import LocationStep from '@/components/onboarding/LocationStep'
 import LocationMapStep from '@/components/onboarding/LocationMapStep'
 import ClarificationStep from '@/components/onboarding/ClarificationStep'
@@ -92,7 +91,8 @@ function BriefErrorScreen({ message, onStart }: { message: string; onStart: () =
   )
 }
 
-// Steps: 0=Intro, 1=Location (text + map), 2=Bien, 3=Budget, 4=Priorities, 5=AI
+// Steps: 1=Location (text + map), 2=Bien, 3=Budget, 4=Priorities, 5=AI
+// (Intro removed — the splash screen is the entry point.)
 // locationMapOpen / clarificationData are sub-states of step 1 — still the
 // same Localisation step.
 const STEP_LABELS = ['Quartiers', 'Bien', 'Budget', 'Critères'] as const
@@ -121,7 +121,9 @@ function OnboardingPageInner() {
   const searchParams = useSearchParams()
   const briefToken = searchParams.get('brief')
   const { onboardingCompleted, setLocation, completeOnboarding } = useSearchStore()
-  const [step, setStep] = useState(0)
+  // Step 0 (IntroStep) was removed — the splash screen now serves as the
+  // intro, so onboarding opens directly on step 1 (Localisation).
+  const [step, setStep] = useState(1)
   const [direction, setDirection] = useState<Direction>(1)
   const [locationMapOpen, setLocationMapOpen] = useState(false)
   // ── AI brief magic-link flow ───────────────────────────────────────────
@@ -276,10 +278,13 @@ function OnboardingPageInner() {
       setAiRecapOpen(true)
       return
     }
-    if (step === 0) return
+    // Step 1 is now the first step — back returns to the splash screen.
+    if (step === 1) {
+      router.replace('/')
+      return
+    }
     goTo(step - 1, -1)
-  }, [step, locationMapOpen, clarificationData, editingFromRecap, goTo])
-  const handleQuick = useCallback(() => router.replace('/feed'), [router])
+  }, [step, locationMapOpen, clarificationData, editingFromRecap, goTo, router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
   // ── AI brief magic-link handlers ────────────────────────────────────────
@@ -572,10 +577,6 @@ function OnboardingPageInner() {
             transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
             className="absolute inset-0"
           >
-            {step === 0 && (
-              <IntroStep onStart={handleNext} onQuick={handleQuick} />
-            )}
-
             {step === 1 && !locationMapOpen && !clarificationData && (
               <LocationStep
                 onOpenMap={handleOpenMap}

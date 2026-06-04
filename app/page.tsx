@@ -9,9 +9,10 @@ export default function SplashPage() {
   const router = useRouter()
   const [showHint, setShowHint] = useState(false)
   const [exiting, setExiting] = useState(false)
+  const [destination, setDestination] = useState('/onboarding')
 
-  const navigateToFeed = () => setExiting(true)
-  const destination = '/onboarding'
+  const start = () => { setDestination('/onboarding'); setExiting(true) }
+  const goToFeed = () => { setDestination('/feed'); setExiting(true) }
 
   useEffect(() => {
     // Match body + theme-color to splash background so safe-area zone is terracotta
@@ -30,7 +31,7 @@ export default function SplashPage() {
       window.matchMedia('(display-mode: standalone)').matches
 
     if (isStandalone) {
-      const timer = setTimeout(navigateToFeed, 2000)
+      const timer = setTimeout(start, 2000)
       return () => clearTimeout(timer)
     } else {
       setShowHint(true)
@@ -70,17 +71,18 @@ export default function SplashPage() {
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <button
-            onClick={navigateToFeed}
+            onClick={start}
             className="text-white font-bold text-[16px] px-10 py-3.5 rounded-full active:opacity-80 transition-opacity"
             style={{ backgroundColor: '#FDF5F2', color: '#A64B27' }}
           >
             Commencer
           </button>
-          <p className="text-white/55 text-[12px] text-center leading-relaxed">
-            Pour ajouter SHOMEE sur votre écran d'accueil,{'\n'}
-            appuyez sur <span className="text-white/75">Partager</span> puis{' '}
-            <span className="text-white/75">Sur l'écran d'accueil</span>
-          </p>
+          <button
+            onClick={goToFeed}
+            className="text-white/70 font-medium text-[14px] active:opacity-60 transition-opacity"
+          >
+            Aller directement sur le feed
+          </button>
         </motion.div>
       )}
     </motion.div>
