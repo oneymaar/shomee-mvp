@@ -71,17 +71,11 @@ interface BienStepProps {
 
 export default function BienStep({ onNext }: BienStepProps) {
   const {
-    togglePropertyType, setPropertyTypes, propertyTypes,
+    togglePropertyType, propertyTypes,
     setRoomsRange, minRooms, maxRooms,
     setBedroomsRange, minBedrooms, maxBedrooms,
     setSurface, minSurface, maxSurface,
   } = useSearchStore()
-
-  // ── Local UI state ────────────────────────────────────────────────────────
-  // "Indifférent" is visual-only — clears the underlying store fields. We
-  // track the explicit click so the chip can stay highlighted (otherwise
-  // it would be indistinguishable from "user hasn't touched it").
-  const [typeIndifferent, setTypeIndifferent] = useState(false)
 
   // Surface dual-slider — same pattern as the Budget step.
   const initialSurfaceMinIndex = useMemo(
@@ -143,12 +137,7 @@ export default function BienStep({ onNext }: BienStepProps) {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handlePropertyType = (value: PropertyType) => {
-    setTypeIndifferent(false)
     togglePropertyType(value)
-  }
-  const handleTypeIndifferent = () => {
-    setTypeIndifferent(true)
-    setPropertyTypes([])
   }
 
   const commitSurface = (lo: number, hi: number) => {
@@ -261,7 +250,7 @@ export default function BienStep({ onNext }: BienStepProps) {
           </p>
           <div className="flex flex-wrap gap-1.5 mb-6">
             {PROPERTY_TYPES.map((pt) => {
-              const isSelected = !typeIndifferent && propertyTypes.includes(pt.value)
+              const isSelected = propertyTypes.includes(pt.value)
               return (
                 <button
                   key={pt.value}
@@ -275,14 +264,6 @@ export default function BienStep({ onNext }: BienStepProps) {
                 </button>
               )
             })}
-            <button
-              type="button"
-              onClick={handleTypeIndifferent}
-              className="shomee-chip"
-              data-selected={typeIndifferent}
-            >
-              Indifférent
-            </button>
           </div>
         </motion.div>
 
