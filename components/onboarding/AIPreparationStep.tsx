@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchStore } from '@/lib/searchStore'
 
+// Number of biens shown in the final confirmation (matches the demo feed).
+const RESULTS_COUNT = 4
 // Each step stays visible at least 2s before the next replaces it.
 const STEP_DURATION = 2000
 const ANALYSIS_STEPS = [
@@ -50,10 +52,7 @@ interface AIPreparationStepProps {
 }
 
 export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
-  const { locationLabel, chipStates, customCriteria, completeOnboarding } = useSearchStore()
-  const criteriaCount =
-    Object.values(chipStates).filter((s) => s > 0).length +
-    customCriteria.filter((c) => c.state > 0).length
+  const { locationLabel, completeOnboarding } = useSearchStore()
   const [currentStep, setCurrentStep] = useState(0)
   const [done, setDone] = useState(false)
   const [typed, setTyped] = useState('')
@@ -97,10 +96,11 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
       setDone(true)
     }, doneAt))
 
+    // Hold the "X biens trouvés" confirmation a touch longer so it reads.
     timers.push(setTimeout(() => {
       completeOnboarding()
       onReady()
-    }, doneAt + 600))
+    }, doneAt + 1500))
 
     return () => timers.forEach(clearTimeout)
   }, [completeOnboarding, onReady])
@@ -177,27 +177,28 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         )}
       </div>
 
-      {/* Stats summary */}
+      {/* Result confirmation — just the number of biens found, with a check */}
       {done && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 px-5 py-3.5 bg-white border border-black/8 rounded-2xl flex items-center gap-3"
+          className="mt-8 flex items-center gap-2.5"
         >
-          <div className="text-left">
-            <p className="text-[22px] font-bold" style={{ color: '#A64B27' }}>4</p>
-            <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">biens sélectionnés</p>
-          </div>
-          <div className="w-px h-8 bg-black/8" />
-          <div className="text-left">
-            <p className="text-[22px] font-bold text-neutral-900">
-              {criteriaCount > 0 ? `${criteriaCount}` : '—'}
-            </p>
-            <p className="text-[11px] text-neutral-400 font-medium uppercase tracking-wide">
-              critères
-            </p>
-          </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: '#A64B27' }}
+          >
+            <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+              <path d="M1 4.5L4.5 8L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </motion.div>
+          <span className="text-[15px] font-semibold text-neutral-900">
+            <span style={{ color: '#A64B27' }}>{RESULTS_COUNT}</span> biens trouvés
+          </span>
         </motion.div>
       )}
     </div>
