@@ -13,6 +13,7 @@ import SkipFeedbackCard from '@/components/SkipFeedbackCard'
 import EndOfFeedCard from '@/components/EndOfFeedCard'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
+import ShomeeLogo from '@/components/ShomeeLogo'
 import { useShomeeStore } from '@/lib/store'
 import { useSearchStore } from '@/lib/searchStore'
 import { properties as mockProperties } from '@/lib/mockData'
@@ -28,6 +29,42 @@ type FeedItem =
 //   pre-reveal → [b1 b2 inter(2) b3 eof-1 b4 eof-2]    (b4 added below eof-1)
 //   revealed   → [b1 b2 inter(2) b3 b4 eof-2]           (eof-1 removed)
 type ResultsStage = 'blocked' | 'pre-reveal' | 'revealed'
+
+// Écran d'attente plein écran montré tant que le feed n'est pas prêt
+// (pendant le pré-fetch /api/feed/generate). Version minimaliste fond noir
+// dans l'esprit de l'AIPreparationStep : logo SHOMEE centré + une ligne de
+// texte qui « respire ». Disparaît en fondu via l'AnimatePresence parent.
+function FeedLoader() {
+  return (
+    <motion.div
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-neutral-900 px-10 text-center"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5, ease: 'easeInOut' }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <motion.div
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <ShomeeLogo size={64} />
+        </motion.div>
+      </motion.div>
+
+      <motion.p
+        className="mt-8 max-w-[260px] text-[13px] leading-relaxed text-neutral-400"
+        animate={{ opacity: [0.45, 1, 0.45] }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        Nous sélectionnons les biens qui vous correspondent…
+      </motion.p>
+    </motion.div>
+  )
+}
 
 export default function FeedPage() {
   const [muted, setMuted] = useState(true)
@@ -327,9 +364,12 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
-      {/* Pas de loader local : l'AIPreparationStep de l'onboarding sert
-          d'écran d'attente unique. Le feed n'apparaît qu'une fois ready
-          (feedItems = [] tant que !feedReady). */}
+      {/* Loader plein écran tant que le feed n'est pas prêt (pré-fetch
+          /api/feed/generate). Remplace l'écran vide ; disparaît en fondu
+          dès que feedReady passe à true (feedItems = [] tant que !feedReady). */}
+      <AnimatePresence>
+        {!feedReady && <FeedLoader key="feed-loader" />}
+      </AnimatePresence>
       <div
         ref={containerRef}
         className="absolute inset-x-0 top-0 overflow-y-scroll scrollbar-hide"
