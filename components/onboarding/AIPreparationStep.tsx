@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchStore } from '@/lib/searchStore'
 
+// Clé sessionStorage où l'AIPreparationStep dépose le feed pré-généré
+// que la page /feed lira en priorité (évite le second loader).
+const PREFETCH_KEY = 'shomee:pregen-feed'
+
 // Number of biens shown in the final confirmation (matches the demo feed).
 const RESULTS_COUNT = 4
 // Each step stays visible at least 2s before the next replaces it.
@@ -56,6 +60,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [done, setDone] = useState(false)
   const [typed, setTyped] = useState('')
+  const [extraStatus, setExtraStatus] = useState<string | null>(null)
   // typingDone is derived, not stored: labels are all distinct, so `typed`
   // matches the full current label only once it has been fully typed out.
   const currentLabel = ANALYSIS_STEPS[currentStep].label
@@ -80,29 +85,102 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
   }, [currentStep, done])
 
   useEffect(() => {
+    let cancelled = false
     const timers: ReturnType<typeof setTimeout>[] = []
 
-    // Reveal one step at a time, each replacing the previous in the same
-    // fixed slot — so the avatar and headline above never shift.
+    // ── Pré-fetch /api/feed/generate en parallèle de l'animation ─────
+    // L'écran reste affiché jusqu'à ce que les DEUX se terminent, puis
+    // navigue. Le résultat est déposé dans sessionStorage pour que
+    // /feed le récupère sans refetch (= un seul écran de chargement).
+    const s = useSearchStore.getState()
+    const hasBrief =
+      !!(s.minSurface || s.maxSurface || s.budgetMin || s.budgetMax ||
+         s.minRooms || s.maxRooms || s.minBedrooms || s.maxBedrooms ||
+         (s.propertyTypes?.length ?? 0) > 0 ||
+         Object.values(s.chipStates ?? {}).some((v) => v > 0) ||
+         (s.customCriteria?.length ?? 0) > 0 ||
+         (s.selectedArrIds?.length ?? 0) > 0 ||
+         (s.selectedCommuneIds?.length ?? 0) > 0)
+
+    let fetchDone = !hasBrief
+    let timerDone = false
+
+    const tryComplete = () => {
+      if (cancelled || !fetchDone || !timerDone) return
+      completeOnboarding()
+      onReady()
+    }
+
+    if (hasBrief) {
+      const briefBody = {
+        minSurface: s.minSurface,
+        maxSurface: s.maxSurface,
+        budgetMin: s.budgetMin,
+        budgetMax: s.budgetMax,
+        minRooms: s.minRooms,
+        maxRooms: s.maxRooms,
+        minBedrooms: s.minBedrooms,
+        maxBedrooms: s.maxBedrooms,
+        propertyTypes: s.propertyTypes,
+        chipStates: s.chipStates,
+        customCriteria: s.customCriteria,
+        arrondissementIds: s.selectedArrIds,
+        communeIds: s.selectedCommuneIds,
+      }
+      try { sessionStorage.removeItem(PREFETCH_KEY) } catch {}
+      fetch('/api/feed/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(briefBody),
+      })
+        .then((r) => r.json())
+        .then((data: unknown) => {
+          if (cancelled) return
+          if (Array.isArray(data) && data.length > 0) {
+            try {
+              sessionStorage.setItem(PREFETCH_KEY, JSON.stringify(data))
+            } catch {
+              // sessionStorage pleine ou indisponible — /feed retombera
+              // sur son fetch habituel.
+            }
+          }
+        })
+        .catch(() => { /* /feed fera son propre fetch en fallback */ })
+        .finally(() => {
+          fetchDone = true
+          if (!cancelled && timerDone) {
+            setExtraStatus(null)
+          }
+          tryComplete()
+        })
+    }
+
+    // ── Animation timers ─────────────────────────────────────────────
     ANALYSIS_STEPS.forEach((step, i) => {
       timers.push(setTimeout(() => {
         setCurrentStep(i)
       }, step.delay + 300))
     })
 
-    // Last step starts at delay*3 + 300, then runs its full 2s before "done".
     const doneAt = ANALYSIS_STEPS[ANALYSIS_STEPS.length - 1].delay + 300 + STEP_DURATION
     timers.push(setTimeout(() => {
       setDone(true)
     }, doneAt))
 
-    // Hold the "X biens trouvés" confirmation a touch longer so it reads.
     timers.push(setTimeout(() => {
-      completeOnboarding()
-      onReady()
+      timerDone = true
+      // Si le fetch n'a pas encore répondu, on tient l'écran et on
+      // affiche un mini-statut pour expliquer la suite de l'attente.
+      if (!cancelled && !fetchDone) {
+        setExtraStatus('Finalisation de la sélection…')
+      }
+      tryComplete()
     }, doneAt + 1500))
 
-    return () => timers.forEach(clearTimeout)
+    return () => {
+      cancelled = true
+      timers.forEach(clearTimeout)
+    }
   }, [completeOnboarding, onReady])
 
   return (
@@ -200,6 +278,13 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
             <span style={{ color: '#A64B27' }}>{RESULTS_COUNT}</span> biens trouvés
           </span>
         </motion.div>
+      )}
+
+      {/* Mini-statut affiché si l'animation est finie mais que le fetch
+          /api/feed/generate continue (latence LLM > 9.5 s). Évite que
+          l'écran ait l'air figé. */}
+      {done && extraStatus && (
+        <p className="mt-3 text-[12px] text-neutral-500">{extraStatus}</p>
       )}
     </div>
   )

@@ -312,6 +312,62 @@ Réponds UNIQUEMENT avec un tableau JSON valide, sans texte autour.
 Chaque fiche doit être cohérente avec les contraintes fournies.
 Les valeurs numériques doivent être réalistes pour le marché parisien.`
 
+/**
+ * Bornes par fiche = intersection du brief acquéreur et des tags de la
+ * vidéo associée. Garantit que la fiche générée (surface, prix, pièces)
+ * soit cohérente avec la vidéo qu'elle illustre.
+ *
+ * Quand le widening géo a poussé une vidéo en dehors des bornes du brief
+ * (intersection vide), on étire un minimum pour ne pas renvoyer un
+ * intervalle invalide au LLM.
+ */
+type VideoContext = {
+  videoId: string
+  targetSurface: number
+  maxSurface: number
+  targetPrice: number
+  maxPrice: number
+  targetRooms: number
+  maxRooms: number
+}
+
+function buildVideoContext(snapshot: BriefSnapshot, video: VideoTag): VideoContext {
+  const briefMinSurface = snapshot.minSurface ?? 0
+  const briefMaxSurface = snapshot.maxSurface ?? Infinity
+  const briefMinBudget = snapshot.budgetMin ?? 0
+  const briefMaxBudget = snapshot.budgetMax ?? Infinity
+  const briefMinRooms = snapshot.minRooms ?? 1
+  const briefMaxRooms = snapshot.maxRooms ?? 10
+
+  const targetSurface = Math.max(briefMinSurface, video.surfaceRange[0])
+  let maxSurface = Math.min(briefMaxSurface, video.surfaceRange[1])
+  if (maxSurface < targetSurface + 10) maxSurface = targetSurface + 20
+
+  const targetPrice = Math.max(briefMinBudget, video.priceRange[0])
+  let maxPrice = Math.min(briefMaxBudget, video.priceRange[1])
+  if (maxPrice < targetPrice * 1.1) maxPrice = Math.round(targetPrice * 1.1)
+  // Plafonner à targetPrice × 1.4 pour éviter que le LLM ne pose le prix
+  // au plafond systématiquement (cf. spec correction).
+  maxPrice = Math.min(maxPrice, Math.round(targetPrice * 1.4))
+
+  const videoRooms = video.rooms ?? []
+  const videoMinRooms = videoRooms[0] ?? 1
+  const videoMaxRooms = videoRooms[videoRooms.length - 1] ?? 10
+  const targetRooms = Math.max(briefMinRooms, videoMinRooms)
+  let maxRooms = Math.min(briefMaxRooms, videoMaxRooms)
+  if (maxRooms < targetRooms) maxRooms = targetRooms
+
+  return {
+    videoId: video.videoId,
+    targetSurface: Math.round(targetSurface),
+    maxSurface: Math.round(maxSurface),
+    targetPrice: Math.round(targetPrice),
+    maxPrice: Math.round(maxPrice),
+    targetRooms,
+    maxRooms,
+  }
+}
+
 function buildUserPrompt(
   snapshot: BriefSnapshot,
   videos: VideoTag[],
@@ -361,47 +417,51 @@ function buildUserPrompt(
       ? snapshot.propertyTypes.join(', ')
       : 'appartement'
 
-  const minSurface = snapshot.minSurface ?? 30
-  const surfaceLine = `${minSurface} m² minimum${
-    snapshot.maxSurface ? ` - ${snapshot.maxSurface} m² maximum` : ''
-  }`
-  const budgetLine = `${
-    snapshot.budgetMin ? snapshot.budgetMin + ' € minimum, ' : ''
-  }${snapshot.budgetMax ? snapshot.budgetMax + ' € maximum' : 'sans limite'}`
-
-  // Prix /m² réaliste calculé sur les arr ciblés ; pour les communes on
-  // s'appuie sur la moyenne intra-muros (10 000 €/m²) — proxy correct
-  // pour Neuilly/Boulogne/etc.
+  // Repère prix moyen secteur — toujours dans le prompt comme guide, en
+  // plus des bornes par fiche, pour rester réaliste sur le marché parisien.
   const avgPricePerSqm =
     arrs.length > 0
       ? Math.round(
           arrs.reduce((s, a) => s + (PRICE_FLOORS[a] ?? 10000), 0) / arrs.length,
         )
       : 10000
-  const minPerSqm = Math.round(avgPricePerSqm * 0.85)
-  const maxPerSqm = Math.round(avgPricePerSqm * 1.3)
-  const absoluteFloor = Math.round(avgPricePerSqm * 0.8 * minSurface)
 
-  return `Génère ${n} fiches de biens immobiliers fictifs correspondant à ces critères :
+  // Contraintes par fiche : intersection brief ∩ vidéo. C'est le coeur
+  // de la cohérence fiche/vidéo — l'ordre du tableau de retour DOIT
+  // correspondre à l'ordre des contextes ci-dessous.
+  const contexts = videos.map((v) => buildVideoContext(snapshot, v))
+  const constraintsBlock = contexts
+    .map(
+      (c, i) =>
+        `Fiche ${i + 1}: surface ${c.targetSurface}-${c.maxSurface} m² · ` +
+        `prix ${c.targetPrice}-${c.maxPrice} € · ` +
+        `pièces ${c.targetRooms}-${c.maxRooms}`,
+    )
+    .join('\n')
 
-- Zones : ${zonesDescription}
-- Type : ${types}
-- Surface : ${surfaceLine}
-- Pièces : ${snapshot.minRooms ?? 1} minimum
-- Budget : ${budgetLine}
-- Critères souhaités : ${desired.join(', ') || 'aucun'}
-- Critères obligatoires : ${mandatory.join(', ') || 'aucun'}
+  return `Génère ${n} fiches de biens immobiliers fictifs DANS CET ORDRE EXACT.
+Chaque fiche a SES PROPRES contraintes — ne pas mélanger les fiches.
 
-Format JSON attendu pour chaque fiche (champs OBLIGATOIRES, dans cet ordre) :
+Zone : ${zonesDescription}
+Type : ${types}
+Prix moyen secteur : ${avgPricePerSqm} €/m²
+
+Contraintes par fiche (À RESPECTER IMPÉRATIVEMENT, jamais hors borne) :
+${constraintsBlock}
+
+Critères souhaités : ${desired.join(', ') || 'aucun'}
+Critères obligatoires : ${mandatory.join(', ') || 'aucun'}
+
+Format JSON — tableau de ${n} objets DANS CET ORDRE EXACT (un par fiche ci-dessus) :
 {"title":"string","address":"string","price":number,"surface":number,"rooms":number,"floor":number,"propertyType":"appartement|maison|loft|atelier","elevator":boolean,"terrace":boolean,"balcony":boolean,"cellar":boolean,"parking":boolean,"dpe":"A|B|C|D|E|F|G","luminosity":number,"charm":number,"quietness":number,"outdoorUsability":number,"description":"string — 1 phrase courte"}
 
-Les 4 scores sont entre 0 et 1. Chaque fiche doit être distincte (adresses différentes, prix variés dans la fourchette).
+Les 4 scores sont entre 0 et 1. Chaque fiche distincte (adresses différentes).
 
 CONTRAINTES STRICTES :
 - L'adresse DOIT être située dans l'une des zones listées ci-dessus, et nulle part ailleurs.
-- Pour Paris, utilise le format "<numéro> <rue>, 750<NN> Paris" (ex: "12 rue de Passy, 75016 Paris" pour le 16e). Pas de "75e" ni de "Paris 75NNN".
-- Pour les communes (Neuilly, Boulogne, etc.), utilise le format "<numéro> <rue>, <commune>".
-- Prix : calculer price = surface × pricePerSqm où pricePerSqm est entre ${minPerSqm} et ${maxPerSqm} €/m². Ne JAMAIS générer un prix inférieur à ${absoluteFloor} €.`
+- Pour Paris, format "<numéro> <rue>, 750<NN> Paris" (ex: "12 rue de Passy, 75016 Paris" pour le 16e). Pas de "75e" ni de "Paris 75NNN".
+- Pour les communes, format "<numéro> <rue>, <commune>".
+- Surface, prix et pièces de chaque fiche DOIVENT être dans la fourchette indiquée pour cette fiche-là.`
 }
 
 /**

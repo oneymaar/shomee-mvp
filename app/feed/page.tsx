@@ -45,6 +45,24 @@ export default function FeedPage() {
   useEffect(() => {
     let cancelled = false
 
+    // Pre-generated feed déposé par l'AIPreparationStep — la fetch
+    // /api/feed/generate a déjà tourné pendant l'animation onboarding.
+    // Si présent, on l'utilise direct et on saute le fetch local.
+    try {
+      const cached = sessionStorage.getItem('shomee:pregen-feed')
+      if (cached) {
+        const data = JSON.parse(cached) as Property[]
+        sessionStorage.removeItem('shomee:pregen-feed')
+        if (Array.isArray(data) && data.length > 0) {
+          setProperties(data)
+          setFeedReady(true)
+          return
+        }
+      }
+    } catch {
+      // sessionStorage indispo / JSON cassé → fallback fetch normal.
+    }
+
     // Read a fresh snapshot at the moment of fetch — Zustand's getState()
     // bypasses the subscription model so we don't re-render the feed when
     // unrelated store fields change. The body shape is the same subset
