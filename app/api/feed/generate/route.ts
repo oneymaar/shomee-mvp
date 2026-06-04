@@ -925,6 +925,7 @@ function ficheToView(
   context: VideoContext,
   snapshot: BriefSnapshot,
   chapters: ChapterRow[] | null,
+  aiTags: string[],
   matchScore01: number,
   isExcluded: boolean,
   id: string,
@@ -940,7 +941,11 @@ function ficheToView(
   const bedrooms = derivedBedrooms(fiche.rooms)
   const quartier = context.quartier
   const subtitle = `Appartement · T${fiche.rooms} · ${fiche.surface} m²`
-  const matchedCriteria = computeMatchedCriteria(fiche, snapshot)
+  // Critères validés = tags IA extraits de la vidéo (PropertyTag/AI_VIDEO,
+  // confidence ≥ 0.7) — données réelles, déterministes par vidéo.
+  // Fallback sur la dérivation chips snapshot si la vidéo n'a pas de tags.
+  const matchedCriteria =
+    aiTags.length > 0 ? aiTags : computeMatchedCriteria(fiche, snapshot)
 
   // Marché : centre €/m² par arr, clampé dans [11K, 16K] (cf. règle prix).
   const rawFloor = arrNum > 0 ? PRICE_FLOORS[arrNum] ?? 12000 : 12000
@@ -1049,10 +1054,10 @@ export async function POST(req: NextRequest) {
   const userArrs = resolveAllArrs(snapshot)
   const contexts = matchedVideos.map((v) => buildVideoContext(snapshot, v, userArrs))
 
-  // Charge la map videoId → chapitres + agence (nom/logo) pour réinjecter au
-  // moment de la projection. Chaque fiche est bâtie à partir d'une vidéo, qui
-  // correspond à un bien DB : on prend SON agence (déjà ré-assignée par
-  // localisation) plutôt qu'un mapping arrondissement hardcodé sans logo.
+  // Charge par vidéo : chapitres + agence (nom/logo) + tags IA. Chaque
+  // fiche est bâtie à partir d'une vidéo, qui correspond à un bien DB :
+  // on prend SES tags (résultat de scripts/scrape-and-seed.ts --analyze)
+  // pour le bandeau "critères validés" plutôt que de dériver des chips.
   // Un seul findMany pour les ~30 biens.
   const dbProps = await prisma.property.findMany({
     where: { videoAnalysis: { isNot: null }, videoUrl: { not: null } },
@@ -1060,10 +1065,16 @@ export async function POST(req: NextRequest) {
       videoUrl: true,
       videoAnalysis: { select: { chapitres: true } },
       agency: { select: { name: true, logo: true } },
+      propertyTags: {
+        where: { source: 'AI_VIDEO' },
+        select: { label: true, confidence: true },
+        orderBy: { confidence: 'desc' },
+      },
     },
   })
   const chaptersByVideoId = new Map<string, ChapterRow[] | null>()
   const agencyByVideoId = new Map<string, { name: string; logo: string | null }>()
+  const aiTagsByVideoId = new Map<string, string[]>()
   for (const p of dbProps) {
     if (!p.videoUrl) continue
     const vid = extractCloudinaryId(p.videoUrl)
@@ -1073,6 +1084,10 @@ export async function POST(req: NextRequest) {
       Array.isArray(raw) && raw.length > 0 ? (raw as unknown as ChapterRow[]) : null,
     )
     if (p.agency) agencyByVideoId.set(vid, { name: p.agency.name, logo: p.agency.logo })
+    const labels = p.propertyTags
+      .filter((t) => t.confidence >= 0.7)
+      .map((t) => t.label.charAt(0).toUpperCase() + t.label.slice(1))
+    aiTagsByVideoId.set(vid, labels)
   }
 
   let fiches: Fiche[] = []
@@ -1096,12 +1111,14 @@ export async function POST(req: NextRequest) {
     const context = contexts[i % contexts.length]
     const chapters = chaptersByVideoId.get(video.videoId) ?? null
     const dbAgency = agencyByVideoId.get(video.videoId) ?? null
+    const aiTags = aiTagsByVideoId.get(video.videoId) ?? []
     return ficheToView(
       fiche,
       video,
       context,
       snapshot,
       chapters,
+      aiTags,
       result.global_score / 100,
       result.is_excluded,
       profile.property_id,
