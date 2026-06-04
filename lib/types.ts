@@ -71,6 +71,12 @@ export interface Property {
   // Score is in 0..1 (engine produces 0..100 → normalised in the route).
   matchScore?: number
   isExcluded?: boolean
+  // Agency identity — projected by /api/properties via the Agency relation.
+  // Falls back to the agent's first letter when null, used as the primary
+  // brand badge in the feed (the agent name is reserved for the detail
+  // sheet and messaging flows).
+  agencyName?: string
+  agencyLogo?: string | null
   // Feed display
   arrondissement: string   // e.g. "PARIS 4e"
   subtitle: string         // e.g. "Appartement haussmannien"

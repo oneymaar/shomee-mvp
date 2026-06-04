@@ -72,7 +72,11 @@ const UserCriteriaBriefSchema = z.object({
 const OrientationSchema = z.enum(['north', 'south', 'east', 'west'])
 const DpeSchema = z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G'])
 
+const PropertyTypeSchema = z.enum(['appartement', 'maison', 'loft', 'atelier'])
+
 const StructuredAttributesSchema = z.object({
+  price: z.number(),
+  property_type: PropertyTypeSchema,
   floor: z.number(),
   total_floors: z.number(),
   has_elevator: z.boolean(),

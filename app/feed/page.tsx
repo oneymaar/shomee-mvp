@@ -19,9 +19,12 @@ import { properties as mockProperties } from '@/lib/mockData'
 import type { Property } from '@/lib/types'
 
 /** Subtle top-right colour dot — green / orange / red — keyed on the 0..1
- *  match score. Pure visual, no number shown. */
+ *  match score. Pure visual, no number shown. Thresholds bumped to 0.85 /
+ *  0.65 once hard filters started running: with structured rules in the
+ *  brief, the score distribution shifts upward, so the previous 0.7 / 0.4
+ *  cut-offs painted nearly everything green. */
 function MatchScoreDot({ score }: { score: number }) {
-  const color = score >= 0.7 ? '#22c55e' : score >= 0.4 ? '#f97316' : '#ef4444'
+  const color = score >= 0.85 ? '#22c55e' : score >= 0.65 ? '#f97316' : '#ef4444'
   return (
     <div
       className="absolute right-4 z-30 w-3 h-3 rounded-full"
@@ -60,6 +63,13 @@ export default function FeedPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [feedReady, setFeedReady] = useState(false)
   const buyerProfileId = useSearchStore((s) => s.buyerProfileId)
+  // Only flash the match dot when the buyer told us something quantifiable.
+  // Without any hard filter the score is purely a sum of soft signals and
+  // tends to bunch at the top, painting almost every card green — visually
+  // noisy and not useful.
+  const hasMeaningfulBrief = useSearchStore(
+    (s) => !!(s.minSurface || s.maxSurface || s.budgetMin || s.budgetMax || s.minRooms || s.minBedrooms),
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -326,7 +336,9 @@ export default function FeedPage() {
                     : Math.max(0.8, 0.95 - propIndex * 0.04)
                 return (
                   <>
-                    {typeof property.matchScore === 'number' && <MatchScoreDot score={score01} />}
+                    {hasMeaningfulBrief && typeof property.matchScore === 'number' && (
+                      <MatchScoreDot score={score01} />
+                    )}
                     <PropertyOverlay
                       property={property}
                       onMore={() => setDetailProperty(property)}

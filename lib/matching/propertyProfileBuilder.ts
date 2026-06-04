@@ -25,6 +25,7 @@ import type {
   PropertyProfile,
   PropertyStructuredAttributes,
   PropertySemanticScores,
+  PropertyTypeStructured,
 } from './types'
 
 const ALLOWED_ORIENTATIONS: ReadonlySet<Orientation> = new Set([
@@ -34,8 +35,25 @@ const ALLOWED_ORIENTATIONS: ReadonlySet<Orientation> = new Set([
   'west',
 ])
 
+/**
+ * Coarse type inference from title + subtitle. The Property model has no
+ * `propertyType` column yet; this heuristic is the lightest path to wire
+ * the searchPreferences.propertyTypes filter without a migration.
+ * Anything unrecognised defaults to "appartement" — the by-far most
+ * common shape in the seeded data and the safest fallback.
+ */
+function inferPropertyType(p: PrismaProperty): PropertyTypeStructured {
+  const hay = `${p.title} ${p.subtitle}`.toLowerCase()
+  if (/\bloft\b/.test(hay)) return 'loft'
+  if (/\batelier\b/.test(hay)) return 'atelier'
+  if (/\bmaison\b|\bvilla\b|h[oô]tel particulier/.test(hay)) return 'maison'
+  return 'appartement'
+}
+
 export function toPropertyProfile(p: PrismaProperty): PropertyProfile {
   const structured: PropertyStructuredAttributes = {
+    price: p.price,
+    property_type: inferPropertyType(p),
     floor: p.floor ?? 0,
     total_floors: p.totalFloors ?? 0,
     has_elevator: p.hasElevator,

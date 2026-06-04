@@ -308,10 +308,15 @@ function resolveAttribute(
 
     // Bedroom / living
     case 'bedroom.count':            return s.bedroom_count
+    case 'bedroom_count':            return s.bedroom_count
     case 'bedroom.street_side':      return s.bedroom_street_side
     case 'living.surface_m2':        return s.surface_m2
     case 'surface_m2':               return s.surface_m2
     case 'room_count':               return s.room_count
+
+    // Hard buyer-side filters
+    case 'price':                    return s.price
+    case 'property_type':            return s.property_type
 
     // Orientation — operator '=' / 'in' against the array of facades
     case 'living.exposure':

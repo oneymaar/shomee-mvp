@@ -85,16 +85,25 @@ export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0,
         className="absolute top-0 left-0 right-0 z-20 px-3"
         style={{ paddingTop: `calc(env(safe-area-inset-top, 0px) + ${12 + agencyTopOffset}px)` }}
       >
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/25 flex items-center justify-center">
-            {property.agentAvatar ? (
-              <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
-            ) : (
-              <span className="text-white text-xs font-bold">{property.agentName.charAt(0)}</span>
-            )}
-          </div>
-          <p className="text-white font-semibold text-[15px] drop-shadow">{property.agentName}</p>
-        </div>
+        {/* Primary brand badge = agency. Falls back to agent identity for
+            properties without a projected agency relation. */}
+        {(() => {
+          const brandName = property.agencyName ?? property.agentName
+          const brandLogo = property.agencyLogo ?? property.agentAvatar
+          const initial = (brandName?.trim().charAt(0) ?? '?').toUpperCase()
+          return (
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/25 flex items-center justify-center">
+                {brandLogo ? (
+                  <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
+                ) : (
+                  <span className="text-white text-xs font-bold">{initial}</span>
+                )}
+              </div>
+              <p className="text-white font-semibold text-[15px] drop-shadow">{brandName}</p>
+            </div>
+          )
+        })()}
       </div>
 
       {/* ── Bottom ── */}

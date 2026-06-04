@@ -22,6 +22,8 @@ import type {
 
 function structured(overrides: Partial<PropertyStructuredAttributes> = {}): PropertyStructuredAttributes {
   return {
+    price: 500000,
+    property_type: 'appartement',
     floor: 3,
     total_floors: 6,
     has_elevator: true,

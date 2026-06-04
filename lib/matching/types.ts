@@ -21,7 +21,18 @@ export type Orientation = 'north' | 'south' | 'east' | 'west'
 
 export type DpeRating = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
 
+export type PropertyTypeStructured =
+  | 'appartement'
+  | 'maison'
+  | 'loft'
+  | 'atelier'
+
 export interface PropertyStructuredAttributes {
+  /** Total asking price in euros. Drives hard budget filters. */
+  price: number
+  /** Coarse type derived from the listing title — pattern-matched in
+   *  {@link PropertyStructuredAttributes}'s builder, never persisted. */
+  property_type: PropertyTypeStructured
   floor: number
   total_floors: number
   has_elevator: boolean
