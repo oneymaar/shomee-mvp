@@ -39,6 +39,48 @@ const NEGATIVE_PREFIXES = [
   'no ',
 ]
 
+// Hard bounds for the rooms/bedrooms ranges shown in BienStep.
+// Anything ≥ 7 rooms is rendered as "7+"; ≥ 6 bedrooms as "6+".
+export const ROOMS_MIN = 1
+export const ROOMS_MAX = 7
+export const BEDROOMS_MIN = 1
+export const BEDROOMS_MAX = 6
+
+/** Auto-coupling rule documented in BienStep:
+ *  Studio (1) → 1 chambre · 2p → 1 · 3p → 2 · 4p → 3 · 5p → 4 · 6p → 5 · 7+ → 6+
+ *  Equivalent to `clamp(rooms - 1, 1, 6)` with a Studio carve-out (rooms=1
+ *  collapses to 1 bedroom since the bedrooms scale itself starts at 1). */
+function roomsToCoupledMinBedrooms(rooms: number): number {
+  return Math.min(BEDROOMS_MAX, Math.max(BEDROOMS_MIN, rooms - 1))
+}
+
+/** Shared logic for `setMinRooms` and `setRoomsRange` — applies the
+ *  rooms→bedrooms auto-coupling and bumps `maxBedrooms` to preserve the
+ *  `max >= min` invariant. */
+function applyRoomsCoupling(
+  s: { minBedrooms: number | null; maxBedrooms: number | null },
+  rooms: { min: number | null; max: number | null },
+): {
+  minRooms: number | null
+  maxRooms: number | null
+  minBedrooms: number | null
+  maxBedrooms: number | null
+} {
+  const coupledMin = rooms.min != null ? roomsToCoupledMinBedrooms(rooms.min) : s.minBedrooms
+  let nextMaxBedrooms = s.maxBedrooms
+  if (coupledMin != null) {
+    if (nextMaxBedrooms == null || nextMaxBedrooms < coupledMin) {
+      nextMaxBedrooms = Math.max(coupledMin, BEDROOMS_MAX)
+    }
+  }
+  return {
+    minRooms: rooms.min,
+    maxRooms: rooms.max,
+    minBedrooms: coupledMin,
+    maxBedrooms: nextMaxBedrooms,
+  }
+}
+
 function detectNegative(label: string): { isNegative: boolean; cleanLabel: string } {
   const lower = label.toLowerCase()
   for (const p of NEGATIVE_PREFIXES) {
@@ -67,6 +109,9 @@ export interface SearchPreferences {
   budgetMax: number | null
   propertyTypes: PropertyType[]
   minRooms: number | null
+  maxRooms: number | null
+  minBedrooms: number | null
+  maxBedrooms: number | null
   minSurface: number | null
   maxSurface: number | null
   /** 4-state per chip — keyed by chip label. Covers both "Le bien" and
@@ -108,7 +153,17 @@ interface SearchStore extends SearchPreferences {
   setBudgetRange: (min: number | null, max: number | null) => void
   setPropertyTypes: (types: PropertyType[]) => void
   togglePropertyType: (type: PropertyType) => void
+  /** Sets only the minimum room count. Auto-couples `minBedrooms` via the
+   *  rooms→bedrooms mapping (Studio→1, 2p→1, 3p→2, …, 7+→6+). Maintains
+   *  the invariant `maxBedrooms >= minBedrooms` by bumping max if needed. */
   setMinRooms: (min: number | null) => void
+  /** Sets `[minRooms, maxRooms]` together. Same auto-coupling rule as
+   *  `setMinRooms` applies to `minBedrooms`. */
+  setRoomsRange: (min: number | null, max: number | null) => void
+  /** Sets `[minBedrooms, maxBedrooms]`. Clamps `minBedrooms < minRooms`
+   *  when `minRooms >= 2` (Studio is the degenerate case where bedrooms
+   *  may equal rooms since the bedrooms scale starts at 1). */
+  setBedroomsRange: (min: number | null, max: number | null) => void
   setSurface: (min: number | null, max: number | null) => void
   /** Cycle a chip 0 → 1 → 2 → 3 → 0. */
   cycleChipState: (label: string) => void
@@ -150,6 +205,9 @@ export const useSearchStore = create<SearchStore>()(
       budgetMax: null,
       propertyTypes: [],
       minRooms: null,
+      maxRooms: null,
+      minBedrooms: null,
+      maxBedrooms: null,
       minSurface: null,
       maxSurface: null,
       chipStates: {},
@@ -273,7 +331,25 @@ export const useSearchStore = create<SearchStore>()(
       setPropertyTypes: (types) => set({ propertyTypes: types }),
       togglePropertyType: (type) =>
         set((s) => ({ propertyTypes: s.propertyTypes.includes(type) ? s.propertyTypes.filter((t) => t !== type) : [...s.propertyTypes, type] })),
-      setMinRooms: (min) => set({ minRooms: min }),
+      setMinRooms: (min) =>
+        set((s) => applyRoomsCoupling(s, { min, max: s.maxRooms })),
+      setRoomsRange: (min, max) =>
+        set((s) => applyRoomsCoupling(s, { min, max })),
+      setBedroomsRange: (min, max) =>
+        set((s) => {
+          // Studio (rooms=1) is the degenerate carve-out: bedrooms may
+          // equal rooms since the bedrooms scale itself starts at 1.
+          // For rooms ≥ 2, enforce `minBedrooms < minRooms`.
+          let nextMin = min
+          if (nextMin != null && s.minRooms != null && s.minRooms >= 2) {
+            nextMin = Math.min(nextMin, s.minRooms - 1)
+          }
+          let nextMax = max
+          if (nextMin != null && nextMax != null && nextMax < nextMin) {
+            nextMax = nextMin
+          }
+          return { minBedrooms: nextMin, maxBedrooms: nextMax }
+        }),
       setSurface: (min, max) => set({ minSurface: min, maxSurface: max }),
       cycleChipState: (label) =>
         set((s) => {
@@ -331,7 +407,9 @@ export const useSearchStore = create<SearchStore>()(
         set({
           locationQuery: '', locationLabel: '', locationLat: null, locationLng: null, locationRadius: 2,
           locationIntent: null, selectedArrIds: [], selectedQuartierIds: [], selectedIrisIds: [], selectedCommuneIds: [],
-          budgetMin: null, budgetMax: null, propertyTypes: [], minRooms: null, minSurface: null, maxSurface: null,
+          budgetMin: null, budgetMax: null, propertyTypes: [],
+          minRooms: null, maxRooms: null, minBedrooms: null, maxBedrooms: null,
+          minSurface: null, maxSurface: null,
           chipStates: {}, customCriteria: [], onboardingCompleted: false,
         }),
     }),
@@ -342,6 +420,9 @@ export const useSearchStore = create<SearchStore>()(
         budgetMax: state.budgetMax,
         propertyTypes: state.propertyTypes,
         minRooms: state.minRooms,
+        maxRooms: state.maxRooms,
+        minBedrooms: state.minBedrooms,
+        maxBedrooms: state.maxBedrooms,
         minSurface: state.minSurface,
         maxSurface: state.maxSurface,
         chipStates: state.chipStates,

@@ -3,20 +3,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
-import { useSearchStore, type PropertyType } from '@/lib/searchStore'
+import {
+  useSearchStore,
+  type PropertyType,
+  ROOMS_MIN,
+  ROOMS_MAX,
+  BEDROOMS_MIN,
+  BEDROOMS_MAX,
+} from '@/lib/searchStore'
 
 const PROPERTY_TYPES: Array<{ value: PropertyType; label: string; emoji: string }> = [
   { value: 'appartement', label: 'Appartement', emoji: '🏢' },
   { value: 'maison', label: 'Maison', emoji: '🏡' },
-  { value: 'loft', label: 'Loft', emoji: '🏗️' },
-  { value: 'atelier', label: 'Atelier', emoji: '🛠️' },
-]
-
-const ROOM_OPTIONS: Array<{ value: number; label: string }> = [
-  { value: 1, label: 'Studio' },
-  { value: 2, label: '2 pièces' },
-  { value: 3, label: '3 pièces' },
-  { value: 4, label: '4 pièces +' },
 ]
 
 // Non-linear surface scale — finer at the bottom, coarser at the top:
@@ -36,9 +34,6 @@ function buildSurfaceScale(): number[] {
 }
 const SURFACE_SCALE = buildSurfaceScale()
 const SURFACE_SCALE_MAX_INDEX = SURFACE_SCALE.length - 1
-// Defaults: 30 m² → no upper limit. Min anchored at a realistic Paris
-// entry size; max defaults to unbounded (mirrors BudgetStep where the
-// minimum thumb starts at the absolute floor of the scale).
 const SURFACE_DEFAULT_MIN_INDEX = SURFACE_SCALE.indexOf(30)
 const SURFACE_DEFAULT_MAX_INDEX = SURFACE_SCALE_MAX_INDEX
 
@@ -56,6 +51,20 @@ function findClosestSurfaceIndex(v: number): number {
   return best
 }
 
+// ─── Rooms / bedrooms label helpers ──────────────────────────────────────
+// Single source of truth for value-to-display formatting so the slider
+// caption and the brief recap stay consistent.
+
+function formatRooms(v: number): string {
+  if (v <= 1) return 'Studio'
+  if (v >= ROOMS_MAX) return '7+'
+  return `${v}p`
+}
+function formatBedrooms(v: number): string {
+  if (v >= BEDROOMS_MAX) return '6+ ch'
+  return `${v} ch`
+}
+
 interface BienStepProps {
   onNext: () => void
 }
@@ -63,16 +72,16 @@ interface BienStepProps {
 export default function BienStep({ onNext }: BienStepProps) {
   const {
     togglePropertyType, setPropertyTypes, propertyTypes,
-    setMinRooms, minRooms,
+    setRoomsRange, minRooms, maxRooms,
+    setBedroomsRange, minBedrooms, maxBedrooms,
     setSurface, minSurface, maxSurface,
   } = useSearchStore()
 
   // ── Local UI state ────────────────────────────────────────────────────────
-  // "Indifférent" / "Peu importe" are visual-only — they clear the underlying
-  // store fields. We track the explicit click so the chip can stay highlighted
-  // (otherwise it would be indistinguishable from "user hasn't touched it").
+  // "Indifférent" is visual-only — clears the underlying store fields. We
+  // track the explicit click so the chip can stay highlighted (otherwise
+  // it would be indistinguishable from "user hasn't touched it").
   const [typeIndifferent, setTypeIndifferent] = useState(false)
-  const [roomsAny, setRoomsAny] = useState(false)
 
   // Surface dual-slider — same pattern as the Budget step.
   const initialSurfaceMinIndex = useMemo(
@@ -88,11 +97,46 @@ export default function BienStep({ onNext }: BienStepProps) {
   const [surfMinIndex, setSurfMinIndex] = useState<number>(initialSurfaceMinIndex)
   const [surfMaxIndex, setSurfMaxIndex] = useState<number>(initialSurfaceMaxIndex)
 
+  // Rooms slider — anchored on values 1..7. Defaults: min=Studio, max=7+.
+  const initialRoomsMin = useMemo(
+    () => (minRooms ?? ROOMS_MIN),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const initialRoomsMax = useMemo(
+    () => (maxRooms ?? ROOMS_MAX),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const [roomsMin, setRoomsMin] = useState<number>(initialRoomsMin)
+  const [roomsMax, setRoomsMax] = useState<number>(initialRoomsMax)
+
+  // Bedrooms slider — anchored on values 1..6. Defaults: max=6+, min derived
+  // from the rooms→bedrooms coupling on first mount.
+  const initialBedroomsMin = useMemo(
+    () => (minBedrooms ?? Math.min(BEDROOMS_MAX, Math.max(BEDROOMS_MIN, initialRoomsMin - 1))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const initialBedroomsMax = useMemo(
+    () => (maxBedrooms ?? BEDROOMS_MAX),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const [bedroomsMin, setBedroomsMin] = useState<number>(initialBedroomsMin)
+  const [bedroomsMax, setBedroomsMax] = useState<number>(initialBedroomsMax)
+
   // Persist defaults once on mount so the user can leave without touching
-  // and still have a surface range recorded.
+  // and still have ranges recorded.
   useEffect(() => {
     if (minSurface == null || maxSurface == null) {
       setSurface(SURFACE_SCALE[initialSurfaceMinIndex], SURFACE_SCALE[initialSurfaceMaxIndex])
+    }
+    if (minRooms == null || maxRooms == null) {
+      setRoomsRange(initialRoomsMin, initialRoomsMax)
+    }
+    if (minBedrooms == null || maxBedrooms == null) {
+      setBedroomsRange(initialBedroomsMin, initialBedroomsMax)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -105,15 +149,6 @@ export default function BienStep({ onNext }: BienStepProps) {
   const handleTypeIndifferent = () => {
     setTypeIndifferent(true)
     setPropertyTypes([])
-  }
-
-  const handleRooms = (value: number) => {
-    setRoomsAny(false)
-    setMinRooms(minRooms === value ? null : value)
-  }
-  const handleRoomsAny = () => {
-    setRoomsAny(true)
-    setMinRooms(null)
   }
 
   const commitSurface = (lo: number, hi: number) => {
@@ -132,6 +167,46 @@ export default function BienStep({ onNext }: BienStepProps) {
     commitSurface(surfMinIndex, next)
   }
 
+  // Rooms handlers — also auto-couple bedrooms.min via the store and
+  // reflect the bumped local bedrooms slider when the coupling fires.
+  const coupleBedroomsToRooms = (newRoomsMin: number) => {
+    const coupledMin = Math.min(BEDROOMS_MAX, Math.max(BEDROOMS_MIN, newRoomsMin - 1))
+    const nextBedroomsMax = Math.max(bedroomsMax, coupledMin)
+    setBedroomsMin(coupledMin)
+    setBedroomsMax(nextBedroomsMax)
+  }
+  const handleRoomsMin = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value)
+    const next = Math.min(v, roomsMax)
+    setRoomsMin(next)
+    setRoomsRange(next, roomsMax)
+    coupleBedroomsToRooms(next)
+  }
+  const handleRoomsMax = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value)
+    const next = Math.max(v, roomsMin)
+    setRoomsMax(next)
+    setRoomsRange(roomsMin, next)
+  }
+
+  // Bedrooms handlers — enforce `bedroomsMin < roomsMin` when rooms ≥ 2.
+  const clampBedroomsMin = (raw: number): number => {
+    if (roomsMin >= 2) return Math.min(raw, roomsMin - 1)
+    return raw
+  }
+  const handleBedroomsMin = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = clampBedroomsMin(Number(e.target.value))
+    const next = Math.min(v, bedroomsMax)
+    setBedroomsMin(next)
+    setBedroomsRange(next, bedroomsMax)
+  }
+  const handleBedroomsMax = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value)
+    const next = Math.max(v, bedroomsMin)
+    setBedroomsMax(next)
+    setBedroomsRange(bedroomsMin, next)
+  }
+
   // ── Derived ───────────────────────────────────────────────────────────────
   const surfaceMinValue = SURFACE_SCALE[surfMinIndex]
   const surfaceMaxValue = SURFACE_SCALE[surfMaxIndex]
@@ -140,6 +215,26 @@ export default function BienStep({ onNext }: BienStepProps) {
     const hi = (surfMaxIndex / SURFACE_SCALE_MAX_INDEX) * 100
     return { lo, hi }
   }, [surfMinIndex, surfMaxIndex])
+
+  const roomsTrack = useMemo(() => {
+    const span = ROOMS_MAX - ROOMS_MIN
+    return {
+      lo: ((roomsMin - ROOMS_MIN) / span) * 100,
+      hi: ((roomsMax - ROOMS_MIN) / span) * 100,
+    }
+  }, [roomsMin, roomsMax])
+
+  const bedroomsTrack = useMemo(() => {
+    const span = BEDROOMS_MAX - BEDROOMS_MIN
+    return {
+      lo: ((bedroomsMin - BEDROOMS_MIN) / span) * 100,
+      hi: ((bedroomsMax - BEDROOMS_MIN) / span) * 100,
+    }
+  }, [bedroomsMin, bedroomsMax])
+
+  // Effective max bound for the bedrooms-min thumb. Studio (rooms=1) lets
+  // bedroomsMin reach 1 (=BEDROOMS_MIN); otherwise capped at roomsMin - 1.
+  const bedroomsMinCap = roomsMin >= 2 ? roomsMin - 1 : BEDROOMS_MIN
 
   return (
     <div className="flex flex-col h-full">
@@ -197,7 +292,7 @@ export default function BienStep({ onNext }: BienStepProps) {
           </div>
         </motion.div>
 
-        {/* Surface — dual-thumb range, same component as the Budget slider */}
+        {/* Surface — dual-thumb range */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -242,7 +337,7 @@ export default function BienStep({ onNext }: BienStepProps) {
           </div>
         </motion.div>
 
-        {/* Pièces */}
+        {/* Nombre de pièces — dual-thumb range Studio → 7+ */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -251,29 +346,84 @@ export default function BienStep({ onNext }: BienStepProps) {
           <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
             Nombre de pièces
           </p>
-          <div className="flex gap-1.5 flex-wrap">
-            {ROOM_OPTIONS.map((opt) => {
-              const isSelected = !roomsAny && minRooms === opt.value
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => handleRooms(opt.value)}
-                  className="shomee-chip"
-                  data-selected={isSelected}
-                >
-                  {opt.label}
-                </button>
-              )
-            })}
-            <button
-              type="button"
-              onClick={handleRoomsAny}
-              className="shomee-chip"
-              data-selected={roomsAny}
-            >
-              Peu importe
-            </button>
+          <div className="flex items-baseline justify-between px-1 mb-2.5">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
+                {formatRooms(roomsMin)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Maximum</p>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
+                {formatRooms(roomsMax)}
+              </p>
+            </div>
+          </div>
+          <div className="shomee-dual-slider mb-7">
+            <div
+              className="shomee-dual-slider-track"
+              style={{
+                backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${roomsTrack.lo}%, #A64B27 ${roomsTrack.lo}%, #A64B27 ${roomsTrack.hi}%, rgba(0,0,0,0.08) ${roomsTrack.hi}%)`,
+              }}
+            />
+            <input
+              type="range" min={ROOMS_MIN} max={ROOMS_MAX} step={1}
+              value={roomsMin} onChange={handleRoomsMin}
+              aria-label="Nombre minimum de pièces"
+              className="shomee-dual-slider-input shomee-dual-slider-input-min"
+            />
+            <input
+              type="range" min={ROOMS_MIN} max={ROOMS_MAX} step={1}
+              value={roomsMax} onChange={handleRoomsMax}
+              aria-label="Nombre maximum de pièces"
+              className="shomee-dual-slider-input shomee-dual-slider-input-max"
+            />
+          </div>
+        </motion.div>
+
+        {/* Nombre de chambres — dual-thumb range 1 → 6+ */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.26, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-widest text-neutral-600 mb-3">
+            Nombre de chambres
+          </p>
+          <div className="flex items-baseline justify-between px-1 mb-2.5">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Minimum</p>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
+                {formatBedrooms(bedroomsMin)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-neutral-600 mb-0.5">Maximum</p>
+              <p className="text-[17px] font-bold tabular-nums leading-none" style={{ color: '#A64B27' }}>
+                {formatBedrooms(bedroomsMax)}
+              </p>
+            </div>
+          </div>
+          <div className="shomee-dual-slider">
+            <div
+              className="shomee-dual-slider-track"
+              style={{
+                backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.08) ${bedroomsTrack.lo}%, #A64B27 ${bedroomsTrack.lo}%, #A64B27 ${bedroomsTrack.hi}%, rgba(0,0,0,0.08) ${bedroomsTrack.hi}%)`,
+              }}
+            />
+            <input
+              type="range" min={BEDROOMS_MIN} max={bedroomsMinCap} step={1}
+              value={bedroomsMin} onChange={handleBedroomsMin}
+              aria-label="Nombre minimum de chambres"
+              className="shomee-dual-slider-input shomee-dual-slider-input-min"
+            />
+            <input
+              type="range" min={BEDROOMS_MIN} max={BEDROOMS_MAX} step={1}
+              value={bedroomsMax} onChange={handleBedroomsMax}
+              aria-label="Nombre maximum de chambres"
+              className="shomee-dual-slider-input shomee-dual-slider-input-max"
+            />
           </div>
         </motion.div>
       </div>

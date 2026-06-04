@@ -31,6 +31,9 @@ export const AIOnboardingBriefSchema = z.object({
     .optional()
     .default([]),
   minRooms: z.number().nullable().optional().default(null),
+  maxRooms: z.number().nullable().optional().default(null),
+  minBedrooms: z.number().nullable().optional().default(null),
+  maxBedrooms: z.number().nullable().optional().default(null),
   minSurface: z.number().positive('minSurface doit être un nombre positif'),
   maxSurface: z.number().nullable().optional().default(null),
   budgetMin: z.number().nullable().optional().default(null),

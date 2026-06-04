@@ -14,7 +14,12 @@ import {
   Plus,
   X as XIcon,
 } from 'lucide-react'
-import { useSearchStore, type ChipState } from '@/lib/searchStore'
+import {
+  useSearchStore,
+  type ChipState,
+  ROOMS_MAX,
+  BEDROOMS_MAX,
+} from '@/lib/searchStore'
 import { SURFACE_UNLIMITED } from './BienStep'
 import { BUDGET_UNLIMITED } from './BudgetStep'
 
@@ -62,9 +67,38 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   atelier: 'Atelier',
 }
 
+function formatRoomLabel(v: number): string {
+  if (v <= 1) return 'Studio'
+  if (v >= ROOMS_MAX) return '7+'
+  return `${v}p`
+}
+function formatRoomsRange(min: number | null, max: number | null): string | null {
+  if (min == null && max == null) return null
+  if (min != null && max != null) {
+    return min === max ? formatRoomLabel(min) : `${formatRoomLabel(min)} – ${formatRoomLabel(max)}`
+  }
+  if (min != null) return `${formatRoomLabel(min)}+`
+  return `≤ ${formatRoomLabel(max!)}`
+}
+function formatBedroomLabel(v: number): string {
+  if (v >= BEDROOMS_MAX) return '6+ ch'
+  return `${v} ch`
+}
+function formatBedroomsRange(min: number | null, max: number | null): string | null {
+  if (min == null && max == null) return null
+  if (min != null && max != null) {
+    return min === max ? formatBedroomLabel(min) : `${formatBedroomLabel(min)} – ${formatBedroomLabel(max)}`
+  }
+  if (min != null) return `${formatBedroomLabel(min)}+`
+  return `≤ ${formatBedroomLabel(max!)}`
+}
+
 function formatBien(
   propertyTypes: string[],
   minRooms: number | null,
+  maxRooms: number | null,
+  minBedrooms: number | null,
+  maxBedrooms: number | null,
   minSurface: number | null,
   maxSurface: number | null,
 ): string {
@@ -74,9 +108,10 @@ function formatBien(
       ? propertyTypes.map((t) => PROPERTY_TYPE_LABELS[t] ?? t).join(', ')
       : 'Tous types',
   )
-  if (minRooms != null) {
-    parts.push(minRooms === 1 ? 'Studio' : minRooms >= 4 ? '4 pièces +' : `${minRooms} pièces`)
-  }
+  const rooms = formatRoomsRange(minRooms, maxRooms)
+  if (rooms) parts.push(rooms)
+  const bedrooms = formatBedroomsRange(minBedrooms, maxBedrooms)
+  if (bedrooms) parts.push(bedrooms)
   parts.push(formatSurface(minSurface, maxSurface))
   return parts.join(' · ')
 }
@@ -154,6 +189,9 @@ export default function AIBriefRecap({
     locationQuery,
     propertyTypes,
     minRooms,
+    maxRooms,
+    minBedrooms,
+    maxBedrooms,
     minSurface,
     maxSurface,
     budgetMin,
@@ -163,8 +201,8 @@ export default function AIBriefRecap({
   } = useSearchStore()
 
   const bienText = useMemo(
-    () => formatBien(propertyTypes, minRooms, minSurface, maxSurface),
-    [propertyTypes, minRooms, minSurface, maxSurface],
+    () => formatBien(propertyTypes, minRooms, maxRooms, minBedrooms, maxBedrooms, minSurface, maxSurface),
+    [propertyTypes, minRooms, maxRooms, minBedrooms, maxBedrooms, minSurface, maxSurface],
   )
   const budgetText = useMemo(() => formatBudget(budgetMin, budgetMax), [budgetMin, budgetMax])
 

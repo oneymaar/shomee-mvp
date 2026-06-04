@@ -33,6 +33,9 @@ export interface AIOnboardingBrief {
   locationQuery: string
   propertyTypes: Array<'appartement' | 'maison' | 'loft' | 'atelier'>
   minRooms: number | null
+  maxRooms?: number | null
+  minBedrooms?: number | null
+  maxBedrooms?: number | null
   minSurface: number
   maxSurface: number | null
   budgetMin: number | null
@@ -115,6 +118,9 @@ export async function injectBrief(brief: AIOnboardingBrief): Promise<void> {
     selectedCommuneIds: communeIds,
     propertyTypes: brief.propertyTypes,
     minRooms: brief.minRooms,
+    maxRooms: brief.maxRooms ?? null,
+    minBedrooms: brief.minBedrooms ?? null,
+    maxBedrooms: brief.maxBedrooms ?? null,
     minSurface: brief.minSurface,
     // When the brief omits maxSurface, default to the "no upper limit"
     // sentinel so downstream consumers (Budget step, matching engine)
