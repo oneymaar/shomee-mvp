@@ -22,27 +22,15 @@ const PROPERTY_INCLUDE = {
 
 type RawChapter = { label: string; startSec?: number; fraction?: number }
 
-/**
- * Generic 5-segment fallback for biens that have no VideoAnalysis row
- * yet. Synthetic listings get the same skeleton so the timeline UI is
- * still meaningful instead of collapsing to a plain bar.
- */
-const FALLBACK_CHAPTERS: RawChapter[] = [
-  { label: 'Entrée',         startSec: 0 },
-  { label: 'Séjour',         startSec: 8 },
-  { label: 'Cuisine',        startSec: 16 },
-  { label: 'Chambre',        startSec: 24 },
-  { label: 'Salle de bain',  startSec: 32 },
-]
-
 type PrismaPropertyWithRels = Awaited<
   ReturnType<typeof prisma.property.findMany<{ include: typeof PROPERTY_INCLUDE }>>
 >[number]
 
 /**
- * Project agency identity + chapters into the view-model. Chapters fall
- * back through (1) VideoAnalysis.chapitres → (2) Property.chapters (legacy
- * column, currently always null) → (3) the static skeleton above.
+ * Project agency identity + chapters into the view-model. We only ever
+ * surface *real* chapters issued by the IA analysis (VideoAnalysis.chapitres).
+ * Synthetic listings have no VideoAnalysis row → chapters stay null, and the
+ * feed renders a plain progress bar instead of fabricated segments.
  */
 function projectPropertyExtras(
   p: PrismaPropertyWithRels,
@@ -50,11 +38,7 @@ function projectPropertyExtras(
 ): ViewProperty {
   const va = p.videoAnalysis?.chapitres
   const chapters =
-    Array.isArray(va) && va.length > 0
-      ? (va as unknown as RawChapter[])
-      : Array.isArray(view.chapters) && view.chapters.length > 0
-        ? view.chapters
-        : FALLBACK_CHAPTERS
+    Array.isArray(va) && va.length > 0 ? (va as unknown as RawChapter[]) : null
 
   return {
     ...view,
