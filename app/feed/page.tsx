@@ -57,23 +57,27 @@ export default function FeedPage() {
          Object.values(s.chipStates ?? {}).some((v) => v > 0) ||
          (s.customCriteria?.length ?? 0) > 0)
 
+    const briefBody = {
+      minSurface: s.minSurface,
+      maxSurface: s.maxSurface,
+      budgetMin: s.budgetMin,
+      budgetMax: s.budgetMax,
+      minRooms: s.minRooms,
+      maxRooms: s.maxRooms,
+      minBedrooms: s.minBedrooms,
+      maxBedrooms: s.maxBedrooms,
+      propertyTypes: s.propertyTypes,
+      chipStates: s.chipStates,
+      customCriteria: s.customCriteria,
+    }
+    // eslint-disable-next-line no-console
+    console.log('[Feed] method=' + (hasBrief ? 'POST' : 'GET'), '| brief=', briefBody)
+
     const fetchPromise = hasBrief
       ? fetch('/api/properties', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            minSurface: s.minSurface,
-            maxSurface: s.maxSurface,
-            budgetMin: s.budgetMin,
-            budgetMax: s.budgetMax,
-            minRooms: s.minRooms,
-            maxRooms: s.maxRooms,
-            minBedrooms: s.minBedrooms,
-            maxBedrooms: s.maxBedrooms,
-            propertyTypes: s.propertyTypes,
-            chipStates: s.chipStates,
-            customCriteria: s.customCriteria,
-          }),
+          body: JSON.stringify(briefBody),
         })
       : fetch('/api/properties')
 

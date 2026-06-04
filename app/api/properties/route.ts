@@ -117,6 +117,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const brief = buildBriefFromSnapshot(body as BriefSnapshot)
+    console.log(
+      '[POST /api/properties] brief=' + brief.parsed_criteria.length + ' criteria | ' +
+      brief.parsed_criteria
+        .map((c) => c.importance[0] + ':' + c.display_label)
+        .join(' | '),
+    )
     const properties = await prisma.property.findMany({
       where: { statut: PropertyStatus.PUBLISHED },
       orderBy: { createdAt: 'desc' },
