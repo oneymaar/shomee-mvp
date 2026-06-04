@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 import { useSearchStore } from '@/lib/searchStore'
 
 const ANALYSIS_STEPS = [
@@ -21,15 +20,17 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
   const criteriaCount =
     Object.values(chipStates).filter((s) => s > 0).length +
     customCriteria.filter((c) => c.state > 0).length
-  const [visibleSteps, setVisibleSteps] = useState<number[]>([])
+  const [currentStep, setCurrentStep] = useState(0)
   const [done, setDone] = useState(false)
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = []
 
+    // Reveal one step at a time, each replacing the previous in the same
+    // fixed slot — so the avatar and headline above never shift.
     ANALYSIS_STEPS.forEach((step, i) => {
       timers.push(setTimeout(() => {
-        setVisibleSteps((prev) => [...prev, i])
+        setCurrentStep(i)
       }, step.delay + 300))
     })
 
@@ -50,7 +51,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
       className="flex flex-col items-center justify-center h-full px-8 text-center"
       style={{ background: 'linear-gradient(135deg, #FDF5F2 0%, #f0e8df 100%)' }}
     >
-      {/* BAIA avatar */}
+      {/* Animated orb */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -66,11 +67,13 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
           <motion.div
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-            className="w-14 h-14 rounded-full overflow-hidden"
-            style={{ border: '2px solid rgba(166,75,39,0.2)' }}
-          >
-            <Image src="/Baia couleur 2.png" alt="BAIA" width={56} height={56} className="object-cover" />
-          </motion.div>
+            className="w-14 h-14 rounded-full"
+            style={{
+              border: '2px solid rgba(166,75,39,0.2)',
+              background: 'radial-gradient(circle at 35% 30%, #C9744F 0%, #A64B27 60%, #8A3C1E 100%)',
+              boxShadow: '0 4px 14px rgba(166,75,39,0.3)',
+            }}
+          />
         </motion.div>
 
         {/* Orbit dots */}
@@ -104,33 +107,32 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         )}
       </motion.div>
 
-      {/* Analysis steps */}
-      <div className="mt-7 flex flex-col gap-2.5 w-full max-w-[280px]">
-        <AnimatePresence>
-          {ANALYSIS_STEPS.map((step, i) => (
-            visibleSteps.includes(i) && (
+      {/* Analysis steps — one at a time, in a fixed slot so nothing shifts */}
+      <div className="mt-7 h-6 flex items-center justify-center w-full max-w-[280px]">
+        <AnimatePresence mode="wait">
+          {!done && (
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center gap-3"
+            >
               <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-3"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: '#A64B27' }}
               >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
-                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#A64B27' }}
-                >
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </motion.div>
-                <span className="text-[13px] text-neutral-600">{step.label}</span>
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </motion.div>
-            )
-          ))}
+              <span className="text-[13px] text-neutral-600">{ANALYSIS_STEPS[currentStep].label}</span>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
