@@ -170,7 +170,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
           so the orb and headline above never shift. */}
       <div className="mt-7 h-6 flex items-center justify-center w-full max-w-[300px]">
         {!done && (
-          <span className="font-mono text-[13px] text-neutral-500 whitespace-nowrap">
+          <span className="text-[13px] text-neutral-500 whitespace-nowrap">
             {typed}
             {typingDone ? <ThinkingDots /> : <Caret />}
           </span>
