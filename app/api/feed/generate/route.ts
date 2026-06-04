@@ -36,8 +36,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const MODEL = 'claude-haiku-4-5-20251001'
-const MAX_FICHES = 6
-const MAX_TOKENS = 1200
+const MAX_FICHES = 4
+const MAX_TOKENS = 2000
 const TAGS_FILE = path.join(process.cwd(), 'src', 'data', 'video-tags.json')
 
 // ─── Tag file ────────────────────────────────────────────────────────────
@@ -199,6 +199,41 @@ function resolveAllArrs(snapshot: BriefSnapshot): number[] {
   return [...out].sort((a, b) => a - b)
 }
 
+/**
+ * Choisit le nom de quartier à afficher pour une fiche.
+ *  - Si l'utilisateur a sélectionné des quartiers sémantiques (`auteuil`…),
+ *    on prend celui-là.
+ *  - Sinon, on tire au hasard parmi `ARR_QUARTIERS[targetArr]` pour donner
+ *    une localisation crédible à la fiche dans l'arrondissement.
+ */
+function resolveDisplayQuartier(snapshot: BriefSnapshot, targetArr: number): string {
+  // 1. Quartier sémantique explicite (auteuil, passy…) → nom direct.
+  for (const id of snapshot.quartierIds ?? []) {
+    if (id.startsWith('qu-')) continue // ID administratif, pas de nom mappable simple
+    // Capitalize id like "saint-germain" → "Saint Germain"
+    const semantic = id
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+    if (semantic) return semantic
+  }
+  // 2. Tirage aléatoire dans le catalogue d'arr.
+  const pool = ARR_QUARTIERS[targetArr] ?? []
+  if (pool.length === 0) return `Paris ${targetArr}e`
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+/**
+ * Sélectionne un arrondissement de référence pour la fiche associée à
+ * cette vidéo. Priorité à l'intersection brief ∩ tags vidéo (vraie
+ * cohérence). À défaut (widening), on prend le 1er arr de la vidéo.
+ */
+function pickArrForFiche(video: VideoTag, userArrs: number[]): number {
+  const hit = video.arrondissements.find((a) => userArrs.includes(a))
+  if (hit) return hit
+  return video.arrondissements[0] ?? 0
+}
+
 // ─── Agency map (spec) ───────────────────────────────────────────────────
 
 /** Plage globale €/m² imposée sur tous les biens du feed. La position
@@ -220,6 +255,50 @@ const PRICE_FLOORS: Record<number, number> = {
   9: 12500, 10: 11500, 11: 11500, 12: 11000,
   13: 11000, 14: 11000, 15: 12000, 16: 14000,
   17: 12500, 18: 11500, 19: 11000, 20: 11000,
+}
+
+/**
+ * Coordonnées approximatives par arrondissement (centre géographique).
+ * Sert de base pour `mapLat`/`mapLng` côté serveur, avec ±0.003° de
+ * jitter pour varier l'emplacement perçu d'une fiche à l'autre.
+ */
+const ARR_COORDS: Record<number, [number, number]> = {
+  1:  [48.860, 2.347], 2:  [48.865, 2.349], 3:  [48.863, 2.356],
+  4:  [48.854, 2.352], 5:  [48.851, 2.346], 6:  [48.849, 2.333],
+  7:  [48.856, 2.317], 8:  [48.874, 2.308], 9:  [48.876, 2.338],
+  10: [48.876, 2.360], 11: [48.859, 2.379], 12: [48.840, 2.388],
+  13: [48.831, 2.362], 14: [48.832, 2.326], 15: [48.841, 2.298],
+  16: [48.863, 2.274], 17: [48.884, 2.313], 18: [48.891, 2.344],
+  19: [48.882, 2.378], 20: [48.864, 2.397],
+}
+
+/**
+ * Liste de quartiers grand-public par arrondissement — sert pour
+ * `resolveDisplayQuartier` quand l'utilisateur n'a pas choisi de quartier
+ * précis (on en pioche un au hasard). Volontairement court : 3-4 noms
+ * iconiques par arr qui parlent à n'importe qui.
+ */
+const ARR_QUARTIERS: Record<number, string[]> = {
+  1: ['Louvre', 'Les Halles', 'Palais Royal', 'Tuileries'],
+  2: ['Sentier', 'Bourse', 'Montorgueil', 'Vivienne'],
+  3: ['Marais', 'République', 'Arts et Métiers', 'Enfants Rouges'],
+  4: ['Marais', 'Île Saint-Louis', 'Bastille', 'Hôtel de Ville'],
+  5: ['Quartier Latin', 'Mouffetard', 'Jardin des Plantes', 'Panthéon'],
+  6: ['Saint-Germain', 'Odéon', 'Luxembourg', 'Saint-Sulpice'],
+  7: ['Invalides', 'Champ de Mars', 'Gros-Caillou', 'Sèvres-Babylone'],
+  8: ['Madeleine', 'Champs-Élysées', 'Monceau', 'Europe'],
+  9: ['Opéra', 'Trinité', 'Saint-Georges', 'Pigalle'],
+  10: ['Canal Saint-Martin', 'Gare du Nord', 'Faubourg', 'Saint-Vincent-de-Paul'],
+  11: ['Bastille', 'République', 'Oberkampf', 'Voltaire'],
+  12: ['Bercy', 'Daumesnil', 'Aligre', 'Nation'],
+  13: ['Butte-aux-Cailles', 'Place d\'Italie', 'Olympiades', 'Tolbiac'],
+  14: ['Montparnasse', 'Denfert-Rochereau', 'Plaisance', 'Petit-Montrouge'],
+  15: ['Beaugrenelle', 'Vaugirard', 'Grenelle', 'Necker'],
+  16: ['Passy', 'Auteuil', 'Trocadéro', 'Muette'],
+  17: ['Batignolles', 'Monceau', 'Ternes', 'Plaine de Monceaux'],
+  18: ['Montmartre', 'Abbesses', 'Goutte d\'Or', 'La Chapelle'],
+  19: ['Buttes-Chaumont', 'Villette', 'Pont-de-Flandre', 'Belleville'],
+  20: ['Belleville', 'Père-Lachaise', 'Ménilmontant', 'Saint-Fargeau'],
 }
 
 const AGENCY_MAP: Record<number, string> = {
@@ -354,9 +433,12 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
 
 // ─── LLM generation ──────────────────────────────────────────────────────
 
-// Schéma demandé au LLM — tenu volontairement court pour rester sous
-// max_tokens=1200 avec 6 fiches. Les champs annexes (subtitle, bedrooms,
-// totalFloors, terraceSurface, guardian) sont dérivés côté serveur.
+// Schéma demandé au LLM — 4 fiches max_tokens 2000.
+// Les champs annexes (subtitle, bedrooms, totalFloors, guardian,
+// agency, lat/lng, charges, marché, matchedCriteria, likes/shares)
+// sont dérivés côté serveur — voir ficheToView.
+type FicheRoom = { label: string; surface: number }
+
 type Fiche = {
   title: string
   address: string
@@ -371,11 +453,14 @@ type Fiche = {
   cellar: boolean
   parking: boolean
   dpe: DpeRating
+  ges?: DpeRating
   luminosity: number
   charm: number
   quietness: number
   outdoorUsability: number
   description: string
+  composition?: FicheRoom[]
+  nearbyPOI?: string[]
 }
 
 const SYSTEM_PROMPT = `Tu génères des fiches de biens immobiliers fictifs pour une démo.
@@ -394,6 +479,8 @@ Les valeurs numériques doivent être réalistes pour le marché parisien.`
  */
 type VideoContext = {
   videoId: string
+  targetArr: number
+  quartier: string
   targetSurface: number
   maxSurface: number
   targetPrice: number
@@ -402,7 +489,11 @@ type VideoContext = {
   maxRooms: number
 }
 
-function buildVideoContext(snapshot: BriefSnapshot, video: VideoTag): VideoContext {
+function buildVideoContext(
+  snapshot: BriefSnapshot,
+  video: VideoTag,
+  userArrs: number[],
+): VideoContext {
   const briefMinSurface = snapshot.minSurface ?? 0
   const briefMaxSurface = snapshot.maxSurface ?? Infinity
   const briefMinBudget = snapshot.budgetMin ?? 0
@@ -428,8 +519,13 @@ function buildVideoContext(snapshot: BriefSnapshot, video: VideoTag): VideoConte
   let maxRooms = Math.min(briefMaxRooms, videoMaxRooms)
   if (maxRooms < targetRooms) maxRooms = targetRooms
 
+  const targetArr = pickArrForFiche(video, userArrs)
+  const quartier = resolveDisplayQuartier(snapshot, targetArr)
+
   return {
     videoId: video.videoId,
+    targetArr,
+    quartier,
     targetSurface: Math.round(targetSurface),
     maxSurface: Math.round(maxSurface),
     targetPrice: Math.round(targetPrice),
@@ -442,6 +538,7 @@ function buildVideoContext(snapshot: BriefSnapshot, video: VideoTag): VideoConte
 function buildUserPrompt(
   snapshot: BriefSnapshot,
   videos: VideoTag[],
+  contexts: VideoContext[],
   n: number,
 ): string {
   // Zones effectives = celles demandées par l'acquéreur en priorité ;
@@ -508,17 +605,18 @@ function buildUserPrompt(
     Math.round(avgPricePerSqm * 1.3),
   )
 
-  // Contraintes par fiche : intersection brief ∩ vidéo (surface + pièces).
-  // Le prix n'est plus borné en absolu — il est dérivé via la formule
-  // price = surface × pricePerSqm en aval, ce qui force la cohérence
-  // €/m² (sinon le LLM choisit surface haute + prix bas → 5 K€/m²).
-  const contexts = videos.map((v) => buildVideoContext(snapshot, v))
+  // Contraintes par fiche fournies en argument (déjà calculées) ; on les
+  // ré-utilise telles quelles pour que l'ordre du tableau réponse soit
+  // verrouillé sur l'ordre des fiches et des vidéos.
   const constraintsBlock = contexts
-    .map(
-      (c, i) =>
-        `Fiche ${i + 1}: surface ${c.targetSurface}-${c.maxSurface} m² · ` +
-        `pièces ${c.targetRooms}-${c.maxRooms}`,
-    )
+    .map((c, i) => {
+      const arrLabel = c.targetArr === 1 ? 'Paris 1er' : `Paris ${c.targetArr}e`
+      return (
+        `Fiche ${i + 1}: ${arrLabel} (${c.quartier}) · ` +
+        `surface ${c.targetSurface}-${c.maxSurface} m² · ` +
+        `pièces ${c.targetRooms}-${c.maxRooms}`
+      )
+    })
     .join('\n')
 
   const budgetCap = snapshot.budgetMax
@@ -544,12 +642,14 @@ Critères souhaités : ${desired.join(', ') || 'aucun'}
 Critères obligatoires : ${mandatory.join(', ') || 'aucun'}
 
 Format JSON — tableau de ${n} objets DANS CET ORDRE EXACT (un par fiche ci-dessus) :
-{"title":"string","address":"string","price":number,"surface":number,"rooms":number,"floor":number,"propertyType":"appartement|maison|loft|atelier","elevator":boolean,"terrace":boolean,"balcony":boolean,"cellar":boolean,"parking":boolean,"dpe":"A|B|C|D|E|F|G","luminosity":number,"charm":number,"quietness":number,"outdoorUsability":number,"description":"string — 1 phrase courte"}
+{"title":"string","address":"string","price":number,"surface":number,"rooms":number,"floor":number,"propertyType":"appartement|maison|loft|atelier","elevator":boolean,"terrace":boolean,"balcony":boolean,"cellar":boolean,"parking":boolean,"dpe":"A|B|C|D|E|F|G","ges":"A|B|C|D|E|F|G","luminosity":number,"charm":number,"quietness":number,"outdoorUsability":number,"description":"string — 2 phrases","composition":[{"label":"Séjour|Cuisine|Chambre 1|...|Salle de bain|Entrée","surface":number}],"nearbyPOI":["string × 2-3 lieux réels du quartier"]}
 
 Les 4 scores sont entre 0 et 1. Chaque fiche distincte (adresses différentes).
+composition : 4 à 7 pièces, somme des surfaces ≈ surface totale (à ±5 m²).
+nearbyPOI : 2-3 lieux réels et identifiables du quartier (parc, station de métro emblématique, marché, école renommée…).
 
 CONTRAINTES STRICTES :
-- L'adresse DOIT être située dans l'une des zones listées ci-dessus, et nulle part ailleurs.
+- L'arrondissement de l'adresse DOIT être celui indiqué pour la fiche (jamais un autre).
 - Pour Paris, format "<numéro> <rue>, 750<NN> Paris" (ex: "12 rue de Passy, 75016 Paris" pour le 16e). Pas de "75e" ni de "Paris 75NNN".
 - Pour les communes, format "<numéro> <rue>, <commune>".
 - Surface et pièces dans la fourchette indiquée par fiche.
@@ -637,11 +737,15 @@ function isFiche(x: unknown): x is Fiche {
   )
 }
 
-async function callLlm(snapshot: BriefSnapshot, videos: VideoTag[]): Promise<Fiche[]> {
+async function callLlm(
+  snapshot: BriefSnapshot,
+  videos: VideoTag[],
+  contexts: VideoContext[],
+): Promise<Fiche[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return []
   const anthropic = new Anthropic({ apiKey })
-  const userPrompt = buildUserPrompt(snapshot, videos, videos.length)
+  const userPrompt = buildUserPrompt(snapshot, videos, contexts, videos.length)
   const res = await anthropic.messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
@@ -662,6 +766,86 @@ function clamp01(n: number): number {
 
 function derivedBedrooms(rooms: number): number {
   return Math.max(1, rooms - 1)
+}
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+/**
+ * Mappe les chips activés du brief sur les attributs effectivement
+ * vrais de la fiche générée. Sert à afficher des chips "validés" sous
+ * la description courte du feed — uniquement les critères pour lesquels
+ * l'utilisateur a exprimé une préférence (chipStates > 0).
+ *
+ * Le mapping est volontairement local et explicite ; on n'utilise pas
+ * `tagsToCriteria` pour rester côté affichage et ne pas mélanger les
+ * registres (matching engine vs. surfaçage UI).
+ */
+function computeMatchedCriteria(fiche: Fiche, snapshot: BriefSnapshot): string[] {
+  const chips = snapshot.chipStates ?? {}
+  const out: string[] = []
+  const has = (label: string): boolean => (chips[label] ?? 0) > 0
+  if (has('Ascenseur') && fiche.elevator) out.push('Ascenseur')
+  if (has('Terrasse') && fiche.terrace) out.push('Terrasse')
+  if (has('Balcon') && fiche.balcony) out.push('Balcon')
+  if (has('Cave') && fiche.cellar) out.push('Cave')
+  if (has('Parking') && fiche.parking) out.push('Parking')
+  if (has('Lumineux') && fiche.luminosity > 0.7) out.push('Lumineux')
+  if (has('Calme') && fiche.quietness > 0.7) out.push('Calme')
+  if (has('Charme') && fiche.charm > 0.7) out.push('Charme')
+  // totalFloors est figé à 6 dans ficheToView → dernier étage = floor 6.
+  if (has('Dernier étage') && fiche.floor >= 6) out.push('Dernier étage')
+  if (has('Vue dégagée') && fiche.luminosity > 0.75) out.push('Vue dégagée')
+  return out
+}
+
+/**
+ * Composition par défaut quand le LLM en omet ou en renvoie une incohérente
+ * (somme des surfaces trop loin de la surface totale). Découpe simple :
+ * séjour + cuisine + N chambres + SDB + entrée, normalisée au m² total.
+ */
+function defaultComposition(surface: number, rooms: number, bedrooms: number): FicheRoom[] {
+  const items: FicheRoom[] = []
+  items.push({ label: 'Séjour', surface: 0 })
+  items.push({ label: 'Cuisine', surface: 0 })
+  for (let i = 1; i <= bedrooms; i++) {
+    items.push({ label: bedrooms === 1 ? 'Chambre' : `Chambre ${i}`, surface: 0 })
+  }
+  items.push({ label: 'Salle de bain', surface: 0 })
+  items.push({ label: 'Entrée', surface: 0 })
+
+  // Répartition indicative : 35 % séjour, 10 % cuisine, ~22 %/chambre,
+  // 7 % SDB, 5 % entrée — ajustée au prorata jusqu'à somme = surface.
+  const weights = [0.35, 0.10, ...Array(bedrooms).fill(0.22), 0.07, 0.05]
+  const total = weights.reduce((s, w) => s + w, 0)
+  return items.map((it, i) => ({
+    ...it,
+    surface: Math.max(2, Math.round((weights[i] / total) * surface)),
+  }))
+}
+
+function normaliseComposition(
+  raw: FicheRoom[] | undefined,
+  fiche: Fiche,
+): FicheRoom[] {
+  const bedrooms = derivedBedrooms(fiche.rooms)
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return defaultComposition(fiche.surface, fiche.rooms, bedrooms)
+  }
+  const sum = raw.reduce((s, r) => s + (typeof r.surface === 'number' ? r.surface : 0), 0)
+  if (Math.abs(sum - fiche.surface) > fiche.surface * 0.25) {
+    return defaultComposition(fiche.surface, fiche.rooms, bedrooms)
+  }
+  return raw
+    .filter((r) => r && typeof r.label === 'string' && typeof r.surface === 'number')
+    .map((r) => ({ label: r.label, surface: Math.max(2, Math.round(r.surface)) }))
+}
+
+/** Évolution prix 10 ans — "+15 %" à "+35 %", fenêtre 2026 réaliste Paris. */
+function randomMarketEvolution10y(): string {
+  const pct = randomInt(15, 35)
+  return `+${pct}%`
 }
 
 /**
@@ -738,13 +922,15 @@ type ChapterRow = { label: string; startSec?: number; fraction?: number }
 function ficheToView(
   fiche: Fiche,
   video: VideoTag,
+  context: VideoContext,
+  snapshot: BriefSnapshot,
   chapters: ChapterRow[] | null,
   matchScore01: number,
   isExcluded: boolean,
   id: string,
   dbAgency: { name: string; logo: string | null } | null,
 ): ViewProperty {
-  const arrNum = parseArrFromAddress(fiche.address)
+  const arrNum = parseArrFromAddress(fiche.address) || context.targetArr
   const arrLabel = arrondissementLabel(arrNum) || fiche.address
   // Agence réelle du bien (ré-assignée par localisation, avec logo Cloudinary).
   // Fallback sur le mapping arrondissement si la vidéo n'est pas reliée en DB.
@@ -752,7 +938,33 @@ function ficheToView(
   const agencyLogo = dbAgency?.logo ?? null
 
   const bedrooms = derivedBedrooms(fiche.rooms)
+  const quartier = context.quartier
   const subtitle = `Appartement · T${fiche.rooms} · ${fiche.surface} m²`
+  const matchedCriteria = computeMatchedCriteria(fiche, snapshot)
+
+  // Marché : centre €/m² par arr, clampé dans [11K, 16K] (cf. règle prix).
+  const rawFloor = arrNum > 0 ? PRICE_FLOORS[arrNum] ?? 12000 : 12000
+  const marketAvg = Math.min(
+    ABSOLUTE_MAX_PER_SQM,
+    Math.max(ABSOLUTE_MIN_PER_SQM, rawFloor),
+  )
+  const pricePerSqm = Math.round(fiche.price / Math.max(1, fiche.surface))
+
+  // Charges et fiscalité — proxys simples mais cohérents.
+  const monthlyCharges = Math.round(fiche.surface * 3) // ~3 €/m²/mois moyenne
+  const propertyTax = Math.round(fiche.price * 0.005) // ~0.5 % de la valeur
+  const lotCount = randomInt(5, 80)
+
+  // Localisation : ±0.003° de jitter autour du centre d'arr pour donner
+  // une position crédible (≈ 200 m).
+  const [baseLat, baseLng] = ARR_COORDS[arrNum] ?? [48.857, 2.352]
+  const mapLat = +(baseLat + (Math.random() - 0.5) * 0.006).toFixed(5)
+  const mapLng = +(baseLng + (Math.random() - 0.5) * 0.006).toFixed(5)
+
+  const composition = normaliseComposition(fiche.composition, fiche)
+  const nearbyPlaces = Array.isArray(fiche.nearbyPOI)
+    ? fiche.nearbyPOI.filter((p): p is string => typeof p === 'string').slice(0, 5)
+    : []
 
   return {
     id,
@@ -763,15 +975,18 @@ function ficheToView(
     agencyName,
     agencyLogo,
     price: fiche.price,
+    pricePerSqm,
     surface: fiche.surface,
     rooms: fiche.rooms,
     bedrooms,
     location: fiche.address,
-    district: arrLabel,
+    district: quartier,
     description: fiche.description,
-    tags: [],
-    features: [],
+    tags: matchedCriteria,
+    features: matchedCriteria,
+    matchedCriteria,
     dpe: fiche.dpe,
+    ges: fiche.ges ?? fiche.dpe,
     floor: fiche.floor,
     totalFloors: 6,
     hasElevator: fiche.elevator,
@@ -785,6 +1000,17 @@ function ficheToView(
     quietness: clamp01(fiche.quietness),
     charm: clamp01(fiche.charm),
     outdoorUsability: clamp01(fiche.outdoorUsability),
+    composition,
+    mapLat,
+    mapLng,
+    nearbyPlaces,
+    marketAvgPricePerSqm: marketAvg,
+    marketEvolution10y: randomMarketEvolution10y(),
+    monthlyCharges,
+    propertyTax,
+    lotCount,
+    likeCount: randomInt(50, 300),
+    shareCount: randomInt(50, 300),
     videoUrl: video.videoUrl,
     chapters: chapters as ViewProperty['chapters'] | undefined,
     imageUrlFallback: '',
@@ -816,6 +1042,13 @@ export async function POST(req: NextRequest) {
 
   const matchedVideos = pickMatchedVideos(snapshot, tags)
 
+  // Contextes par vidéo (arr/quartier/bornes) calculés une seule fois et
+  // partagés entre le prompt LLM et la projection ficheToView pour que
+  // l'arr et le quartier de la fiche soient déterministes (pas relancés
+  // en aval).
+  const userArrs = resolveAllArrs(snapshot)
+  const contexts = matchedVideos.map((v) => buildVideoContext(snapshot, v, userArrs))
+
   // Charge la map videoId → chapitres + agence (nom/logo) pour réinjecter au
   // moment de la projection. Chaque fiche est bâtie à partir d'une vidéo, qui
   // correspond à un bien DB : on prend SON agence (déjà ré-assignée par
@@ -844,7 +1077,7 @@ export async function POST(req: NextRequest) {
 
   let fiches: Fiche[] = []
   try {
-    fiches = await callLlm(snapshot, matchedVideos)
+    fiches = await callLlm(snapshot, matchedVideos, contexts)
   } catch (error) {
     console.error('[feed/generate] LLM call failed:', error)
     return NextResponse.json({ error: 'llm_failed' }, { status: 500 })
@@ -860,11 +1093,14 @@ export async function POST(req: NextRequest) {
     const profile = ficheToProfile(fiche, i)
     const result = matchProperty(profile, brief)
     const video = matchedVideos[i % matchedVideos.length]
+    const context = contexts[i % contexts.length]
     const chapters = chaptersByVideoId.get(video.videoId) ?? null
     const dbAgency = agencyByVideoId.get(video.videoId) ?? null
     return ficheToView(
       fiche,
       video,
+      context,
+      snapshot,
       chapters,
       result.global_score / 100,
       result.is_excluded,

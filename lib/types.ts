@@ -71,6 +71,10 @@ export interface Property {
   // Score is in 0..1 (engine produces 0..100 → normalised in the route).
   matchScore?: number
   isExcluded?: boolean
+  // For LLM-generated biens (feed dynamique) — chips activés dans le brief
+  // dont l'attribut correspondant est effectivement vrai sur le bien.
+  // Source de vérité pour le bandeau "critères validés" du PropertyOverlay.
+  matchedCriteria?: string[]
   // Agency identity — projected by /api/properties via the Agency relation.
   // Falls back to the agent's first letter when null, used as the primary
   // brand badge in the feed (the agent name is reserved for the detail
