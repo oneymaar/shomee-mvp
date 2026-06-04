@@ -99,9 +99,13 @@ export default function FeedPage() {
       chipStates: s.chipStates,
       customCriteria: s.customCriteria,
       // Geo selection — the server maps these to video tags / arrondissement
-      // strings depending on the endpoint, before scoring.
+      // strings depending on the endpoint, before scoring. On envoie tous
+      // les niveaux (arr / quartier / IRIS / commune) : /api/feed/generate
+      // résout l'arrondissement à partir de n'importe laquelle de ces sources.
       arrondissementIds: s.selectedArrIds,
       communeIds: s.selectedCommuneIds,
+      quartierIds: s.selectedQuartierIds,
+      irisIds: s.selectedIrisIds,
     }
     // eslint-disable-next-line no-console
     console.log('[Feed] hasBrief=' + hasBrief, '| brief=', briefBody)

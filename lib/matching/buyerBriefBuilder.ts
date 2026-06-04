@@ -61,6 +61,14 @@ export interface BriefSnapshot {
   /** Zustand store selectedCommuneIds — e.g. ['com-92051']. Same usage as
    *  arrondissementIds for suburban communes. */
   communeIds?: string[] | null
+  /** Zustand store selectedQuartierIds — e.g. ['auteuil']. The feed
+   *  generator resolves these to arrondissement numbers via the
+   *  quartiers.json hierarchy so a brief at quartier granularity still
+   *  triggers strict arr-level video matching. */
+  quartierIds?: string[] | null
+  /** Zustand store selectedIrisIds — e.g. ['iris-751161001']. Parsed as
+   *  INSEE code (commune part = 751NN) to recover the arrondissement. */
+  irisIds?: string[] | null
 }
 
 interface PrefsCriterion {

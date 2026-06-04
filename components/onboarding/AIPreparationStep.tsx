@@ -101,7 +101,9 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
          Object.values(s.chipStates ?? {}).some((v) => v > 0) ||
          (s.customCriteria?.length ?? 0) > 0 ||
          (s.selectedArrIds?.length ?? 0) > 0 ||
-         (s.selectedCommuneIds?.length ?? 0) > 0)
+         (s.selectedCommuneIds?.length ?? 0) > 0 ||
+         (s.selectedQuartierIds?.length ?? 0) > 0 ||
+         (s.selectedIrisIds?.length ?? 0) > 0)
 
     let fetchDone = !hasBrief
     let timerDone = false
@@ -127,6 +129,8 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         customCriteria: s.customCriteria,
         arrondissementIds: s.selectedArrIds,
         communeIds: s.selectedCommuneIds,
+        quartierIds: s.selectedQuartierIds,
+        irisIds: s.selectedIrisIds,
       }
       try { sessionStorage.removeItem(PREFETCH_KEY) } catch {}
       fetch('/api/feed/generate', {

@@ -114,6 +114,86 @@ function communeIdsToNames(ids?: string[] | null): string[] {
     .filter((n): n is string => Boolean(n))
 }
 
+/**
+ * IRIS ID → arrondissement number. IDs sont préfixées `iris-` dans le
+ * store, suivies du code INSEE 9 chiffres : `iris-75116XXXX`. Le triplet
+ * `751NN` = commune Paris arr NN.
+ */
+function arrFromIrisId(id: string): number | null {
+  const m = id.match(/(?:^|[^0-9])751(0[1-9]|1[0-9]|20)/)
+  if (!m) return null
+  const n = parseInt(m[1], 10)
+  return n >= 1 && n <= 20 ? n : null
+}
+
+// ─── Quartier → arrondissements (chargé une fois au démarrage) ───────────
+
+type QuartierRaw = { id: string; irisNames?: string[] }
+type IrisIndex = Record<string, unknown>
+
+// Lazy single-shot map building — évite de re-lire les JSON à chaque
+// requête. Charge `quartiers.json` + `iris_codes_insee.json` depuis
+// `src/data/` au premier appel, puis met en cache.
+let QUARTIER_TO_ARRS: Map<string, number[]> | null = null
+
+function getQuartierToArrs(): Map<string, number[]> {
+  if (QUARTIER_TO_ARRS) return QUARTIER_TO_ARRS
+  const out = new Map<string, number[]>()
+  try {
+    const root = path.join(process.cwd(), 'src', 'data')
+    const quartiers = JSON.parse(
+      fs.readFileSync(path.join(root, 'quartiers.json'), 'utf-8'),
+    ) as QuartierRaw[]
+    const irisCodes = JSON.parse(
+      fs.readFileSync(path.join(root, 'iris_codes_insee.json'), 'utf-8'),
+    ) as IrisIndex
+
+    // Index irisName → arr (le 1er trouvé suffit, les IRIS sont quasi-uniques).
+    const nameToArr = new Map<string, number>()
+    for (const key of Object.keys(irisCodes)) {
+      const [name, arrPart] = key.split('|')
+      if (!name || !arrPart) continue
+      const m = arrPart.match(/^arr-(\d{1,2})$/)
+      if (!m) continue
+      const arr = parseInt(m[1], 10)
+      if (!nameToArr.has(name)) nameToArr.set(name, arr)
+    }
+
+    for (const q of quartiers) {
+      const arrs = new Set<number>()
+      for (const name of q.irisNames ?? []) {
+        const arr = nameToArr.get(name)
+        if (arr) arrs.add(arr)
+      }
+      out.set(q.id, [...arrs])
+    }
+  } catch (err) {
+    console.error('[feed/generate] failed to build quartier→arr map:', err)
+  }
+  QUARTIER_TO_ARRS = out
+  return out
+}
+
+/**
+ * Résout l'ensemble complet des arrondissements ciblés en combinant les
+ * 3 niveaux géo du store (arr, quartier, IRIS). Si l'utilisateur sélectionne
+ * Paris 16 via quartier "Auteuil" sans cocher "Paris 16" explicitement,
+ * cette fonction injecte quand même arr=16 dans le pipeline.
+ */
+function resolveAllArrs(snapshot: BriefSnapshot): number[] {
+  const out = new Set<number>()
+  for (const n of arrIdsToNumbers(snapshot.arrondissementIds)) out.add(n)
+  for (const id of snapshot.irisIds ?? []) {
+    const arr = arrFromIrisId(id)
+    if (arr) out.add(arr)
+  }
+  const qMap = getQuartierToArrs()
+  for (const id of snapshot.quartierIds ?? []) {
+    for (const arr of qMap.get(id) ?? []) out.add(arr)
+  }
+  return [...out].sort((a, b) => a - b)
+}
+
 // ─── Agency map (spec) ───────────────────────────────────────────────────
 
 /**
@@ -205,7 +285,7 @@ const GEO_GROUPS: number[][] = [
  * vidéos puisque communeMatch défaultait à true.
  */
 function geoMatch(snapshot: BriefSnapshot, tag: VideoTag): boolean {
-  const arrs = arrIdsToNumbers(snapshot.arrondissementIds)
+  const arrs = resolveAllArrs(snapshot)
   const communes = communeIdsToNames(snapshot.communeIds)
   if (arrs.length === 0 && communes.length === 0) return true
   const arrHit = arrs.length > 0 && tag.arrondissements.some((a) => arrs.includes(a))
@@ -226,11 +306,14 @@ function geoMatch(snapshot: BriefSnapshot, tag: VideoTag): boolean {
 function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[] {
   const budget = snapshot.budgetMax ?? Infinity
   const surface = snapshot.minSurface ?? 0
-  const requestedArrs = arrIdsToNumbers(snapshot.arrondissementIds)
+  const requestedArrs = resolveAllArrs(snapshot)
   const requestedCommunes = communeIdsToNames(snapshot.communeIds)
   const byGeoOnly = tags.filter((t) => geoMatch(snapshot, t))
   console.log(
     `[feed/generate] match input: requestedArrs=${JSON.stringify(requestedArrs)} ` +
+      `(arr=${JSON.stringify(snapshot.arrondissementIds ?? [])} ` +
+      `quartier=${JSON.stringify(snapshot.quartierIds ?? [])} ` +
+      `iris=${(snapshot.irisIds ?? []).length}) ` +
       `requestedCommunes=${JSON.stringify(requestedCommunes)} ` +
       `budgetMax=${snapshot.budgetMax ?? '∞'} minSurface=${snapshot.minSurface ?? 0} ` +
       `| ${byGeoOnly.length}/${tags.length} vidéos passent le filtre géo`,
@@ -260,7 +343,7 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
   if (res.length >= 3) return finalize(res, '2-geo-only')
 
   // 3. Proximité géographique — agrège tous les arr des groupes contenant
-  //    un arr demandé.
+  //    un arr demandé (resolveAllArrs couvre déjà arr + quartier + IRIS).
   if (requestedArrs.length > 0) {
     const nearby = new Set<number>()
     for (const arr of requestedArrs) {
@@ -375,8 +458,9 @@ function buildUserPrompt(
 ): string {
   // Zones effectives = celles demandées par l'acquéreur en priorité ;
   // à défaut (rien sélectionné), l'union des vidéos matchées sert de cadre
-  // pour éviter d'envoyer "France entière" au LLM.
-  const userArrs = arrIdsToNumbers(snapshot.arrondissementIds)
+  // pour éviter d'envoyer "France entière" au LLM. resolveAllArrs combine
+  // arr + quartier + IRIS pour qu'un brief "Auteuil" remonte arr=16.
+  const userArrs = resolveAllArrs(snapshot)
   const userCommunes = communeIdsToNames(snapshot.communeIds)
   let arrs = userArrs
   let communes = userCommunes
