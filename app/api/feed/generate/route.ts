@@ -198,13 +198,19 @@ const GEO_GROUPS: number[][] = [
   [19, 20, 10, 11],        // Nord-Est
 ]
 
+/**
+ * Vrai si la vidéo couvre au moins une zone demandée par l'acquéreur.
+ * Une dimension non spécifiée par l'utilisateur ne contribue PAS au
+ * match — sinon un brief arr=[14], com=[] retournerait toutes les
+ * vidéos puisque communeMatch défaultait à true.
+ */
 function geoMatch(snapshot: BriefSnapshot, tag: VideoTag): boolean {
   const arrs = arrIdsToNumbers(snapshot.arrondissementIds)
   const communes = communeIdsToNames(snapshot.communeIds)
   if (arrs.length === 0 && communes.length === 0) return true
-  const arrMatch = arrs.length === 0 || tag.arrondissements.some((a) => arrs.includes(a))
-  const communeMatch = communes.length === 0 || tag.communes.some((c) => communes.includes(c))
-  return arrMatch || communeMatch
+  const arrHit = arrs.length > 0 && tag.arrondissements.some((a) => arrs.includes(a))
+  const communeHit = communes.length > 0 && tag.communes.some((c) => communes.includes(c))
+  return arrHit || communeHit
 }
 
 /**
