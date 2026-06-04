@@ -3,10 +3,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// Reset persisted state on every page load — each refresh = fresh onboarding
-if (typeof window !== 'undefined') {
-  localStorage.removeItem('shomee-search')
-}
+// The store is persisted across reloads (see partialize below). Without
+// persistence the feed cannot see the onboarding answers — the POST snapshot
+// to /api/properties would always be empty on a refresh.
 
 export interface LocationIntent {
   location_terms: string[]
@@ -127,10 +126,6 @@ export interface SearchPreferences {
     state: ChipState
     polarity: 'positive' | 'negative'
   }>
-  /** BuyerProfile.id used to fetch a scored feed via /api/properties.
-   *  Hardcoded to the demo profile in DB until auth lands. `null` disables
-   *  scoring server-side. */
-  buyerProfileId: string | null
   onboardingCompleted: boolean
 }
 
@@ -212,7 +207,6 @@ export const useSearchStore = create<SearchStore>()(
       maxSurface: null,
       chipStates: {},
       customCriteria: [],
-      buyerProfileId: 'cmppap3t00004co288tpeh0xh',
       onboardingCompleted: false,
 
       setLocation: ({ query, label, lat, lng, intent }) =>

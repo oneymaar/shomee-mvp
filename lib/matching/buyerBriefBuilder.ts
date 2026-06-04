@@ -25,9 +25,36 @@ import type { BuyerProfile as PrismaBuyerProfile } from '@prisma/client'
 import type {
   CriterionImportance,
   ParsedCriterion,
+  StructuredRule,
   UserCriteriaBrief,
 } from '../criteria/types'
 import { tagsToCriteria } from '../criteria/tags'
+
+/**
+ * Shape of the buyer-side snapshot accepted by {@link buildBriefFromSnapshot}.
+ * Mirrors the relevant subset of the Zustand `SearchPreferences` so the API
+ * can compose a brief on-the-fly without any persistence layer.
+ * Everything is optional / nullable: an empty snapshot returns an empty
+ * brief and the caller falls back to the chronological feed.
+ */
+export interface BriefSnapshot {
+  minSurface?: number | null
+  maxSurface?: number | null
+  budgetMin?: number | null
+  budgetMax?: number | null
+  minRooms?: number | null
+  maxRooms?: number | null
+  minBedrooms?: number | null
+  maxBedrooms?: number | null
+  propertyTypes?: string[] | null
+  chipStates?: Record<string, 0 | 1 | 2 | 3> | null
+  customCriteria?: Array<{
+    id?: string
+    label: string
+    state: 0 | 1 | 2 | 3
+    polarity?: 'positive' | 'negative'
+  }> | null
+}
 
 interface PrefsCriterion {
   label: string
@@ -191,6 +218,111 @@ function prefsCriterionToParsed(c: PrefsCriterion): ParsedCriterion {
     confidence: 1,
     importance_override: false,
   }
+}
+
+/**
+ * Build a brief directly from a client-side snapshot of the Zustand store
+ * — no DB hit, no auth. Mirrors {@link toBuyerBrief} but skips the
+ * `parsedCriteria` (LLM) layer (the snapshot has nothing equivalent).
+ *
+ * Three contribution buckets:
+ *   1. Hard scalar filters (surface, budget, rooms, bedrooms, types) →
+ *      mandatory structured rules. Reuses {@link buildHardFilters}.
+ *   2. `chipStates` (catalogue chips with their 1/2/3 state) → reuses the
+ *      `tagsToCriteria` mapping and then overrides importance per state.
+ *      State 3 (dealbreaker) flips boolean structured rules so e.g. the
+ *      `Terrasse` chip in state 3 reads as `terrace.exists = false`.
+ *   3. `customCriteria` (free-text + polarity) → semantic ParsedCriterion.
+ *
+ * Dedup is case-insensitive on `display_label` (same convention as
+ * {@link toBuyerBrief}).
+ */
+export function buildBriefFromSnapshot(snapshot: BriefSnapshot | null | undefined): UserCriteriaBrief {
+  const safe = snapshot ?? {}
+
+  // 1. Hard filters — reuse the existing builder (it tolerates any
+  // object-shaped input thanks to typeof guards).
+  const fromHardFilters = buildHardFilters(safe as unknown as PrismaBuyerProfile['searchPreferences'])
+
+  // 2. Catalogue chips → criteria with per-state importance.
+  const fromChips: ParsedCriterion[] = chipStatesToCriteria(safe.chipStates ?? {})
+
+  // 3. Custom user-added criteria.
+  const fromCustom: ParsedCriterion[] = (safe.customCriteria ?? [])
+    .filter((c) => c && typeof c.label === 'string' && c.state > 0)
+    .map((c) => ({
+      id: randomUUID(),
+      display_label: c.label,
+      category: 'ambiance' as const,
+      polarity: (c.polarity === 'negative' ? 'negative' : 'positive') as 'positive' | 'negative',
+      importance: stateToImportance(c.state),
+      match_type: 'semantic' as const,
+      rule: null,
+      semantic_hint: c.label,
+      raw_input: c.label,
+      confidence: 1,
+      importance_override: false,
+    }))
+
+  // Merge with dedup on lowercased display_label.
+  const seen = new Set<string>()
+  const merged: ParsedCriterion[] = []
+  for (const c of [...fromHardFilters, ...fromChips, ...fromCustom]) {
+    const key = c.display_label.trim().toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    merged.push(c)
+  }
+
+  const nowIso = new Date().toISOString()
+  return {
+    user_id: 'anonymous',
+    parsed_criteria: merged,
+    raw_tags: Object.keys(safe.chipStates ?? {}).filter((k) => (safe.chipStates?.[k] ?? 0) > 0),
+    raw_text_input: '',
+    created_at: nowIso,
+    updated_at: nowIso,
+  }
+}
+
+function stateToImportance(state: 0 | 1 | 2 | 3): CriterionImportance {
+  if (state === 3) return 'dealbreaker'
+  if (state === 2) return 'mandatory'
+  return 'desired'
+}
+
+/**
+ * Lift catalogue chip labels (Extérieur, Terrasse, Ascenseur, …) into
+ * `ParsedCriterion` carrying the user's per-chip state. Unknown labels
+ * fall through `tagsToCriteria`'s own semantic fallback. State 3 inverts
+ * boolean structured rules so the chip reads as "I don't want this".
+ */
+function chipStatesToCriteria(chipStates: Record<string, 0 | 1 | 2 | 3>): ParsedCriterion[] {
+  const active = Object.entries(chipStates).filter(([, s]) => s > 0)
+  if (active.length === 0) return []
+
+  const labelToState = new Map<string, 0 | 1 | 2 | 3>(active)
+  const base = tagsToCriteria(active.map(([label]) => label))
+
+  return base.map((c) => {
+    const state = labelToState.get(c.display_label) ?? 1
+    const importance = stateToImportance(state)
+    const polarity: 'positive' | 'negative' = state === 3 ? 'negative' : 'positive'
+
+    let rule = c.rule
+    // Dealbreaker on a boolean structured chip → invert the expected value.
+    // "Terrasse" desired = "I want a terrace" (terrace.exists = true).
+    // "Terrasse" dealbreaker = "I don't want a terrace" (terrace.exists = false).
+    if (state === 3 && rule && isFlippableBooleanRule(rule)) {
+      rule = { ...rule, value: !rule.value }
+    }
+    return { ...c, importance, polarity, rule }
+  })
+}
+
+function isFlippableBooleanRule(rule: ParsedCriterion['rule']): rule is StructuredRule & { value: boolean } {
+  if (!rule || !('attribute' in rule)) return false
+  return rule.operator === '=' && typeof rule.value === 'boolean'
 }
 
 /**

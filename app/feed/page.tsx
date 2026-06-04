@@ -62,7 +62,6 @@ export default function FeedPage() {
   // a beat before the API response swapped it for the top-ranked bien.
   const [properties, setProperties] = useState<Property[]>([])
   const [feedReady, setFeedReady] = useState(false)
-  const buyerProfileId = useSearchStore((s) => s.buyerProfileId)
   // Only flash the match dot when the buyer told us something quantifiable.
   // Without any hard filter the score is purely a sum of soft signals and
   // tends to bunch at the top, painting almost every card green — visually
@@ -73,10 +72,40 @@ export default function FeedPage() {
 
   useEffect(() => {
     let cancelled = false
-    const url = buyerProfileId
-      ? `/api/properties?buyerProfileId=${encodeURIComponent(buyerProfileId)}`
-      : '/api/properties'
-    fetch(url)
+
+    // Read a fresh snapshot at the moment of fetch — Zustand's getState()
+    // bypasses the subscription model so we don't re-render the feed when
+    // unrelated store fields change. The body shape is the same subset
+    // accepted by `buildBriefFromSnapshot` on the server.
+    const s = useSearchStore.getState()
+    const hasBrief =
+      !!(s.minSurface || s.maxSurface || s.budgetMin || s.budgetMax ||
+         s.minRooms || s.maxRooms || s.minBedrooms || s.maxBedrooms ||
+         (s.propertyTypes?.length ?? 0) > 0 ||
+         Object.values(s.chipStates ?? {}).some((v) => v > 0) ||
+         (s.customCriteria?.length ?? 0) > 0)
+
+    const fetchPromise = hasBrief
+      ? fetch('/api/properties', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            minSurface: s.minSurface,
+            maxSurface: s.maxSurface,
+            budgetMin: s.budgetMin,
+            budgetMax: s.budgetMax,
+            minRooms: s.minRooms,
+            maxRooms: s.maxRooms,
+            minBedrooms: s.minBedrooms,
+            maxBedrooms: s.maxBedrooms,
+            propertyTypes: s.propertyTypes,
+            chipStates: s.chipStates,
+            customCriteria: s.customCriteria,
+          }),
+        })
+      : fetch('/api/properties')
+
+    fetchPromise
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
         return r.json()
@@ -100,7 +129,7 @@ export default function FeedPage() {
     return () => {
       cancelled = true
     }
-  }, [buyerProfileId])
+  }, [])
 
   interface FlyHeart { id: number; from: { x: number; y: number }; to: { x: number; y: number } }
   const [flyHearts, setFlyHearts] = useState<FlyHeart[]>([])

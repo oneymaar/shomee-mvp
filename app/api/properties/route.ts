@@ -3,9 +3,14 @@ import { PropertyStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { toViewProperty } from '@/lib/serializers/property'
 import { matchProperty } from '@/lib/matching/engine'
-import { toBuyerBrief } from '@/lib/matching/buyerBriefBuilder'
+import {
+  toBuyerBrief,
+  buildBriefFromSnapshot,
+  type BriefSnapshot,
+} from '@/lib/matching/buyerBriefBuilder'
 import { toPropertyProfile } from '@/lib/matching/propertyProfileBuilder'
 import type { Property as ViewProperty } from '@/lib/types'
+import type { UserCriteriaBrief } from '@/lib/criteria/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,27 +104,70 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const brief = toBuyerBrief(profile)
-    const scored = properties
-      .map((p) => ({
-        property: p,
-        result: matchProperty(toPropertyProfile(p), brief),
-      }))
-      .filter(({ result }) => !result.is_excluded)
-      .sort((a, b) => b.result.global_score - a.result.global_score)
-      .map(({ property, result }) => {
-        const view = toViewProperty(property)
-        const enriched = projectPropertyExtras(property, view)
-        return {
-          ...enriched,
-          matchScore: result.global_score / 100,
-          isExcluded: result.is_excluded,
-        }
-      })
-
-    return NextResponse.json(scored)
+    return NextResponse.json(scoreAndProject(properties, toBuyerBrief(profile)))
   } catch (error) {
     console.error('[GET /api/properties]', error)
     return NextResponse.json({ error: 'Failed to fetch properties' }, { status: 500 })
   }
+}
+
+/**
+ * POST /api/properties
+ *
+ * Snapshot-driven scoring. The browser sends the relevant subset of its
+ * Zustand store (surface/budget/rooms/chipStates/customCriteria) and the
+ * server composes the brief on the fly, with zero persistence and no
+ * `BuyerProfile` row required. Used by the onboarding → feed handoff
+ * when the user has expressed enough preferences to make scoring useful.
+ */
+export async function POST(req: NextRequest) {
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'invalid_json' }, { status: 400 })
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
+  }
+
+  try {
+    const brief = buildBriefFromSnapshot(body as BriefSnapshot)
+    const properties = await prisma.property.findMany({
+      where: { statut: PropertyStatus.PUBLISHED },
+      orderBy: { createdAt: 'desc' },
+      include: PROPERTY_INCLUDE,
+    })
+    return NextResponse.json(scoreAndProject(properties, brief))
+  } catch (error) {
+    console.error('[POST /api/properties]', error)
+    return NextResponse.json({ error: 'Failed to score properties' }, { status: 500 })
+  }
+}
+
+/**
+ * Shared scoring + projection pipeline. Excluded properties are dropped;
+ * survivors are sorted by descending global score and decorated with the
+ * agency/chapters/matchScore overlay needed by the feed.
+ */
+function scoreAndProject(
+  properties: PrismaPropertyWithRels[],
+  brief: UserCriteriaBrief,
+): ViewProperty[] {
+  return properties
+    .map((p) => ({
+      property: p,
+      result: matchProperty(toPropertyProfile(p), brief),
+    }))
+    .filter(({ result }) => !result.is_excluded)
+    .sort((a, b) => b.result.global_score - a.result.global_score)
+    .map(({ property, result }) => {
+      const view = toViewProperty(property)
+      const enriched = projectPropertyExtras(property, view)
+      return {
+        ...enriched,
+        matchScore: result.global_score / 100,
+        isExcluded: result.is_excluded,
+      }
+    })
 }
