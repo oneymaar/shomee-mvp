@@ -82,16 +82,31 @@ export default function FeedPage() {
       : fetch('/api/properties')
 
     fetchPromise
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      .then(async (r) => {
+        // eslint-disable-next-line no-console
+        console.log('[Feed] response status=' + r.status + ' ok=' + r.ok)
+        if (!r.ok) {
+          const text = await r.text().catch(() => '')
+          // eslint-disable-next-line no-console
+          console.warn('[Feed] response body (error):', text.slice(0, 300))
+          throw new Error(`HTTP ${r.status}`)
+        }
         return r.json()
       })
       .then((data: Property[]) => {
         if (cancelled) return
+        // eslint-disable-next-line no-console
+        console.log(
+          '[Feed] data type=' + (Array.isArray(data) ? 'array' : typeof data) +
+          ' length=' + (Array.isArray(data) ? data.length : '-') +
+          ' top3=', Array.isArray(data) ? data.slice(0, 3).map((p) => ({ t: p.title, s: p.matchScore })) : data,
+        )
         if (Array.isArray(data) && data.length > 0) {
           setProperties(data)
         } else {
           // Empty / malformed response — fall back so the feed is never blank.
+          // eslint-disable-next-line no-console
+          console.warn('[Feed] falling back to mockProperties because response was empty/non-array')
           setProperties(mockProperties)
         }
         setFeedReady(true)
