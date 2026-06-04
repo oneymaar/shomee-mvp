@@ -8,6 +8,7 @@ import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import VideoCard from '@/components/VideoCard'
 import PropertyOverlay from '@/components/PropertyOverlay'
+import ShomeeLogo from '@/components/ShomeeLogo'
 import ActionRail from '@/components/ActionRail'
 import SkipFeedbackCard from '@/components/SkipFeedbackCard'
 import EndOfFeedCard from '@/components/EndOfFeedCard'
@@ -71,16 +72,18 @@ export default function FeedPage() {
       propertyTypes: s.propertyTypes,
       chipStates: s.chipStates,
       customCriteria: s.customCriteria,
-      // Geo selection — the server maps these to Property.arrondissement
-      // strings and pre-filters the candidate pool before scoring.
+      // Geo selection — the server maps these to video tags / arrondissement
+      // strings depending on the endpoint, before scoring.
       arrondissementIds: s.selectedArrIds,
       communeIds: s.selectedCommuneIds,
     }
     // eslint-disable-next-line no-console
-    console.log('[Feed] method=' + (hasBrief ? 'POST' : 'GET'), '| brief=', briefBody)
+    console.log('[Feed] hasBrief=' + hasBrief, '| brief=', briefBody)
 
+    // With a brief → LLM-generated feed, matched to real video tags.
+    // Without a brief → chronological feed (legacy /api/properties GET).
     const fetchPromise = hasBrief
-      ? fetch('/api/properties', {
+      ? fetch('/api/feed/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(briefBody),
@@ -99,7 +102,7 @@ export default function FeedPage() {
         }
         return r.json()
       })
-      .then((data: Property[]) => {
+      .then(async (data: Property[]) => {
         if (cancelled) return
         // eslint-disable-next-line no-console
         console.log(
@@ -118,10 +121,25 @@ export default function FeedPage() {
         }
         if (Array.isArray(data) && data.length > 0) {
           setProperties(data)
-        } else {
-          // Empty / malformed response — fall back so the feed is never blank.
-          // eslint-disable-next-line no-console
-          console.warn('[Feed] falling back to mockProperties because response was empty/non-array')
+          setFeedReady(true)
+          return
+        }
+        // Empty / malformed. With a brief, /api/feed/generate returns []
+        // when video-tags.json is empty or the LLM produced 0 fiches —
+        // fall back to the chronological feed before resorting to mocks.
+        // eslint-disable-next-line no-console
+        console.warn('[Feed] empty response — falling back to /api/properties')
+        try {
+          const r2 = await fetch('/api/properties')
+          const fallbackData = (await r2.json()) as Property[]
+          if (cancelled) return
+          if (Array.isArray(fallbackData) && fallbackData.length > 0) {
+            setProperties(fallbackData)
+          } else {
+            setProperties(mockProperties)
+          }
+        } catch {
+          if (cancelled) return
           setProperties(mockProperties)
         }
         setFeedReady(true)
@@ -279,16 +297,24 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
-      {/* Loading overlay — black background + spinner, dropped as soon as
-          feedReady flips to true. Keeps the entry from flashing any
-          fallback content while the API answer is in flight. */}
+      {/* Loading overlay — black background, SHOMEE logo + pulsing tagline.
+          LLM generation runs 1-3s so a calm full-screen loader reads better
+          than a tiny spinner. Dropped as soon as feedReady flips. */}
       {!feedReady && (
-        <div className="absolute inset-0 z-40 bg-neutral-900 flex items-center justify-center">
+        <div className="absolute inset-0 z-40 bg-black flex flex-col items-center justify-center px-8">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-            className="w-7 h-7 rounded-full border-2 border-white/15 border-t-white/70"
-          />
+            animate={{ opacity: [0.55, 1, 0.55] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <ShomeeLogo size={96} />
+          </motion.div>
+          <motion.p
+            className="mt-10 text-center text-white/80 text-[15px] font-medium"
+            animate={{ opacity: [0.45, 1, 0.45] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            Nous sélectionnons les biens qui vous correspondent…
+          </motion.p>
         </div>
       )}
       <div
