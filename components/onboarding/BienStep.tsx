@@ -38,7 +38,7 @@ const SURFACE_DEFAULT_MIN_INDEX = SURFACE_SCALE.indexOf(30)
 const SURFACE_DEFAULT_MAX_INDEX = SURFACE_SCALE_MAX_INDEX
 
 function formatSurface(v: number): string {
-  if (v >= SURFACE_UNLIMITED) return '500 m²+'
+  if (v >= SURFACE_UNLIMITED) return '500 m² +'
   return `${v} m²`
 }
 function findClosestSurfaceIndex(v: number): number {
@@ -57,11 +57,11 @@ function findClosestSurfaceIndex(v: number): number {
 
 function formatRooms(v: number): string {
   if (v <= 1) return 'Studio'
-  if (v >= ROOMS_MAX) return '7+'
+  if (v >= ROOMS_MAX) return `${ROOMS_MAX}p +`
   return `${v}p`
 }
 function formatBedrooms(v: number): string {
-  if (v >= BEDROOMS_MAX) return '6+ ch'
+  if (v >= BEDROOMS_MAX) return `${BEDROOMS_MAX} ch +`
   return `${v} ch`
 }
 
