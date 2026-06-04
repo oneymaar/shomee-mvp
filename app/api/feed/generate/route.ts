@@ -201,18 +201,25 @@ function resolveAllArrs(snapshot: BriefSnapshot): number[] {
 
 // ─── Agency map (spec) ───────────────────────────────────────────────────
 
+/** Plage globale €/m² imposée sur tous les biens du feed. La position
+ *  dans cette plage est ensuite biaisée par l'arrondissement via la
+ *  table PRICE_FLOORS. */
+const ABSOLUTE_MIN_PER_SQM = 11000
+const ABSOLUTE_MAX_PER_SQM = 16000
+
 /**
- * Prix plancher /m² par arrondissement (€/m², ordre de grandeur 2026).
- * Sert à brider la génération LLM qui sinon sort des biens à 5 000 €/m²
- * dans le 7e. Lu par buildUserPrompt pour exposer une fourchette
- * réaliste au modèle.
+ * Centre €/m² par arrondissement — bornes calibrées pour rester dans
+ * [11 K, 16 K] (cf. règle produit "globalement entre 11 K et 16 K").
+ * Les arr les moins chers (12, 13, 14, 19, 20) sont à 11 K, les plus
+ * cotés (6, 7) à 15-16 K. Les prompts et la rectification serveur
+ * partent toujours de cette table.
  */
 const PRICE_FLOORS: Record<number, number> = {
-  1: 13000, 2: 12000, 3: 12000, 4: 13000,
-  5: 12000, 6: 15000, 7: 16000, 8: 14000,
-  9: 11000, 10: 10000, 11: 10000, 12: 9000,
-  13: 8500, 14: 9000, 15: 10000, 16: 13000,
-  17: 11000, 18: 9500, 19: 8500, 20: 8500,
+  1: 14000, 2: 13000, 3: 13000, 4: 14000,
+  5: 13000, 6: 15000, 7: 15500, 8: 14500,
+  9: 12500, 10: 11500, 11: 11500, 12: 11000,
+  13: 11000, 14: 11000, 15: 12000, 16: 14000,
+  17: 12500, 18: 11500, 19: 11000, 20: 11000,
 }
 
 const AGENCY_MAP: Record<number, string> = {
@@ -482,16 +489,24 @@ function buildUserPrompt(
       ? snapshot.propertyTypes.join(', ')
       : 'appartement'
 
-  // Prix /m² réaliste secteur — moyenne pondérée des planchers PRICE_FLOORS
-  // sur les arr ciblés. Sert de référence absolue pour la formule du prix.
+  // Prix /m² réaliste secteur — moyenne pondérée des centres PRICE_FLOORS
+  // sur les arr ciblés. La fourchette envoyée au LLM est ensuite clampée
+  // dans [ABSOLUTE_MIN_PER_SQM, ABSOLUTE_MAX_PER_SQM] pour respecter la
+  // règle produit "tous les biens entre 11 K et 16 K €/m²".
   const avgPricePerSqm =
     arrs.length > 0
       ? Math.round(
-          arrs.reduce((s, a) => s + (PRICE_FLOORS[a] ?? 10000), 0) / arrs.length,
+          arrs.reduce((s, a) => s + (PRICE_FLOORS[a] ?? 12000), 0) / arrs.length,
         )
-      : 10000
-  const minPerSqm = Math.round(avgPricePerSqm * 0.85)
-  const maxPerSqm = Math.round(avgPricePerSqm * 1.3)
+      : 12000
+  const minPerSqm = Math.max(
+    ABSOLUTE_MIN_PER_SQM,
+    Math.round(avgPricePerSqm * 0.85),
+  )
+  const maxPerSqm = Math.min(
+    ABSOLUTE_MAX_PER_SQM,
+    Math.round(avgPricePerSqm * 1.3),
+  )
 
   // Contraintes par fiche : intersection brief ∩ vidéo (surface + pièces).
   // Le prix n'est plus borné en absolu — il est dérivé via la formule
@@ -650,20 +665,26 @@ function derivedBedrooms(rooms: number): number {
 }
 
 /**
- * Filet de sécurité côté serveur : si le LLM a généré une fiche dont
- * le prix/m² tombe sous le plancher PRICE_FLOORS de son arrondissement
- * (avec 15 % de marge), on remplace le prix par surface × plancher pour
- * coller au marché parisien réel. Toujours appliqué après le LLM, jamais
- * en amont — la formule reste exprimée dans le prompt pour que le LLM
- * gère le cas nominal.
+ * Filet de sécurité côté serveur : tous les biens doivent rester
+ * strictement dans [11 K, 16 K] €/m² (règle produit). Si le LLM dérape
+ * — en dessous du plancher d'arr ou au-dessus du plafond global —, on
+ * recale le prix sur le centre d'arr clampé. La formule "price = surface
+ * × pricePerSqm" reste exprimée dans le prompt pour le cas nominal ;
+ * cette fonction n'intervient qu'en correction.
  */
 function rectifyFichePrice(fiche: Fiche): Fiche {
-  const arr = parseArrFromAddress(fiche.address)
-  const floor = arr > 0 ? PRICE_FLOORS[arr] ?? 10000 : 10000
   if (fiche.surface <= 0) return fiche
+  const arr = parseArrFromAddress(fiche.address)
+  const rawFloor = arr > 0 ? PRICE_FLOORS[arr] ?? 12000 : 12000
+  const targetPerSqm = Math.min(
+    ABSOLUTE_MAX_PER_SQM,
+    Math.max(ABSOLUTE_MIN_PER_SQM, rawFloor),
+  )
   const ratio = fiche.price / fiche.surface
-  if (ratio >= floor * 0.85) return fiche
-  return { ...fiche, price: Math.round(fiche.surface * floor) }
+  if (ratio < ABSOLUTE_MIN_PER_SQM || ratio > ABSOLUTE_MAX_PER_SQM) {
+    return { ...fiche, price: Math.round(fiche.surface * targetPerSqm) }
+  }
+  return fiche
 }
 
 function ficheToProfile(fiche: Fiche, idx: number): PropertyProfile {
