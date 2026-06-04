@@ -17,7 +17,7 @@ const ANALYSIS_STEPS = [
   { label: 'Analyse de votre zone idéale', delay: 0 },
   { label: 'Calibrage du budget', delay: STEP_DURATION },
   { label: 'Profil de recherche', delay: STEP_DURATION * 2 },
-  { label: 'Nous sélectionnons les biens qui vous correspondent', delay: STEP_DURATION * 3 },
+  { label: 'Sélection de vos biens', delay: STEP_DURATION * 3 },
 ]
 
 // Blinking block caret shown while the line is being "typed".
@@ -35,29 +35,12 @@ function Caret() {
   )
 }
 
-// Three dots cycling while the engine "thinks" on the current step.
-function ThinkingDots() {
-  return (
-    <span className="inline-flex">
-      {[0, 1, 2].map((i) => (
-        <motion.span
-          key={i}
-          animate={{ opacity: [0.2, 1, 0.2] }}
-          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.18 }}
-        >
-          .
-        </motion.span>
-      ))}
-    </span>
-  )
-}
-
 interface AIPreparationStepProps {
   onReady: () => void
 }
 
 export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
-  const { locationLabel, completeOnboarding } = useSearchStore()
+  const { completeOnboarding } = useSearchStore()
   const [currentStep, setCurrentStep] = useState(0)
   const [done, setDone] = useState(false)
   const [typed, setTyped] = useState('')
@@ -193,47 +176,6 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
       className="flex flex-col items-center justify-center h-full px-8 text-center"
       style={{ background: 'linear-gradient(135deg, #FDF5F2 0%, #f0e8df 100%)' }}
     >
-      {/* Animated orb */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative mb-8"
-      >
-        <motion.div
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-20 h-20 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(166,75,39,0.08)' }}
-        >
-          <motion.div
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-            className="w-14 h-14 rounded-full"
-            style={{
-              border: '2px solid rgba(166,75,39,0.2)',
-              background: 'radial-gradient(circle at 35% 30%, #C9744F 0%, #A64B27 60%, #8A3C1E 100%)',
-              boxShadow: '0 4px 14px rgba(166,75,39,0.3)',
-            }}
-          />
-        </motion.div>
-
-        {/* Orbit dots */}
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="absolute w-2 h-2 rounded-full"
-            style={{ background: '#A64B27', opacity: 0.3, top: '50%', left: '50%' }}
-            animate={{
-              x: Math.cos((i / 3) * Math.PI * 2) * 40 - 4,
-              y: Math.sin((i / 3) * Math.PI * 2) * 40 - 4,
-              opacity: [0.15, 0.5, 0.15],
-            }}
-            transition={{ duration: 3, delay: i * 0.4, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        ))}
-      </motion.div>
-
       {/* Headline */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -244,9 +186,6 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         <h2 className="text-[20px] font-bold text-neutral-900">
           {done ? 'Votre sélection est prête !' : 'SHOMEE analyse votre projet…'}
         </h2>
-        {locationLabel && (
-          <p className="text-[13px] text-neutral-400 mt-1">{locationLabel}</p>
-        )}
       </motion.div>
 
       {/* Analysis steps — typed live, one at a time, in a fixed-height slot
@@ -255,7 +194,8 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         {!done && (
           <span className="text-[13px] text-neutral-500 whitespace-nowrap">
             {typed}
-            {typingDone ? <ThinkingDots /> : <Caret />}
+            {typingDone && '...'}
+            <Caret />
           </span>
         )}
       </div>
