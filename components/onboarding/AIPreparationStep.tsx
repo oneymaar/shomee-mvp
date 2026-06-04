@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useSearchStore } from '@/lib/searchStore'
 
 // Each step stays visible at least 2s before the next replaces it.
@@ -12,6 +12,38 @@ const ANALYSIS_STEPS = [
   { label: 'Profil de recherche', delay: STEP_DURATION * 2 },
   { label: 'Sélection personnalisée en cours', delay: STEP_DURATION * 3 },
 ]
+
+// Blinking block caret shown while the line is being "typed".
+function Caret() {
+  return (
+    <motion.span
+      aria-hidden
+      animate={{ opacity: [1, 1, 0, 0] }}
+      transition={{ duration: 0.9, repeat: Infinity, ease: 'linear', times: [0, 0.5, 0.5, 1] }}
+      className="inline-block"
+      style={{ color: '#A64B27' }}
+    >
+      ▋
+    </motion.span>
+  )
+}
+
+// Three dots cycling while the engine "thinks" on the current step.
+function ThinkingDots() {
+  return (
+    <span className="inline-flex">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          animate={{ opacity: [0.2, 1, 0.2] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.18 }}
+        >
+          .
+        </motion.span>
+      ))}
+    </span>
+  )
+}
 
 interface AIPreparationStepProps {
   onReady: () => void
@@ -24,6 +56,29 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
     customCriteria.filter((c) => c.state > 0).length
   const [currentStep, setCurrentStep] = useState(0)
   const [done, setDone] = useState(false)
+  const [typed, setTyped] = useState('')
+  // typingDone is derived, not stored: labels are all distinct, so `typed`
+  // matches the full current label only once it has been fully typed out.
+  const currentLabel = ANALYSIS_STEPS[currentStep].label
+  const typingDone = typed === currentLabel
+
+  // Typewriter effect: re-type the current step's label char by char (the
+  // first tick clears any leftover text), then the animated dots take over
+  // for the rest of the step duration.
+  useEffect(() => {
+    if (done) return
+    const label = ANALYSIS_STEPS[currentStep].label
+    let i = 0
+    const id = setInterval(() => {
+      setTyped(label.slice(0, i))
+      if (i >= label.length) {
+        clearInterval(id)
+        return
+      }
+      i += 1
+    }, 30)
+    return () => clearInterval(id)
+  }, [currentStep, done])
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = []
@@ -111,33 +166,15 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         )}
       </motion.div>
 
-      {/* Analysis steps — one at a time, in a fixed slot so nothing shifts */}
-      <div className="mt-7 h-6 flex items-center justify-center w-full max-w-[280px]">
-        <AnimatePresence mode="wait">
-          {!done && (
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="flex items-center gap-3"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: '#A64B27' }}
-              >
-                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </motion.div>
-              <span className="text-[13px] text-neutral-600">{ANALYSIS_STEPS[currentStep].label}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Analysis steps — typed live, one at a time, in a fixed-height slot
+          so the orb and headline above never shift. */}
+      <div className="mt-7 h-6 flex items-center justify-center w-full max-w-[300px]">
+        {!done && (
+          <span className="font-mono text-[13px] text-neutral-500 whitespace-nowrap">
+            {typed}
+            {typingDone ? <ThinkingDots /> : <Caret />}
+          </span>
+        )}
       </div>
 
       {/* Stats summary */}
