@@ -57,8 +57,30 @@ function readTagsFile(): VideoTag[] {
   try {
     const raw = fs.readFileSync(TAGS_FILE, 'utf-8')
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as VideoTag[]) : []
-  } catch {
+    const tags = Array.isArray(parsed) ? (parsed as VideoTag[]) : []
+    const withArrs = tags.filter(
+      (t) => Array.isArray(t.arrondissements) && t.arrondissements.length > 0,
+    ).length
+    const withCommunes = tags.filter(
+      (t) => Array.isArray(t.communes) && t.communes.length > 0,
+    ).length
+    console.log(
+      `[feed/generate] tags file path=${TAGS_FILE} loaded=${tags.length} ` +
+        `withArr=${withArrs} withCommune=${withCommunes}`,
+    )
+    for (let i = 0; i < Math.min(3, tags.length); i++) {
+      const t = tags[i]
+      console.log(
+        `[feed/generate] tag[${i}] id=${t.videoId} ` +
+          `arr=${JSON.stringify(t.arrondissements)} ` +
+          `com=${JSON.stringify(t.communes)}`,
+      )
+    }
+    return tags
+  } catch (err) {
+    console.error(
+      `[feed/generate] tags file read failed path=${TAGS_FILE} err=${String(err)}`,
+    )
     return []
   }
 }
@@ -198,6 +220,25 @@ function geoMatch(snapshot: BriefSnapshot, tag: VideoTag): boolean {
 function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[] {
   const budget = snapshot.budgetMax ?? Infinity
   const surface = snapshot.minSurface ?? 0
+  const requestedArrs = arrIdsToNumbers(snapshot.arrondissementIds)
+  const requestedCommunes = communeIdsToNames(snapshot.communeIds)
+  const byGeoOnly = tags.filter((t) => geoMatch(snapshot, t))
+  console.log(
+    `[feed/generate] match input: requestedArrs=${JSON.stringify(requestedArrs)} ` +
+      `requestedCommunes=${JSON.stringify(requestedCommunes)} ` +
+      `budgetMax=${snapshot.budgetMax ?? '∞'} minSurface=${snapshot.minSurface ?? 0} ` +
+      `| ${byGeoOnly.length}/${tags.length} vidéos passent le filtre géo`,
+  )
+
+  const finalize = (picked: VideoTag[], tier: string): VideoTag[] => {
+    const sliced = picked.slice(0, MAX_FICHES)
+    console.log(
+      `[feed/generate] tier=${tier} picked=${sliced.length} ids=[` +
+        sliced.map((v) => v.videoId).join(', ') +
+        ']',
+    )
+    return sliced
+  }
 
   // 1. Match strict
   let res = tags.filter(
@@ -206,15 +247,14 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
       tag.priceRange[0] <= budget &&
       tag.surfaceRange[1] >= surface,
   )
-  if (res.length >= 3) return res.slice(0, MAX_FICHES)
+  if (res.length >= 3) return finalize(res, '1-strict')
 
   // 2. Géo exacte sans budget/surface
-  res = tags.filter((tag) => geoMatch(snapshot, tag))
-  if (res.length >= 3) return res.slice(0, MAX_FICHES)
+  res = byGeoOnly
+  if (res.length >= 3) return finalize(res, '2-geo-only')
 
   // 3. Proximité géographique — agrège tous les arr des groupes contenant
   //    un arr demandé.
-  const requestedArrs = arrIdsToNumbers(snapshot.arrondissementIds)
   if (requestedArrs.length > 0) {
     const nearby = new Set<number>()
     for (const arr of requestedArrs) {
@@ -223,14 +263,16 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
       }
     }
     res = tags.filter((tag) => tag.arrondissements.some((a) => nearby.has(a)))
-    if (res.length >= 2) return res.slice(0, MAX_FICHES)
+    console.log(
+      `[feed/generate] tier=3 nearby=${JSON.stringify([...nearby].sort((a, b) => a - b))} ` +
+        `match=${res.length}`,
+    )
+    if (res.length >= 2) return finalize(res, '3-proximity')
   }
 
   // 4. Fallback total
-  console.warn(
-    '[feed/generate] aucune vidéo proche trouvée, fallback toutes vidéos',
-  )
-  return tags.slice(0, MAX_FICHES)
+  console.warn('[feed/generate] tier=4-fallback aucune vidéo proche, retour de toutes les vidéos')
+  return finalize(tags, '4-fallback')
 }
 
 // ─── LLM generation ──────────────────────────────────────────────────────
