@@ -12,7 +12,7 @@ const ANALYSIS_STEPS = [
   { label: 'Analyse de votre zone idéale', delay: 0 },
   { label: 'Calibrage du budget', delay: STEP_DURATION },
   { label: 'Profil de recherche', delay: STEP_DURATION * 2 },
-  { label: 'Sélection personnalisée en cours', delay: STEP_DURATION * 3 },
+  { label: 'Nous sélectionnons les biens qui vous correspondent', delay: STEP_DURATION * 3 },
 ]
 
 // Blinking block caret shown while the line is being "typed".

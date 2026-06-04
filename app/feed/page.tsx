@@ -8,7 +8,6 @@ import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import VideoCard from '@/components/VideoCard'
 import PropertyOverlay from '@/components/PropertyOverlay'
-import ShomeeLogo from '@/components/ShomeeLogo'
 import ActionRail from '@/components/ActionRail'
 import SkipFeedbackCard from '@/components/SkipFeedbackCard'
 import EndOfFeedCard from '@/components/EndOfFeedCard'
@@ -297,26 +296,9 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
-      {/* Loading overlay — black background, SHOMEE logo + pulsing tagline.
-          LLM generation runs 1-3s so a calm full-screen loader reads better
-          than a tiny spinner. Dropped as soon as feedReady flips. */}
-      {!feedReady && (
-        <div className="absolute inset-0 z-40 bg-black flex flex-col items-center justify-center px-8">
-          <motion.div
-            animate={{ opacity: [0.55, 1, 0.55] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <ShomeeLogo size={96} />
-          </motion.div>
-          <motion.p
-            className="mt-10 text-center text-white/80 text-[15px] font-medium"
-            animate={{ opacity: [0.45, 1, 0.45] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            Nous sélectionnons les biens qui vous correspondent…
-          </motion.p>
-        </div>
-      )}
+      {/* Pas de loader local : l'AIPreparationStep de l'onboarding sert
+          d'écran d'attente unique. Le feed n'apparaît qu'une fois ready
+          (feedItems = [] tant que !feedReady). */}
       <div
         ref={containerRef}
         className="absolute inset-x-0 top-0 overflow-y-scroll scrollbar-hide"

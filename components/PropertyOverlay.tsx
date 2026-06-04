@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, MapPin, Check, Home } from 'lucide-react'
 import type { Property } from '@/lib/types'
 import { formatLocation } from '@/lib/format'
@@ -23,15 +24,60 @@ const BADGE_STYLES = {
   },
 } as const
 
-function MatchBadge({ score }: { score: number }) {
+function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
+  const [displayScore, setDisplayScore] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (!isActive) return
+    // Reset and animate when card becomes active
+    setDisplayScore(0)
+    const duration = 2000
+    const start = performance.now()
+
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const t = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplayScore(Math.round(eased * score))
+      if (t < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [isActive, score])
+
   return (
-    <div className="shrink-0 self-end mb-1 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1 text-white text-sm font-bold drop-shadow">
-      {score} %
+    <div
+      className="relative shrink-0 drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]"
+      style={{ width: 58, height: 58 }}
+    >
+      {/* Outer ring — conic-gradient gauge, clearly OUTSIDE inner circle */}
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `conic-gradient(from 0deg, #3b82f6 0%, #6366f1 ${displayScore / 2}%, #14b8a6 ${displayScore}%, rgba(0,0,0,0.10) ${displayScore}% 100%)`,
+        }}
+      />
+      {/* Inner cream circle — 7px ring visible */}
+      <div
+        className="absolute rounded-full"
+        style={{ inset: 7, backgroundColor: '#FDF5F2' }}
+      />
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ gap: 2 }}>
+        <span style={{ color: '#A64B27', fontWeight: 900, fontSize: 15, lineHeight: 1 }}>
+          {displayScore}%
+        </span>
+        <span style={{ color: '#A64B27', fontWeight: 700, fontSize: 6.5, letterSpacing: '0.07em', lineHeight: 1 }}>
+          MATCH
+        </span>
+      </div>
     </div>
   )
 }
 
-export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0, matchScore }: PropertyOverlayProps) {
+export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0, matchScore, isActive = false }: PropertyOverlayProps) {
   return (
     <>
       {/* ── Top — agency ── */}
@@ -121,8 +167,10 @@ export default function PropertyOverlay({ property, onMore, agencyTopOffset = 0,
             )}
           </div>
 
-          {/* Right — simple score pill, bottom-aligned with left column */}
-          {matchScore !== undefined && <MatchBadge score={matchScore} />}
+          {/* Right — match gauge badge, bottom-aligned with left column */}
+          {matchScore !== undefined && (
+            <MatchBadge score={matchScore} isActive={isActive} />
+          )}
         </div>
       </div>
     </>

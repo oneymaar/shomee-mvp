@@ -36,8 +36,8 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 const MODEL = 'claude-haiku-4-5-20251001'
-const MAX_FICHES = 10
-const MAX_TOKENS = 4000
+const MAX_FICHES = 6
+const MAX_TOKENS = 1200
 const TAGS_FILE = path.join(process.cwd(), 'src', 'data', 'video-tags.json')
 
 // ─── Tag file ────────────────────────────────────────────────────────────
@@ -94,6 +94,20 @@ function communeIdsToNames(ids?: string[] | null): string[] {
 
 // ─── Agency map (spec) ───────────────────────────────────────────────────
 
+/**
+ * Prix plancher /m² par arrondissement (€/m², ordre de grandeur 2026).
+ * Sert à brider la génération LLM qui sinon sort des biens à 5 000 €/m²
+ * dans le 7e. Lu par buildUserPrompt pour exposer une fourchette
+ * réaliste au modèle.
+ */
+const PRICE_FLOORS: Record<number, number> = {
+  1: 13000, 2: 12000, 3: 12000, 4: 13000,
+  5: 12000, 6: 15000, 7: 16000, 8: 14000,
+  9: 11000, 10: 10000, 11: 10000, 12: 9000,
+  13: 8500, 14: 9000, 15: 10000, 16: 13000,
+  17: 11000, 18: 9500, 19: 8500, 20: 8500,
+}
+
 const AGENCY_MAP: Record<number, string> = {
   7: 'Barnes Tour Eiffel',
   15: 'Barnes Tour Eiffel',
@@ -147,40 +161,76 @@ function extractCloudinaryId(videoUrl: string): string {
 
 // ─── Video matching with progressive widening ────────────────────────────
 
-function matchVideos(
-  snapshot: BriefSnapshot,
-  tags: VideoTag[],
-  flags: { byBudget: boolean; bySurface: boolean },
-): VideoTag[] {
+/**
+ * Groupes d'arrondissements géographiquement proches — utilisés en
+ * dernier recours quand aucune vidéo n'est taggée pour la zone exacte
+ * demandée. Les groupes se chevauchent volontairement (ex: 15 est dans
+ * Rive gauche ET Ouest) pour mailler le territoire.
+ */
+const GEO_GROUPS: number[][] = [
+  [1, 2, 3, 4],            // Centre
+  [5, 6, 7, 13, 14, 15],   // Rive gauche
+  [8, 9, 10, 17, 18],      // Nord-Ouest
+  [11, 12, 20],            // Est
+  [16, 15, 7],             // Ouest
+  [19, 20, 10, 11],        // Nord-Est
+]
+
+function geoMatch(snapshot: BriefSnapshot, tag: VideoTag): boolean {
   const arrs = arrIdsToNumbers(snapshot.arrondissementIds)
   const communes = communeIdsToNames(snapshot.communeIds)
-  const budget = snapshot.budgetMax ?? Infinity
-  const surface = snapshot.minSurface ?? 0
-  const geoUnspecified = arrs.length === 0 && communes.length === 0
-
-  return tags.filter((tag) => {
-    const arrMatch =
-      arrs.length === 0 || tag.arrondissements.some((a) => arrs.includes(a))
-    const communeMatch =
-      communes.length === 0 || tag.communes.some((c) => communes.includes(c))
-    // If both arr and commune are specified, accept either kind of match (OR).
-    const geoMatch = geoUnspecified || arrMatch || communeMatch
-    const budgetMatch = !flags.byBudget || tag.priceRange[0] <= budget
-    const surfaceMatch = !flags.bySurface || tag.surfaceRange[1] >= surface
-    return geoMatch && budgetMatch && surfaceMatch
-  })
+  if (arrs.length === 0 && communes.length === 0) return true
+  const arrMatch = arrs.length === 0 || tag.arrondissements.some((a) => arrs.includes(a))
+  const communeMatch = communes.length === 0 || tag.communes.some((c) => communes.includes(c))
+  return arrMatch || communeMatch
 }
 
+/**
+ * Widening progressif — on relâche les contraintes une par une plutôt
+ * que de retomber brutalement sur toutes les vidéos. À chaque palier on
+ * s'arrête dès qu'on a au moins quelques vidéos exploitables.
+ *
+ *   1. Géo exacte + budget + surface
+ *   2. Géo exacte sans budget/surface
+ *   3. Proximité géographique (GEO_GROUPS)
+ *   4. Fallback total — toutes les vidéos (avec warning)
+ */
 function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[] {
-  let res = matchVideos(snapshot, tags, { byBudget: true, bySurface: true })
-  if (res.length === 0) {
-    res = matchVideos(snapshot, tags, { byBudget: true, bySurface: false })
+  const budget = snapshot.budgetMax ?? Infinity
+  const surface = snapshot.minSurface ?? 0
+
+  // 1. Match strict
+  let res = tags.filter(
+    (tag) =>
+      geoMatch(snapshot, tag) &&
+      tag.priceRange[0] <= budget &&
+      tag.surfaceRange[1] >= surface,
+  )
+  if (res.length >= 3) return res.slice(0, MAX_FICHES)
+
+  // 2. Géo exacte sans budget/surface
+  res = tags.filter((tag) => geoMatch(snapshot, tag))
+  if (res.length >= 3) return res.slice(0, MAX_FICHES)
+
+  // 3. Proximité géographique — agrège tous les arr des groupes contenant
+  //    un arr demandé.
+  const requestedArrs = arrIdsToNumbers(snapshot.arrondissementIds)
+  if (requestedArrs.length > 0) {
+    const nearby = new Set<number>()
+    for (const arr of requestedArrs) {
+      for (const group of GEO_GROUPS) {
+        if (group.includes(arr)) for (const a of group) nearby.add(a)
+      }
+    }
+    res = tags.filter((tag) => tag.arrondissements.some((a) => nearby.has(a)))
+    if (res.length >= 2) return res.slice(0, MAX_FICHES)
   }
-  if (res.length === 0) {
-    res = matchVideos(snapshot, tags, { byBudget: false, bySurface: false })
-  }
-  if (res.length === 0) res = tags
-  return res.slice(0, MAX_FICHES)
+
+  // 4. Fallback total
+  console.warn(
+    '[feed/generate] aucune vidéo proche trouvée, fallback toutes vidéos',
+  )
+  return tags.slice(0, MAX_FICHES)
 }
 
 // ─── LLM generation ──────────────────────────────────────────────────────
@@ -265,12 +315,26 @@ function buildUserPrompt(
       ? snapshot.propertyTypes.join(', ')
       : 'appartement'
 
-  const surfaceLine = `${snapshot.minSurface ?? 30} m² minimum${
+  const minSurface = snapshot.minSurface ?? 30
+  const surfaceLine = `${minSurface} m² minimum${
     snapshot.maxSurface ? ` - ${snapshot.maxSurface} m² maximum` : ''
   }`
   const budgetLine = `${
     snapshot.budgetMin ? snapshot.budgetMin + ' € minimum, ' : ''
   }${snapshot.budgetMax ? snapshot.budgetMax + ' € maximum' : 'sans limite'}`
+
+  // Prix /m² réaliste calculé sur les arr ciblés ; pour les communes on
+  // s'appuie sur la moyenne intra-muros (10 000 €/m²) — proxy correct
+  // pour Neuilly/Boulogne/etc.
+  const avgPricePerSqm =
+    arrs.length > 0
+      ? Math.round(
+          arrs.reduce((s, a) => s + (PRICE_FLOORS[a] ?? 10000), 0) / arrs.length,
+        )
+      : 10000
+  const minPerSqm = Math.round(avgPricePerSqm * 0.85)
+  const maxPerSqm = Math.round(avgPricePerSqm * 1.3)
+  const absoluteFloor = Math.round(avgPricePerSqm * 0.8 * minSurface)
 
   return `Génère ${n} fiches de biens immobiliers fictifs correspondant à ces critères :
 
@@ -315,7 +379,8 @@ Chaque fiche doit être distincte (adresses différentes, prix variés dans la f
 CONTRAINTES STRICTES :
 - L'adresse DOIT être située dans l'une des zones listées ci-dessus, et nulle part ailleurs.
 - Pour Paris, utilise le format "<numéro> <rue>, 750<NN> Paris" (ex: "12 rue de Passy, 75016 Paris" pour le 16e). Pas de "75e" ni de "Paris 75NNN".
-- Pour les communes (Neuilly, Boulogne, etc.), utilise le format "<numéro> <rue>, <commune>".`
+- Pour les communes (Neuilly, Boulogne, etc.), utilise le format "<numéro> <rue>, <commune>".
+- Prix : calculer price = surface × pricePerSqm où pricePerSqm est entre ${minPerSqm} et ${maxPerSqm} €/m². Ne JAMAIS générer un prix inférieur à ${absoluteFloor} €.`
 }
 
 function parseFiches(text: string): Fiche[] {
