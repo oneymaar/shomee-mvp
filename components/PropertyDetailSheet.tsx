@@ -228,6 +228,10 @@ export default function PropertyDetailSheet({
 
   if (!property) return null
 
+  // Identité de marque = agence (logo + nom), fallback sur l'agent.
+  const brandName = property.agencyName ?? property.agentName
+  const brandLogo = property.agencyLogo ?? property.agentAvatar
+
   const gallery = property.gallery
   const fmtPrice = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
   const fmtPpm = property.pricePerSqm
@@ -334,13 +338,13 @@ export default function PropertyDetailSheet({
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/15 flex items-center justify-center">
-                        {property.agentAvatar ? (
-                          <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+                        {brandLogo ? (
+                          <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
                         ) : (
-                          <span className="text-white text-[11px] font-bold">{property.agentName.charAt(0)}</span>
+                          <span className="text-white text-[11px] font-bold">{brandName.charAt(0)}</span>
                         )}
                       </div>
-                      <span className="text-neutral-600 text-sm font-medium truncate">{property.agentName}</span>
+                      <span className="text-neutral-600 text-sm font-medium truncate">{brandName}</span>
                     </div>
                     <button
                       onClick={onClose}

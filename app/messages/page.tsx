@@ -20,6 +20,10 @@ function ConversationRow({ conv }: { conv: Conversation }) {
   const property = properties.find(p => p.id === conv.propertyId)
   if (!property) return null
 
+  // Identité de marque = agence (logo + nom), fallback sur l'agent.
+  const brandName = property.agencyName ?? property.agentName
+  const brandLogo = property.agencyLogo ?? property.agentAvatar
+
   const lastMsg = conv.messages[conv.messages.length - 1]
   const unread = hasUnread(conv)
   const preview = lastMsg
@@ -35,10 +39,10 @@ function ConversationRow({ conv }: { conv: Conversation }) {
     >
       <div className="relative shrink-0">
         <div className="w-12 h-12 rounded-full bg-white border border-black/10 overflow-hidden flex items-center justify-center">
-          {property.agentAvatar ? (
-            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+          {brandLogo ? (
+            <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
           ) : (
-            <span className="text-neutral-700 font-bold text-sm">{property.agentName.charAt(0)}</span>
+            <span className="text-neutral-700 font-bold text-sm">{brandName.charAt(0)}</span>
           )}
         </div>
         {unread && (
@@ -49,7 +53,7 @@ function ConversationRow({ conv }: { conv: Conversation }) {
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between gap-2">
           <p className={`text-[14px] truncate ${unread ? 'text-neutral-900 font-bold' : 'text-neutral-900 font-semibold'}`}>
-            {property.agentName}
+            {brandName}
           </p>
           {lastMsg && (
             <span className={`text-[11px] shrink-0 ${unread ? 'text-neutral-900 font-bold' : 'text-neutral-400'}`}>

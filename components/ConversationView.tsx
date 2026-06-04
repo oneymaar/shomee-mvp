@@ -25,6 +25,10 @@ export default function ConversationView({ property }: { property: Property }) {
   const conv = conversations.find(c => c.propertyId === property.id)
   const messages: ChatMessage[] = conv?.messages ?? []
 
+  // Identité de marque = agence (logo + nom), fallback sur l'agent.
+  const brandName = property.agencyName ?? property.agentName
+  const brandLogo = property.agencyLogo ?? property.agentAvatar
+
   const [text, setText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -104,14 +108,14 @@ export default function ConversationView({ property }: { property: Property }) {
           <ChevronLeft size={22} />
         </button>
         <div className="w-8 h-8 rounded-full bg-white border border-black/10 overflow-hidden flex items-center justify-center shrink-0">
-          {property.agentAvatar ? (
-            <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+          {brandLogo ? (
+            <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
           ) : (
-            <span className="text-neutral-700 text-xs font-bold">{property.agentName.charAt(0)}</span>
+            <span className="text-neutral-700 text-xs font-bold">{brandName.charAt(0)}</span>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-neutral-900 font-semibold text-[14px] leading-tight">{property.agentName}</p>
+          <p className="text-neutral-900 font-semibold text-[14px] leading-tight">{brandName}</p>
           <p className="text-neutral-500 text-[11px] truncate">{property.title}</p>
         </div>
       </div>
@@ -123,14 +127,14 @@ export default function ConversationView({ property }: { property: Property }) {
         {!hasMessages && (
           <div className="flex-1 flex flex-col items-center justify-center gap-5 pt-4 pb-2">
             <div className="w-[80px] h-[80px] rounded-full bg-white border border-black/10 overflow-hidden flex items-center justify-center">
-              {property.agentAvatar ? (
-                <img src={property.agentAvatar} alt={property.agentName} className="w-full h-full object-contain" />
+              {brandLogo ? (
+                <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
               ) : (
-                <span className="text-neutral-700 text-2xl font-bold">{property.agentName.charAt(0)}</span>
+                <span className="text-neutral-700 text-2xl font-bold">{brandName.charAt(0)}</span>
               )}
             </div>
             <div className="text-center">
-              <p className="text-neutral-900 font-bold text-[17px]">{property.agentName}</p>
+              <p className="text-neutral-900 font-bold text-[17px]">{brandName}</p>
               <p className="text-neutral-500 text-[13px] mt-1">Agence immobilière · Paris</p>
             </div>
             <button
@@ -147,7 +151,7 @@ export default function ConversationView({ property }: { property: Property }) {
               <ChevronRight size={15} className="text-neutral-400 shrink-0" />
             </button>
             <p className="text-neutral-500 text-[13px] text-center leading-relaxed">
-              Envoyez un message pour démarrer<br />votre échange avec {property.agentName}.
+              Envoyez un message pour démarrer<br />votre échange avec {brandName}.
             </p>
           </div>
         )}

@@ -36,6 +36,9 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
   const heartRef = useRef<HTMLButtonElement>(null)
   const [callOpen, setCallOpen] = useState(false)
 
+  // Marque = agence, fallback sur l'agent.
+  const brandName = property.agencyName ?? property.agentName
+
   const handleHeartClick = () => {
     const rect = heartRef.current?.getBoundingClientRect()
     if (rect) onToggleFavorite(rect)
@@ -104,7 +107,7 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-white/50 text-xs uppercase tracking-widest mb-0.5">Appeler</p>
-                <p className="text-white font-bold text-lg leading-tight">{property.agentName}</p>
+                <p className="text-white font-bold text-lg leading-tight">{brandName}</p>
               </div>
               <button onClick={() => setCallOpen(false)} className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center mt-0.5">
                 <X size={15} className="text-white" />

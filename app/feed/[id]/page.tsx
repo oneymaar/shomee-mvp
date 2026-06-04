@@ -107,12 +107,20 @@ export default function PropertyDetailPage({ params }: Props) {
 
         {/* Content */}
         <div className="bg-black px-4 pt-4 pb-28">
-          {/* Agency / agent */}
+          {/* Agency / agent — logo de l'agence, fallback initiale */}
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold">{property.agentName.charAt(0)}</span>
+            <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 border border-white/20 flex items-center justify-center">
+              {(property.agencyLogo ?? property.agentAvatar) ? (
+                <img
+                  src={(property.agencyLogo ?? property.agentAvatar) || undefined}
+                  alt={property.agencyName ?? property.agentName}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <span className="text-white text-[10px] font-bold">{(property.agencyName ?? property.agentName).charAt(0)}</span>
+              )}
             </div>
-            <span className="text-white font-semibold text-sm">{property.agentName}</span>
+            <span className="text-white font-semibold text-sm">{property.agencyName ?? property.agentName}</span>
           </div>
 
           {/* Price */}
