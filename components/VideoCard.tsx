@@ -28,7 +28,6 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const [videoDuration, setVideoDuration] = useState(0)
   const [chapterLabel, setChapterLabel] = useState<string | null>(null)
   const hasVideo = Boolean(property.videoUrl)
-  const hasGuidedTour = Boolean(property.chapters && property.chapters.length > 0)
 
   /** Normalise property.chapters into { label, startSec } regardless of which
    *  shape was stored (legacy fraction-based or AI startSec-based). */
@@ -203,18 +202,6 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
             'linear-gradient(to bottom, rgba(0,0,0,0.60) 0%, transparent 28%, transparent 50%, rgba(0,0,0,0.82) 100%)',
         }}
       />
-
-      {/* Guided-tour badge — only when real IA chapters exist */}
-      {hasGuidedTour && (
-        <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-1.5 rounded-full bg-black/35 backdrop-blur-md px-2.5 py-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-white">
-            <path d="M8 5v14l11-7z" fill="currentColor" />
-          </svg>
-          <span className="text-[11px] font-medium uppercase tracking-wide text-white/90">
-            Visite guidée
-          </span>
-        </div>
-      )}
 
       {/* Tap zones */}
       <div
