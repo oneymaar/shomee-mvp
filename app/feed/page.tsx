@@ -98,9 +98,18 @@ export default function FeedPage() {
         // eslint-disable-next-line no-console
         console.log(
           '[Feed] data type=' + (Array.isArray(data) ? 'array' : typeof data) +
-          ' length=' + (Array.isArray(data) ? data.length : '-') +
-          ' top3=', Array.isArray(data) ? data.slice(0, 3).map((p) => ({ t: p.title, s: p.matchScore })) : data,
+          ' length=' + (Array.isArray(data) ? data.length : '-'),
         )
+        if (Array.isArray(data)) {
+          for (let i = 0; i < Math.min(3, data.length); i++) {
+            const p = data[i]
+            // eslint-disable-next-line no-console
+            console.log(
+              '[Feed] top ' + (i + 1) + ': "' + p.title + '" — ' +
+              p.surface + 'm² ' + p.rooms + 'p ' + p.price + '€ — score=' + p.matchScore,
+            )
+          }
+        }
         if (Array.isArray(data) && data.length > 0) {
           setProperties(data)
         } else {
