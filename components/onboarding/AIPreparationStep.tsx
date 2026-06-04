@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchStore } from '@/lib/searchStore'
 
+// Each step stays visible at least 2s before the next replaces it.
+const STEP_DURATION = 2000
 const ANALYSIS_STEPS = [
   { label: 'Analyse de votre zone idéale', delay: 0 },
-  { label: 'Calibrage du budget', delay: 800 },
-  { label: 'Profil de recherche', delay: 1600 },
-  { label: 'Sélection personnalisée en cours', delay: 2400 },
+  { label: 'Calibrage du budget', delay: STEP_DURATION },
+  { label: 'Profil de recherche', delay: STEP_DURATION * 2 },
+  { label: 'Sélection personnalisée en cours', delay: STEP_DURATION * 3 },
 ]
 
 interface AIPreparationStepProps {
@@ -34,14 +36,16 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
       }, step.delay + 300))
     })
 
+    // Last step starts at delay*3 + 300, then runs its full 2s before "done".
+    const doneAt = ANALYSIS_STEPS[ANALYSIS_STEPS.length - 1].delay + 300 + STEP_DURATION
     timers.push(setTimeout(() => {
       setDone(true)
-    }, 3400))
+    }, doneAt))
 
     timers.push(setTimeout(() => {
       completeOnboarding()
       onReady()
-    }, 4000))
+    }, doneAt + 600))
 
     return () => timers.forEach(clearTimeout)
   }, [completeOnboarding, onReady])
