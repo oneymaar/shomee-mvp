@@ -319,6 +319,25 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
       `| ${byGeoOnly.length}/${tags.length} vidéos passent le filtre géo`,
   )
 
+  // ─── LOG 3 : verdict arrMatch vidéo par vidéo ──────────────────────
+  // Affiche pour CHAQUE vidéo du fichier : videoId, ses arrondissements
+  // tagués, et true/false selon que ses arrs ∩ requestedArrs ≠ ∅.
+  // Une dimension non spécifiée par l'utilisateur n'accorde plus de match
+  // implicite — cf. geoMatch après fix du bug 26/26.
+  for (const tag of tags) {
+    const arrHit =
+      requestedArrs.length > 0 &&
+      tag.arrondissements.some((a) => requestedArrs.includes(a))
+    const communeHit =
+      requestedCommunes.length > 0 &&
+      tag.communes.some((c) => requestedCommunes.includes(c))
+    console.log(
+      `[feed/generate] video ${tag.videoId} arr=${JSON.stringify(
+        tag.arrondissements,
+      )} → arrMatch=${arrHit}${communeHit ? ' communeMatch=true' : ''}`,
+    )
+  }
+
   const finalize = (picked: VideoTag[], tier: string): VideoTag[] => {
     const sliced = picked.slice(0, MAX_FICHES)
     console.log(
@@ -714,10 +733,14 @@ function ficheToView(
   matchScore01: number,
   isExcluded: boolean,
   id: string,
+  dbAgency: { name: string; logo: string | null } | null,
 ): ViewProperty {
   const arrNum = parseArrFromAddress(fiche.address)
   const arrLabel = arrondissementLabel(arrNum) || fiche.address
-  const agency = resolveAgencyName(fiche.address)
+  // Agence réelle du bien (ré-assignée par localisation, avec logo Cloudinary).
+  // Fallback sur le mapping arrondissement si la vidéo n'est pas reliée en DB.
+  const agencyName = dbAgency?.name ?? resolveAgencyName(fiche.address)
+  const agencyLogo = dbAgency?.logo ?? null
 
   const bedrooms = derivedBedrooms(fiche.rooms)
   const subtitle = `Appartement · T${fiche.rooms} · ${fiche.surface} m²`
@@ -727,9 +750,9 @@ function ficheToView(
     title: fiche.title,
     subtitle,
     arrondissement: arrLabel,
-    agentName: agency,
-    agencyName: agency,
-    agencyLogo: null,
+    agentName: agencyName,
+    agencyName,
+    agencyLogo,
     price: fiche.price,
     surface: fiche.surface,
     rooms: fiche.rooms,
@@ -776,6 +799,30 @@ export async function POST(req: NextRequest) {
   }
   const snapshot = body as BriefSnapshot
 
+  // ─── LOG 1 : valeurs brutes telles que reçues dans le body POST ─────
+  // Pas de reconstruction : on imprime ce qui arrive réellement côté serveur.
+  console.log(
+    `[feed/generate] raw body — ` +
+      `selectedArrIds=${JSON.stringify(snapshot.arrondissementIds)} ` +
+      `selectedCommuneIds=${JSON.stringify(snapshot.communeIds)} ` +
+      `selectedQuartierIds=${JSON.stringify(snapshot.quartierIds)} ` +
+      `selectedIrisIds=${JSON.stringify(snapshot.irisIds)}`,
+  )
+
+  // ─── LOG 2 : requestedArrs après parsing arr-N → N ──────────────────
+  // Référence exacte au fait que l'utilisateur attend [16] pour Paris 16.
+  const parsedRequestedArrs = (snapshot.arrondissementIds ?? [])
+    .map((id) => parseInt(id.replace('arr-', ''), 10))
+    .filter((n) => Number.isFinite(n))
+  console.log(
+    `[feed/generate] parsedRequestedArrs (depuis selectedArrIds uniquement) = ` +
+      JSON.stringify(parsedRequestedArrs),
+  )
+  console.log(
+    `[feed/generate] resolveAllArrs (arr + quartier + iris combinés) = ` +
+      JSON.stringify(resolveAllArrs(snapshot)),
+  )
+
   const tags = readTagsFile()
   if (tags.length === 0) {
     // Tag file vide / manquant — la page feed retombera sur /api/properties.
@@ -790,13 +837,21 @@ export async function POST(req: NextRequest) {
       `budget≤${snapshot.budgetMax ?? '∞'}, surf≥${snapshot.minSurface ?? 0})`,
   )
 
-  // Charge la map videoId → chapitres pour réinjecter le chapitrage IA
-  // au moment de la projection. Un seul findMany pour les ~30 biens.
+  // Charge la map videoId → chapitres + agence (nom/logo) pour réinjecter au
+  // moment de la projection. Chaque fiche est bâtie à partir d'une vidéo, qui
+  // correspond à un bien DB : on prend SON agence (déjà ré-assignée par
+  // localisation) plutôt qu'un mapping arrondissement hardcodé sans logo.
+  // Un seul findMany pour les ~30 biens.
   const dbProps = await prisma.property.findMany({
     where: { videoAnalysis: { isNot: null }, videoUrl: { not: null } },
-    select: { videoUrl: true, videoAnalysis: { select: { chapitres: true } } },
+    select: {
+      videoUrl: true,
+      videoAnalysis: { select: { chapitres: true } },
+      agency: { select: { name: true, logo: true } },
+    },
   })
   const chaptersByVideoId = new Map<string, ChapterRow[] | null>()
+  const agencyByVideoId = new Map<string, { name: string; logo: string | null }>()
   for (const p of dbProps) {
     if (!p.videoUrl) continue
     const vid = extractCloudinaryId(p.videoUrl)
@@ -805,6 +860,7 @@ export async function POST(req: NextRequest) {
       vid,
       Array.isArray(raw) && raw.length > 0 ? (raw as unknown as ChapterRow[]) : null,
     )
+    if (p.agency) agencyByVideoId.set(vid, { name: p.agency.name, logo: p.agency.logo })
   }
 
   let fiches: Fiche[] = []
@@ -826,6 +882,7 @@ export async function POST(req: NextRequest) {
     const result = matchProperty(profile, brief)
     const video = matchedVideos[i % matchedVideos.length]
     const chapters = chaptersByVideoId.get(video.videoId) ?? null
+    const dbAgency = agencyByVideoId.get(video.videoId) ?? null
     return ficheToView(
       fiche,
       video,
@@ -833,6 +890,7 @@ export async function POST(req: NextRequest) {
       result.global_score / 100,
       result.is_excluded,
       profile.property_id,
+      dbAgency,
     )
   })
 
