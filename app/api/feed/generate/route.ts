@@ -57,26 +57,7 @@ function readTagsFile(): VideoTag[] {
   try {
     const raw = fs.readFileSync(TAGS_FILE, 'utf-8')
     const parsed = JSON.parse(raw)
-    const tags = Array.isArray(parsed) ? (parsed as VideoTag[]) : []
-    const withArrs = tags.filter(
-      (t) => Array.isArray(t.arrondissements) && t.arrondissements.length > 0,
-    ).length
-    const withCommunes = tags.filter(
-      (t) => Array.isArray(t.communes) && t.communes.length > 0,
-    ).length
-    console.log(
-      `[feed/generate] tags file path=${TAGS_FILE} loaded=${tags.length} ` +
-        `withArr=${withArrs} withCommune=${withCommunes}`,
-    )
-    for (let i = 0; i < Math.min(3, tags.length); i++) {
-      const t = tags[i]
-      console.log(
-        `[feed/generate] tag[${i}] id=${t.videoId} ` +
-          `arr=${JSON.stringify(t.arrondissements)} ` +
-          `com=${JSON.stringify(t.communes)}`,
-      )
-    }
-    return tags
+    return Array.isArray(parsed) ? (parsed as VideoTag[]) : []
   } catch (err) {
     console.error(
       `[feed/generate] tags file read failed path=${TAGS_FILE} err=${String(err)}`,
@@ -331,46 +312,7 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
   const budget = snapshot.budgetMax ?? Infinity
   const surface = snapshot.minSurface ?? 0
   const requestedArrs = resolveAllArrs(snapshot)
-  const requestedCommunes = communeIdsToNames(snapshot.communeIds)
   const byGeoOnly = tags.filter((t) => geoMatch(snapshot, t))
-  console.log(
-    `[feed/generate] match input: requestedArrs=${JSON.stringify(requestedArrs)} ` +
-      `(arr=${JSON.stringify(snapshot.arrondissementIds ?? [])} ` +
-      `quartier=${JSON.stringify(snapshot.quartierIds ?? [])} ` +
-      `iris=${(snapshot.irisIds ?? []).length}) ` +
-      `requestedCommunes=${JSON.stringify(requestedCommunes)} ` +
-      `budgetMax=${snapshot.budgetMax ?? '∞'} minSurface=${snapshot.minSurface ?? 0} ` +
-      `| ${byGeoOnly.length}/${tags.length} vidéos passent le filtre géo`,
-  )
-
-  // ─── LOG 3 : verdict arrMatch vidéo par vidéo ──────────────────────
-  // Affiche pour CHAQUE vidéo du fichier : videoId, ses arrondissements
-  // tagués, et true/false selon que ses arrs ∩ requestedArrs ≠ ∅.
-  // Une dimension non spécifiée par l'utilisateur n'accorde plus de match
-  // implicite — cf. geoMatch après fix du bug 26/26.
-  for (const tag of tags) {
-    const arrHit =
-      requestedArrs.length > 0 &&
-      tag.arrondissements.some((a) => requestedArrs.includes(a))
-    const communeHit =
-      requestedCommunes.length > 0 &&
-      tag.communes.some((c) => requestedCommunes.includes(c))
-    console.log(
-      `[feed/generate] video ${tag.videoId} arr=${JSON.stringify(
-        tag.arrondissements,
-      )} → arrMatch=${arrHit}${communeHit ? ' communeMatch=true' : ''}`,
-    )
-  }
-
-  const finalize = (picked: VideoTag[], tier: string): VideoTag[] => {
-    const sliced = picked.slice(0, MAX_FICHES)
-    console.log(
-      `[feed/generate] tier=${tier} picked=${sliced.length} ids=[` +
-        sliced.map((v) => v.videoId).join(', ') +
-        ']',
-    )
-    return sliced
-  }
 
   // 1. Match strict
   let res = tags.filter(
@@ -379,11 +321,11 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
       tag.priceRange[0] <= budget &&
       tag.surfaceRange[1] >= surface,
   )
-  if (res.length >= 3) return finalize(res, '1-strict')
+  if (res.length >= 3) return res.slice(0, MAX_FICHES)
 
   // 2. Géo exacte sans budget/surface
   res = byGeoOnly
-  if (res.length >= 3) return finalize(res, '2-geo-only')
+  if (res.length >= 3) return res.slice(0, MAX_FICHES)
 
   // 3. Proximité géographique — agrège tous les arr des groupes contenant
   //    un arr demandé (resolveAllArrs couvre déjà arr + quartier + IRIS).
@@ -395,16 +337,12 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
       }
     }
     res = tags.filter((tag) => tag.arrondissements.some((a) => nearby.has(a)))
-    console.log(
-      `[feed/generate] tier=3 nearby=${JSON.stringify([...nearby].sort((a, b) => a - b))} ` +
-        `match=${res.length}`,
-    )
-    if (res.length >= 2) return finalize(res, '3-proximity')
+    if (res.length >= 2) return res.slice(0, MAX_FICHES)
   }
 
   // 4. Fallback total
   console.warn('[feed/generate] tier=4-fallback aucune vidéo proche, retour de toutes les vidéos')
-  return finalize(tags, '4-fallback')
+  return tags.slice(0, MAX_FICHES)
 }
 
 // ─── LLM generation ──────────────────────────────────────────────────────
@@ -544,36 +482,47 @@ function buildUserPrompt(
       ? snapshot.propertyTypes.join(', ')
       : 'appartement'
 
-  // Repère prix moyen secteur — toujours dans le prompt comme guide, en
-  // plus des bornes par fiche, pour rester réaliste sur le marché parisien.
+  // Prix /m² réaliste secteur — moyenne pondérée des planchers PRICE_FLOORS
+  // sur les arr ciblés. Sert de référence absolue pour la formule du prix.
   const avgPricePerSqm =
     arrs.length > 0
       ? Math.round(
           arrs.reduce((s, a) => s + (PRICE_FLOORS[a] ?? 10000), 0) / arrs.length,
         )
       : 10000
+  const minPerSqm = Math.round(avgPricePerSqm * 0.85)
+  const maxPerSqm = Math.round(avgPricePerSqm * 1.3)
 
-  // Contraintes par fiche : intersection brief ∩ vidéo. C'est le coeur
-  // de la cohérence fiche/vidéo — l'ordre du tableau de retour DOIT
-  // correspondre à l'ordre des contextes ci-dessous.
+  // Contraintes par fiche : intersection brief ∩ vidéo (surface + pièces).
+  // Le prix n'est plus borné en absolu — il est dérivé via la formule
+  // price = surface × pricePerSqm en aval, ce qui force la cohérence
+  // €/m² (sinon le LLM choisit surface haute + prix bas → 5 K€/m²).
   const contexts = videos.map((v) => buildVideoContext(snapshot, v))
   const constraintsBlock = contexts
     .map(
       (c, i) =>
         `Fiche ${i + 1}: surface ${c.targetSurface}-${c.maxSurface} m² · ` +
-        `prix ${c.targetPrice}-${c.maxPrice} € · ` +
         `pièces ${c.targetRooms}-${c.maxRooms}`,
     )
     .join('\n')
+
+  const budgetCap = snapshot.budgetMax
+    ? `Plafond budget acquéreur : ${snapshot.budgetMax} € (ne JAMAIS dépasser).`
+    : 'Pas de plafond budget acquéreur.'
 
   return `Génère ${n} fiches de biens immobiliers fictifs DANS CET ORDRE EXACT.
 Chaque fiche a SES PROPRES contraintes — ne pas mélanger les fiches.
 
 Zone : ${zonesDescription}
 Type : ${types}
-Prix moyen secteur : ${avgPricePerSqm} €/m²
 
-Contraintes par fiche (À RESPECTER IMPÉRATIVEMENT, jamais hors borne) :
+RÈGLE PRIX ABSOLUE (marché parisien réel) :
+Pour chaque fiche, price = surface × pricePerSqm
+où pricePerSqm est OBLIGATOIREMENT entre ${minPerSqm} et ${maxPerSqm} €/m².
+Un prix correspondant à moins de ${minPerSqm} €/m² est INVALIDE.
+${budgetCap}
+
+Contraintes par fiche (surface + pièces, à respecter pour chaque fiche) :
 ${constraintsBlock}
 
 Critères souhaités : ${desired.join(', ') || 'aucun'}
@@ -588,7 +537,8 @@ CONTRAINTES STRICTES :
 - L'adresse DOIT être située dans l'une des zones listées ci-dessus, et nulle part ailleurs.
 - Pour Paris, format "<numéro> <rue>, 750<NN> Paris" (ex: "12 rue de Passy, 75016 Paris" pour le 16e). Pas de "75e" ni de "Paris 75NNN".
 - Pour les communes, format "<numéro> <rue>, <commune>".
-- Surface, prix et pièces de chaque fiche DOIVENT être dans la fourchette indiquée pour cette fiche-là.`
+- Surface et pièces dans la fourchette indiquée par fiche.
+- Prix calculé strictement via la formule ci-dessus, JAMAIS sous ${minPerSqm} €/m².`
 }
 
 /**
@@ -674,10 +624,7 @@ function isFiche(x: unknown): x is Fiche {
 
 async function callLlm(snapshot: BriefSnapshot, videos: VideoTag[]): Promise<Fiche[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    console.warn('[feed/generate] ANTHROPIC_API_KEY missing — returning [].')
-    return []
-  }
+  if (!apiKey) return []
   const anthropic = new Anthropic({ apiKey })
   const userPrompt = buildUserPrompt(snapshot, videos, videos.length)
   const res = await anthropic.messages.create({
@@ -700,6 +647,23 @@ function clamp01(n: number): number {
 
 function derivedBedrooms(rooms: number): number {
   return Math.max(1, rooms - 1)
+}
+
+/**
+ * Filet de sécurité côté serveur : si le LLM a généré une fiche dont
+ * le prix/m² tombe sous le plancher PRICE_FLOORS de son arrondissement
+ * (avec 15 % de marge), on remplace le prix par surface × plancher pour
+ * coller au marché parisien réel. Toujours appliqué après le LLM, jamais
+ * en amont — la formule reste exprimée dans le prompt pour que le LLM
+ * gère le cas nominal.
+ */
+function rectifyFichePrice(fiche: Fiche): Fiche {
+  const arr = parseArrFromAddress(fiche.address)
+  const floor = arr > 0 ? PRICE_FLOORS[arr] ?? 10000 : 10000
+  if (fiche.surface <= 0) return fiche
+  const ratio = fiche.price / fiche.surface
+  if (ratio >= floor * 0.85) return fiche
+  return { ...fiche, price: Math.round(fiche.surface * floor) }
 }
 
 function ficheToProfile(fiche: Fiche, idx: number): PropertyProfile {
@@ -823,30 +787,6 @@ export async function POST(req: NextRequest) {
   }
   const snapshot = body as BriefSnapshot
 
-  // ─── LOG 1 : valeurs brutes telles que reçues dans le body POST ─────
-  // Pas de reconstruction : on imprime ce qui arrive réellement côté serveur.
-  console.log(
-    `[feed/generate] raw body — ` +
-      `selectedArrIds=${JSON.stringify(snapshot.arrondissementIds)} ` +
-      `selectedCommuneIds=${JSON.stringify(snapshot.communeIds)} ` +
-      `selectedQuartierIds=${JSON.stringify(snapshot.quartierIds)} ` +
-      `selectedIrisIds=${JSON.stringify(snapshot.irisIds)}`,
-  )
-
-  // ─── LOG 2 : requestedArrs après parsing arr-N → N ──────────────────
-  // Référence exacte au fait que l'utilisateur attend [16] pour Paris 16.
-  const parsedRequestedArrs = (snapshot.arrondissementIds ?? [])
-    .map((id) => parseInt(id.replace('arr-', ''), 10))
-    .filter((n) => Number.isFinite(n))
-  console.log(
-    `[feed/generate] parsedRequestedArrs (depuis selectedArrIds uniquement) = ` +
-      JSON.stringify(parsedRequestedArrs),
-  )
-  console.log(
-    `[feed/generate] resolveAllArrs (arr + quartier + iris combinés) = ` +
-      JSON.stringify(resolveAllArrs(snapshot)),
-  )
-
   const tags = readTagsFile()
   if (tags.length === 0) {
     // Tag file vide / manquant — la page feed retombera sur /api/properties.
@@ -854,12 +794,6 @@ export async function POST(req: NextRequest) {
   }
 
   const matchedVideos = pickMatchedVideos(snapshot, tags)
-  console.log(
-    `[feed/generate] tags=${tags.length} matched=${matchedVideos.length} ` +
-      `(arr=${(snapshot.arrondissementIds ?? []).join(',') || '-'}, ` +
-      `com=${(snapshot.communeIds ?? []).join(',') || '-'}, ` +
-      `budget≤${snapshot.budgetMax ?? '∞'}, surf≥${snapshot.minSurface ?? 0})`,
-  )
 
   // Charge la map videoId → chapitres + agence (nom/logo) pour réinjecter au
   // moment de la projection. Chaque fiche est bâtie à partir d'une vidéo, qui
@@ -896,12 +830,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (fiches.length === 0) {
-    console.warn('[feed/generate] LLM returned 0 fiches, falling back to empty.')
     return NextResponse.json([])
   }
 
   const brief = buildBriefFromSnapshot(snapshot)
-  const scored: ViewProperty[] = fiches.map((fiche, i) => {
+  const scored: ViewProperty[] = fiches.map((rawFiche, i) => {
+    const fiche = rectifyFichePrice(rawFiche)
     const profile = ficheToProfile(fiche, i)
     const result = matchProperty(profile, brief)
     const video = matchedVideos[i % matchedVideos.length]
@@ -921,11 +855,6 @@ export async function POST(req: NextRequest) {
   const feed = scored
     .filter((p) => !p.isExcluded)
     .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
-
-  console.log(
-    `[feed/generate] fiches=${fiches.length} scored=${scored.length} ` +
-      `kept=${feed.length} top=${feed[0]?.matchScore?.toFixed(2) ?? '-'}`,
-  )
 
   return NextResponse.json(feed)
 }
