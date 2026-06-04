@@ -53,7 +53,12 @@ export default function FeedPage() {
   const [detailProperty, setDetailProperty] = useState<Property | null>(null)
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
   const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
-  const [properties, setProperties] = useState<Property[]>(mockProperties)
+  // Start empty so no VideoCard renders (and no .mp4 starts playing) before
+  // the real feed arrives. Falling back to mockProperties as the initial
+  // value caused a visible flash: the first mock video would auto-play for
+  // a beat before the API response swapped it for the top-ranked bien.
+  const [properties, setProperties] = useState<Property[]>([])
+  const [feedReady, setFeedReady] = useState(false)
   const buyerProfileId = useSearchStore((s) => s.buyerProfileId)
 
   useEffect(() => {
@@ -67,12 +72,20 @@ export default function FeedPage() {
         return r.json()
       })
       .then((data: Property[]) => {
-        if (!cancelled && Array.isArray(data) && data.length > 0) {
+        if (cancelled) return
+        if (Array.isArray(data) && data.length > 0) {
           setProperties(data)
+        } else {
+          // Empty / malformed response — fall back so the feed is never blank.
+          setProperties(mockProperties)
         }
+        setFeedReady(true)
       })
       .catch((err) => {
+        if (cancelled) return
         console.warn('[feed] /api/properties unavailable, using mock fallback', err)
+        setProperties(mockProperties)
+        setFeedReady(true)
       })
     return () => {
       cancelled = true
@@ -123,6 +136,11 @@ export default function FeedPage() {
   const feedItems = useMemo<FeedItem[]>(() => {
     const items: FeedItem[] = []
 
+    // Don't build any cards (and therefore don't auto-start a VideoCard)
+    // before the API has answered. Keeps the entry pristine instead of
+    // flashing a mock video for the duration of the fetch.
+    if (!feedReady || properties.length === 0) return items
+
     for (const p of properties.slice(0, 3)) {
       items.push({ type: 'property', property: p })
       if (p.promising) items.push({ type: 'interstitial', property: p })
@@ -141,7 +159,7 @@ export default function FeedPage() {
     }
 
     return items
-  }, [resultsStage, properties])
+  }, [resultsStage, properties, feedReady])
 
   // Step 1: BAIA found results → add b4 to DOM below eof-1 so the scroll has a destination
   const handleFoundResults = useCallback(() => {
@@ -216,6 +234,18 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
+      {/* Loading overlay — black background + spinner, dropped as soon as
+          feedReady flips to true. Keeps the entry from flashing any
+          fallback content while the API answer is in flight. */}
+      {!feedReady && (
+        <div className="absolute inset-0 z-40 bg-neutral-900 flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+            className="w-7 h-7 rounded-full border-2 border-white/15 border-t-white/70"
+          />
+        </div>
+      )}
       <div
         ref={containerRef}
         className="absolute inset-x-0 top-0 overflow-y-scroll scrollbar-hide"
