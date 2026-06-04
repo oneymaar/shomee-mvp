@@ -196,15 +196,15 @@ export default function FeedPage() {
   const router = useRouter()
   const { currentIndex, favorites, toggleFavorite } = useShomeeStore()
 
-  const handleToggleFavorite = useCallback((propertyId: string, heartRect: DOMRect, currentlyFavorite: boolean) => {
+  const handleToggleFavorite = useCallback((property: Property, heartRect: DOMRect, currentlyFavorite: boolean) => {
     if (currentlyFavorite) {
-      toggleFavorite(propertyId)
+      toggleFavorite(property)
       return
     }
 
     const frame = containerRef.current?.parentElement
     const frameRect = frame?.getBoundingClientRect()
-    if (!frameRect) { toggleFavorite(propertyId); return }
+    if (!frameRect) { toggleFavorite(property); return }
 
     // Use actual DOM position of the favorites tab icon
     const favEl = document.querySelector('[data-tab="favoris"] svg')
@@ -218,7 +218,7 @@ export default function FeedPage() {
     const id = Date.now()
     setFlyHearts((prev) => [...prev, { id, from: { x: fromX, y: fromY }, to: { x: toX, y: toY } }])
 
-    setTimeout(() => toggleFavorite(propertyId), 400)
+    setTimeout(() => toggleFavorite(property), 400)
     setTimeout(() => {
       setFlyHearts((prev) => prev.filter((h) => h.id !== id))
       setFavBursts((prev) => [...prev, { id, x: toX, y: toY }])
@@ -386,7 +386,7 @@ export default function FeedPage() {
           const { property } = item
           const propIndex  = properties.findIndex((p) => p.id === property.id)
           const isActive   = propIndex === currentIndex
-          const isFavorite = favorites.includes(property.id)
+          const isFavorite = favorites.some((f) => f.id === property.id)
 
           return (
             <div
@@ -422,7 +422,7 @@ export default function FeedPage() {
               <ActionRail
                 property={property}
                 isFavorite={isFavorite}
-                onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect, isFavorite)}
+                onToggleFavorite={(rect) => handleToggleFavorite(property, rect, isFavorite)}
                 onMessage={() => router.push(`/messages?bien=${property.id}`)}
               />
             </div>
@@ -448,8 +448,8 @@ export default function FeedPage() {
         property={detailProperty}
         open={Boolean(detailProperty)}
         onClose={() => setDetailProperty(null)}
-        isFavorite={detailProperty ? favorites.includes(detailProperty.id) : false}
-        onToggleFavorite={() => detailProperty && toggleFavorite(detailProperty.id)}
+        isFavorite={detailProperty ? favorites.some((f) => f.id === detailProperty.id) : false}
+        onToggleFavorite={() => detailProperty && toggleFavorite(detailProperty)}
         onMessage={() => { setDetailProperty(null); router.push(`/messages?bien=${detailProperty?.id}`) }}
       />
 

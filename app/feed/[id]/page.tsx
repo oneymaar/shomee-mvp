@@ -55,7 +55,7 @@ export default function PropertyDetailPage({ params }: Props) {
   const property = properties.find((p) => p.id === id)
   if (!property) notFound()
 
-  const isFavorite = favorites.includes(property.id)
+  const isFavorite = favorites.some((f) => f.id === property.id)
 
   const formattedPrice = new Intl.NumberFormat('fr-FR', {
     maximumFractionDigits: 0,
@@ -228,7 +228,7 @@ export default function PropertyDetailPage({ params }: Props) {
           <Share2 size={16} className="text-white" />
         </motion.button>
         <motion.button
-          onClick={() => toggleFavorite(property.id)}
+          onClick={() => toggleFavorite(property)}
           className={clsx(
             'w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center border',
             isFavorite ? 'bg-red-500 border-red-400' : 'bg-black/70 border-white/20',

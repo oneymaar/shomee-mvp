@@ -23,9 +23,11 @@ export default function FavoritesFeedPage({ params }: Props) {
   const router = useRouter()
   const { favorites, toggleFavorite } = useShomeeStore()
 
-  const favProperties = favorites
-    .map((fid) => allProperties.find((p) => p.id === fid))
-    .filter(Boolean) as typeof allProperties
+  // On lit la fiche complète stockée dans le store. Pour les anciens favoris
+  // (ou biens statiques) on retombe sur mockData si jamais l'objet manque.
+  const favProperties = favorites.map(
+    (fav) => allProperties.find((p) => p.id === fav.id) ?? fav,
+  )
 
   const startIndex = Math.max(0, favProperties.findIndex((p) => p.id === id))
 
@@ -75,15 +77,15 @@ export default function FavoritesFeedPage({ params }: Props) {
     return () => observer.disconnect()
   }, [favProperties.map((p) => p.id).join(',')])
 
-  const handleToggleFavorite = useCallback((propertyId: string, heartRect: DOMRect, currentlyFavorite: boolean) => {
+  const handleToggleFavorite = useCallback((property: typeof allProperties[0], heartRect: DOMRect, currentlyFavorite: boolean) => {
     if (currentlyFavorite) {
-      toggleFavorite(propertyId)
+      toggleFavorite(property)
       return
     }
 
     const frame = containerRef.current?.parentElement
     const frameRect = frame?.getBoundingClientRect()
-    if (!frameRect) { toggleFavorite(propertyId); return }
+    if (!frameRect) { toggleFavorite(property); return }
 
     const favEl = document.querySelector('[data-tab="favoris"] svg')
     const favRect = favEl?.getBoundingClientRect()
@@ -96,7 +98,7 @@ export default function FavoritesFeedPage({ params }: Props) {
     const animId = Date.now()
     setFlyHearts((prev) => [...prev, { id: animId, from: { x: fromX, y: fromY }, to: { x: toX, y: toY } }])
 
-    setTimeout(() => toggleFavorite(propertyId), 400)
+    setTimeout(() => toggleFavorite(property), 400)
     setTimeout(() => {
       setFlyHearts((prev) => prev.filter((h) => h.id !== animId))
       setFavBursts((prev) => [...prev, { id: animId, x: toX, y: toY }])
@@ -118,7 +120,7 @@ export default function FavoritesFeedPage({ params }: Props) {
       >
         {favProperties.map((property, index) => {
           const isActive = index === currentIndex
-          const isFavorite = favorites.includes(property.id)
+          const isFavorite = favorites.some((f) => f.id === property.id)
 
           return (
             <div
@@ -141,7 +143,7 @@ export default function FavoritesFeedPage({ params }: Props) {
               <ActionRail
                 property={property}
                 isFavorite={isFavorite}
-                onToggleFavorite={(rect) => handleToggleFavorite(property.id, rect, isFavorite)}
+                onToggleFavorite={(rect) => handleToggleFavorite(property, rect, isFavorite)}
                 onMessage={() => router.push(`/messages?bien=${property.id}`)}
               />
             </div>
@@ -177,8 +179,8 @@ export default function FavoritesFeedPage({ params }: Props) {
         property={detailProperty}
         open={Boolean(detailProperty)}
         onClose={() => setDetailProperty(null)}
-        isFavorite={detailProperty ? favorites.includes(detailProperty.id) : false}
-        onToggleFavorite={() => detailProperty && toggleFavorite(detailProperty.id)}
+        isFavorite={detailProperty ? favorites.some((f) => f.id === detailProperty.id) : false}
+        onToggleFavorite={() => detailProperty && toggleFavorite(detailProperty)}
       />
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />

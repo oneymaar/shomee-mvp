@@ -1,35 +1,67 @@
 import { create } from 'zustand'
-import type { Conversation, ChatMessage } from './types'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import type { Conversation, ChatMessage, Property } from './types'
 
 interface ShomeeState {
   currentIndex: number
-  favorites: string[]
+  /**
+   * Fiches complètes des biens favoris (générés ou statiques).
+   * On stocke l'objet entier — et non juste l'id — pour que la vue Favoris
+   * reste fonctionnelle pour les biens générés à la volée, qui ne sont pas
+   * présents dans `lib/mockData.ts`.
+   */
+  favorites: Property[]
   conversations: Conversation[]
 
   setCurrentIndex: (index: number) => void
-  toggleFavorite: (id: string) => void
+  /** Ajoute une fiche complète aux favoris (no-op si déjà présente). */
+  addFavorite: (property: Property) => void
+  /** Retire un favori par son id. */
+  removeFavorite: (id: string) => void
+  /** Ajoute/retire selon l'état courant. Accepte la fiche entière. */
+  toggleFavorite: (property: Property) => void
+  /** True si le bien est déjà en favori. */
+  isFavorite: (id: string) => boolean
   addMessage: (propertyId: string, msg: ChatMessage) => void
   markUserMessagesRead: (propertyId: string) => void
   markConversationSeen: (propertyId: string) => void
 }
 
-export const useShomeeStore = create<ShomeeState>((set, get) => ({
-  currentIndex: 0,
-  favorites: [],
-  conversations: [],
+export const useShomeeStore = create<ShomeeState>()(
+  persist(
+    (set, get) => ({
+      currentIndex: 0,
+      favorites: [],
+      conversations: [],
 
-  setCurrentIndex: (index: number) => {
-    if (index === get().currentIndex) return
-    set({ currentIndex: index })
-  },
+      setCurrentIndex: (index: number) => {
+        if (index === get().currentIndex) return
+        set({ currentIndex: index })
+      },
 
-  toggleFavorite: (id: string) => {
-    set((state) => ({
-      favorites: state.favorites.includes(id)
-        ? state.favorites.filter((f) => f !== id)
-        : [...state.favorites, id],
-    }))
-  },
+      addFavorite: (property: Property) => {
+        set((state) =>
+          state.favorites.some((f) => f.id === property.id)
+            ? state
+            : { favorites: [...state.favorites, property] },
+        )
+      },
+
+      removeFavorite: (id: string) => {
+        set((state) => ({
+          favorites: state.favorites.filter((f) => f.id !== id),
+        }))
+      },
+
+      toggleFavorite: (property: Property) => {
+        set((state) => ({
+          favorites: state.favorites.some((f) => f.id === property.id)
+            ? state.favorites.filter((f) => f.id !== property.id)
+            : [...state.favorites, property],
+        }))
+      },
+
+      isFavorite: (id: string) => get().favorites.some((f) => f.id === id),
 
   addMessage: (propertyId, msg) => {
     set(state => {
@@ -64,7 +96,16 @@ export const useShomeeStore = create<ShomeeState>((set, get) => ({
       ),
     }))
   },
-}))
+    }),
+    {
+      name: 'shomee-favorites',
+      storage: createJSONStorage(() => localStorage),
+      // On ne persiste que les favoris — currentIndex et conversations
+      // restent éphémères.
+      partialize: (state) => ({ favorites: state.favorites }),
+    },
+  ),
+)
 
 /** True if the conversation has agent messages the user hasn't seen yet */
 export function hasUnread(conv: Conversation): boolean {

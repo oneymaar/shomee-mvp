@@ -10,9 +10,12 @@ import { properties } from '@/lib/mockData'
 
 export default function FavoritesPage() {
   const { favorites } = useShomeeStore()
-  const favProperties = favorites
-    .map((fid) => properties.find((p) => p.id === fid))
-    .filter(Boolean) as typeof properties
+  // Les favoris contiennent désormais la fiche complète (biens générés ou
+  // statiques) : on lit directement le store. Fallback sur mockData pour
+  // récupérer une éventuelle version enrichie d'un bien statique.
+  const favProperties = favorites.map(
+    (fav) => properties.find((p) => p.id === fav.id) ?? fav,
+  )
 
   return (
     <MobileFrame>
