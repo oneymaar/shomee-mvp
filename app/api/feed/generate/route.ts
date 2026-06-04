@@ -126,6 +126,22 @@ function arrFromIrisId(id: string): number | null {
   return n >= 1 && n <= 20 ? n : null
 }
 
+/**
+ * Quartier ID administratif (opendata Paris) → arrondissement number.
+ * Les IDs ont la forme `qu-NN` où NN est le code INSEE c_qu (1..80).
+ * Paris est découpé en 80 quartiers répartis 4 par arrondissement
+ * dans l'ordre (qu-1..4 = arr-1, qu-5..8 = arr-2, …, qu-77..80 = arr-20).
+ * Donc arr = ⌈c_qu / 4⌉. La formule est utilisée par tout l'outillage
+ * Paris (cf. parseQuartier dans lib/services/geoDataService.ts).
+ */
+function arrFromAdminQuartierId(id: string): number | null {
+  const m = id.match(/^qu-(\d{1,2})$/)
+  if (!m) return null
+  const cQu = parseInt(m[1], 10)
+  if (cQu < 1 || cQu > 80) return null
+  return Math.ceil(cQu / 4)
+}
+
 // ─── Quartier → arrondissements (chargé une fois au démarrage) ───────────
 
 type QuartierRaw = { id: string; irisNames?: string[] }
@@ -189,6 +205,14 @@ function resolveAllArrs(snapshot: BriefSnapshot): number[] {
   }
   const qMap = getQuartierToArrs()
   for (const id of snapshot.quartierIds ?? []) {
+    // Format administratif `qu-NN` (opendata Paris) — formule c_qu→arr.
+    const adminArr = arrFromAdminQuartierId(id)
+    if (adminArr) {
+      out.add(adminArr)
+      continue
+    }
+    // Fallback : ID sémantique (`auteuil`, `passy`…) résolu via
+    // quartiers.json + iris_codes_insee.json.
     for (const arr of qMap.get(id) ?? []) out.add(arr)
   }
   return [...out].sort((a, b) => a - b)
