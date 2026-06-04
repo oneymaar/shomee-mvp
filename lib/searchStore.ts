@@ -337,12 +337,12 @@ export const useSearchStore = create<SearchStore>()(
         set((s) => applyRoomsCoupling(s, { min, max })),
       setBedroomsRange: (min, max) =>
         set((s) => {
-          // Studio (rooms=1) is the degenerate carve-out: bedrooms may
-          // equal rooms since the bedrooms scale itself starts at 1.
-          // For rooms ≥ 2, enforce `minBedrooms < minRooms`.
+          // Enforce `minBedrooms <= minRooms` (relaxed from strict `<` at
+          // the user's request — équal autorisé). No carve-out needed: the
+          // bedrooms scale starts at 1 so Studio with 1 ch est l'égalité.
           let nextMin = min
-          if (nextMin != null && s.minRooms != null && s.minRooms >= 2) {
-            nextMin = Math.min(nextMin, s.minRooms - 1)
+          if (nextMin != null && s.minRooms != null) {
+            nextMin = Math.min(nextMin, s.minRooms)
           }
           let nextMax = max
           if (nextMin != null && nextMax != null && nextMax < nextMin) {

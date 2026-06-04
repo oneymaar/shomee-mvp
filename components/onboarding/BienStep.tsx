@@ -189,14 +189,12 @@ export default function BienStep({ onNext }: BienStepProps) {
     setRoomsRange(roomsMin, next)
   }
 
-  // Bedrooms handlers — enforce `bedroomsMin < roomsMin` when rooms ≥ 2.
-  const clampBedroomsMin = (raw: number): number => {
-    if (roomsMin >= 2) return Math.min(raw, roomsMin - 1)
-    return raw
-  }
+  // Bedrooms handlers — enforce `bedroomsMin <= roomsMin` (less-than-or-equal,
+  // not strictly less than: rule explicitly relaxed at the user's request).
   const handleBedroomsMin = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = clampBedroomsMin(Number(e.target.value))
-    const next = Math.min(v, bedroomsMax)
+    const raw = Number(e.target.value)
+    const capByRooms = Math.min(BEDROOMS_MAX, roomsMin)
+    const next = Math.min(raw, capByRooms, bedroomsMax)
     setBedroomsMin(next)
     setBedroomsRange(next, bedroomsMax)
   }
@@ -231,10 +229,6 @@ export default function BienStep({ onNext }: BienStepProps) {
       hi: ((bedroomsMax - BEDROOMS_MIN) / span) * 100,
     }
   }, [bedroomsMin, bedroomsMax])
-
-  // Effective max bound for the bedrooms-min thumb. Studio (rooms=1) lets
-  // bedroomsMin reach 1 (=BEDROOMS_MIN); otherwise capped at roomsMin - 1.
-  const bedroomsMinCap = roomsMin >= 2 ? roomsMin - 1 : BEDROOMS_MIN
 
   return (
     <div className="flex flex-col h-full">
@@ -413,7 +407,7 @@ export default function BienStep({ onNext }: BienStepProps) {
               }}
             />
             <input
-              type="range" min={BEDROOMS_MIN} max={bedroomsMinCap} step={1}
+              type="range" min={BEDROOMS_MIN} max={BEDROOMS_MAX} step={1}
               value={bedroomsMin} onChange={handleBedroomsMin}
               aria-label="Nombre minimum de chambres"
               className="shomee-dual-slider-input shomee-dual-slider-input-min"
