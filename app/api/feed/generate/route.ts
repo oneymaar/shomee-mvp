@@ -110,9 +110,27 @@ const AGENCY_MAP: Record<number, string> = {
   10: "L'Agence des Enfants Rouges",
 }
 
+/**
+ * Tire le numéro d'arrondissement d'une adresse fictive générée par le LLM.
+ * Tolère trois formes communes : "Paris 16e/16ème", "Paris 75016",
+ * "75016 Paris". Renvoie 0 si rien d'exploitable.
+ */
 function parseArrFromAddress(address: string): number {
-  const m = address.match(/Paris\s+(\d{1,2})/i)
-  return m ? parseInt(m[1], 10) : 0
+  // 75001 → 1, 75016 → 16, etc. Anywhere in the string.
+  const postal = address.match(/\b750(\d{2})\b/)
+  if (postal) {
+    const n = parseInt(postal[1], 10)
+    if (n >= 1 && n <= 20) return n
+  }
+  // "Paris 1er", "Paris 16e", "Paris 16ème"
+  const literal = address.match(/Paris\s+(\d{1,2})(?:er|e|ème|eme)?\b/i)
+  if (literal) {
+    const n = parseInt(literal[1], 10)
+    // Reject when the captured number is the department code (75) used
+    // without a postal-code suffix.
+    if (n >= 1 && n <= 20) return n
+  }
+  return 0
 }
 
 function resolveAgencyName(address: string): string {
@@ -203,16 +221,23 @@ function buildUserPrompt(
   videos: VideoTag[],
   n: number,
 ): string {
-  // Aggregate the zones covered by the matched videos so the LLM sticks to
-  // plausible addresses.
-  const arrsSet = new Set<number>()
-  const commSet = new Set<string>()
-  for (const v of videos) {
-    for (const a of v.arrondissements) arrsSet.add(a)
-    for (const c of v.communes) commSet.add(c)
+  // Zones effectives = celles demandées par l'acquéreur en priorité ;
+  // à défaut (rien sélectionné), l'union des vidéos matchées sert de cadre
+  // pour éviter d'envoyer "France entière" au LLM.
+  const userArrs = arrIdsToNumbers(snapshot.arrondissementIds)
+  const userCommunes = communeIdsToNames(snapshot.communeIds)
+  let arrs = userArrs
+  let communes = userCommunes
+  if (arrs.length === 0 && communes.length === 0) {
+    const arrsSet = new Set<number>()
+    const commSet = new Set<string>()
+    for (const v of videos) {
+      for (const a of v.arrondissements) arrsSet.add(a)
+      for (const c of v.communes) commSet.add(c)
+    }
+    arrs = [...arrsSet].sort((a, b) => a - b)
+    communes = [...commSet]
   }
-  const arrs = [...arrsSet].sort((a, b) => a - b)
-  const communes = [...commSet]
 
   const zoneParts: string[] = []
   if (arrs.length > 0) {
@@ -285,7 +310,12 @@ Format JSON attendu pour chaque fiche :
 }
 
 Les scores luminosity/charm/quietness/outdoorUsability sont entre 0 et 1.
-Chaque fiche doit être distincte (adresses différentes, prix variés dans la fourchette).`
+Chaque fiche doit être distincte (adresses différentes, prix variés dans la fourchette).
+
+CONTRAINTES STRICTES :
+- L'adresse DOIT être située dans l'une des zones listées ci-dessus, et nulle part ailleurs.
+- Pour Paris, utilise le format "<numéro> <rue>, 750<NN> Paris" (ex: "12 rue de Passy, 75016 Paris" pour le 16e). Pas de "75e" ni de "Paris 75NNN".
+- Pour les communes (Neuilly, Boulogne, etc.), utilise le format "<numéro> <rue>, <commune>".`
 }
 
 function parseFiches(text: string): Fiche[] {
