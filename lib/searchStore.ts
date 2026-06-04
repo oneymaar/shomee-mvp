@@ -408,7 +408,15 @@ export const useSearchStore = create<SearchStore>()(
         }),
     }),
     {
-      name: 'shomee-search',
+      // v2: `onboardingCompleted` was previously persisted, which trapped
+      // returning users on /feed after the splash screen. Bumping the key
+      // discards old payloads so anyone in the bugged state gets a clean
+      // entry point again. New payloads exclude that flag — see partialize.
+      name: 'shomee-search-v2',
+      // Persist the brief itself so the feed survives a refresh, but
+      // NOT `onboardingCompleted`: that flag forces /onboarding to
+      // redirect straight to /feed when true, and persisting it means
+      // a returning user could never re-enter the funnel.
       partialize: (state) => ({
         budgetMin: state.budgetMin,
         budgetMax: state.budgetMax,
@@ -421,7 +429,6 @@ export const useSearchStore = create<SearchStore>()(
         maxSurface: state.maxSurface,
         chipStates: state.chipStates,
         customCriteria: state.customCriteria,
-        onboardingCompleted: state.onboardingCompleted,
       }),
     }
   )
