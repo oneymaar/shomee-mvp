@@ -235,24 +235,22 @@ function pickMatchedVideos(snapshot: BriefSnapshot, tags: VideoTag[]): VideoTag[
 
 // ─── LLM generation ──────────────────────────────────────────────────────
 
+// Schéma demandé au LLM — tenu volontairement court pour rester sous
+// max_tokens=1200 avec 6 fiches. Les champs annexes (subtitle, bedrooms,
+// totalFloors, terraceSurface, guardian) sont dérivés côté serveur.
 type Fiche = {
   title: string
-  subtitle: string
   address: string
   price: number
   surface: number
   rooms: number
-  bedrooms: number
   floor: number
-  totalFloors: number
   propertyType: PropertyTypeStructured
   elevator: boolean
   terrace: boolean
-  terraceSurface: number | null
   balcony: boolean
   cellar: boolean
   parking: boolean
-  guardian: boolean
   dpe: DpeRating
   luminosity: number
   charm: number
@@ -346,35 +344,10 @@ function buildUserPrompt(
 - Critères souhaités : ${desired.join(', ') || 'aucun'}
 - Critères obligatoires : ${mandatory.join(', ') || 'aucun'}
 
-Format JSON attendu pour chaque fiche :
-{
-  "title": "string — titre accrocheur",
-  "subtitle": "string — type et caractéristique principale",
-  "address": "string — adresse précise et réaliste (rue + arrondissement/commune)",
-  "price": number,
-  "surface": number,
-  "rooms": number,
-  "bedrooms": number,
-  "floor": number,
-  "totalFloors": number,
-  "propertyType": "appartement|maison|loft|atelier",
-  "elevator": boolean,
-  "terrace": boolean,
-  "terraceSurface": number|null,
-  "balcony": boolean,
-  "cellar": boolean,
-  "parking": boolean,
-  "guardian": boolean,
-  "dpe": "A|B|C|D|E|F|G",
-  "luminosity": number,
-  "charm": number,
-  "quietness": number,
-  "outdoorUsability": number,
-  "description": "string — 2-3 phrases de description"
-}
+Format JSON attendu pour chaque fiche (champs OBLIGATOIRES, dans cet ordre) :
+{"title":"string","address":"string","price":number,"surface":number,"rooms":number,"floor":number,"propertyType":"appartement|maison|loft|atelier","elevator":boolean,"terrace":boolean,"balcony":boolean,"cellar":boolean,"parking":boolean,"dpe":"A|B|C|D|E|F|G","luminosity":number,"charm":number,"quietness":number,"outdoorUsability":number,"description":"string — 1 phrase courte"}
 
-Les scores luminosity/charm/quietness/outdoorUsability sont entre 0 et 1.
-Chaque fiche doit être distincte (adresses différentes, prix variés dans la fourchette).
+Les 4 scores sont entre 0 et 1. Chaque fiche doit être distincte (adresses différentes, prix variés dans la fourchette).
 
 CONTRAINTES STRICTES :
 - L'adresse DOIT être située dans l'une des zones listées ci-dessus, et nulle part ailleurs.
@@ -383,18 +356,73 @@ CONTRAINTES STRICTES :
 - Prix : calculer price = surface × pricePerSqm où pricePerSqm est entre ${minPerSqm} et ${maxPerSqm} €/m². Ne JAMAIS générer un prix inférieur à ${absoluteFloor} €.`
 }
 
-function parseFiches(text: string): Fiche[] {
-  // Try to extract the first JSON array in the response, tolerating prose
-  // before/after — Haiku usually obeys but we shouldn't crash on stray text.
-  const m = text.match(/\[\s*\{[\s\S]*\}\s*\]/)
-  const body = m?.[0] ?? text
-  try {
-    const parsed = JSON.parse(body) as unknown
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(isFiche)
-  } catch {
-    return []
+/**
+ * Repère la position du `}` qui ferme le `{` à l'index `start`, en tenant
+ * compte des accolades imbriquées et des chaînes de caractères JSON.
+ * Renvoie -1 si la fermeture n'est pas trouvée (réponse tronquée).
+ */
+function findMatchingBrace(text: string, start: number): number {
+  let depth = 0
+  let inStr = false
+  let escape = false
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]
+    if (inStr) {
+      if (escape) {
+        escape = false
+        continue
+      }
+      if (ch === '\\') {
+        escape = true
+        continue
+      }
+      if (ch === '"') inStr = false
+      continue
+    }
+    if (ch === '"') inStr = true
+    else if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) return i
+    }
   }
+  return -1
+}
+
+/**
+ * Parser tolérant : tente d'abord le tableau JSON complet, puis rabat
+ * sur une extraction objet-par-objet pour récupérer les fiches valides
+ * même si la réponse a été tronquée par max_tokens.
+ */
+function parseFiches(text: string): Fiche[] {
+  const arrayMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/)
+  if (arrayMatch) {
+    try {
+      const parsed = JSON.parse(arrayMatch[0]) as unknown
+      if (Array.isArray(parsed)) return parsed.filter(isFiche)
+    } catch {
+      // fall through to salvage parse
+    }
+  }
+
+  const out: Fiche[] = []
+  let i = 0
+  while (i < text.length) {
+    if (text[i] !== '{') {
+      i++
+      continue
+    }
+    const end = findMatchingBrace(text, i)
+    if (end === -1) break
+    try {
+      const obj = JSON.parse(text.slice(i, end + 1))
+      if (isFiche(obj)) out.push(obj)
+    } catch {
+      // skip malformed object
+    }
+    i = end + 1
+  }
+  return out
 }
 
 function isFiche(x: unknown): x is Fiche {
@@ -435,6 +463,10 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n))
 }
 
+function derivedBedrooms(rooms: number): number {
+  return Math.max(1, rooms - 1)
+}
+
 function ficheToProfile(fiche: Fiche, idx: number): PropertyProfile {
   return {
     property_id: `gen-${Date.now()}-${idx}`,
@@ -442,21 +474,21 @@ function ficheToProfile(fiche: Fiche, idx: number): PropertyProfile {
       price: fiche.price,
       property_type: fiche.propertyType,
       floor: fiche.floor,
-      total_floors: fiche.totalFloors,
+      total_floors: 6, // Paris haussmannien — défaut quand non précisé.
       has_elevator: fiche.elevator,
       has_terrace: fiche.terrace,
-      terrace_surface_m2: fiche.terraceSurface,
+      terrace_surface_m2: fiche.terrace ? 8 : null,
       has_balcony: fiche.balcony,
       balcony_surface_m2: null,
       has_garden: false,
       garden_surface_m2: null,
       has_cellar: fiche.cellar,
       has_parking: fiche.parking,
-      has_concierge: fiche.guardian,
+      has_concierge: false,
       is_ground_floor: fiche.floor === 0,
       surface_m2: fiche.surface,
       room_count: fiche.rooms,
-      bedroom_count: fiche.bedrooms,
+      bedroom_count: derivedBedrooms(fiche.rooms),
       bedroom_street_side: null,
       orientation: [],
       is_quiet_street: null,
@@ -495,10 +527,13 @@ function ficheToView(
   const arrLabel = arrondissementLabel(arrNum) || fiche.address
   const agency = resolveAgencyName(fiche.address)
 
+  const bedrooms = derivedBedrooms(fiche.rooms)
+  const subtitle = `Appartement · T${fiche.rooms} · ${fiche.surface} m²`
+
   return {
     id,
     title: fiche.title,
-    subtitle: fiche.subtitle,
+    subtitle,
     arrondissement: arrLabel,
     agentName: agency,
     agencyName: agency,
@@ -506,7 +541,7 @@ function ficheToView(
     price: fiche.price,
     surface: fiche.surface,
     rooms: fiche.rooms,
-    bedrooms: fiche.bedrooms,
+    bedrooms,
     location: fiche.address,
     district: arrLabel,
     description: fiche.description,
@@ -514,14 +549,14 @@ function ficheToView(
     features: [],
     dpe: fiche.dpe,
     floor: fiche.floor,
-    totalFloors: fiche.totalFloors,
+    totalFloors: 6,
     hasElevator: fiche.elevator,
     hasTerrace: fiche.terrace,
-    terraceSurfaceM2: fiche.terraceSurface ?? undefined,
+    terraceSurfaceM2: fiche.terrace ? 8 : undefined,
     hasBalcony: fiche.balcony,
     hasCellar: fiche.cellar,
     hasParking: fiche.parking,
-    hasConcierge: fiche.guardian,
+    hasConcierge: false,
     luminosity: clamp01(fiche.luminosity),
     quietness: clamp01(fiche.quietness),
     charm: clamp01(fiche.charm),
