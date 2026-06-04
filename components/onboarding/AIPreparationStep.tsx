@@ -173,7 +173,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
 
   return (
     <div
-      className="flex flex-col items-center justify-center h-full px-8 text-center"
+      className="relative flex flex-col items-center justify-center h-full px-8 text-center"
       style={{ background: 'linear-gradient(135deg, #FDF5F2 0%, #f0e8df 100%)' }}
     >
       {/* Headline */}
@@ -188,48 +188,48 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         </h2>
       </motion.div>
 
-      {/* Analysis steps — typed live, one at a time, in a fixed-height slot
-          so the orb and headline above never shift. */}
-      <div className="mt-7 h-6 flex items-center justify-center w-full max-w-[300px]">
-        {!done && (
+      {/* Single fixed-height slot : the thinking steps and the result line
+          share the exact same vertical position, so nothing shifts between
+          "analyse" and "prête" (headline above stays put too). */}
+      <div className="mt-7 h-7 flex items-center justify-center w-full max-w-[300px]">
+        {!done ? (
           <span className="text-[13px] text-neutral-500 whitespace-nowrap">
             {typed}
             {typingDone && '...'}
             <Caret />
           </span>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-2.5"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: '#A64B27' }}
+            >
+              <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+                <path d="M1 4.5L4.5 8L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </motion.div>
+            <span className="text-[15px] font-semibold text-neutral-900">
+              <span style={{ color: '#A64B27' }}>{RESULTS_COUNT}</span> biens trouvés
+            </span>
+          </motion.div>
         )}
       </div>
 
-      {/* Result confirmation — just the number of biens found, with a check */}
-      {done && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 flex items-center gap-2.5"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: '#A64B27' }}
-          >
-            <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
-              <path d="M1 4.5L4.5 8L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </motion.div>
-          <span className="text-[15px] font-semibold text-neutral-900">
-            <span style={{ color: '#A64B27' }}>{RESULTS_COUNT}</span> biens trouvés
-          </span>
-        </motion.div>
-      )}
-
       {/* Mini-statut affiché si l'animation est finie mais que le fetch
-          /api/feed/generate continue (latence LLM > 9.5 s). Évite que
-          l'écran ait l'air figé. */}
+          /api/feed/generate continue (latence LLM > 9.5 s). Positionné en
+          absolu pour ne décaler ni le titre ni le slot ci-dessus. */}
       {done && extraStatus && (
-        <p className="mt-3 text-[12px] text-neutral-500">{extraStatus}</p>
+        <p className="absolute bottom-14 left-0 right-0 text-center text-[12px] text-neutral-500">
+          {extraStatus}
+        </p>
       )}
     </div>
   )
