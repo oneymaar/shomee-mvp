@@ -22,6 +22,47 @@ const PROPERTY_INCLUDE = {
 
 type RawChapter = { label: string; startSec?: number; fraction?: number }
 
+/**
+ * arr-N → Property.arrondissement string. The DB seed + scraper use the
+ * "Paris Xème" pattern with "1er" as the only exception.
+ */
+function arrIdToName(id: string): string | null {
+  const m = id.match(/^arr-(\d{1,2})$/)
+  if (!m) return null
+  const n = Number(m[1])
+  if (!Number.isFinite(n) || n < 1 || n > 20) return null
+  return n === 1 ? 'Paris 1er' : `Paris ${n}ème`
+}
+
+/**
+ * com-{INSEE} → Property.arrondissement string. Only the suburbs that
+ * actually appear in our seeded data are mapped — the goal is to filter,
+ * not to cover the full Île-de-France gazetteer. Unknown codes return
+ * null and are silently dropped from the filter.
+ */
+const COMMUNE_ID_TO_NAME: Record<string, string> = {
+  'com-92012': 'Boulogne-Billancourt',
+  'com-92040': 'Issy-les-Moulineaux',
+  'com-92044': 'Levallois-Perret',
+  'com-92051': 'Neuilly-sur-Seine',
+  'com-92064': 'Saint-Cloud',
+  'com-92072': 'Sèvres',
+  'com-94081': 'Vincennes',
+}
+
+function buildZoneNameFilter(body: BriefSnapshot): string[] {
+  const out: string[] = []
+  for (const id of body.arrondissementIds ?? []) {
+    const name = arrIdToName(id)
+    if (name) out.push(name)
+  }
+  for (const id of body.communeIds ?? []) {
+    const name = COMMUNE_ID_TO_NAME[id]
+    if (name) out.push(name)
+  }
+  return out
+}
+
 type PrismaPropertyWithRels = Awaited<
   ReturnType<typeof prisma.property.findMany<{ include: typeof PROPERTY_INCLUDE }>>
 >[number]
@@ -116,15 +157,26 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const brief = buildBriefFromSnapshot(body as BriefSnapshot)
+    const snapshot = body as BriefSnapshot
+    const brief = buildBriefFromSnapshot(snapshot)
+    const zoneNames = buildZoneNameFilter(snapshot)
     console.log(
-      '[POST /api/properties] brief=' + brief.parsed_criteria.length + ' criteria | ' +
+      '[POST /api/properties] brief=' + brief.parsed_criteria.length + ' criteria' +
+      (zoneNames.length > 0 ? ' | zones=' + zoneNames.join(',') : ' | zones=ALL') +
+      ' | ' +
       brief.parsed_criteria
         .map((c) => c.importance[0] + ':' + c.display_label)
         .join(' | '),
     )
     const properties = await prisma.property.findMany({
-      where: { statut: PropertyStatus.PUBLISHED },
+      where: {
+        statut: PropertyStatus.PUBLISHED,
+        // Hard geo gate — IRIS / quartier precision isn't carried on
+        // Property yet, so the filter operates at arr/commune granularity.
+        // Empty zoneNames means "no location filter" (rare — only when the
+        // user didn't pick any zone).
+        ...(zoneNames.length > 0 ? { arrondissement: { in: zoneNames } } : {}),
+      },
       orderBy: { createdAt: 'desc' },
       include: PROPERTY_INCLUDE,
     })

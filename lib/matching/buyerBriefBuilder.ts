@@ -54,6 +54,13 @@ export interface BriefSnapshot {
     state: 0 | 1 | 2 | 3
     polarity?: 'positive' | 'negative'
   }> | null
+  /** Zustand store selectedArrIds — e.g. ['arr-16']. The route maps them
+   *  to Property.arrondissement strings and pre-filters the candidate
+   *  pool BEFORE scoring. */
+  arrondissementIds?: string[] | null
+  /** Zustand store selectedCommuneIds — e.g. ['com-92051']. Same usage as
+   *  arrondissementIds for suburban communes. */
+  communeIds?: string[] | null
 }
 
 interface PrefsCriterion {

@@ -55,7 +55,9 @@ export default function FeedPage() {
          s.minRooms || s.maxRooms || s.minBedrooms || s.maxBedrooms ||
          (s.propertyTypes?.length ?? 0) > 0 ||
          Object.values(s.chipStates ?? {}).some((v) => v > 0) ||
-         (s.customCriteria?.length ?? 0) > 0)
+         (s.customCriteria?.length ?? 0) > 0 ||
+         (s.selectedArrIds?.length ?? 0) > 0 ||
+         (s.selectedCommuneIds?.length ?? 0) > 0)
 
     const briefBody = {
       minSurface: s.minSurface,
@@ -69,6 +71,10 @@ export default function FeedPage() {
       propertyTypes: s.propertyTypes,
       chipStates: s.chipStates,
       customCriteria: s.customCriteria,
+      // Geo selection — the server maps these to Property.arrondissement
+      // strings and pre-filters the candidate pool before scoring.
+      arrondissementIds: s.selectedArrIds,
+      communeIds: s.selectedCommuneIds,
     }
     // eslint-disable-next-line no-console
     console.log('[Feed] method=' + (hasBrief ? 'POST' : 'GET'), '| brief=', briefBody)
