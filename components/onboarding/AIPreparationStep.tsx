@@ -10,8 +10,9 @@ const PREFETCH_KEY = 'shomee:pregen-feed'
 
 // Number of biens shown in the final confirmation (matches the demo feed).
 const RESULTS_COUNT = 4
-// Each step stays visible at least 2s before the next replaces it.
-const STEP_DURATION = 2000
+// Each step stays visible 3s before the next replaces it (4 × 3s = 12s),
+// laissant le temps au pré-fetch /api/feed/generate de répondre.
+const STEP_DURATION = 3000
 const ANALYSIS_STEPS = [
   { label: 'Analyse de votre zone idéale', delay: 0 },
   { label: 'Calibrage du budget', delay: STEP_DURATION },

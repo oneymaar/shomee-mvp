@@ -48,19 +48,28 @@ export default function FeedPage() {
     // Pre-generated feed déposé par l'AIPreparationStep — la fetch
     // /api/feed/generate a déjà tourné pendant l'animation onboarding.
     // Si présent, on l'utilise direct et on saute le fetch local.
+    let cachedFeed: Property[] | null = null
     try {
       const cached = sessionStorage.getItem('shomee:pregen-feed')
       if (cached) {
-        const data = JSON.parse(cached) as Property[]
         sessionStorage.removeItem('shomee:pregen-feed')
-        if (Array.isArray(data) && data.length > 0) {
-          setProperties(data)
-          setFeedReady(true)
-          return
-        }
+        const data = JSON.parse(cached) as Property[]
+        if (Array.isArray(data) && data.length > 0) cachedFeed = data
       }
     } catch {
       // sessionStorage indispo / JSON cassé → fallback fetch normal.
+    }
+
+    if (cachedFeed) {
+      // Defer to a microtask so we don't setState synchronously in the
+      // effect body (évite les cascades de rendus signalées par le linter).
+      const feed = cachedFeed
+      queueMicrotask(() => {
+        if (cancelled) return
+        setProperties(feed)
+        setFeedReady(true)
+      })
+      return () => { cancelled = true }
     }
 
     // Read a fresh snapshot at the moment of fetch — Zustand's getState()
