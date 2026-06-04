@@ -1,1 +1,293 @@
-[]
+[
+  {
+    "videoId": "shomee/videos/ffecc53cab0a",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431116/shomee/videos/ffecc53cab0a.mp4",
+    "arrondissements": [8, 16, 17],
+    "communes": [],
+    "rooms": [3, 4, 5, 6, 7, 8, 9, 10],
+    "bedrooms": [3, 4, 5, 6],
+    "priceRange": [800000, 10000000],
+    "surfaceRange": [70, 500]
+  },
+  {
+    "videoId": "shomee/videos/e1a082b328ac",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431125/shomee/videos/e1a082b328ac.mp4",
+    "arrondissements": [3, 4],
+    "communes": [],
+    "rooms": [2, 3, 4],
+    "bedrooms": [1, 2, 3],
+    "priceRange": [600000, 10000000],
+    "surfaceRange": [40, 100]
+  },
+  {
+    "videoId": "shomee/videos/f7a55c3dea52",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431135/shomee/videos/f7a55c3dea52.mp4",
+    "arrondissements": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    "communes": [
+      "Neuilly-sur-Seine",
+      "Levallois-Perret",
+      "Boulogne-Billancourt",
+      "Issy-les-Moulineaux",
+      "Vincennes",
+      "Saint-Mandé",
+      "Saint-Cloud",
+      "Sèvres",
+      "Meudon",
+      "Vanves",
+      "Malakoff",
+      "Montrouge",
+      "Gentilly",
+      "Charenton-le-Pont",
+      "Saint-Maurice"
+    ],
+    "rooms": [4, 5, 6, 7, 8, 9, 10],
+    "bedrooms": [3, 4, 5, 6],
+    "priceRange": [1250000, 10000000],
+    "surfaceRange": [120, 500]
+  },
+  {
+    "videoId": "shomee/videos/8966cca41c83",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431148/shomee/videos/8966cca41c83.mp4",
+    "arrondissements": [17],
+    "communes": [],
+    "rooms": [3, 4, 5, 6, 7, 8, 9, 10],
+    "bedrooms": [3, 4, 5, 6],
+    "priceRange": [700000, 10000000],
+    "surfaceRange": [90, 500]
+  },
+  {
+    "videoId": "shomee/videos/ca1fdf19c51f",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431156/shomee/videos/ca1fdf19c51f.mp4",
+    "arrondissements": [10, 11, 12],
+    "communes": [],
+    "rooms": [1, 2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [200000, 600000],
+    "surfaceRange": [20, 60]
+  },
+  {
+    "videoId": "shomee/videos/d5bf15989ecb",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431165/shomee/videos/d5bf15989ecb.mp4",
+    "arrondissements": [],
+    "communes": ["Neuilly-sur-Seine", "Levallois-Perret"],
+    "rooms": [2, 3, 4],
+    "bedrooms": [1, 2, 3, 4],
+    "priceRange": [400000, 10000000],
+    "surfaceRange": [40, 500]
+  },
+  {
+    "videoId": "shomee/videos/6dcbd9ebf5ab",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431175/shomee/videos/6dcbd9ebf5ab.mp4",
+    "arrondissements": [8],
+    "communes": [],
+    "rooms": [3, 4, 5],
+    "bedrooms": [2, 3],
+    "priceRange": [600000, 10000000],
+    "surfaceRange": [50, 500]
+  },
+  {
+    "videoId": "shomee/videos/2f933eec7a52",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431184/shomee/videos/2f933eec7a52.mp4",
+    "arrondissements": [10],
+    "communes": [],
+    "rooms": [3, 4, 5, 6],
+    "bedrooms": [2, 3, 4, 5],
+    "priceRange": [800000, 10000000],
+    "surfaceRange": [70, 500]
+  },
+  {
+    "videoId": "shomee/videos/105e14608ebb",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431204/shomee/videos/105e14608ebb.mp4",
+    "arrondissements": [12, 13, 14, 15, 16, 17, 18, 19, 20],
+    "communes": [
+      "Ivry-sur-Seine",
+      "Boulogne-Billancourt",
+      "Charenton-le-Pont",
+      "Issy-les-Moulineaux",
+      "Vincennes",
+      "Saint-Mandé",
+      "Saint-Cloud",
+      "Sèvres",
+      "Meudon",
+      "Vanves",
+      "Malakoff",
+      "Montrouge",
+      "Gentilly",
+      "Saint-Maurice"
+    ],
+    "rooms": [4, 5, 6, 7, 8, 9],
+    "bedrooms": [2, 3, 4, 5],
+    "priceRange": [700000, 10000000],
+    "surfaceRange": [80, 500]
+  },
+  {
+    "videoId": "shomee/videos/94ceb14af5a4",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431237/shomee/videos/94ceb14af5a4.mp4",
+    "arrondissements": [8, 17],
+    "communes": [],
+    "rooms": [4, 5, 6, 7, 8],
+    "bedrooms": [4, 5, 6],
+    "priceRange": [1750000, 10000000],
+    "surfaceRange": [160, 500]
+  },
+  {
+    "videoId": "shomee/videos/9e850bc11b59",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431245/shomee/videos/9e850bc11b59.mp4",
+    "arrondissements": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+    "communes": [],
+    "rooms": [1, 2],
+    "bedrooms": [1],
+    "priceRange": [200000, 600000],
+    "surfaceRange": [20, 60]
+  },
+  {
+    "videoId": "shomee/videos/e4de48038078",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431256/shomee/videos/e4de48038078.mp4",
+    "arrondissements": [7, 8, 9, 15, 16, 17],
+    "communes": ["Neuilly-sur-Seine", "Vincennes"],
+    "rooms": [4, 5, 6, 7, 8],
+    "bedrooms": [3, 4, 5, 6],
+    "priceRange": [1250000, 10000000],
+    "surfaceRange": [100, 500]
+  },
+  {
+    "videoId": "shomee/videos/190595eb866b",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431265/shomee/videos/190595eb866b.mp4",
+    "arrondissements": [8, 17],
+    "communes": [],
+    "rooms": [3, 4, 5, 6],
+    "bedrooms": [2, 3, 4],
+    "priceRange": [800000, 10000000],
+    "surfaceRange": [70, 500]
+  },
+  {
+    "videoId": "shomee/videos/9d43144127dc",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431273/shomee/videos/9d43144127dc.mp4",
+    "arrondissements": [11],
+    "communes": [],
+    "rooms": [4, 5],
+    "bedrooms": [3, 4],
+    "priceRange": [1000000, 10000000],
+    "surfaceRange": [100, 500]
+  },
+  {
+    "videoId": "shomee/videos/f99bc3e50bfc",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431282/shomee/videos/f99bc3e50bfc.mp4",
+    "arrondissements": [2, 9, 10],
+    "communes": [],
+    "rooms": [3, 4, 5],
+    "bedrooms": [2, 3, 4],
+    "priceRange": [1000000, 10000000],
+    "surfaceRange": [80, 500]
+  },
+  {
+    "videoId": "shomee/videos/f2f7b9a5f606",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431292/shomee/videos/f2f7b9a5f606.mp4",
+    "arrondissements": [5, 6, 7],
+    "communes": [],
+    "rooms": [3, 4, 5, 6, 7],
+    "bedrooms": [2, 3, 4, 5],
+    "priceRange": [1000000, 10000000],
+    "surfaceRange": [90, 500]
+  },
+  {
+    "videoId": "shomee/videos/a0a9b104cbb4",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431301/shomee/videos/a0a9b104cbb4.mp4",
+    "arrondissements": [18],
+    "communes": [],
+    "rooms": [1, 2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [500000, 1500000],
+    "surfaceRange": [30, 70]
+  },
+  {
+    "videoId": "shomee/videos/ce86aeddb357",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431312/shomee/videos/ce86aeddb357.mp4",
+    "arrondissements": [14],
+    "communes": [],
+    "rooms": [2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [400000, 800000],
+    "surfaceRange": [40, 60]
+  },
+  {
+    "videoId": "shomee/videos/b02f65ede144",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431320/shomee/videos/b02f65ede144.mp4",
+    "arrondissements": [12],
+    "communes": [],
+    "rooms": [2, 3],
+    "bedrooms": [],
+    "priceRange": [500000, 800000],
+    "surfaceRange": [50, 80]
+  },
+  {
+    "videoId": "shomee/videos/93e65b33567f",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431329/shomee/videos/93e65b33567f.mp4",
+    "arrondissements": [12],
+    "communes": [],
+    "rooms": [2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [300000, 600000],
+    "surfaceRange": [30, 60]
+  },
+  {
+    "videoId": "shomee/videos/af54859c1786",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431338/shomee/videos/af54859c1786.mp4",
+    "arrondissements": [2],
+    "communes": [],
+    "rooms": [3, 4, 5, 6],
+    "bedrooms": [2, 3, 4, 5],
+    "priceRange": [600000, 1750000],
+    "surfaceRange": [60, 140]
+  },
+  {
+    "videoId": "shomee/videos/68813a4fcc1b",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431347/shomee/videos/68813a4fcc1b.mp4",
+    "arrondissements": [16],
+    "communes": [],
+    "rooms": [5, 6, 7, 8, 9, 10],
+    "bedrooms": [3, 4, 5, 6],
+    "priceRange": [2000000, 10000000],
+    "surfaceRange": [140, 500]
+  },
+  {
+    "videoId": "shomee/videos/e7c72ecb3b03",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431355/shomee/videos/e7c72ecb3b03.mp4",
+    "arrondissements": [18],
+    "communes": [],
+    "rooms": [2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [1000000, 10000000],
+    "surfaceRange": [60, 500]
+  },
+  {
+    "videoId": "shomee/videos/840461e1e2bf",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431365/shomee/videos/840461e1e2bf.mp4",
+    "arrondissements": [14],
+    "communes": [],
+    "rooms": [2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [400000, 800000],
+    "surfaceRange": [40, 80]
+  },
+  {
+    "videoId": "shomee/videos/60b1cfecd4a8",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431373/shomee/videos/60b1cfecd4a8.mp4",
+    "arrondissements": [7],
+    "communes": [],
+    "rooms": [4, 5, 6, 7, 8, 9, 10],
+    "bedrooms": [3, 4, 5, 6],
+    "priceRange": [7000000, 10000000],
+    "surfaceRange": [200, 500]
+  },
+  {
+    "videoId": "shomee/videos/fa081dd38f57",
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431382/shomee/videos/fa081dd38f57.mp4",
+    "arrondissements": [1, 2, 3, 4, 11, 12, 13],
+    "communes": [],
+    "rooms": [2, 3],
+    "bedrooms": [1, 2],
+    "priceRange": [700000, 1500000],
+    "surfaceRange": [50, 100]
+  }
+]
