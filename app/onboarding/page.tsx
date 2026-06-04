@@ -18,16 +18,76 @@ import { parseLocationIntent } from '@/lib/services/locationIntentParser'
 import { injectBrief, type AIOnboardingBrief } from '@/lib/services/aiBriefInjector'
 import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
 
-function MapLoadingScreen() {
+// Coherent thinking steps for the pre-map analysis. Same visual system as
+// AIPreparationStep (typewriter + static dots + blinking caret). The overlay's
+// lifetime is driven by the parent (mapWillOpen && !mapUiReady, min 3s), so
+// these steps are purely cosmetic: they advance on their own timer and hold on
+// the last one if the analysis runs longer — never gating the reveal.
+const MAP_STEPS = [
+  'Analyse de votre recherche',
+  'Repérage des secteurs',
+  'Préparation de la carte',
+]
+const MAP_STEP_DURATION = 1000
+
+// Blinking block caret (shared visual with AIPreparationStep).
+function LoaderCaret() {
   return (
-    <div className="flex flex-col h-full items-center justify-center gap-5">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
-      >
-        <Loader2 size={32} style={{ color: '#A64B27', opacity: 0.7 }} />
-      </motion.div>
-      <p className="text-[15px] text-neutral-600 font-medium">SHOMEE réfléchit…</p>
+    <motion.span
+      aria-hidden
+      animate={{ opacity: [1, 1, 0, 0] }}
+      transition={{ duration: 0.9, repeat: Infinity, ease: 'linear', times: [0, 0.5, 0.5, 1] }}
+      className="inline-block"
+      style={{ color: '#A64B27' }}
+    >
+      ▋
+    </motion.span>
+  )
+}
+
+function MapLoadingScreen() {
+  const [currentStep, setCurrentStep] = useState(0)
+  const [typed, setTyped] = useState('')
+  const currentLabel = MAP_STEPS[currentStep]
+  const typingDone = typed === currentLabel
+
+  // Advance through the steps, holding on the last (the parent unmounts us).
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = []
+    MAP_STEPS.forEach((_, i) => {
+      if (i === 0) return
+      timers.push(setTimeout(() => setCurrentStep(i), i * MAP_STEP_DURATION))
+    })
+    return () => timers.forEach(clearTimeout)
+  }, [])
+
+  // Typewriter: re-type the current step's label char by char.
+  useEffect(() => {
+    const label = MAP_STEPS[currentStep]
+    let i = 0
+    const id = setInterval(() => {
+      setTyped(label.slice(0, i))
+      if (i >= label.length) {
+        clearInterval(id)
+        return
+      }
+      i += 1
+    }, 30)
+    return () => clearInterval(id)
+  }, [currentStep])
+
+  return (
+    <div className="flex flex-col h-full items-center justify-center px-8 text-center">
+      <h2 className="text-[20px] font-bold text-neutral-900 mb-7">
+        SHOMEE analyse votre recherche…
+      </h2>
+      <div className="h-6 flex items-center justify-center w-full max-w-[300px]">
+        <span className="text-[13px] text-neutral-500 whitespace-nowrap">
+          {typed}
+          {typingDone && '...'}
+          <LoaderCaret />
+        </span>
+      </div>
     </div>
   )
 }
