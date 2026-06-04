@@ -1,12 +1,14 @@
 #!/usr/bin/env npx tsx
 /**
- * Upload les logos d'agences disponibles localement vers Cloudinary
- * (dossier `shomee/agencies/`), avec le bon `public_id` pour que les URLs
- * correspondent à celles de scripts/update-agency-logos.ts.
+ * Upload les logos d'agences (public/agencies/) vers Cloudinary
+ * (dossier `shomee/agencies/`), normalisés sur une pastille blanche carrée.
  *
- * Ne traite que les fichiers présents dans public/agencies/. Les enseignes
- * sans fichier local restent à uploader manuellement (puis relancer ce script
- * ou ajouter une entrée ci-dessous).
+ * Pourquoi la pastille blanche : le badge agence du feed est un cercle à fond
+ * sombre (bg-neutral-900). Les logos à éléments foncés (wordmark Engel & Völkers,
+ * flamme Moriss, "K" Kretz…) y seraient invisibles. On aplatit donc chaque logo
+ * sur fond blanc (JPG) avec une marge → rendu homogène et lisible.
+ *
+ * Les public_id correspondent aux URLs de scripts/update-agency-logos.ts (.jpg).
  *
  * Usage :
  *   npx tsx scripts/upload-agency-logos.ts          # upload
@@ -26,17 +28,22 @@ const FILES: ReadonlyArray<[string, string]> = [
   ['public/agencies/Logo Junot.png', 'shomee/agencies/junot'],
   ['public/agencies/Logo Kretz.png', 'shomee/agencies/kretz'],
   ['public/agencies/Logo Fredelion.png', 'shomee/agencies/fredelion'],
-  // À compléter au fur et à mesure des logos récupérés :
-  // ['public/agencies/Logo Engel.png', 'shomee/agencies/engel-volkers'],
-  // ['public/agencies/Logo DanielFeau.png', 'shomee/agencies/daniel-feau'],
-  // ['public/agencies/Logo Laforet.png', 'shomee/agencies/laforet'],
-  // ['public/agencies/Logo Century21.png', 'shomee/agencies/century21'],
-  // ['public/agencies/Logo Orpi.png', 'shomee/agencies/orpi'],
-  // ['public/agencies/Logo Morriss.png', 'shomee/agencies/morriss'],
-  // ['public/agencies/Logo GuyHoquet.png', 'shomee/agencies/guy-hoquet'],
-  // ['public/agencies/Logo IAD.png', 'shomee/agencies/iad'],
-  // ['public/agencies/Logo Varenne.png', 'shomee/agencies/varenne'],
-  // ['public/agencies/Logo EnfantsRouges.png', 'shomee/agencies/enfants-rouges'],
+  ['public/agencies/Logo Engel.png', 'shomee/agencies/engel-volkers'],
+  ['public/agencies/Logo Century21.svg', 'shomee/agencies/century21'],
+  ['public/agencies/Logo GuyHoquet.png', 'shomee/agencies/guy-hoquet'],
+  ['public/agencies/Logo Laforet.jpg', 'shomee/agencies/laforet'],
+  ['public/agencies/Logo DanielFeau.svg', 'shomee/agencies/daniel-feau'],
+  ['public/agencies/Logo Orpi.svg', 'shomee/agencies/orpi'],
+  ['public/agencies/Logo IAD.png', 'shomee/agencies/iad'],
+  ['public/agencies/Logo Morriss.png', 'shomee/agencies/morriss'],
+  // Sans logo trouvable → fallback initiale dans le feed :
+  // Varenne & Associés, L'Agence des Enfants Rouges
+]
+
+// Aplatit le logo sur une pastille blanche carrée avec marge.
+const WHITE_TILE = [
+  { width: 340, height: 340, crop: 'fit' },
+  { width: 400, height: 400, crop: 'pad', background: 'white' },
 ]
 
 async function main() {
@@ -50,14 +57,15 @@ async function main() {
       continue
     }
     if (DRY_RUN) {
-      console.log(`• ${file}  →  ${publicId}`)
+      console.log(`• ${file}  →  ${publicId}.jpg`)
       done++
       continue
     }
     const res = await cloudinary.uploader.upload(abs, {
       public_id: publicId,
       overwrite: true,
-      resource_type: 'image',
+      format: 'jpg',
+      transformation: WHITE_TILE,
     })
     console.log(`✅  ${publicId}  →  ${res.secure_url}`)
     done++

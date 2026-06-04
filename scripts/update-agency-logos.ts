@@ -29,25 +29,28 @@ const DRY_RUN = process.argv.includes('--dry')
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME ?? 'dcysksoo3'
 const BASE = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/shomee/agencies`
 
-// Nom d'agence (exact, tel qu'en DB) → fichier Cloudinary.
+// Nom d'agence (exact, tel qu'en DB) → fichier Cloudinary (.jpg = pastille
+// blanche aplatie, cf. scripts/upload-agency-logos.ts).
 // Les agences d'une même enseigne partagent le logo (Laforêt, Orpi).
+// Varenne & Enfants Rouges : pas de logo trouvable → URL absente, la
+// vérification les ignore et le feed garde l'initiale.
 const AGENCY_LOGOS: Record<string, string> = {
-  'Kretz Real Estate': `${BASE}/kretz.png`,
-  'Barnes Tour Eiffel': `${BASE}/barnes.png`,
-  'Junot Immobilier': `${BASE}/junot.png`,
-  'Varenne & Associés': `${BASE}/varenne.png`,
-  'Engel & Völkers Marais': `${BASE}/engel-volkers.png`,
-  'Daniel Féau Passy': `${BASE}/daniel-feau.png`,
-  'Frédélion Trocadéro': `${BASE}/fredelion.png`,
-  'Laforêt Monceau': `${BASE}/laforet.png`,
-  'Laforêt Batignolles': `${BASE}/laforet.png`,
-  'Century 21 Bastille': `${BASE}/century21.png`,
-  'Orpi Nation': `${BASE}/orpi.png`,
-  'Orpi Saint-Cloud Sèvres': `${BASE}/orpi.png`,
-  "L'Agence des Enfants Rouges": `${BASE}/enfants-rouges.png`,
-  'Morriss Montparnasse': `${BASE}/morriss.png`,
-  'Guy Hoquet Neuilly': `${BASE}/guy-hoquet.png`,
-  'IAD Boulogne-Issy': `${BASE}/iad.png`,
+  'Kretz Real Estate': `${BASE}/kretz.jpg`,
+  'Barnes Tour Eiffel': `${BASE}/barnes.jpg`,
+  'Junot Immobilier': `${BASE}/junot.jpg`,
+  'Varenne & Associés': `${BASE}/varenne.jpg`,
+  'Engel & Völkers Marais': `${BASE}/engel-volkers.jpg`,
+  'Daniel Féau Passy': `${BASE}/daniel-feau.jpg`,
+  'Frédélion Trocadéro': `${BASE}/fredelion.jpg`,
+  'Laforêt Monceau': `${BASE}/laforet.jpg`,
+  'Laforêt Batignolles': `${BASE}/laforet.jpg`,
+  'Century 21 Bastille': `${BASE}/century21.jpg`,
+  'Orpi Nation': `${BASE}/orpi.jpg`,
+  'Orpi Saint-Cloud Sèvres': `${BASE}/orpi.jpg`,
+  "L'Agence des Enfants Rouges": `${BASE}/enfants-rouges.jpg`,
+  'Morriss Montparnasse': `${BASE}/morriss.jpg`,
+  'Guy Hoquet Neuilly': `${BASE}/guy-hoquet.jpg`,
+  'IAD Boulogne-Issy': `${BASE}/iad.jpg`,
 }
 
 async function urlExists(url: string): Promise<boolean> {
