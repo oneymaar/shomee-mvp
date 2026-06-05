@@ -65,7 +65,10 @@ export default async function AgentDashboardPage({
   const quotaReached   = activeCount >= agent.agency.maxProperties
 
   return (
-    <main className="px-5 pt-6">
+    <main
+      className="px-5 pt-6"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
+    >
       {/* Header — agency logo (circle) + name + plan */}
       <header className="flex items-center gap-3 mb-5">
         {agent.agency.logo ? (
