@@ -45,16 +45,14 @@ export default function FeedPage() {
   // a beat before the API response swapped it for the top-ranked bien.
   const [properties, setProperties] = useState<Property[]>([])
   const [feedReady, setFeedReady] = useState(false)
-  // Le loader plein écran (AIPreparationStep) ne concerne que l'arrivée via
-  // lien magique (Custom GPT) : ?brief=TOKEN dans l'URL. Depuis l'onboarding
-  // natif, l'AIPreparationStep de l'onboarding a déjà joué → on ne le rejoue
-  // pas ici. Lu en effet (et pas à l'init) pour éviter un mismatch d'hydratation.
-  const [hasBriefParam, setHasBriefParam] = useState(false)
-
-  useEffect(() => {
-    const token = new URLSearchParams(window.location.search).get('brief')
-    setHasBriefParam(!!token)
-  }, [])
+  // Le loader plein écran (AIPreparationStep) s'affiche dès qu'on doit faire un
+  // fetch LLM live (≈10 s) faute de feed pré-généré en cache. Depuis l'onboarding
+  // natif, l'AIPreparationStep a déjà tourné et déposé le feed en sessionStorage
+  // → /feed le lit direct, liveFetch reste false, pas de loader rejoué. Mais via
+  // une recherche LLM sans cache (ou si le pré-fetch onboarding a échoué), on
+  // affiche bien le loader au lieu d'un écran vide. Mis à jour en effet pour
+  // éviter tout mismatch d'hydratation.
+  const [liveFetch, setLiveFetch] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -85,6 +83,12 @@ export default function FeedPage() {
       })
       return () => { cancelled = true }
     }
+
+    // Pas de cache → on va faire un fetch live (LLM generate ou /api/properties).
+    // On bascule le loader plein écran pour ne pas laisser un écran vide pendant
+    // la latence. queueMicrotask : on évite un setState synchrone dans le corps
+    // de l'effet (cascades de rendus signalées par le linter).
+    queueMicrotask(() => { if (!cancelled) setLiveFetch(true) })
 
     // Read a fresh snapshot at the moment of fetch — Zustand's getState()
     // bypasses the subscription model so we don't re-render the feed when
@@ -341,12 +345,11 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
-      {/* Écran d'attente tant que le feed n'est pas prêt (pré-fetch
-          /api/feed/generate) : on réutilise tel quel l'AIPreparationStep
-          de l'onboarding. Disparaît dès que feedReady passe à true.
-          Affiché uniquement à l'arrivée via lien magique (?brief=TOKEN) :
-          depuis l'onboarding natif, l'AIPreparationStep a déjà joué. */}
-      {hasBriefParam && !feedReady && (
+      {/* Écran d'attente pendant le fetch LLM live (≈10 s) : on réutilise tel
+          quel l'AIPreparationStep de l'onboarding. Disparaît dès que feedReady
+          passe à true. Non affiché quand le feed vient du cache pré-généré
+          (onboarding natif) : liveFetch reste false → pas de loader rejoué. */}
+      {liveFetch && !feedReady && (
         <div className="absolute inset-0 z-50">
           <AIPreparationStep onReady={() => {}} />
         </div>
