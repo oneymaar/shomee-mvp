@@ -405,15 +405,15 @@ export default function BienStep({ onNext }: BienStepProps) {
 
       {/* CTAs */}
       <div
-        className="px-6 pt-4 pb-10 flex flex-col gap-3 flex-shrink-0"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 32px)' }}
+        className="px-6 pt-4 flex-shrink-0"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
       >
         <button
           onClick={onNext}
-          className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
+          className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
           style={{ backgroundColor: '#A64B27' }}
         >
-          Continuer
+          Valider
           <ChevronRight size={18} />
         </button>
       </div>

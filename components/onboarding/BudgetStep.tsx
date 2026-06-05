@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
 import { budgetSignal, medianBudgetFor, LEGEND_GRADIENT_CSS } from '@/lib/services/budgetFeasibility'
 import {
@@ -327,17 +327,16 @@ export default function BudgetStep({ onNext }: BudgetStepProps) {
 
       {/* CTAs */}
       <div
-        className="flex-none flex flex-col gap-1.5 pt-3"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+        className="flex-none pt-4 flex-shrink-0"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
       >
         <button
           onClick={onNext}
           className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
           style={{ backgroundColor: '#A64B27' }}
         >
-          <CheckCircle size={16} />
           Valider mon budget
-          <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">3 / 4</span>
+          <ChevronRight size={18} />
         </button>
       </div>
     </div>

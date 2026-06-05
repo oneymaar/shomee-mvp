@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ArrowRight, Check, X, Loader2, Plus } from 'lucide-react'
+import { CheckCircle, ArrowRight, Check, X, Loader2, Plus } from 'lucide-react'
 import { useSearchStore, type ChipState } from '@/lib/searchStore'
 
 const PROPERTY_TAGS: string[] = [
@@ -531,16 +531,16 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.25, delay: 0.08 }}
-          className="px-6 pt-5 flex-shrink-0"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 28px)' }}
+          className="px-6 pt-4 flex-shrink-0"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
         >
           <button
             onClick={handleContinue}
-            className="w-full py-3.5 rounded-2xl font-semibold text-[15.5px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
+            className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
             style={{ backgroundColor: '#A64B27' }}
           >
-            Continuer
-            <ChevronRight size={18} />
+            Lancer ma recherche
+            <CheckCircle size={18} />
           </button>
         </motion.div>
       )}

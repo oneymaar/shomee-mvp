@@ -6,7 +6,7 @@ const SHOW_IRIS_DEBUG = false
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
-import { CheckCircle, Loader2, MapPin, AlertCircle } from 'lucide-react'
+import { ChevronRight, Loader2, MapPin, AlertCircle } from 'lucide-react'
 import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, matchQuartiersByName, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
 import { findStation } from '@/lib/services/metroStationsDb'
 import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
@@ -1140,8 +1140,8 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
 
       {/* CTAs */}
       <div
-        className="px-4 pt-2 flex flex-col gap-2 flex-shrink-0"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
+        className="px-4 pt-4 flex-shrink-0"
+        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}
       >
         <button
           onClick={onValidate}
@@ -1149,19 +1149,8 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
           className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
           style={{ backgroundColor: canValidate ? '#A64B27' : '#DB947E', cursor: canValidate ? 'pointer' : 'default' }}
         >
-          <CheckCircle size={17} />
           Valider ma zone
-          {canValidate && (
-            <span className="bg-white/20 text-[12px] px-2 py-0.5 rounded-full">
-              {allTags.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={onValidate}
-          className="w-full py-2 text-[13px] font-medium text-neutral-600 active:text-neutral-800"
-        >
-          Continuer sans sélectionner
+          <ChevronRight size={18} />
         </button>
       </div>
     </div>
