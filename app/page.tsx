@@ -26,16 +26,10 @@ export default function SplashPage() {
   }, [])
 
   useEffect(() => {
-    const isStandalone =
-      (window.navigator as any).standalone === true ||
-      window.matchMedia('(display-mode: standalone)').matches
-
-    if (isStandalone) {
-      const timer = setTimeout(start, 2000)
-      return () => clearTimeout(timer)
-    } else {
-      setShowHint(true)
-    }
+    // Aucune redirection automatique : l'écran d'accueil (logo + boutons)
+    // s'affiche et attend une action explicite de l'utilisateur, quel que
+    // soit le contexte (Chrome, Safari ou PWA installée en standalone).
+    setShowHint(true)
   }, [])
 
   return (
