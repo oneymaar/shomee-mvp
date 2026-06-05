@@ -80,23 +80,39 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
     chapterTimerRef.current = setTimeout(() => setChapterLabel(null), 1700)
   }
 
-  /* ── Play / pause on active state ── */
+  /* ── Play / pause + lecture « autoplay-safe » ──
+     On respecte l'état muted voulu, mais on ne laisse jamais un refus
+     d'autoplay sonore (politique navigateur, sans geste utilisateur récent)
+     figer la vidéo sur la frame 1 : si play() est rejeté, on retombe sur une
+     lecture muette, toujours autorisée. Le son revient au premier geste
+     (bouton mute, ou toggle), qui relance cet effet via la dépendance muted. */
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
-    if (isActive) {
-      video.play().catch(() => {})
-    } else {
+
+    if (!isActive) {
       video.pause()
       video.currentTime = 0
       lastChapterIdxRef.current = -1
+      return
     }
-  }, [isActive])
 
-  /* ── Muted state ── */
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted
-  }, [muted])
+    let cancelled = false
+    const play = async () => {
+      video.muted = muted
+      try {
+        await video.play()
+      } catch {
+        if (cancelled) return
+        // Autoplay sonore bloqué → on joue en muet pour éviter le freeze.
+        video.muted = true
+        try { await video.play() } catch { /* rien de plus à tenter */ }
+      }
+    }
+    play()
+
+    return () => { cancelled = true }
+  }, [isActive, muted])
 
   /* ── Track current chapter index during playback (no label flash) ── */
   const onTimeUpdate = () => {
