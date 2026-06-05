@@ -31,7 +31,10 @@ type FeedItem =
 type ResultsStage = 'blocked' | 'pre-reveal' | 'revealed'
 
 export default function FeedPage() {
-  const [muted, setMuted] = useState(true)
+  // Son actif par défaut à l'arrivée sur le feed, quel que soit le chemin
+  // (onboarding natif, lien magique LLM, ou accès direct). L'utilisateur peut
+  // couper via le bouton mute.
+  const [muted, setMuted] = useState(false)
   const [baiaOpen, setBaiaOpen] = useState(false)
   const [detailProperty, setDetailProperty] = useState<Property | null>(null)
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
