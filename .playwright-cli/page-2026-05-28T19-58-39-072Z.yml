@@ -1,0 +1,432 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "A Abriculteurs PARIS • ÎLE-DE-FRANCE" [ref=e902] [cursor=pointer]:
+            - generic [ref=e11]: A
+            - generic [ref=e12]: Abriculteurs PARIS • ÎLE-DE-FRANCE
+          - button "button.toggleSidebar" [ref=e903] [cursor=pointer]:
+            - generic [ref=e16]: Toggle Sidebar
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - generic [ref=e20]:
+              - button "Rechercher" [ref=e904] [cursor=pointer]:
+                - generic [ref=e24]: Rechercher
+              - button [ref=e26] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "Carte" [ref=e905] [cursor=pointer]:
+              - /url: /map-insights
+              - generic [ref=e31]: Carte
+        - list [ref=e34]:
+          - listitem [ref=e36]:
+            - button "Prospects vendeurs" [ref=e906] [cursor=pointer]:
+              - generic [ref=e40]: Prospects vendeurs
+          - listitem [ref=e42]:
+            - link "Mandats de vente" [ref=e907] [cursor=pointer]:
+              - /url: /mandates/tracking-board
+              - generic [ref=e46]: Mandats de vente
+          - listitem [ref=e47]:
+            - link "Demandes acquéreurs" [ref=e908] [cursor=pointer]:
+              - /url: /matches/tracking-board
+              - generic [ref=e51]: Demandes acquéreurs
+          - separator [ref=e52]
+          - listitem [ref=e54]:
+            - button "Prospects bailleurs" [ref=e909] [cursor=pointer]:
+              - generic [ref=e58]: Prospects bailleurs
+          - listitem [ref=e60]:
+            - link "Mandats de location" [ref=e910] [cursor=pointer]:
+              - /url: /rental/management/tracking-board
+              - generic [ref=e64]: Mandats de location
+          - separator [ref=e65]
+          - listitem [ref=e66]:
+            - link "Annonces" [ref=e911] [cursor=pointer]:
+              - /url: /listings
+              - generic [ref=e70]: Annonces
+          - listitem [ref=e71]:
+            - link "Fichier acquéreurs" [ref=e912] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e75]: Fichier acquéreurs
+        - generic [ref=e76]:
+          - separator [ref=e77]
+          - button "? Support client" [ref=e913] [cursor=pointer]:
+            - generic [ref=e79]: "?"
+            - generic [ref=e80]: Support client
+          - generic [ref=e81]:
+            - text: "2026"
+            - link "Avest" [ref=e914] [cursor=pointer]:
+              - /url: https://avest.fr
+            - text: "- v1.31.0"
+        - button "Toggle Sidebar" [ref=e915] [cursor=pointer]
+      - main [ref=e84]:
+        - navigation "breadcrumb" [ref=e916]:
+          - list [ref=e94]:
+            - button [ref=e95] [cursor=pointer]
+            - link "Fichier acquéreurs" [ref=e917] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e98]: Fichier acquéreurs
+            - listitem [ref=e99]: /
+            - generic [ref=e100]:
+              - img [ref=e101]
+              - generic [ref=e103]: À qualifier
+            - listitem [ref=e104]: /
+            - link "5208YTYK" [disabled] [ref=e918]:
+              - generic [ref=e106]: 5208YTYK
+              - button [disabled] [ref=e107] [cursor=pointer]
+        - generic [ref=e86]:
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e112]:
+                - generic [ref=e114]:
+                  - generic [ref=e118]: Acquisition
+                  - generic [ref=e120]: Daniel ZRIHEN
+                - generic [ref=e124]:
+                  - button "Olivier MENART" [ref=e919] [cursor=pointer]:
+                    - generic [ref=e128]: Olivier MENART
+                  - button "À qualifier" [ref=e920] [cursor=pointer]:
+                    - generic [ref=e130]:
+                      - img [ref=e131]
+                      - generic [ref=e133]: À qualifier
+                  - button "Ajouter une étiquette" [ref=e921] [cursor=pointer]:
+                    - generic [ref=e138]: Ajouter une étiquette
+              - generic [ref=e139]:
+                - button "Archiver" [ref=e922] [cursor=pointer]: Archiver
+                - button "Changer d'étape" [ref=e923] [cursor=pointer]: Changer d'étape
+                - button [ref=e144] [cursor=pointer]
+                - button [ref=e146] [cursor=pointer]:
+                  - img [ref=e148]
+            - generic [ref=e153]:
+              - generic [ref=e157]:
+                - tablist [ref=e160]:
+                  - tab "Description" [selected] [ref=e924] [cursor=pointer]: Description
+                  - button "Rapproch. 0" [ref=e925] [cursor=pointer]:
+                    - tab "Rapproch. 0" [ref=e926]:
+                      - text: Rapproch.
+                      - generic [ref=e167]: "0"
+                  - button "Demandes 1" [ref=e927] [cursor=pointer]:
+                    - tab "Demandes 1" [ref=e928]:
+                      - text: Demandes
+                      - generic [ref=e172]: "1"
+                - tabpanel "Description" [ref=e929]:
+                  - region [ref=e392]:
+                    - generic [ref=e393]:
+                      - generic [ref=e394]:
+                        - heading "Acquéreur" [level=3] [ref=e930]:
+                          - button "Acquéreur" [expanded] [ref=e931] [cursor=pointer]: Acquéreur
+                        - generic [ref=e399]:
+                          - button [ref=e400] [cursor=pointer]
+                          - generic [ref=e402]:
+                            - link [ref=e403] [cursor=pointer]:
+                              - /url: tel:+33616136126
+                              - button [ref=e404]
+                            - button [ref=e406] [cursor=pointer]
+                          - button [ref=e408] [cursor=pointer]
+                      - region "Acquéreur" [ref=e932]:
+                        - generic [ref=e412]:
+                          - generic [ref=e413]:
+                            - generic:
+                              - generic: Principal
+                          - generic [ref=e417] [cursor=pointer]:
+                            - generic [ref=e418]: Daniel ZRIHEN
+                            - generic [ref=e419]:
+                              - generic [ref=e421]: 06 16 13 61 26
+                              - generic [ref=e424]:
+                                - generic [ref=e426]: 06 16 13 61 26
+                                - generic:
+                                  - button
+                                  - button
+                    - generic [ref=e431]:
+                      - heading "Critères" [level=3] [ref=e933]:
+                        - button "Critères" [expanded] [ref=e934] [cursor=pointer]: Critères
+                      - region "Critères" [ref=e935]:
+                        - generic [ref=e439]:
+                          - generic [ref=e440]:
+                            - generic [ref=e441]: Zones
+                            - combobox [expanded] [ref=e447]
+                          - generic [ref=e448]:
+                            - generic [ref=e449]: Budget
+                            - generic [ref=e451]:
+                              - textbox "Min" [ref=e936]
+                              - generic [ref=e455]: "-"
+                              - textbox "Max" [ref=e937]
+                          - generic [ref=e459]:
+                            - generic [ref=e460]: Type de bien
+                            - button "Renseigner" [ref=e938] [cursor=pointer]:
+                              - generic [ref=e463]: Renseigner
+                          - generic [ref=e464]:
+                            - generic [ref=e465]: Surface
+                            - generic [ref=e467]:
+                              - textbox "Min" [ref=e939]
+                              - generic [ref=e471]: "-"
+                              - textbox "Max" [ref=e940]
+                          - generic [ref=e475]:
+                            - generic [ref=e476]: Nb. de pièces
+                            - generic [ref=e478]:
+                              - textbox "Min" [ref=e941]
+                              - generic [ref=e482]: "-"
+                              - textbox "Max" [ref=e942]
+                          - generic [ref=e486]:
+                            - generic [ref=e487]: Nb. de chambres
+                            - generic [ref=e489]:
+                              - textbox "Min" [ref=e943]
+                              - generic [ref=e493]: "-"
+                              - textbox "Max" [ref=e944]
+                          - generic [ref=e497]:
+                            - generic [ref=e498]: Parking
+                            - button "Renseigner" [ref=e945] [cursor=pointer]:
+                              - generic [ref=e501]: Renseigner
+                          - generic [ref=e502]:
+                            - generic [ref=e503]: Espace extérieur
+                            - button "Renseigner" [ref=e946] [cursor=pointer]:
+                              - generic [ref=e506]: Renseigner
+                    - generic [ref=e507]:
+                      - heading "Transaction" [level=3] [ref=e947]:
+                        - button "Transaction" [expanded] [ref=e948] [cursor=pointer]: Transaction
+                      - region "Transaction" [ref=e949]:
+                        - generic [ref=e515]:
+                          - generic [ref=e516]:
+                            - generic [ref=e517]:
+                              - generic:
+                                - generic: Propriétaire
+                            - button "Renseigner" [ref=e950] [cursor=pointer]:
+                              - generic [ref=e520]: Renseigner
+                          - generic [ref=e521]:
+                            - generic [ref=e522]: Priorité
+                            - button "Chaud" [ref=e951] [cursor=pointer]:
+                              - generic [ref=e524]: Chaud
+                          - generic [ref=e526]:
+                            - generic [ref=e527]: Destination
+                            - button "Renseigner" [ref=e952] [cursor=pointer]:
+                              - generic [ref=e529]: Renseigner
+                          - generic [ref=e530]:
+                            - generic [ref=e531]: Mandat de recherche
+                            - button "Non" [ref=e953] [cursor=pointer]
+                          - generic [ref=e533]:
+                            - generic [ref=e534]: Portail
+                            - button "Renseigner" [ref=e954] [cursor=pointer]:
+                              - generic [ref=e536]: Renseigner
+                          - generic [ref=e538]:
+                            - generic [ref=e539]: Source
+                            - button "Olivier MENART" [ref=e955] [cursor=pointer]:
+                              - generic [ref=e543]: Olivier MENART
+                          - generic [ref=e545]:
+                            - generic [ref=e546]: Réf. Avest
+                            - generic [ref=e547]:
+                              - generic [ref=e548]: 5208YTYK
+                              - generic [ref=e549]:
+                                - button [ref=e550] [cursor=pointer]
+                                - button [ref=e552] [cursor=pointer]
+                          - generic [ref=e554]:
+                            - generic [ref=e555]: Étape
+                            - generic [ref=e557]: À qualifier
+                    - generic [ref=e559]:
+                      - heading "Autres projets 0" [level=3] [ref=e956]:
+                        - button "Autres projets 0" [disabled] [ref=e957]:
+                          - generic [ref=e564]: Autres projets
+                          - generic [ref=e565]: "0"
+                      - button "Créer" [ref=e958] [cursor=pointer]
+                    - heading "Automatisation 0" [level=3] [ref=e959]:
+                      - button "Automatisation 0" [ref=e960] [cursor=pointer]:
+                        - generic [ref=e576]:
+                          - generic [ref=e577]: Automatisation
+                          - generic [ref=e578]: "0"
+              - separator [ref=e215]
+              - generic [ref=e219]:
+                - tablist [ref=e222]:
+                  - tab "Activités" [selected] [ref=e961] [cursor=pointer]:
+                    - generic [ref=e225]: Activités
+                  - tab "Emails 0" [ref=e962] [cursor=pointer]:
+                    - generic [ref=e228]: Emails
+                    - generic [ref=e229]: "0"
+                  - tab "Notes 0" [ref=e963] [cursor=pointer]:
+                    - generic [ref=e232]: Notes
+                    - generic [ref=e233]: "0"
+                  - tab "Fichiers 0" [ref=e964] [cursor=pointer]:
+                    - generic [ref=e236]: Fichiers
+                    - generic [ref=e237]: "0"
+                  - tab "Journal" [ref=e965] [cursor=pointer]:
+                    - generic [ref=e240]: Journal
+                - generic [ref=e244]:
+                  - generic:
+                    - generic:
+                      - paragraph: Déposez vos fichiers ici pour les ajouter à cette fiche
+                  - generic [ref=e245]:
+                    - heading "Prochaine activité" [level=2] [ref=e966]
+                    - generic [ref=e247]:
+                      - button "Créer une activité" [ref=e967] [cursor=pointer]:
+                        - generic [ref=e250]: Créer une activité
+                      - button "Ajouter une note" [ref=e968] [cursor=pointer]:
+                        - generic [ref=e253]: Ajouter une note
+                  - generic [ref=e255]:
+                    - generic [ref=e256]:
+                      - generic [ref=e260]:
+                        - button "Appel" [ref=e969] [cursor=pointer]:
+                          - generic [ref=e265]: Appel
+                        - button "Olivier MENART" [ref=e970] [cursor=pointer]:
+                          - generic [ref=e269]: Olivier MENART
+                        - button "Aujourd'hui" [ref=e971] [cursor=pointer]:
+                          - generic [ref=e273]: Aujourd'hui
+                        - button "Ajouter à mon agenda" [ref=e972] [cursor=pointer]:
+                          - generic [ref=e277]: Ajouter à mon agenda
+                        - button "Ajouter à mon agenda" [ref=e973] [cursor=pointer]:
+                          - generic [ref=e280]:
+                            - generic: Ajouter à mon agenda
+                      - generic [ref=e283]:
+                        - textbox [ref=e287]: Appel de qualification 1/2
+                        - textbox [ref=e293]:
+                          - paragraph [ref=e294]: Ajouter du contenu à cette note
+                        - generic [ref=e296]:
+                          - button "Faux numéro" [ref=e974] [cursor=pointer]:
+                            - generic [ref=e299]: Faux numéro
+                          - button "Non répondu" [ref=e975] [cursor=pointer]:
+                            - generic [ref=e302]: Non répondu
+                          - button "Répondu" [ref=e976] [cursor=pointer]:
+                            - generic [ref=e305]: Répondu
+                    - generic [ref=e977]:
+                      - generic [ref=e981]:
+                        - button "Rendez-vous" [ref=e983] [cursor=pointer]:
+                          - generic [ref=e986]: Rendez-vous
+                        - button "Olivier MENART" [ref=e987] [cursor=pointer]:
+                          - generic [ref=e990]: Olivier MENART
+                        - button "Aujourd'hui • 12:30 - 13:00" [expanded] [ref=e1246] [cursor=pointer]:
+                          - generic [ref=e994]: Aujourd'hui • 12:30 - 13:00
+                        - dialog [ref=e1026]:
+                          - generic [ref=e1030]:
+                            - generic [ref=e1031]:
+                              - textbox "Lundi prochain..." [ref=e1032]
+                              - generic [ref=e1035]: ↵
+                            - generic [ref=e1038]:
+                              - generic [ref=e1039]:
+                                - generic [ref=e1040]:
+                                  - button [ref=e1041] [cursor=pointer]
+                                  - generic [ref=e1043]: mai
+                                  - button [ref=e1044] [cursor=pointer]
+                                - textbox [ref=e1048]: "2026"
+                              - grid "mai 2026" [ref=e1049]:
+                                - rowgroup [ref=e1050]:
+                                  - row [ref=e1051]:
+                                    - columnheader [ref=e1052]: lu
+                                    - columnheader [ref=e1053]: ma
+                                    - columnheader [ref=e1054]: me
+                                    - columnheader [ref=e1055]: je
+                                    - columnheader [ref=e1056]: ve
+                                    - columnheader [ref=e1057]: sa
+                                    - columnheader [ref=e1058]: di
+                                - rowgroup [ref=e1059]:
+                                  - row "lundi 27 avril 2026 mardi 28 avril 2026 mercredi 29 avril 2026 jeudi 30 avril 2026 vendredi 1 mai 2026 samedi 2 mai 2026 dimanche 3 mai 2026" [ref=e1060]:
+                                    - gridcell "lundi 27 avril 2026":
+                                      - button "lundi 27 avril 2026": "27"
+                                    - gridcell "mardi 28 avril 2026":
+                                      - button "mardi 28 avril 2026": "28"
+                                    - gridcell "mercredi 29 avril 2026":
+                                      - button "mercredi 29 avril 2026": "29"
+                                    - gridcell "jeudi 30 avril 2026":
+                                      - button "jeudi 30 avril 2026": "30"
+                                    - gridcell "vendredi 1 mai 2026" [ref=e1061]:
+                                      - button "vendredi 1 mai 2026" [ref=e1062] [cursor=pointer]: "1"
+                                    - gridcell "samedi 2 mai 2026" [ref=e1063]:
+                                      - button "samedi 2 mai 2026" [ref=e1064] [cursor=pointer]: "2"
+                                    - gridcell "dimanche 3 mai 2026" [ref=e1065]:
+                                      - button "dimanche 3 mai 2026" [ref=e1066] [cursor=pointer]: "3"
+                                  - row "lundi 4 mai 2026 mardi 5 mai 2026 mercredi 6 mai 2026 jeudi 7 mai 2026 vendredi 8 mai 2026 samedi 9 mai 2026 dimanche 10 mai 2026" [ref=e1067]:
+                                    - gridcell "lundi 4 mai 2026" [ref=e1068]:
+                                      - button "lundi 4 mai 2026" [ref=e1069] [cursor=pointer]: "4"
+                                    - gridcell "mardi 5 mai 2026" [ref=e1070]:
+                                      - button "mardi 5 mai 2026" [ref=e1071] [cursor=pointer]: "5"
+                                    - gridcell "mercredi 6 mai 2026" [ref=e1072]:
+                                      - button "mercredi 6 mai 2026" [ref=e1073] [cursor=pointer]: "6"
+                                    - gridcell "jeudi 7 mai 2026" [ref=e1074]:
+                                      - button "jeudi 7 mai 2026" [ref=e1075] [cursor=pointer]: "7"
+                                    - gridcell "vendredi 8 mai 2026" [ref=e1076]:
+                                      - button "vendredi 8 mai 2026" [ref=e1077] [cursor=pointer]: "8"
+                                    - gridcell "samedi 9 mai 2026" [ref=e1078]:
+                                      - button "samedi 9 mai 2026" [ref=e1079] [cursor=pointer]: "9"
+                                    - gridcell "dimanche 10 mai 2026" [ref=e1080]:
+                                      - button "dimanche 10 mai 2026" [ref=e1081] [cursor=pointer]: "10"
+                                  - row "lundi 11 mai 2026 mardi 12 mai 2026 mercredi 13 mai 2026 jeudi 14 mai 2026 vendredi 15 mai 2026 samedi 16 mai 2026 dimanche 17 mai 2026" [ref=e1082]:
+                                    - gridcell "lundi 11 mai 2026" [ref=e1083]:
+                                      - button "lundi 11 mai 2026" [ref=e1084] [cursor=pointer]: "11"
+                                    - gridcell "mardi 12 mai 2026" [ref=e1085]:
+                                      - button "mardi 12 mai 2026" [ref=e1086] [cursor=pointer]: "12"
+                                    - gridcell "mercredi 13 mai 2026" [ref=e1087]:
+                                      - button "mercredi 13 mai 2026" [ref=e1088] [cursor=pointer]: "13"
+                                    - gridcell "jeudi 14 mai 2026" [ref=e1089]:
+                                      - button "jeudi 14 mai 2026" [ref=e1090] [cursor=pointer]: "14"
+                                    - gridcell "vendredi 15 mai 2026" [ref=e1091]:
+                                      - button "vendredi 15 mai 2026" [ref=e1092] [cursor=pointer]: "15"
+                                    - gridcell "samedi 16 mai 2026" [ref=e1093]:
+                                      - button "samedi 16 mai 2026" [ref=e1094] [cursor=pointer]: "16"
+                                    - gridcell "dimanche 17 mai 2026" [ref=e1095]:
+                                      - button "dimanche 17 mai 2026" [ref=e1096] [cursor=pointer]: "17"
+                                  - row "lundi 18 mai 2026 mardi 19 mai 2026 mercredi 20 mai 2026 jeudi 21 mai 2026 vendredi 22 mai 2026 samedi 23 mai 2026 dimanche 24 mai 2026" [ref=e1097]:
+                                    - gridcell "lundi 18 mai 2026" [ref=e1098]:
+                                      - button "lundi 18 mai 2026" [ref=e1099] [cursor=pointer]: "18"
+                                    - gridcell "mardi 19 mai 2026" [ref=e1100]:
+                                      - button "mardi 19 mai 2026" [ref=e1101] [cursor=pointer]: "19"
+                                    - gridcell "mercredi 20 mai 2026" [ref=e1102]:
+                                      - button "mercredi 20 mai 2026" [ref=e1103] [cursor=pointer]: "20"
+                                    - gridcell "jeudi 21 mai 2026" [ref=e1104]:
+                                      - button "jeudi 21 mai 2026" [ref=e1105] [cursor=pointer]: "21"
+                                    - gridcell "vendredi 22 mai 2026" [ref=e1106]:
+                                      - button "vendredi 22 mai 2026" [ref=e1107] [cursor=pointer]: "22"
+                                    - gridcell "samedi 23 mai 2026" [ref=e1108]:
+                                      - button "samedi 23 mai 2026" [ref=e1109] [cursor=pointer]: "23"
+                                    - gridcell "dimanche 24 mai 2026" [ref=e1110]:
+                                      - button "dimanche 24 mai 2026" [ref=e1111] [cursor=pointer]: "24"
+                                  - row "lundi 25 mai 2026 mardi 26 mai 2026 mercredi 27 mai 2026 Today, jeudi 28 mai 2026, selected vendredi 29 mai 2026 samedi 30 mai 2026 dimanche 31 mai 2026" [ref=e1112]:
+                                    - gridcell "lundi 25 mai 2026" [ref=e1113]:
+                                      - button "lundi 25 mai 2026" [ref=e1114] [cursor=pointer]: "25"
+                                    - gridcell "mardi 26 mai 2026" [ref=e1115]:
+                                      - button "mardi 26 mai 2026" [ref=e1116] [cursor=pointer]: "26"
+                                    - gridcell "mercredi 27 mai 2026" [ref=e1117]:
+                                      - button "mercredi 27 mai 2026" [ref=e1118] [cursor=pointer]: "27"
+                                    - gridcell "Today, jeudi 28 mai 2026, selected" [selected] [ref=e1119]:
+                                      - button "Today, jeudi 28 mai 2026, selected" [ref=e1120] [cursor=pointer]: "28"
+                                    - gridcell "vendredi 29 mai 2026" [ref=e1121]:
+                                      - button "vendredi 29 mai 2026" [ref=e1122] [cursor=pointer]: "29"
+                                    - gridcell "samedi 30 mai 2026" [ref=e1123]:
+                                      - button "samedi 30 mai 2026" [ref=e1124] [cursor=pointer]: "30"
+                                    - gridcell "dimanche 31 mai 2026" [ref=e1125]:
+                                      - button "dimanche 31 mai 2026" [ref=e1126] [cursor=pointer]: "31"
+                            - separator [ref=e1127]
+                            - generic [ref=e1128]:
+                              - generic [ref=e1131]:
+                                - button "12:30" [ref=e1132] [cursor=pointer]:
+                                  - textbox "Début" [ref=e1133]: 12:30
+                                - button "13:00 (30 min)" [active] [ref=e1247] [cursor=pointer]:
+                                  - textbox "Fin" [ref=e1136]: 13:00
+                                  - generic [ref=e1137]: (30 min)
+                              - button [ref=e1138] [cursor=pointer]
+                        - button "Ajouter à mon agenda" [ref=e995] [cursor=pointer]:
+                          - generic [ref=e998]: Ajouter à mon agenda
+                        - button "Ajouter à mon agenda" [ref=e1000] [cursor=pointer]:
+                          - generic [ref=e1001]:
+                            - generic: Ajouter à mon agenda
+                      - generic [ref=e1004]:
+                        - textbox [ref=e1008]: Visite - 18 Passage de la Bonne Graine
+                        - textbox [ref=e1014]:
+                          - paragraph [ref=e1015]: Daniel ZRIHEN +33 6 16 13 61 26 danzrihen@gmail.com
+                        - button "Rendez-vous effectué" [ref=e1018] [cursor=pointer]: Rendez-vous effectué
+                  - heading "Historique" [level=2] [ref=e1020]
+                  - generic [ref=e311]:
+                    - generic [ref=e314]: Aujourd'hui
+                    - generic [ref=e316]:
+                      - generic [ref=e320]:
+                        - img [ref=e327]
+                        - generic [ref=e334]:
+                          - generic [ref=e335]:
+                            - text: Une demande d'information a été faite sur la vente
+                            - link "Rémy HOCHART • 18 Passage de la Bonne Graine (75011)" [ref=e1021] [cursor=pointer]:
+                              - /url: /card/69e38dbc9ecc67b2d70cc31f
+                            - text: via
+                            - generic [ref=e337]: Olivier MENART
+                          - generic [ref=e338]: Le 28 mai 2026 à 10:12
+                      - generic [ref=e345]:
+                        - img [ref=e352]
+                        - generic [ref=e358]:
+                          - generic [ref=e359]: Olivier MENARTa créé cette fiche
+                          - generic [ref=e360]: Le 28 mai 2026 à 10:11
+          - button
+    - region "Notifications alt+T"
+  - iframe [ref=e87]:
+    

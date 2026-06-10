@@ -1,0 +1,235 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "A Abriculteurs PARIS • ÎLE-DE-FRANCE" [ref=e8] [cursor=pointer]:
+            - generic [ref=e11]: A
+            - generic [ref=e12]: Abriculteurs PARIS • ÎLE-DE-FRANCE
+          - button "button.toggleSidebar" [ref=e14] [cursor=pointer]:
+            - generic [ref=e16]: Toggle Sidebar
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - generic [ref=e20]:
+              - button "Rechercher" [ref=e22] [cursor=pointer]:
+                - generic [ref=e24]: Rechercher
+              - button [ref=e26] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "Carte" [ref=e29] [cursor=pointer]:
+              - /url: /map-insights
+              - generic [ref=e31]: Carte
+        - list [ref=e34]:
+          - listitem [ref=e36]:
+            - button "Prospects vendeurs" [expanded] [ref=e37] [cursor=pointer]:
+              - generic [ref=e40]: Prospects vendeurs
+            - list [ref=e43]:
+              - listitem [ref=e44]:
+                - link "Suivi des opportunités" [ref=e45] [cursor=pointer]:
+                  - /url: /sellers/tracking-board
+                  - generic [ref=e48]: Suivi des opportunités
+              - listitem [ref=e49]:
+                - link "Pioche" [ref=e50] [cursor=pointer]:
+                  - /url: /sellers/stack
+                  - generic [ref=e53]: Pioche
+              - listitem [ref=e54]:
+                - link "Préqualification" [ref=e55] [cursor=pointer]:
+                  - /url: /sellers/prequalification
+                  - generic [ref=e58]: Préqualification
+              - listitem [ref=e59]:
+                - link "Prospection terrain" [ref=e60] [cursor=pointer]:
+                  - /url: /sellers/terrain
+                  - generic [ref=e63]: Prospection terrain
+              - listitem [ref=e64]:
+                - link "Archivés" [ref=e65] [cursor=pointer]:
+                  - /url: /sellers/archives
+                  - generic [ref=e68]: Archivés
+          - listitem [ref=e69]:
+            - link "Mandats de vente" [ref=e70] [cursor=pointer]:
+              - /url: /mandates/tracking-board
+              - generic [ref=e73]: Mandats de vente
+          - listitem [ref=e74]:
+            - link "Demandes acquéreurs" [ref=e75] [cursor=pointer]:
+              - /url: /matches/tracking-board
+              - generic [ref=e78]: Demandes acquéreurs
+          - separator [ref=e79]
+          - listitem [ref=e81]:
+            - button "Prospects bailleurs" [ref=e82] [cursor=pointer]:
+              - generic [ref=e85]: Prospects bailleurs
+          - listitem [ref=e87]:
+            - link "Mandats de location" [ref=e88] [cursor=pointer]:
+              - /url: /rental/management/tracking-board
+              - generic [ref=e91]: Mandats de location
+          - separator [ref=e92]
+          - listitem [ref=e93]:
+            - link "Annonces" [ref=e94] [cursor=pointer]:
+              - /url: /listings
+              - generic [ref=e97]: Annonces
+          - listitem [ref=e98]:
+            - link "Fichier acquéreurs" [ref=e99] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e102]: Fichier acquéreurs
+        - generic [ref=e103]:
+          - separator [ref=e104]
+          - button "? Support client" [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: "?"
+            - generic [ref=e107]: Support client
+          - generic [ref=e108]:
+            - text: "2026"
+            - link "Avest" [ref=e109] [cursor=pointer]:
+              - /url: https://avest.fr
+            - text: "- v1.31.0"
+        - button "Toggle Sidebar" [ref=e110] [cursor=pointer]
+      - main [ref=e111]:
+        - navigation "breadcrumb" [ref=e117]:
+          - list [ref=e118]:
+            - button [ref=e119] [cursor=pointer]
+            - link "Fichier acquéreurs" [ref=e121] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e122]: Fichier acquéreurs
+            - listitem [ref=e123]: /
+            - generic [ref=e124]:
+              - img [ref=e125]
+              - generic [ref=e127]: À qualifier
+            - listitem [ref=e128]: /
+            - link "5208YTYK" [disabled] [ref=e129]:
+              - generic [ref=e130]: 5208YTYK
+              - button [disabled] [ref=e131] [cursor=pointer]
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - generic [ref=e137]:
+                - generic [ref=e139]:
+                  - generic [ref=e143]: Acquisition
+                  - generic [ref=e145]: Daniel ZRIHEN
+                - generic [ref=e149]:
+                  - button "Olivier MENART" [ref=e150] [cursor=pointer]:
+                    - generic [ref=e153]: Olivier MENART
+                  - button "À qualifier" [ref=e154] [cursor=pointer]:
+                    - generic [ref=e155]:
+                      - img [ref=e156]
+                      - generic [ref=e158]: À qualifier
+                  - button "Ajouter une étiquette" [ref=e160] [cursor=pointer]:
+                    - generic [ref=e163]: Ajouter une étiquette
+              - generic [ref=e164]:
+                - button "Archiver" [ref=e165] [cursor=pointer]: Archiver
+                - button "Changer d'étape" [expanded] [ref=e167] [cursor=pointer]: Changer d'étape
+                - menu "Changer d'étape" [active] [ref=e394]:
+                  - menuitem "Changer l'étape du projet" [ref=e395] [cursor=pointer]:
+                    - generic [ref=e396]: Changer l'étape du projet
+                  - menuitem "Changer l'étape d'une demande" [ref=e398] [cursor=pointer]:
+                    - generic [ref=e399]: Changer l'étape d'une demande
+                - button [ref=e169] [cursor=pointer]
+                - button [ref=e171] [cursor=pointer]:
+                  - img [ref=e173]
+            - generic [ref=e178]:
+              - generic [ref=e182]:
+                - tablist [ref=e185]:
+                  - tab "Description" [ref=e186] [cursor=pointer]: Description
+                  - button "Rapproch. 0" [ref=e188] [cursor=pointer]:
+                    - tab "Rapproch. 0" [ref=e189]:
+                      - text: Rapproch.
+                      - generic [ref=e192]: "0"
+                  - button "Demandes 1" [ref=e193] [cursor=pointer]:
+                    - tab "Demandes 1" [selected] [ref=e194]:
+                      - text: Demandes
+                      - generic [ref=e197]: "1"
+                - tabpanel "Demandes 1" [ref=e200]:
+                  - region [ref=e201]:
+                    - generic [ref=e202]:
+                      - generic [ref=e203]:
+                        - heading "Suivi des demandes d'infos et visites de biens" [level=3] [ref=e205]:
+                          - button "Suivi des demandes d'infos et visites de biens" [expanded] [ref=e206] [cursor=pointer]:
+                            - generic [ref=e211]: Suivi des demandes d'infos et visites de biens
+                        - generic [ref=e213]:
+                          - button [ref=e214] [cursor=pointer]
+                          - button [ref=e216] [cursor=pointer]
+                      - region "Suivi des demandes d'infos et visites de biens" [ref=e218]:
+                        - link "Olivier MENART HOCHART - 18 Passage de la Bonne Graine (75011) Step 3 of 5 Visite" [ref=e221] [cursor=pointer]:
+                          - /url: /card/69e38dbc9ecc67b2d70cc31f/activity?tab=matching
+                          - generic [ref=e222]:
+                            - button "Olivier MENART" [ref=e224]:
+                              - img "Olivier MENART" [ref=e226]
+                            - generic [ref=e228]:
+                              - generic [ref=e229]: HOCHART -
+                              - generic [ref=e230]: 18 Passage de la Bonne Graine
+                              - generic [ref=e231]: (75011)
+                          - button "Step 3 of 5 Visite" [ref=e234]:
+                            - generic [ref=e235]:
+                              - img "Step 3 of 5" [ref=e236]
+                              - generic [ref=e239]: Visite
+              - separator [ref=e240]
+              - generic [ref=e244]:
+                - tablist [ref=e247]:
+                  - tab "Activités" [selected] [ref=e248] [cursor=pointer]:
+                    - generic [ref=e250]: Activités
+                  - tab "Emails 0" [ref=e251] [cursor=pointer]:
+                    - generic [ref=e253]: Emails
+                    - generic [ref=e254]: "0"
+                  - tab "Notes 0" [ref=e255] [cursor=pointer]:
+                    - generic [ref=e257]: Notes
+                    - generic [ref=e258]: "0"
+                  - tab "Fichiers 0" [ref=e259] [cursor=pointer]:
+                    - generic [ref=e261]: Fichiers
+                    - generic [ref=e262]: "0"
+                  - tab "Journal" [ref=e263] [cursor=pointer]:
+                    - generic [ref=e265]: Journal
+                - generic [ref=e269]:
+                  - generic:
+                    - generic:
+                      - paragraph: Déposez vos fichiers ici pour les ajouter à cette fiche
+                  - generic [ref=e270]:
+                    - heading "Prochaine activité" [level=2] [ref=e271]
+                    - generic [ref=e272]:
+                      - button "Créer une activité" [ref=e273] [cursor=pointer]:
+                        - generic [ref=e275]: Créer une activité
+                      - button "Ajouter une note" [ref=e276] [cursor=pointer]:
+                        - generic [ref=e278]: Ajouter une note
+                  - generic [ref=e281]:
+                    - generic [ref=e285]:
+                      - button "Appel" [ref=e287] [cursor=pointer]:
+                        - generic [ref=e290]: Appel
+                      - button "Olivier MENART" [ref=e291] [cursor=pointer]:
+                        - generic [ref=e294]: Olivier MENART
+                      - button "Aujourd'hui" [ref=e295] [cursor=pointer]:
+                        - generic [ref=e298]: Aujourd'hui
+                      - button "Ajouter à mon agenda" [ref=e299] [cursor=pointer]:
+                        - generic [ref=e302]: Ajouter à mon agenda
+                      - button "Ajouter à mon agenda" [ref=e304] [cursor=pointer]:
+                        - generic [ref=e305]:
+                          - generic: Ajouter à mon agenda
+                    - generic [ref=e308]:
+                      - textbox [ref=e312]: Appel de qualification 1/2
+                      - textbox [ref=e318]:
+                        - paragraph [ref=e319]: Ajouter du contenu à cette note
+                      - generic [ref=e320]:
+                        - generic [ref=e405]: Enregistré
+                        - generic [ref=e321]:
+                          - button "Faux numéro" [ref=e322] [cursor=pointer]:
+                            - generic [ref=e324]: Faux numéro
+                          - button "Non répondu" [ref=e325] [cursor=pointer]:
+                            - generic [ref=e327]: Non répondu
+                          - button "Répondu" [ref=e328] [cursor=pointer]:
+                            - generic [ref=e330]: Répondu
+                  - heading "Historique" [level=2] [ref=e332]
+                  - generic [ref=e336]:
+                    - generic [ref=e339]: Aujourd'hui
+                    - generic [ref=e341]:
+                      - generic [ref=e345]:
+                        - img [ref=e352]
+                        - generic [ref=e359]:
+                          - generic [ref=e360]:
+                            - text: Une demande d'information a été faite sur la vente
+                            - link "Rémy HOCHART • 18 Passage de la Bonne Graine (75011)" [ref=e361] [cursor=pointer]:
+                              - /url: /card/69e38dbc9ecc67b2d70cc31f
+                            - text: via
+                            - generic [ref=e362]: Olivier MENART
+                          - generic [ref=e363]: Le 28 mai 2026 à 10:12
+                      - generic [ref=e370]:
+                        - img [ref=e377]
+                        - generic [ref=e383]:
+                          - generic [ref=e384]: Olivier MENARTa créé cette fiche
+                          - generic [ref=e385]: Le 28 mai 2026 à 10:11
+          - button
+    - region "Notifications alt+T"
+  - iframe [ref=e389]:
+    

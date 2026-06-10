@@ -1,0 +1,523 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "A Abriculteurs PARIS • ÎLE-DE-FRANCE" [ref=e8] [cursor=pointer]:
+            - generic [ref=e11]: A
+            - generic [ref=e12]: Abriculteurs PARIS • ÎLE-DE-FRANCE
+          - button "button.toggleSidebar" [ref=e14] [cursor=pointer]:
+            - generic [ref=e16]: Toggle Sidebar
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - generic [ref=e20]:
+              - button "Rechercher" [ref=e22] [cursor=pointer]:
+                - generic [ref=e24]: Rechercher
+              - button [ref=e26] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "Carte" [ref=e29] [cursor=pointer]:
+              - /url: /map-insights
+              - generic [ref=e31]: Carte
+        - list [ref=e34]:
+          - listitem [ref=e36]:
+            - button "Prospects vendeurs" [expanded] [ref=e37] [cursor=pointer]:
+              - generic [ref=e40]: Prospects vendeurs
+            - list [ref=e43]:
+              - listitem [ref=e44]:
+                - link "Suivi des opportunités" [ref=e45] [cursor=pointer]:
+                  - /url: /sellers/tracking-board
+                  - generic [ref=e48]: Suivi des opportunités
+              - listitem [ref=e49]:
+                - link "Pioche" [ref=e50] [cursor=pointer]:
+                  - /url: /sellers/stack
+                  - generic [ref=e53]: Pioche
+              - listitem [ref=e54]:
+                - link "Préqualification" [ref=e55] [cursor=pointer]:
+                  - /url: /sellers/prequalification
+                  - generic [ref=e58]: Préqualification
+              - listitem [ref=e59]:
+                - link "Prospection terrain" [ref=e60] [cursor=pointer]:
+                  - /url: /sellers/terrain
+                  - generic [ref=e63]: Prospection terrain
+              - listitem [ref=e64]:
+                - link "Archivés" [ref=e65] [cursor=pointer]:
+                  - /url: /sellers/archives
+                  - generic [ref=e68]: Archivés
+          - listitem [ref=e69]:
+            - link "Mandats de vente" [ref=e70] [cursor=pointer]:
+              - /url: /mandates/tracking-board
+              - generic [ref=e73]: Mandats de vente
+          - listitem [ref=e74]:
+            - link "Demandes acquéreurs" [ref=e75] [cursor=pointer]:
+              - /url: /matches/tracking-board
+              - generic [ref=e78]: Demandes acquéreurs
+          - separator [ref=e79]
+          - listitem [ref=e81]:
+            - button "Prospects bailleurs" [ref=e82] [cursor=pointer]:
+              - generic [ref=e85]: Prospects bailleurs
+          - listitem [ref=e87]:
+            - link "Mandats de location" [ref=e88] [cursor=pointer]:
+              - /url: /rental/management/tracking-board
+              - generic [ref=e91]: Mandats de location
+          - separator [ref=e92]
+          - listitem [ref=e93]:
+            - link "Annonces" [ref=e94] [cursor=pointer]:
+              - /url: /listings
+              - generic [ref=e97]: Annonces
+          - listitem [ref=e98]:
+            - link "Fichier acquéreurs" [ref=e99] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e102]: Fichier acquéreurs
+        - generic [ref=e103]:
+          - separator [ref=e104]
+          - button "? Support client" [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: "?"
+            - generic [ref=e107]: Support client
+          - generic [ref=e109]:
+            - text: "2026"
+            - link "Avest" [ref=e110] [cursor=pointer]:
+              - /url: https://avest.fr
+            - text: "- v1.31.0"
+        - button "Toggle Sidebar" [ref=e111] [cursor=pointer]
+      - main [ref=e112]:
+        - generic [ref=e116]:
+          - navigation "breadcrumb" [ref=e118]:
+            - list [ref=e119]:
+              - button [ref=e793] [cursor=pointer]
+              - link "Mandats de vente" [ref=e795] [cursor=pointer]:
+                - /url: /mandates/tracking-board
+                - generic [ref=e796]: Mandats de vente
+              - listitem [ref=e797]: /
+              - generic [ref=e798]:
+                - img [ref=e799]
+                - generic [ref=e801]: Mandat signé
+              - listitem [ref=e802]: /
+              - link "KBQY0907" [disabled] [ref=e803]:
+                - generic [ref=e804]: KBQY0907
+                - button [disabled] [ref=e805] [cursor=pointer]
+          - generic [ref=e807]:
+            - button [ref=e808] [cursor=pointer]
+            - generic [ref=e810]: 6/18
+            - button [ref=e811] [cursor=pointer]
+        - generic [ref=e127]:
+          - generic [ref=e813]:
+            - generic [ref=e814]:
+              - generic [ref=e816]:
+                - generic [ref=e818]:
+                  - generic [ref=e821]: Vente
+                  - generic [ref=e823]: Rémy HOCHART
+                  - generic [ref=e824]: 18 Passage de la Bonne Graine (75011)
+                - generic [ref=e829]:
+                  - button "Olivier MENART" [ref=e830] [cursor=pointer]:
+                    - generic [ref=e833]: Olivier MENART
+                  - button "Mandat signé" [ref=e834] [cursor=pointer]:
+                    - generic [ref=e835]:
+                      - img [ref=e836]
+                      - generic [ref=e838]: Mandat signé
+                  - button "Portails & site web" [ref=e839] [cursor=pointer]:
+                    - button "Portails & site web" [ref=e840]:
+                      - generic [ref=e841]: Portails & site web
+                  - button "Ajouter une étiquette" [ref=e844] [cursor=pointer]:
+                    - generic [ref=e847]: Ajouter une étiquette
+              - generic [ref=e848]:
+                - button "Archiver" [ref=e849] [cursor=pointer]:
+                  - generic [ref=e851]: Archiver
+                - button "Changer d'étape" [ref=e852] [cursor=pointer]: Changer d'étape
+                - button [ref=e854] [cursor=pointer]
+                - button [ref=e856] [cursor=pointer]:
+                  - img [ref=e858]
+                - button [ref=e861] [cursor=pointer]
+            - generic [ref=e865]:
+              - generic [ref=e869]:
+                - tablist [ref=e872]:
+                  - tab "Description" [selected] [ref=e873] [cursor=pointer]: Description
+                  - button "Acquéreurs 91" [ref=e875] [cursor=pointer]:
+                    - tab "Acquéreurs 91" [ref=e876]:
+                      - text: Acquéreurs
+                      - generic [ref=e879]: "91"
+                  - tab "Diffusion 2" [ref=e881] [cursor=pointer]:
+                    - generic [ref=e884]: Diffusion
+                    - generic [ref=e885]: "2"
+                - tabpanel "Description" [ref=e888]:
+                  - region [ref=e889]:
+                    - generic [ref=e890]:
+                      - generic [ref=e891]:
+                        - heading "Propriétaire" [level=3] [ref=e892]:
+                          - button "Propriétaire" [expanded] [ref=e893] [cursor=pointer]: Propriétaire
+                        - generic [ref=e896]:
+                          - button [ref=e897] [cursor=pointer]
+                          - generic [ref=e899]:
+                            - link [ref=e900] [cursor=pointer]:
+                              - /url: tel:+33688217458
+                              - button [ref=e901]
+                            - button [ref=e903] [cursor=pointer]
+                          - button [ref=e905] [cursor=pointer]
+                      - region "Propriétaire" [ref=e907]:
+                        - generic [ref=e909]:
+                          - generic [ref=e910]:
+                            - generic:
+                              - generic: Principal
+                          - generic [ref=e914] [cursor=pointer]:
+                            - generic [ref=e915]: Rémy HOCHART
+                            - generic [ref=e916]:
+                              - generic [ref=e918]: 06 88 21 74 58
+                              - generic [ref=e921]:
+                                - generic [ref=e923]: 06 88 21 74 58
+                                - generic:
+                                  - button
+                                  - button
+                            - generic [ref=e928]:
+                              - generic [ref=e930]: remy.hochart@gmail.com
+                              - generic [ref=e933]:
+                                - generic [ref=e935]: remy.hochart@gmail.com
+                                - generic:
+                                  - button
+                                  - button
+                    - generic [ref=e940]:
+                      - generic [ref=e941]:
+                        - generic [ref=e942]:
+                          - heading "Bien" [level=3] [ref=e943]:
+                            - button "Bien" [expanded] [ref=e944] [cursor=pointer]: Bien
+                          - button "3" [ref=e947] [cursor=pointer]:
+                            - generic [ref=e948]: "3"
+                        - button [ref=e951] [cursor=pointer]
+                      - region "Bien" [ref=e953]:
+                        - generic [ref=e954]:
+                          - generic [ref=e955]:
+                            - generic [ref=e957]:
+                              - generic [ref=e958]:
+                                - generic:
+                                  - generic: Adresse
+                              - generic [ref=e960]:
+                                - button "18 Passage De La Bonne Graine, 75011 Paris" [ref=e963] [cursor=pointer]:
+                                  - combobox [expanded] [ref=e964]: 18 Passage De La Bonne Graine, 75011 Paris
+                                - generic [ref=e965]:
+                                  - link [ref=e966] [cursor=pointer]:
+                                    - /url: /map-insights?customId=KBQY0907
+                                    - button [ref=e967]:
+                                      - img [ref=e969]
+                                  - link [ref=e975] [cursor=pointer]:
+                                    - /url: https://maps.google.com/?q=18 Passage De La Bonne Graine, 75011 Paris
+                            - generic [ref=e977]:
+                              - generic [ref=e978]: Type bien
+                              - button "Appartement" [ref=e979] [cursor=pointer]:
+                                - generic [ref=e980]: Appartement
+                            - generic [ref=e982]:
+                              - generic [ref=e983]:
+                                - generic:
+                                  - generic: Surface
+                              - textbox "Surface" [ref=e986]:
+                                - /placeholder: Renseigner
+                                - text: 61 m²
+                            - generic [ref=e988]:
+                              - generic [ref=e989]:
+                                - generic:
+                                  - generic: État
+                              - button "Refait à neuf" [ref=e991] [cursor=pointer]:
+                                - generic [ref=e992]: Refait à neuf
+                            - generic [ref=e995]:
+                              - generic [ref=e996]: Étage
+                              - button "1er étage" [ref=e997] [cursor=pointer]:
+                                - generic [ref=e1000]: 1er étage
+                            - generic [ref=e1004]:
+                              - generic [ref=e1005]: Agencement
+                              - button "2 Pièces • 1 Chambre" [ref=e1006] [cursor=pointer]:
+                                - generic [ref=e1007]: 2 Pièces • 1 Chambre
+                            - generic [ref=e1010]:
+                              - generic [ref=e1011]:
+                                - generic:
+                                  - generic: Annexes
+                              - button "Balcon" [ref=e1013] [cursor=pointer]:
+                                - generic [ref=e1014]: Balcon
+                          - button "Voir les 29 autres caractéristiques >" [ref=e1015] [cursor=pointer]:
+                            - generic [ref=e1016]: Voir les 29 autres caractéristiques >
+                    - generic [ref=e1017]:
+                      - heading "Transaction" [level=3] [ref=e1020]:
+                        - button "Transaction" [expanded] [ref=e1021] [cursor=pointer]: Transaction
+                      - region "Transaction" [ref=e1024]:
+                        - generic [ref=e1026]:
+                          - generic [ref=e1027]:
+                            - generic [ref=e1028]:
+                              - generic:
+                                - generic: Type vente
+                            - button "Ancien" [ref=e1030] [cursor=pointer]
+                          - generic [ref=e1032]:
+                            - generic [ref=e1033]: Mandat
+                            - button "635 000 € FAI (610 577 € NV) Simple 2" [ref=e1034] [cursor=pointer]:
+                              - generic [ref=e1036]:
+                                - generic [ref=e1037]: 635 000 € FAI
+                                - generic [ref=e1038]: (610 577 € NV)
+                                - generic [ref=e1039]: Simple
+                                - button "2" [ref=e1040]:
+                                  - generic [ref=e1042]: "2"
+                          - generic [ref=e1045]:
+                            - generic [ref=e1047]:
+                              - img [ref=e1048]
+                              - text: MyNotary
+                            - button "Mandat de vente - MyNotary Signé" [ref=e1058] [cursor=pointer]:
+                              - generic [ref=e1061]:
+                                - generic [ref=e1062]: Mandat de vente - MyNotary
+                                - generic [ref=e1064]: Signé
+                              - generic:
+                                - generic:
+                                  - button
+                          - generic [ref=e1068]:
+                            - generic [ref=e1069]:
+                              - generic:
+                                - generic: Commission
+                            - generic [ref=e1072] [cursor=pointer]:
+                              - generic [ref=e1075]: 24 423 €
+                              - text: TTC • Olivier M.
+                          - button "Yanport Aucune étude" [ref=e1077] [cursor=pointer]:
+                            - generic [ref=e1078]:
+                              - generic [ref=e1082]:
+                                - img [ref=e1083]
+                                - text: Yanport
+                              - generic [ref=e1422]: Aucune étude
+                          - generic [ref=e1424]:
+                            - generic [ref=e1425]: Estimation
+                            - button "598 000 € - 658 000 € Avest" [ref=e1426] [cursor=pointer]:
+                              - generic [ref=e1428]:
+                                - generic [ref=e1429]:
+                                  - generic [ref=e1431]: 598 000 €
+                                  - generic [ref=e1432]: "-"
+                                  - generic [ref=e1434]: 658 000 €
+                                - generic [ref=e1435]: Avest
+                          - generic [ref=e1438]:
+                            - generic [ref=e1439]: Dates clés
+                            - button "25 mai 2026 (Sign. mandat)" [ref=e1440] [cursor=pointer]:
+                              - generic [ref=e1442]: 25 mai 2026 (Sign. mandat)
+                          - generic [ref=e1444]:
+                            - generic [ref=e1445]:
+                              - generic:
+                                - generic: Statut
+                            - button "Commercialisé" [ref=e1447] [cursor=pointer]:
+                              - generic [ref=e1449]: Commercialisé
+                          - generic [ref=e1451]:
+                            - generic [ref=e1452]: Source
+                            - button "Inconnu (18 avr. 26)" [ref=e1453] [cursor=pointer]:
+                              - generic [ref=e1455]:
+                                - generic [ref=e1456]: Inconnu
+                                - generic [ref=e1457]: (18 avr. 26)
+                          - generic [ref=e1459]:
+                            - generic [ref=e1460]: Réf. Avest
+                            - generic [ref=e1461]:
+                              - generic [ref=e1462]: KBQY0907
+                              - generic [ref=e1463]:
+                                - button [ref=e1464] [cursor=pointer]
+                                - button [ref=e1466] [cursor=pointer]
+                          - generic [ref=e1469]:
+                            - generic [ref=e1470]: Réf. agence
+                            - textbox "Renseigner" [ref=e1472]
+                          - generic [ref=e1473]:
+                            - generic [ref=e1474]: Étape
+                            - generic [ref=e1475]:
+                              - generic [ref=e1476]: Mandat signé
+                              - generic [ref=e1477]: "-"
+                              - generic [ref=e1478]: Depuis 3 jours
+                    - generic [ref=e1479]:
+                      - heading "Partenaire" [level=3] [ref=e1481]:
+                        - button "Partenaire" [expanded] [ref=e1482] [cursor=pointer]: Partenaire
+                      - region "Partenaire" [ref=e1485]:
+                        - button "Ajouter un contact partenaire" [ref=e1488] [cursor=pointer]: Ajouter un contact partenaire
+                    - generic [ref=e1491]:
+                      - heading "Autres projets 0" [level=3] [ref=e1492]:
+                        - button "Autres projets 0" [disabled] [ref=e1493]:
+                          - generic [ref=e1496]: Autres projets
+                          - generic [ref=e1497]: "0"
+                      - button "Créer" [ref=e1500] [cursor=pointer]
+                    - generic [ref=e1502]:
+                      - heading "Automatisation 0" [level=3] [ref=e1505]:
+                        - button "Automatisation 0" [ref=e1506] [cursor=pointer]:
+                          - generic [ref=e1508]:
+                            - generic [ref=e1509]: Automatisation
+                            - generic [ref=e1510]: "0"
+                      - button [ref=e1512] [cursor=pointer]
+              - separator [ref=e1516]
+              - generic [ref=e1520]:
+                - tablist [ref=e1523]:
+                  - tab "Activités" [selected] [ref=e1524] [cursor=pointer]:
+                    - generic [ref=e1526]: Activités
+                  - tab "Emails 2" [ref=e1527] [cursor=pointer]:
+                    - generic [ref=e1529]: Emails
+                    - generic [ref=e1530]: "2"
+                  - tab "Notes 0" [ref=e1531] [cursor=pointer]:
+                    - generic [ref=e1533]: Notes
+                    - generic [ref=e1534]: "0"
+                  - tab "Fichiers 16" [ref=e1535] [cursor=pointer]:
+                    - generic [ref=e1537]: Fichiers
+                    - generic [ref=e1538]: "16"
+                  - tab "Journal" [ref=e1539] [cursor=pointer]:
+                    - generic [ref=e1541]: Journal
+                - generic [ref=e1545]:
+                  - generic:
+                    - generic:
+                      - paragraph: Déposez vos fichiers ici pour les ajouter à cette fiche
+                  - generic [ref=e1546]:
+                    - heading "Prochaine activité" [level=2] [ref=e1547]
+                    - button "Ajouter une note" [ref=e1549] [cursor=pointer]:
+                      - generic [ref=e1551]: Ajouter une note
+                  - alert [ref=e1554]:
+                    - generic [ref=e1556]:
+                      - generic [ref=e1557]:
+                        - paragraph [ref=e1558]: Pas de prochaine activité
+                        - paragraph [ref=e1559]: Vous pouvez créer une activité en cliquant sur le bouton ci-dessous
+                      - button "Créer une activité" [ref=e1560] [cursor=pointer]: Créer une activité
+                  - heading "Historique" [level=2] [ref=e1563]
+                  - generic [ref=e1566]:
+                    - generic [ref=e1567]:
+                      - generic [ref=e1570]: Cette semaine
+                      - generic [ref=e1572]:
+                        - generic [ref=e1574]:
+                          - generic [ref=e1586]:
+                            - text: Olivier MENARTa terminé une tâche
+                            - generic [ref=e1587]: Le 25 mai 2026 à 18:32
+                          - generic [ref=e1593]:
+                            - textbox "Titre de la note" [ref=e1597]: CHECKLIST MANDAT
+                            - textbox [ref=e1603]:
+                              - list [ref=e1604]:
+                                - listitem [ref=e1605]:
+                                  - checkbox "Task item checkbox for Compléter l'évaluation TRACFIN sur les vendeurs (sur MyNotary)" [ref=e1607]
+                                  - paragraph [ref=e1609]: Compléter l'évaluation TRACFIN sur les vendeurs (sur MyNotary)
+                                - listitem [ref=e1610]:
+                                  - checkbox "Task item checkbox for Charger les documents dans la fiche Avest (voir ci-dessous)" [ref=e1612]
+                                  - paragraph [ref=e1614]: Charger les documents dans la fiche Avest (voir ci-dessous)
+                                - listitem [ref=e1615]:
+                                  - checkbox "Task item checkbox for Vérifier date de prochaine AG de copropriété" [ref=e1617]
+                                  - paragraph [ref=e1619]: Vérifier date de prochaine AG de copropriété
+                              - paragraph [ref=e1620]
+                              - paragraph [ref=e1621]: "Vendeurs :"
+                              - list [ref=e1622]:
+                                - listitem [ref=e1623]:
+                                  - checkbox "Task item checkbox for Pièces d'identité de l'ensemble des indivisaires" [ref=e1625]
+                                  - paragraph [ref=e1627]: Pièces d'identité de l'ensemble des indivisaires
+                                - listitem [ref=e1628]:
+                                  - checkbox "Task item checkbox for Titre de propriété" [ref=e1630]
+                                  - paragraph [ref=e1632]: Titre de propriété
+                                - listitem [ref=e1633]:
+                                  - checkbox "Task item checkbox for Dernier avis d’imposition à la taxe foncière" [ref=e1635]
+                                  - paragraph [ref=e1637]: Dernier avis d’imposition à la taxe foncière
+                                - listitem [ref=e1638]:
+                                  - checkbox "Task item checkbox for Mandat (lien dossier avec MyNotary)" [ref=e1640]
+                                  - paragraph [ref=e1642]: Mandat (lien dossier avec MyNotary)
+                                - listitem [ref=e1643]:
+                                  - checkbox "Task item checkbox for Offre contre signée" [ref=e1645]
+                                  - paragraph [ref=e1647]: Offre contre signée
+                              - paragraph [ref=e1648]: "Bien vendu :"
+                              - list [ref=e1649]:
+                                - listitem [ref=e1650]:
+                                  - 'checkbox "Task item checkbox for DDT : collecter les diagnostics et vérifier validité" [ref=e1652]'
+                                  - paragraph [ref=e1654]: "DDT : collecter les diagnostics et vérifier validité"
+                              - paragraph [ref=e1655]: "Copro :"
+                              - list [ref=e1656]:
+                                - listitem [ref=e1657]:
+                                  - checkbox "Task item checkbox for Fiche synthétique de la copropriété (registre des copropriétés), sinon attestation de immatriculation de l’immeuble" [ref=e1659]
+                                  - paragraph [ref=e1661]: Fiche synthétique de la copropriété (registre des copropriétés), sinon attestation de immatriculation de l’immeuble
+                                - listitem [ref=e1662]:
+                                  - checkbox "Task item checkbox for 3 derniers PV d'AG" [ref=e1664]
+                                  - paragraph [ref=e1666]: 3 derniers PV d'AG
+                                - listitem [ref=e1667]:
+                                  - checkbox "Task item checkbox for RCP avec état descriptif de division et modificatifs" [ref=e1669]
+                                  - paragraph [ref=e1671]: RCP avec état descriptif de division et modificatifs
+                                - listitem [ref=e1672]:
+                                  - checkbox "Task item checkbox for Carnet d’entretien de l’immeuble" [ref=e1674]
+                                  - paragraph [ref=e1676]: Carnet d’entretien de l’immeuble
+                                - listitem [ref=e1677]:
+                                  - checkbox "Task item checkbox for Appels de charge" [ref=e1679]
+                                  - paragraph [ref=e1681]: Appels de charge
+                                - listitem [ref=e1682]:
+                                  - checkbox "Task item checkbox for (si disponible) convocation future AG" [ref=e1684]
+                                  - paragraph [ref=e1686]: (si disponible) convocation future AG
+                              - paragraph [ref=e1687]
+                        - generic [ref=e1692]:
+                          - generic [ref=e1702]:
+                            - text: Olivier MENART
+                            - generic [ref=e1703]: a été à un rendez-vous qui était planifié le 21 avril 2026 de 11:00 à 11:30
+                            - generic [ref=e1704]: Le 25 mai 2026 à 18:32
+                          - generic [ref=e1710]:
+                            - textbox "Titre de la note" [ref=e1714]: Rendez-vous estimation
+                            - textbox [ref=e1720]:
+                              - paragraph [ref=e1721]: Ajouter du contenu à cette note
+                        - generic [ref=e1724]:
+                          - generic [ref=e1736]:
+                            - text: Avesta importé un contrat depuis MyNotary
+                            - generic [ref=e1737]: Le 25 mai 2026 à 18:22
+                          - generic [ref=e1742] [cursor=pointer]:
+                            - img [ref=e1744]
+                            - generic [ref=e1752]: Annexe_2.pdf
+                        - generic [ref=e1754]:
+                          - generic [ref=e1766]:
+                            - text: Avesta importé un contrat depuis MyNotary
+                            - generic [ref=e1767]: Le 25 mai 2026 à 18:22
+                          - generic [ref=e1772] [cursor=pointer]:
+                            - img [ref=e1774]
+                            - generic [ref=e1782]: Mandat de vente - MyNotary.pdf
+                        - generic [ref=e1793]:
+                          - text: Olivier MENART
+                          - generic [ref=e1794]: a déplacé cette fiche de Estimation (R1) vers Mandat signé
+                          - generic [ref=e1795]: Le 25 mai 2026 à 17:31
+                    - generic [ref=e1799]:
+                      - generic [ref=e1802]: avril 2026
+                      - generic [ref=e1804]:
+                        - generic [ref=e1816]:
+                          - text: Olivier MENART
+                          - generic [ref=e1817]: a déplacé cette fiche de Nouveau vers Estimation (R1), le rendez-vous d'estimation est planifiée le 21/04/2026 de 11:00 à 12:30
+                          - generic [ref=e1818]: Le 20 avr. 2026 à 10:13
+                        - generic [ref=e1823]:
+                          - generic [ref=e1835]:
+                            - text: Avesta indiqué cette activité comme terminée car la séquence activité est terminée
+                            - generic [ref=e1836]: Le 20 avr. 2026 à 10:13
+                          - generic [ref=e1842]:
+                            - textbox "Titre de la note" [ref=e1846]: Confirmer le rendez-vous du 21/4/2026 à 12h00 (1/7)
+                            - textbox [ref=e1852]:
+                              - paragraph [ref=e1853]: Ajouter du contenu à cette note
+                        - generic [ref=e1856]:
+                          - generic [ref=e1868]:
+                            - text: Avesta envoyé un email
+                            - generic [ref=e1869]: Le 18 avr. 2026 à 16:01
+                          - generic [ref=e1874] [cursor=pointer]:
+                            - generic [ref=e1876]:
+                              - generic [ref=e1877]: Votre rendez-vous d'estimation Passage de la Bonne Graine à Paris
+                              - generic [ref=e1878]:
+                                - text: Olivier MENART
+                                - generic [ref=e1880]: remy.hochart@gmail.com
+                            - generic [ref=e1881]:
+                              - generic [ref=e1882]: "Bonjour, je vous confirme avoir bien reçu votre demande de rendez-vous d’estimation pour un bien situé Passage de la Bonne Graine à Paris. Je vais vous recontacter dans les meilleurs délais afin de confirmer ce rendez-vous. Voici mes coordonnées à toutes fins utiles : 06 70 74 49 35, olivier@abriculteurs.com. Cordialement, Olivier MENART Conseiller immobilier +33 6 70 74 49 35 olivier@abriculteurs.com abriculteurs.com"
+                              - generic [ref=e1883]:
+                                - button [ref=e1884]
+                                - button [ref=e1887]
+                        - generic [ref=e1891]:
+                          - generic [ref=e1903]:
+                            - text: Olivier MENARTa effectué un appel
+                            - generic [ref=e1904]: Le 18 avr. 2026 à 16:01
+                          - generic [ref=e1910]:
+                            - textbox "Titre de la note" [ref=e1914]: Appel de qualification 1/7
+                            - textbox [ref=e1920]:
+                              - paragraph [ref=e1921]: Ajouter du contenu à cette note
+                        - generic [ref=e1934]:
+                          - generic [ref=e1935]: Un rendez-vous d'estimation a été demandé pour le 21/04/2026 à 12:00
+                          - generic [ref=e1936]: Le 18 avr. 2026 à 16:01
+                        - generic [ref=e1941]:
+                          - generic [ref=e1953]:
+                            - text: Avesta envoyé un email
+                            - generic [ref=e1954]: Le 18 avr. 2026 à 15:57
+                          - generic [ref=e1959] [cursor=pointer]:
+                            - generic [ref=e1961]:
+                              - generic [ref=e1962]: "Re: Votre Appartement Passage de la Bonne Graine"
+                              - generic [ref=e1963]:
+                                - text: Olivier MENART
+                                - generic [ref=e1965]: remy.hochart@gmail.com
+                            - generic [ref=e1966]:
+                              - generic [ref=e1967]: "Bonjour, Suite à votre demande d’estimation sur le site de notre agence pour un bien situé Passage de la Bonne Graine à Paris, veuillez trouver ci-dessous notre pré-estimation prenant en compte les caractéristiques que vous avez renseignées : > Prix de marché : 598 000 €> Prix “coup de coeur” : 658 000 € Spécialiste à Paris, je me tiens à votre disposition pour échanger sur votre projet et affiner l'estimation de votre bien.Je suis joignable sur mon portable au 06 70 74 49 35 ou par email olivier@abriculteurs.com. Vous pouvez prendre rendez-vous pour une estimation sur place gratuite et sans engagement en suivant ce lien :https://abriculteurs.data-immo.com/rendez-vous/creneau Abriculteurs PARIS • ÎLE-DE-FRANCE est une agence immobilière innovante qui s’est affirmée comme un acteur incontournable à Paris grâce à son équipe dynamique et expérimentée, un fichier d'acheteurs actifs et qualifiés, et des stratégies de commercialisation personnalisées. Nos clients sont satisfaits et nous recommandent. Cordialement, Olivier MENART Conseiller immobilier +33 6 70 74 49 35 olivier@abriculteurs.com abriculteurs.com"
+                              - generic [ref=e1968]:
+                                - button [ref=e1969]
+                                - button [ref=e1972]
+                        - generic [ref=e1978]:
+                          - img [ref=e1985]
+                          - generic [ref=e1991]:
+                            - generic [ref=e1992]: Avesta créé cette fiche suite à une estimation en ligne
+                            - generic [ref=e1993]: Le 18 avr. 2026 à 15:57
+          - button
+    - region "Notifications alt+T"
+  - iframe [ref=e792]:
+    

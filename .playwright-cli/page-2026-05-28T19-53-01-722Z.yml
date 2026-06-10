@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "A Abriculteurs PARIS • ÎLE-DE-FRANCE" [ref=e8] [cursor=pointer]:
+            - generic [ref=e11]: A
+            - generic [ref=e12]: Abriculteurs PARIS • ÎLE-DE-FRANCE
+          - button "button.toggleSidebar" [ref=e14] [cursor=pointer]:
+            - generic [ref=e16]: Toggle Sidebar
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - generic [ref=e20]:
+              - button "Rechercher" [ref=e22] [cursor=pointer]:
+                - generic [ref=e24]: Rechercher
+              - button [ref=e26] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "Carte" [ref=e29] [cursor=pointer]:
+              - /url: /map-insights
+              - generic [ref=e31]: Carte
+        - list [ref=e34]:
+          - listitem [ref=e36]:
+            - button "Prospects vendeurs" [ref=e37] [cursor=pointer]:
+              - generic [ref=e40]: Prospects vendeurs
+          - listitem [ref=e42]:
+            - link "Mandats de vente" [ref=e43] [cursor=pointer]:
+              - /url: /mandates/tracking-board
+              - generic [ref=e46]: Mandats de vente
+          - listitem [ref=e47]:
+            - link "Demandes acquéreurs" [ref=e48] [cursor=pointer]:
+              - /url: /matches/tracking-board
+              - generic [ref=e51]: Demandes acquéreurs
+          - separator [ref=e52]
+          - listitem [ref=e54]:
+            - button "Prospects bailleurs" [ref=e55] [cursor=pointer]:
+              - generic [ref=e58]: Prospects bailleurs
+          - listitem [ref=e60]:
+            - link "Mandats de location" [ref=e61] [cursor=pointer]:
+              - /url: /rental/management/tracking-board
+              - generic [ref=e64]: Mandats de location
+          - separator [ref=e65]
+          - listitem [ref=e66]:
+            - link "Annonces" [ref=e67] [cursor=pointer]:
+              - /url: /listings
+              - generic [ref=e70]: Annonces
+          - listitem [ref=e71]:
+            - link "Fichier acquéreurs" [ref=e72] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e75]: Fichier acquéreurs
+        - generic [ref=e76]:
+          - separator [ref=e77]
+          - button "? Support client" [ref=e78] [cursor=pointer]:
+            - generic [ref=e79]: "?"
+            - generic [ref=e80]: Support client
+          - generic [ref=e81]:
+            - text: "2026"
+            - link "Avest" [ref=e82] [cursor=pointer]:
+              - /url: https://avest.fr
+            - text: "- v1.31.0"
+        - button "Toggle Sidebar" [ref=e83] [cursor=pointer]
+      - main [ref=e84]:
+        - generic [ref=e88]:
+          - img [ref=e89]
+          - generic [ref=e91]: Chargement...
+    - region "Notifications alt+T"
+  - iframe [ref=e92]:
+    

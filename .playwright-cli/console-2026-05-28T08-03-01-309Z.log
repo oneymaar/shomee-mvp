@@ -1,0 +1,405 @@
+[     238ms] [WARNING] Please ensure Intercom is setup and running on client-side! @ https://app.avest.fr/index.1779894461.js:10
+[     712ms] [INFO] [Intercom] Launcher is disabled in settings or current page does not match display conditions @ https://js.intercomcdn.com/frame-modern.88eff855.js:0
+[    1902ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://icons.duckduckgo.com/ip2/www.giraffe360.com.ico:0
+[  900362ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779956281651&ver=1.372.10&compression=base64:0
+[ 1200348ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779956581646&ver=1.372.10&compression=base64:0
+[ 1500346ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779956881645&ver=1.372.10&compression=base64:0
+[ 1800352ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779957181646&ver=1.372.10&compression=base64:0
+[ 2100361ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779957481649&ver=1.372.10&compression=base64:0
+[ 2400350ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779957781645&ver=1.372.10&compression=base64:0
+[ 2700358ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779958081645&ver=1.372.10&compression=base64:0
+[ 3000361ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779958381653&ver=1.372.10&compression=base64:0
+[ 3300361ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779958681650&ver=1.372.10&compression=base64:0
+[ 3600360ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779958981649&ver=1.372.10&compression=base64:0
+[ 3900363ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779959281645&ver=1.372.10&compression=base64:0
+[ 4200361ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779959581645&ver=1.372.10&compression=base64:0
+[ 4500359ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779959881654&ver=1.372.10&compression=base64:0
+[ 4800341ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779960181643&ver=1.372.10&compression=base64:0
+[ 6600348ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779961981644&ver=1.372.10&compression=base64:0
+[ 6900364ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779962281659&ver=1.372.10&compression=base64:0
+[ 7200352ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779962581645&ver=1.372.10&compression=base64:0
+[ 7384574ms] [ERROR] WebSocket connection to 'wss://nexus-websocket-a.intercom.io/pubsub/5-IRGfqxK5XoU6qwxHrAnFx7IuzUQzrKX9u9Xt2FwazvvZmAGm7VMu_2HwQyomgzBD1HM631mveg2UON4EKXrxIh287nCeA3AXGJF6?X-Nexus-New-Client=true&X-Nexus-Version=0.18.8&user_role=user' failed: Error in connection establishment: net::ERR_NAME_NOT_RESOLVED @ https://js.intercomcdn.com/vendor-modern.60bbf292.js:1
+[ 7384601ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/mailboxes:0
+[ 7384615ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/websites:0
+[ 7384616ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[ 7384616ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[ 7384616ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/account:0
+[ 7384616ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[ 7384616ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency-groups:0
+[ 7384617ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[ 7384617ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[ 7384617ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[ 7384617ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384644ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384645ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384648ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[ 7384653ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[ 7384654ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[ 7384654ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/meta.json?cb=1779962765706:0
+[ 7384657ms] [ERROR] TypeError: Failed to fetch
+    at queryFn (https://app.avest.fr/index.1779894461.js:91:59883)
+    at Object.r [as fn] (https://app.avest.fr/index.1779894461.js:10:49504)
+    at _ (https://app.avest.fr/index.1779894461.js:10:43962) @ https://app.avest.fr/index.1779894461.js:90
+[ 7384659ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[ 7384659ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[ 7384659ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[ 7384659ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[ 7384659ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[ 7384660ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[ 7384660ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[ 7384660ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384660ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[ 7384662ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/mailboxes:0
+[ 7384663ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/websites:0
+[ 7384682ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[ 7384683ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[ 7384683ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/account:0
+[ 7384684ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[ 7384695ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[ 7384696ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency-groups:0
+[ 7384711ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[ 7384738ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[ 7384739ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[ 7384739ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384739ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384739ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384739ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[ 7384740ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[ 7384740ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[ 7384747ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[ 7384759ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[ 7384781ms] [ERROR] There is an error fetching the matching transactions AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122)
+    at tu.request (https://app.avest.fr/index.1779894461.js:87:2231)
+    at async tu.request (https://app.avest.fr/index.1779894461.js:87:2135)
+    at async queryFn (https://app.avest.fr/utils.17798944617.js:1:1167) @ https://app.avest.fr/utils.17798944617.js:0
+[ 7384789ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[ 7384796ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[ 7384821ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[ 7384821ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[ 7384821ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[ 7384871ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[ 7384880ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[ 7384880ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[ 7399804ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://app.avest.fr/meta.json?cb=1779962774824:0
+[ 7399804ms] [ERROR] TypeError: Failed to fetch
+    at queryFn (https://app.avest.fr/index.1779894461.js:91:59883)
+    at Object.r [as fn] (https://app.avest.fr/index.1779894461.js:10:49504)
+    at _ (https://app.avest.fr/index.1779894461.js:10:43962)
+    at Object.start (https://app.avest.fr/index.1779894461.js:10:44423)
+    at xV.fetch (https://app.avest.fr/index.1779894461.js:10:50313)
+    at #h (https://app.avest.fr/index.1779894461.js:10:54922)
+    at $V.fetch (https://app.avest.fr/index.1779894461.js:10:54809)
+    at $V.refetch (https://app.avest.fr/index.1779894461.js:10:54621)
+    at xV.onOnline (https://app.avest.fr/index.1779894461.js:10:48171)
+    at https://app.avest.fr/index.1779894461.js:10:66700 @ https://app.avest.fr/index.1779894461.js:90
+[ 7399806ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agency-groups:0
+[ 7399806ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[ 7399806ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/mailboxes:0
+[ 7399807ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/websites:0
+[ 7399807ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[ 7399807ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[ 7399809ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/account:0
+[ 7399809ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[ 7399811ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[ 7399811ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[ 7399812ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[ 7399812ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399812ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399812ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399812ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[ 7399813ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[ 7399840ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[ 7399841ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[ 7399841ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[ 7399841ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[ 7399842ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[ 7399842ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[ 7399842ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[ 7399842ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[ 7399843ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399843ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[ 7399843ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399843ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/mailboxes:0
+[ 7399843ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/websites:0
+[ 7399847ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[ 7399847ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[ 7399847ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399847ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7399847ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[ 7399847ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/agency-groups:0
+[ 7399847ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[ 7399848ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[ 7399848ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[ 7399850ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[ 7399851ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[ 7399855ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[ 7399856ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[ 7399913ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/account:0
+[ 7399916ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[ 7399916ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[ 7399916ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[ 7399919ms] [ERROR] There is an error fetching the matching transactions AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122)
+    at tu.request (https://app.avest.fr/index.1779894461.js:87:2231)
+    at async tu.request (https://app.avest.fr/index.1779894461.js:87:2135)
+    at async queryFn (https://app.avest.fr/utils.17798944617.js:1:1167) @ https://app.avest.fr/utils.17798944617.js:0
+[ 7399919ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[ 7399919ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[ 7399921ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[ 7399921ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[ 7399921ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[ 7399921ms] [ERROR] Failed to load resource: net::ERR_ADDRESS_UNREACHABLE @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[ 7411696ms] [ERROR] WebSocket connection to 'wss://nexus-websocket-a.intercom.io/pubsub/5-IRGfqxK5XoU6qwxHrAnFx7IuzUQzrKX9u9Xt2FwazvvZmAGm7VMu_2HwQyomgzBD1HM631mveg2UON4EKXrxIh287nCeA3AXGJF6?X-Nexus-New-Client=true&X-Nexus-Version=0.18.8&user_role=user' failed: Error in connection establishment: net::ERR_NAME_NOT_RESOLVED @ https://js.intercomcdn.com/vendor-modern.60bbf292.js:1
+[ 7411766ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/meta.json?cb=1779962792857:0
+[ 7411766ms] [ERROR] TypeError: Failed to fetch
+    at queryFn (https://app.avest.fr/index.1779894461.js:91:59883)
+    at Object.r [as fn] (https://app.avest.fr/index.1779894461.js:10:49504)
+    at _ (https://app.avest.fr/index.1779894461.js:10:43962)
+    at Object.start (https://app.avest.fr/index.1779894461.js:10:44423)
+    at xV.fetch (https://app.avest.fr/index.1779894461.js:10:50313)
+    at #h (https://app.avest.fr/index.1779894461.js:10:54922)
+    at $V.fetch (https://app.avest.fr/index.1779894461.js:10:54809)
+    at $V.refetch (https://app.avest.fr/index.1779894461.js:10:54621)
+    at xV.onOnline (https://app.avest.fr/index.1779894461.js:10:48171)
+    at https://app.avest.fr/index.1779894461.js:10:66700 @ https://app.avest.fr/index.1779894461.js:90
+[ 7411778ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency-groups:0
+[ 7411778ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[ 7411778ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/mailboxes:0
+[ 7411779ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/websites:0
+[ 7411779ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[ 7411779ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[ 7411793ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/account:0
+[ 7411793ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[ 7411800ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[ 7411801ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[ 7411854ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[ 7411855ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7411860ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7411863ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7411863ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[ 7411864ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[ 7411864ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[ 7411864ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[ 7411868ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[ 7411872ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[ 7411873ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[ 7411875ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[ 7411877ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[ 7411878ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[ 7411878ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[ 7411879ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[ 7411880ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency-groups:0
+[ 7411882ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[ 7411896ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[ 7411917ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/mailboxes:0
+[ 7411935ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/websites:0
+[ 7411972ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[ 7411987ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[ 7412104ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/account:0
+[ 7412121ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[ 7412147ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[ 7412188ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[ 7412263ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[ 7412296ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7412306ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7412331ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[ 7412406ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[ 7412490ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[ 7412506ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[ 7412507ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[ 7412507ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[ 7412564ms] [ERROR] There is an error fetching the matching transactions AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122)
+    at tu.request (https://app.avest.fr/index.1779894461.js:87:2231)
+    at async tu.request (https://app.avest.fr/index.1779894461.js:87:2135)
+    at async queryFn (https://app.avest.fr/utils.17798944617.js:1:1167) @ https://app.avest.fr/utils.17798944617.js:0
+[ 7412605ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[ 7412728ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[ 7413913ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[ 7413918ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[ 7413918ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[ 7413919ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[ 7549160ms] [ERROR] WebSocket connection to 'wss://nexus-websocket-a.intercom.io/pubsub/5-IRGfqxK5XoU6qwxHrAnFx7IuzUQzrKX9u9Xt2FwazvvZmAGm7VMu_2HwQyomgzBD1HM631mveg2UON4EKXrxIh287nCeA3AXGJF6?X-Nexus-New-Client=true&X-Nexus-Version=0.18.8&user_role=user' failed: WebSocket opening handshake timed out @ https://js.intercomcdn.com/vendor-modern.60bbf292.js:1
+[ 8400348ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779963781646&ver=1.372.10&compression=base64:0
+[ 8700359ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779964081650&ver=1.372.10&compression=base64:0
+[ 9000354ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779964381646&ver=1.372.10&compression=base64:0
+[ 9300361ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779964681651&ver=1.372.10&compression=base64:0
+[ 9600365ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779964981648&ver=1.372.10&compression=base64:0
+[ 9900380ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779965281668&ver=1.372.10&compression=base64:0
+[10200359ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779965581645&ver=1.372.10&compression=base64:0
+[10500356ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779965881642&ver=1.372.10&compression=base64:0
+[10800369ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779966181649&ver=1.372.10&compression=base64:0
+[11100359ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779966481648&ver=1.372.10&compression=base64:0
+[11400360ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779966781645&ver=1.372.10&compression=base64:0
+[11700348ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779967081644&ver=1.372.10&compression=base64:0
+[12000365ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779967381648&ver=1.372.10&compression=base64:0
+[28500345ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779983881643&ver=1.372.10&compression=base64:0
+[28800344ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779984181644&ver=1.372.10&compression=base64:0
+[29100344ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779984481645&ver=1.372.10&compression=base64:0
+[29400364ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779984781654&ver=1.372.10&compression=base64:0
+[29700348ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779985081642&ver=1.372.10&compression=base64:0
+[30000360ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779985381648&ver=1.372.10&compression=base64:0
+[30300360ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779985681649&ver=1.372.10&compression=base64:0
+[30600356ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779985981645&ver=1.372.10&compression=base64:0
+[30900346ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779986281643&ver=1.372.10&compression=base64:0
+[31200364ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779986581646&ver=1.372.10&compression=base64:0
+[31500361ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779986881649&ver=1.372.10&compression=base64:0
+[31800350ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779987181646&ver=1.372.10&compression=base64:0
+[32100363ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779987481654&ver=1.372.10&compression=base64:0
+[32400350ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779987781644&ver=1.372.10&compression=base64:0
+[32700352ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779988081644&ver=1.372.10&compression=base64:0
+[33000368ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779988381655&ver=1.372.10&compression=base64:0
+[33300354ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779988681644&ver=1.372.10&compression=base64:0
+[33600357ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779988981646&ver=1.372.10&compression=base64:0
+[33900352ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779989281645&ver=1.372.10&compression=base64:0
+[34200359ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779989581647&ver=1.372.10&compression=base64:0
+[34500355ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779989881646&ver=1.372.10&compression=base64:0
+[34800358ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779990181646&ver=1.372.10&compression=base64:0
+[35100355ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779990481644&ver=1.372.10&compression=base64:0
+[35400355ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779990781645&ver=1.372.10&compression=base64:0
+[35700360ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779991081646&ver=1.372.10&compression=base64:0
+[36791801ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/mailboxes:0
+[36791801ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/websites:0
+[36791801ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[36791801ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[36791801ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/account:0
+[36791802ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[36791802ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agency-groups:0
+[36791802ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[36791802ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[36791802ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[36791803ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[36791803ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[36791803ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[36791803ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[36791803ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[36791851ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/meta.json?cb=1779992172752:0
+[36791856ms] [ERROR] TypeError: Failed to fetch
+    at queryFn (https://app.avest.fr/index.1779894461.js:91:59883)
+    at Object.r [as fn] (https://app.avest.fr/index.1779894461.js:10:49504)
+    at _ (https://app.avest.fr/index.1779894461.js:10:43962) @ https://app.avest.fr/index.1779894461.js:90
+[36791857ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[36791858ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[36791859ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[36791859ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/mailboxes:0
+[36791873ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/websites:0
+[36791874ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[36791874ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[36791939ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/account:0
+[36791955ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[36792031ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[36792064ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[36792098ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[36792122ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[36792163ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[36792380ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[36792381ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[36792381ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[36792381ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[36792382ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency-groups:0
+[36792382ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[36792406ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[36792406ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[36792415ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[36792415ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[36792416ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[36792431ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[36792474ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[36792474ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[36792475ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[36792475ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[36792475ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[36792523ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[36792524ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[36792524ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[36793016ms] [ERROR] There is an error fetching the matching transactions AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122)
+    at tu.request (https://app.avest.fr/index.1779894461.js:87:2231)
+    at async tu.request (https://app.avest.fr/index.1779894461.js:87:2135)
+    at async queryFn (https://app.avest.fr/utils.17798944617.js:1:1167) @ https://app.avest.fr/utils.17798944617.js:0
+[36793016ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[36793022ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[36793071ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[37765456ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agency-groups:0
+[37765463ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[37765464ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/mailboxes:0
+[37765464ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/websites:0
+[37765464ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[37765464ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[37765465ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/account:0
+[37765465ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[37765465ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[37765466ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[37765469ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[37765469ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[37765469ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[37765470ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[37765470ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[37765470ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[37765470ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[37765470ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[37765471ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[37765471ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[37765471ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[37765471ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[37765472ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[37765472ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[37765472ms] [ERROR] Failed to load resource: net::ERR_NETWORK_CHANGED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[37765682ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/meta.json?cb=1779993146172:0
+[37765683ms] [ERROR] TypeError: Failed to fetch
+    at queryFn (https://app.avest.fr/index.1779894461.js:91:59883)
+    at Object.r [as fn] (https://app.avest.fr/index.1779894461.js:10:49504)
+    at _ (https://app.avest.fr/index.1779894461.js:10:43962)
+    at Object.start (https://app.avest.fr/index.1779894461.js:10:44423)
+    at xV.fetch (https://app.avest.fr/index.1779894461.js:10:50313)
+    at #h (https://app.avest.fr/index.1779894461.js:10:54922)
+    at $V.fetch (https://app.avest.fr/index.1779894461.js:10:54809)
+    at $V.refetch (https://app.avest.fr/index.1779894461.js:10:54621)
+    at xV.onOnline (https://app.avest.fr/index.1779894461.js:10:48171)
+    at https://app.avest.fr/index.1779894461.js:10:66700 @ https://app.avest.fr/index.1779894461.js:90
+[37765709ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[37765716ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency-groups:0
+[37765726ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/sale-tags?agencies=698cb2ce239dd6ab399bc522:0
+[37765734ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/other-projects:0
+[37765743ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition-tags?agencies=698cb2ce239dd6ab399bc522:0
+[37765757ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transactions/search?filter=%7B%7D&agencyGroup=69709812c0b6ac9d7a35154f&search=&saleIds%5B%5D=69e38dbc9ecc67b2d70cc31f&acquisitionIds%5B%5D=6a17e6859bb91d1947b47c38:0
+[37765875ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/rental-tags?agencies=698cb2ce239dd6ab399bc522:0
+[37765885ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38:0
+[37765901ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agencies?filter=%7B%22isActive%22:true%7D:0
+[37765909ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/visits?agencyGroup=69709812c0b6ac9d7a35154f&sortOrder=descending&sortField=lastUpdatedAt:0
+[37765918ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=pinned:0
+[37765926ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/visit-receipts?filter%5Bacquisition%5D=6a17e6859bb91d1947b47c38:0
+[37765943ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=files:0
+[37765951ms] [ERROR] There is an error fetching the matching transactions AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122)
+    at tu.request (https://app.avest.fr/index.1779894461.js:87:2231)
+    at async tu.request (https://app.avest.fr/index.1779894461.js:87:2135)
+    at async queryFn (https://app.avest.fr/utils.17798944617.js:1:1167) @ https://app.avest.fr/utils.17798944617.js:0
+[37765959ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/matching?steps=RDV,DLV,MND,OFR,AGT,MTG,SLD,TARC:0
+[37765976ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=email:0
+[37766009ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/transaction-activities?filter=%7B%22type%22:%22note%22,%22linkedDocument%22:%7B%22$in%22:%5B%226a17e6859bb91d1947b47c38%22,%226a17e6839bb91d1947b47a5a%22%5D%7D%7D&sortField=completionDate&sortOrder=descending:0
+[37766059ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/agency/698cb2ce239dd6ab399bc522:0
+[37766059ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/account:0
+[37766068ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/websites:0
+[37766084ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/mailboxes:0
+[37766169ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/website?agency=698cb2ce239dd6ab399bc522:0
+[37766169ms] [ERROR] AxiosError: Network Error
+    at w.onerror (https://app.avest.fr/index.1779894461.js:85:16122) @ https://app.avest.fr/index.1779894461.js:90
+[37766170ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/user/698202ef3c7adb8c3df2520a?displayOnly=true:0
+[37766170ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/activities?activityView=activitySummary:0
+[37766171ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/drive-links:0
+[37766171ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/acquisition/6a17e6859bb91d1947b47c38/next-activities:0
+[37766171ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://api.avest.fr/v1/users?agencies=698cb2ce239dd6ab399bc522:0
+[37785443ms] [ERROR] WebSocket connection to 'wss://nexus-websocket-a.intercom.io/pubsub/5-IRGfqxK5XoU6qwxHrAnFx7IuzUQzrKX9u9Xt2FwazvvZmAGm7VMu_2HwQyomgzBD1HM631mveg2UON4EKXrxIh287nCeA3AXGJF6?X-Nexus-New-Client=true&X-Nexus-Version=0.18.8&user_role=user' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED @ https://js.intercomcdn.com/vendor-modern.60bbf292.js:1
+[37785475ms] [ERROR] WebSocket connection to 'wss://nexus-websocket-a.intercom.io/pubsub/5-IRGfqxK5XoU6qwxHrAnFx7IuzUQzrKX9u9Xt2FwazvvZmAGm7VMu_2HwQyomgzBD1HM631mveg2UON4EKXrxIh287nCeA3AXGJF6?X-Nexus-New-Client=true&X-Nexus-Version=0.18.8&user_role=user' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED @ https://js.intercomcdn.com/vendor-modern.60bbf292.js:1
+[37997078ms] [ERROR] Failed to load resource: net::ERR_INTERNET_DISCONNECTED @ https://app.avest.fr/r/flags/?v=2&ip=0&_=1779993378353&ver=1.372.10&compression=base64:0

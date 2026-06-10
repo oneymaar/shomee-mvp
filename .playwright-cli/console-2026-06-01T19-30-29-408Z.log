@@ -1,0 +1,4 @@
+[     277ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ https://app.avest.fr/index.1780324386.js:8
+[     521ms] [ERROR] Failed to load resource: the server responded with a status of 410 () @ https://api.refiner.io/js-client/v1/da130ea0-510b-11f0-85fa-cfcca1795cad/identify-user:0
+[     555ms] [ERROR] Failed to load resource: the server responded with a status of 410 () @ https://api.refiner.io/js-client/v1/da130ea0-510b-11f0-85fa-cfcca1795cad/identify-user:0
+[     982ms] [ERROR] Failed to load resource: the server responded with a status of 410 () @ https://api.refiner.io/js-client/v1/da130ea0-510b-11f0-85fa-cfcca1795cad/identify-user:0

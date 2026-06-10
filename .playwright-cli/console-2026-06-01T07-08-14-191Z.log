@@ -1,0 +1,3 @@
+[    4842ms] [WARNING] Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.youtube.com') does not match the recipient window's origin ('https://www.google.com'). @ https://www.youtube.com/s/player/9fc68080/www-widgetapi.vflset/www-widgetapi.js:209
+[   55016ms] [ERROR] Access to fetch at 'https://cdn-gl.nmrodam.com/novms/js/2/nlsSDK600.bundle.min.js' from origin 'https://www.france.tv' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://www.france.tv/france-2/bel-et-bien/8070612-le-coup-de-coeur-estherium.html:0
+[   55017ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://cdn-gl.nmrodam.com/novms/js/2/nlsSDK600.bundle.min.js:0

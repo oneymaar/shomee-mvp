@@ -1,0 +1,1520 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "A Abriculteurs PARIS • ÎLE-DE-FRANCE" [ref=e8] [cursor=pointer]:
+            - generic [ref=e11]: A
+            - generic [ref=e12]: Abriculteurs PARIS • ÎLE-DE-FRANCE
+          - button "button.toggleSidebar" [ref=e14] [cursor=pointer]:
+            - generic [ref=e16]: Toggle Sidebar
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - generic [ref=e20]:
+              - button "Rechercher" [ref=e22] [cursor=pointer]:
+                - generic [ref=e24]: Rechercher
+              - button [ref=e26] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "Carte" [ref=e29] [cursor=pointer]:
+              - /url: /map-insights
+              - generic [ref=e31]: Carte
+        - list [ref=e34]:
+          - listitem [ref=e36]:
+            - button "Prospects vendeurs" [expanded] [ref=e37] [cursor=pointer]:
+              - generic [ref=e40]: Prospects vendeurs
+            - list [ref=e43]:
+              - listitem [ref=e44]:
+                - link "Suivi des opportunités" [ref=e45] [cursor=pointer]:
+                  - /url: /sellers/tracking-board
+                  - generic [ref=e48]: Suivi des opportunités
+              - listitem [ref=e49]:
+                - link "Pioche" [ref=e50] [cursor=pointer]:
+                  - /url: /sellers/stack
+                  - generic [ref=e53]: Pioche
+              - listitem [ref=e54]:
+                - link "Préqualification" [ref=e55] [cursor=pointer]:
+                  - /url: /sellers/prequalification
+                  - generic [ref=e58]: Préqualification
+              - listitem [ref=e59]:
+                - link "Prospection terrain" [ref=e60] [cursor=pointer]:
+                  - /url: /sellers/terrain
+                  - generic [ref=e63]: Prospection terrain
+              - listitem [ref=e64]:
+                - link "Archivés" [ref=e65] [cursor=pointer]:
+                  - /url: /sellers/archives
+                  - generic [ref=e68]: Archivés
+          - listitem [ref=e69]:
+            - link "Mandats de vente" [ref=e70] [cursor=pointer]:
+              - /url: /mandates/tracking-board
+              - generic [ref=e73]: Mandats de vente
+          - listitem [ref=e74]:
+            - link "Demandes acquéreurs" [ref=e75] [cursor=pointer]:
+              - /url: /matches/tracking-board
+              - generic [ref=e78]: Demandes acquéreurs
+          - separator [ref=e79]
+          - listitem [ref=e81]:
+            - button "Prospects bailleurs" [ref=e82] [cursor=pointer]:
+              - generic [ref=e85]: Prospects bailleurs
+          - listitem [ref=e87]:
+            - link "Mandats de location" [ref=e88] [cursor=pointer]:
+              - /url: /rental/management/tracking-board
+              - generic [ref=e91]: Mandats de location
+          - separator [ref=e92]
+          - listitem [ref=e93]:
+            - link "Annonces" [ref=e94] [cursor=pointer]:
+              - /url: /listings
+              - generic [ref=e97]: Annonces
+          - listitem [ref=e98]:
+            - link "Fichier acquéreurs" [ref=e99] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e102]: Fichier acquéreurs
+        - generic [ref=e103]:
+          - separator [ref=e104]
+          - button "? Support client" [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: "?"
+            - generic [ref=e107]: Support client
+          - generic [ref=e109]:
+            - text: "2026"
+            - link "Avest" [ref=e110] [cursor=pointer]:
+              - /url: https://avest.fr
+            - text: "- v1.31.0"
+        - button "Toggle Sidebar" [ref=e111] [cursor=pointer]
+      - main [ref=e112]:
+        - generic [ref=e116]:
+          - navigation "breadcrumb" [ref=e118]:
+            - list [ref=e119]:
+              - button [ref=e793] [cursor=pointer]
+              - link "Mandats de vente" [ref=e795] [cursor=pointer]:
+                - /url: /mandates/tracking-board
+                - generic [ref=e796]: Mandats de vente
+              - listitem [ref=e797]: /
+              - generic [ref=e798]:
+                - img [ref=e799]
+                - generic [ref=e801]: Mandat signé
+              - listitem [ref=e802]: /
+              - link "KBQY0907" [disabled] [ref=e803]:
+                - generic [ref=e804]: KBQY0907
+                - button [disabled] [ref=e805] [cursor=pointer]
+          - generic [ref=e807]:
+            - button [ref=e808] [cursor=pointer]
+            - generic [ref=e810]: 6/18
+            - button [ref=e811] [cursor=pointer]
+        - generic [ref=e127]:
+          - generic [ref=e813]:
+            - generic [ref=e814]:
+              - generic [ref=e816]:
+                - generic [ref=e818]:
+                  - generic [ref=e821]: Vente
+                  - generic [ref=e823]: Rémy HOCHART
+                  - generic [ref=e824]: 18 Passage de la Bonne Graine (75011)
+                - generic [ref=e829]:
+                  - button "Olivier MENART" [ref=e830] [cursor=pointer]:
+                    - generic [ref=e833]: Olivier MENART
+                  - button "Mandat signé" [ref=e834] [cursor=pointer]:
+                    - generic [ref=e835]:
+                      - img [ref=e836]
+                      - generic [ref=e838]: Mandat signé
+                  - button "Portails & site web" [ref=e839] [cursor=pointer]:
+                    - button "Portails & site web" [ref=e840]:
+                      - generic [ref=e841]: Portails & site web
+                  - button "Ajouter une étiquette" [ref=e844] [cursor=pointer]:
+                    - generic [ref=e847]: Ajouter une étiquette
+              - generic [ref=e848]:
+                - button "Archiver" [ref=e849] [cursor=pointer]:
+                  - generic [ref=e851]: Archiver
+                - button "Changer d'étape" [ref=e852] [cursor=pointer]: Changer d'étape
+                - button [ref=e854] [cursor=pointer]
+                - button [ref=e856] [cursor=pointer]:
+                  - img [ref=e858]
+                - button [ref=e861] [cursor=pointer]
+            - generic [ref=e865]:
+              - generic [ref=e869]:
+                - tablist [ref=e872]:
+                  - tab "Description" [ref=e873] [cursor=pointer]: Description
+                  - button "Acquéreurs 91" [ref=e875] [cursor=pointer]:
+                    - tab "Acquéreurs 91" [active] [selected] [ref=e876]:
+                      - text: Acquéreurs
+                      - generic [ref=e879]: "91"
+                  - tab "Diffusion 2" [ref=e881] [cursor=pointer]:
+                    - generic [ref=e884]: Diffusion
+                    - generic [ref=e885]: "2"
+                - tabpanel "Acquéreurs 91" [ref=e2001]:
+                  - region [ref=e2002]:
+                    - generic [ref=e2003]:
+                      - generic [ref=e2004]:
+                        - heading "Demandes d'infos et visites des acquéreurs 9" [level=3] [ref=e2006]:
+                          - button "Demandes d'infos et visites des acquéreurs 9" [expanded] [ref=e2007] [cursor=pointer]:
+                            - generic [ref=e2008]:
+                              - generic [ref=e2012]: Demandes d'infos et visites des acquéreurs
+                              - generic [ref=e2014]: "9"
+                        - generic [ref=e2016]:
+                          - button [ref=e2017] [cursor=pointer]
+                          - button "Accéder dans le tableau de suivi des demandes acquéreurs" [ref=e2020] [cursor=pointer]
+                          - button [ref=e2022] [cursor=pointer]
+                      - region "Demandes d'infos et visites des acquéreurs 9" [ref=e2024]:
+                        - generic [ref=e2026]:
+                          - link "Olivier MENART Elisabeth PHILIPPS 49 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2027] [cursor=pointer]:
+                            - /url: /acq/6a17e6859bb91d1947b47c38/activity?tab=matching
+                            - generic [ref=e2028]:
+                              - button "Olivier MENART" [ref=e2030]:
+                                - img "Olivier MENART" [ref=e2032]
+                              - generic [ref=e2033]:
+                                - generic [ref=e2034]: Elisabeth PHILIPPS
+                                - generic [ref=e2036]: 49 m² min
+                                - generic [ref=e2038]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2041]:
+                              - generic [ref=e2042]:
+                                - img "Step 2 of 5" [ref=e2043]
+                                - generic [ref=e2046]: Demande d'information
+                          - link "Olivier MENART Sara BRASSEUR 49 m² min 699 000 € max Step 3 of 5 Visite" [ref=e2047] [cursor=pointer]:
+                            - /url: /acq/6a16cb4c4754df734712eeb7/activity?tab=matching
+                            - generic [ref=e2048]:
+                              - button "Olivier MENART" [ref=e2050]:
+                                - img "Olivier MENART" [ref=e2052]
+                              - generic [ref=e2053]:
+                                - generic [ref=e2054]: Sara BRASSEUR
+                                - generic [ref=e2056]: 49 m² min
+                                - generic [ref=e2058]: 699 000 € max
+                            - button "Step 3 of 5 Visite" [ref=e2061]:
+                              - generic [ref=e2062]:
+                                - img "Step 3 of 5" [ref=e2063]
+                                - generic [ref=e2066]: Visite
+                          - link "Olivier MENART Mathilde PHILIPPON 49 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2067] [cursor=pointer]:
+                            - /url: /acq/6a17255f411229cd9e8ba2d0/activity?tab=matching
+                            - generic [ref=e2068]:
+                              - button "Olivier MENART" [ref=e2070]:
+                                - img "Olivier MENART" [ref=e2072]
+                              - generic [ref=e2073]:
+                                - generic [ref=e2074]: Mathilde PHILIPPON
+                                - generic [ref=e2076]: 49 m² min
+                                - generic [ref=e2078]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2081]:
+                              - generic [ref=e2082]:
+                                - img "Step 2 of 5" [ref=e2083]
+                                - generic [ref=e2086]: Demande d'information
+                          - link "Olivier MENART Vincent 49 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2087] [cursor=pointer]:
+                            - /url: /acq/6a17177d02c59a6acc1a14be/activity?tab=matching
+                            - generic [ref=e2088]:
+                              - button "Olivier MENART" [ref=e2090]:
+                                - img "Olivier MENART" [ref=e2092]
+                              - generic [ref=e2093]:
+                                - generic [ref=e2094]: Vincent
+                                - generic [ref=e2096]: 49 m² min
+                                - generic [ref=e2098]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2101]:
+                              - generic [ref=e2102]:
+                                - img "Step 2 of 5" [ref=e2103]
+                                - generic [ref=e2106]: Demande d'information
+                          - link "Olivier MENART Lionel ARRIVÉ 49 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2107] [cursor=pointer]:
+                            - /url: /acq/6a16f6645731866124a8ca5f/activity?tab=matching
+                            - generic [ref=e2108]:
+                              - button "Olivier MENART" [ref=e2110]:
+                                - img "Olivier MENART" [ref=e2112]
+                              - generic [ref=e2113]:
+                                - generic [ref=e2114]: Lionel ARRIVÉ
+                                - generic [ref=e2116]: 49 m² min
+                                - generic [ref=e2118]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2121]:
+                              - generic [ref=e2122]:
+                                - img "Step 2 of 5" [ref=e2123]
+                                - generic [ref=e2126]: Demande d'information
+                          - link "Olivier MENART Sophie ROUGEVIN BAVILLE 49 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2127] [cursor=pointer]:
+                            - /url: /acq/6a1573a292eae0c2aad4c65b/activity?tab=matching
+                            - generic [ref=e2128]:
+                              - button "Olivier MENART" [ref=e2130]:
+                                - img "Olivier MENART" [ref=e2132]
+                              - generic [ref=e2133]:
+                                - generic [ref=e2134]: Sophie ROUGEVIN BAVILLE
+                                - generic [ref=e2136]: 49 m² min
+                                - generic [ref=e2138]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2141]:
+                              - generic [ref=e2142]:
+                                - img "Step 2 of 5" [ref=e2143]
+                                - generic [ref=e2146]: Demande d'information
+                          - link "Olivier MENART Sebastien WILLIAMS-CARRICABURU 50 m² min 700 000 € max Step 2 of 5 Demande d'information" [ref=e2147] [cursor=pointer]:
+                            - /url: /acq/6a1589d7feb2964bcd5f6580/activity?tab=matching
+                            - generic [ref=e2148]:
+                              - button "Olivier MENART" [ref=e2150]:
+                                - img "Olivier MENART" [ref=e2152]
+                              - generic [ref=e2153]:
+                                - generic [ref=e2154]: Sebastien WILLIAMS-CARRICABURU
+                                - generic [ref=e2156]: 50 m² min
+                                - generic [ref=e2158]: 700 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2161]:
+                              - generic [ref=e2162]:
+                                - img "Step 2 of 5" [ref=e2163]
+                                - generic [ref=e2166]: Demande d'information
+                          - link "Olivier MENART Alain TORTEVOIX 55 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2167] [cursor=pointer]:
+                            - /url: /acq/6a1687d9c92b2155901cd6f1/activity?tab=matching
+                            - generic [ref=e2168]:
+                              - button "Olivier MENART" [ref=e2170]:
+                                - img "Olivier MENART" [ref=e2172]
+                              - generic [ref=e2173]:
+                                - generic [ref=e2174]: Alain TORTEVOIX
+                                - generic [ref=e2176]: 55 m² min
+                                - generic [ref=e2178]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2181]:
+                              - generic [ref=e2182]:
+                                - img "Step 2 of 5" [ref=e2183]
+                                - generic [ref=e2186]: Demande d'information
+                          - link "Olivier MENART Lore ALBA 49 m² min 699 000 € max Step 2 of 5 Demande d'information" [ref=e2187] [cursor=pointer]:
+                            - /url: /acq/6a15a724feb2964bcd0731d7/activity?tab=matching
+                            - generic [ref=e2188]:
+                              - button "Olivier MENART" [ref=e2190]:
+                                - img "Olivier MENART" [ref=e2192]
+                              - generic [ref=e2193]:
+                                - generic [ref=e2194]: Lore ALBA
+                                - generic [ref=e2196]: 49 m² min
+                                - generic [ref=e2198]: 699 000 € max
+                            - button "Step 2 of 5 Demande d'information" [ref=e2201]:
+                              - generic [ref=e2202]:
+                                - img "Step 2 of 5" [ref=e2203]
+                                - generic [ref=e2206]: Demande d'information
+                    - generic [ref=e2207]:
+                      - generic [ref=e2208]:
+                        - heading "Rapprochements automatiques avec le fichier acquéreurs 82" [level=3] [ref=e2210]:
+                          - button "Rapprochements automatiques avec le fichier acquéreurs 82" [expanded] [ref=e2211] [cursor=pointer]:
+                            - generic [ref=e2212]:
+                              - generic [ref=e2216]: Rapprochements automatiques avec le fichier acquéreurs
+                              - generic [ref=e2218]: "82"
+                        - generic [ref=e2220]:
+                          - button [ref=e2221] [cursor=pointer]
+                          - button [ref=e2224] [cursor=pointer]
+                          - button [ref=e2227] [cursor=pointer]
+                          - button [ref=e2230] [cursor=pointer]
+                      - region "Rapprochements automatiques avec le fichier acquéreurs 82" [ref=e2232]:
+                        - generic [ref=e2234]:
+                          - link "- Sara BRASSEUR 49 m² min 699 000 € max" [ref=e2235] [cursor=pointer]:
+                            - /url: /acq/6a16cb4c4754df734712eeb7
+                            - generic [ref=e2236]:
+                              - generic [ref=e2238]: "-"
+                              - generic [ref=e2239]:
+                                - generic [ref=e2240]: Sara BRASSEUR
+                                - generic [ref=e2242]: 49 m² min
+                                - generic [ref=e2244]: 699 000 € max
+                              - generic [ref=e2246]:
+                                - button [ref=e2247]
+                                - button [ref=e2249]
+                            - generic:
+                              - button
+                          - link "- Vincent 49 m² min 699 000 € max" [ref=e2252] [cursor=pointer]:
+                            - /url: /acq/6a17177d02c59a6acc1a14be
+                            - generic [ref=e2253]:
+                              - generic [ref=e2255]: "-"
+                              - generic [ref=e2256]:
+                                - generic [ref=e2257]: Vincent
+                                - generic [ref=e2259]: 49 m² min
+                                - generic [ref=e2261]: 699 000 € max
+                              - generic [ref=e2263]:
+                                - button [ref=e2264]
+                                - button [ref=e2266]
+                            - generic:
+                              - button
+                          - link "- Lionel ARRIVÉ 49 m² min 699 000 € max" [ref=e2269] [cursor=pointer]:
+                            - /url: /acq/6a16f6645731866124a8ca5f
+                            - generic [ref=e2270]:
+                              - generic [ref=e2272]: "-"
+                              - generic [ref=e2273]:
+                                - generic [ref=e2274]: Lionel ARRIVÉ
+                                - generic [ref=e2276]: 49 m² min
+                                - generic [ref=e2278]: 699 000 € max
+                              - generic [ref=e2280]:
+                                - button [ref=e2281]
+                                - button [ref=e2283]
+                            - generic:
+                              - button
+                          - link "- Mathilde PHILIPPON 49 m² min 699 000 € max" [ref=e2286] [cursor=pointer]:
+                            - /url: /acq/6a17255f411229cd9e8ba2d0
+                            - generic [ref=e2287]:
+                              - generic [ref=e2289]: "-"
+                              - generic [ref=e2290]:
+                                - generic [ref=e2291]: Mathilde PHILIPPON
+                                - generic [ref=e2293]: 49 m² min
+                                - generic [ref=e2295]: 699 000 € max
+                              - generic [ref=e2297]:
+                                - button [ref=e2298]
+                                - button [ref=e2300]
+                            - generic:
+                              - button
+                          - link "- Alain TORTEVOIX 55 m² min 699 000 € max" [ref=e2303] [cursor=pointer]:
+                            - /url: /acq/6a1687d9c92b2155901cd6f1
+                            - generic [ref=e2304]:
+                              - generic [ref=e2306]: "-"
+                              - generic [ref=e2307]:
+                                - generic [ref=e2308]: Alain TORTEVOIX
+                                - generic [ref=e2310]: 55 m² min
+                                - generic [ref=e2312]: 699 000 € max
+                              - generic [ref=e2314]:
+                                - button [ref=e2315]
+                                - button [ref=e2317]
+                            - generic:
+                              - button
+                          - link "- Sophie BERENGUER 45 m² min 650 000 € max" [ref=e2320] [cursor=pointer]:
+                            - /url: /acq/699cc1f0e47e18009c72d0f4
+                            - generic [ref=e2321]:
+                              - generic [ref=e2323]: "-"
+                              - generic [ref=e2324]:
+                                - generic [ref=e2325]: Sophie BERENGUER
+                                - generic [ref=e2327]: 45 m² min
+                                - generic [ref=e2329]: 650 000 € max
+                              - generic [ref=e2331]:
+                                - button [ref=e2332]
+                                - button [ref=e2334]
+                            - generic:
+                              - button
+                          - link "Adrien PIOT -" [ref=e2337] [cursor=pointer]:
+                            - /url: /acq/69ca58e95ee104fc7dd1b42e
+                            - generic [ref=e2338]:
+                              - img "Adrien PIOT" [ref=e2340]
+                              - generic [ref=e2342]: "-"
+                              - generic [ref=e2345]:
+                                - button [ref=e2346]
+                                - button [ref=e2348]
+                            - generic:
+                              - button
+                          - link "- Pascale PASCALE PIERRARD 28 m² min 550 000 € max" [ref=e2351] [cursor=pointer]:
+                            - /url: /acq/699cc1eee47e18009c728897
+                            - generic [ref=e2352]:
+                              - generic [ref=e2354]: "-"
+                              - generic [ref=e2355]:
+                                - generic [ref=e2356]: Pascale PASCALE PIERRARD
+                                - generic [ref=e2358]: 28 m² min
+                                - generic [ref=e2360]: 550 000 € max
+                              - generic [ref=e2362]:
+                                - button [ref=e2363]
+                                - button [ref=e2365]
+                            - generic:
+                              - button
+                          - link "- Raphael" [ref=e2368] [cursor=pointer]:
+                            - /url: /acq/699cc1f6e47e18009c7482a6
+                            - generic [ref=e2369]:
+                              - generic [ref=e2371]: "-"
+                              - generic [ref=e2373]: Raphael
+                              - generic [ref=e2376]:
+                                - button [ref=e2377]
+                                - button [ref=e2379]
+                            - generic:
+                              - button
+                          - link "Adrien PIOT - 10 000 000 € max" [ref=e2382] [cursor=pointer]:
+                            - /url: /acq/69ca5699330a70d9f009fe95
+                            - generic [ref=e2383]:
+                              - img "Adrien PIOT" [ref=e2385]
+                              - generic [ref=e2386]:
+                                - generic [ref=e2387]: "-"
+                                - generic [ref=e2389]: 10 000 000 € max
+                              - generic [ref=e2391]:
+                                - button [ref=e2392]
+                                - button [ref=e2394]
+                            - generic:
+                              - button
+                          - link "- Sebastien WILLIAMS-CARRICABURU 50 m² min 700 000 € max" [ref=e2397] [cursor=pointer]:
+                            - /url: /acq/6a1589d7feb2964bcd5f6580
+                            - generic [ref=e2398]:
+                              - generic [ref=e2400]: "-"
+                              - generic [ref=e2401]:
+                                - generic [ref=e2402]: Sebastien WILLIAMS-CARRICABURU
+                                - generic [ref=e2404]: 50 m² min
+                                - generic [ref=e2406]: 700 000 € max
+                              - generic [ref=e2408]:
+                                - button [ref=e2409]
+                                - button [ref=e2411]
+                            - generic:
+                              - button
+                          - link "- Lore ALBA 49 m² min 699 000 € max" [ref=e2414] [cursor=pointer]:
+                            - /url: /acq/6a15a724feb2964bcd0731d7
+                            - generic [ref=e2415]:
+                              - generic [ref=e2417]: "-"
+                              - generic [ref=e2418]:
+                                - generic [ref=e2419]: Lore ALBA
+                                - generic [ref=e2421]: 49 m² min
+                                - generic [ref=e2423]: 699 000 € max
+                              - generic [ref=e2425]:
+                                - button [ref=e2426]
+                                - button [ref=e2428]
+                            - generic:
+                              - button
+                          - link "- Élodie CAZES 40 m² min 600 000 € max" [ref=e2431] [cursor=pointer]:
+                            - /url: /acq/6a0e11fab883980f885550c0
+                            - generic [ref=e2432]:
+                              - generic [ref=e2434]: "-"
+                              - generic [ref=e2435]:
+                                - generic [ref=e2436]: Élodie CAZES
+                                - generic [ref=e2438]: 40 m² min
+                                - generic [ref=e2440]: 600 000 € max
+                              - generic [ref=e2442]:
+                                - button [ref=e2443]
+                                - button [ref=e2445]
+                            - generic:
+                              - button
+                          - link "- Dominique DEMOULIN 52 m² min 660 000 € max" [ref=e2448] [cursor=pointer]:
+                            - /url: /acq/6a0add65c8462a2cbf33e0eb
+                            - generic [ref=e2449]:
+                              - generic [ref=e2451]: "-"
+                              - generic [ref=e2452]:
+                                - generic [ref=e2453]: Dominique DEMOULIN
+                                - generic [ref=e2455]: 52 m² min
+                                - generic [ref=e2457]: 660 000 € max
+                              - generic [ref=e2459]:
+                                - button [ref=e2460]
+                                - button [ref=e2462]
+                            - generic:
+                              - button
+                          - link "- Sophie ROUGEVIN BAVILLE 49 m² min 699 000 € max" [ref=e2465] [cursor=pointer]:
+                            - /url: /acq/6a1573a292eae0c2aad4c65b
+                            - generic [ref=e2466]:
+                              - generic [ref=e2468]: "-"
+                              - generic [ref=e2469]:
+                                - generic [ref=e2470]: Sophie ROUGEVIN BAVILLE
+                                - generic [ref=e2472]: 49 m² min
+                                - generic [ref=e2474]: 699 000 € max
+                              - generic [ref=e2476]:
+                                - button [ref=e2477]
+                                - button [ref=e2479]
+                            - generic:
+                              - button
+                          - link "- Carine SYLVESTRE 30 m² min 550 000 € max" [ref=e2482] [cursor=pointer]:
+                            - /url: /acq/69ea27cb13ef2faccca2887a
+                            - generic [ref=e2483]:
+                              - generic [ref=e2485]: "-"
+                              - generic [ref=e2486]:
+                                - generic [ref=e2487]: Carine SYLVESTRE
+                                - generic [ref=e2489]: 30 m² min
+                                - generic [ref=e2491]: 550 000 € max
+                              - generic [ref=e2493]:
+                                - button [ref=e2494]
+                                - button [ref=e2496]
+                            - generic:
+                              - button
+                          - link "- Mae PELLEGRINI 40 m² min 550 000 € max" [ref=e2499] [cursor=pointer]:
+                            - /url: /acq/69c10f03d0e0cdc7435a6b49
+                            - generic [ref=e2500]:
+                              - generic [ref=e2502]: "-"
+                              - generic [ref=e2503]:
+                                - generic [ref=e2504]: Mae PELLEGRINI
+                                - generic [ref=e2506]: 40 m² min
+                                - generic [ref=e2508]: 550 000 € max
+                              - generic [ref=e2510]:
+                                - button [ref=e2511]
+                                - button [ref=e2513]
+                            - generic:
+                              - button
+                          - link "- Alexandra DELECOURT 50 m² min 600 000 € max" [ref=e2516] [cursor=pointer]:
+                            - /url: /acq/699cc5bee47e18009c73c6c9
+                            - generic [ref=e2517]:
+                              - generic [ref=e2519]: "-"
+                              - generic [ref=e2520]:
+                                - generic [ref=e2521]: Alexandra DELECOURT
+                                - generic [ref=e2523]: 50 m² min
+                                - generic [ref=e2525]: 600 000 € max
+                              - generic [ref=e2527]:
+                                - button [ref=e2528]
+                                - button [ref=e2530]
+                            - generic:
+                              - button
+                          - link "- Benjamin CAILLON 52 m² min 800 000 € max" [ref=e2533] [cursor=pointer]:
+                            - /url: /acq/6a0c93a7f275a8c46a905a72
+                            - generic [ref=e2534]:
+                              - generic [ref=e2536]: "-"
+                              - generic [ref=e2537]:
+                                - generic [ref=e2538]: Benjamin CAILLON
+                                - generic [ref=e2540]: 52 m² min
+                                - generic [ref=e2542]: 800 000 € max
+                              - generic [ref=e2544]:
+                                - button [ref=e2545]
+                                - button [ref=e2547]
+                            - generic:
+                              - button
+                          - link "- Marie-Antoinette AYRAUD 34 m² min 543 000 € max" [ref=e2550] [cursor=pointer]:
+                            - /url: /acq/6a100d2ca67b48089d6e8af2
+                            - generic [ref=e2551]:
+                              - generic [ref=e2553]: "-"
+                              - generic [ref=e2554]:
+                                - generic [ref=e2555]: Marie-Antoinette AYRAUD
+                                - generic [ref=e2557]: 34 m² min
+                                - generic [ref=e2559]: 543 000 € max
+                              - generic [ref=e2561]:
+                                - button [ref=e2562]
+                                - button [ref=e2564]
+                            - generic:
+                              - button
+                          - link "- GIULIA CATTARUZZA 45 m² min 635 000 € max" [ref=e2567] [cursor=pointer]:
+                            - /url: /acq/699cc45fe47e18009c17834f
+                            - generic [ref=e2568]:
+                              - generic [ref=e2570]: "-"
+                              - generic [ref=e2571]:
+                                - generic [ref=e2572]: GIULIA CATTARUZZA
+                                - generic [ref=e2574]: 45 m² min
+                                - generic [ref=e2576]: 635 000 € max
+                              - generic [ref=e2578]:
+                                - button [ref=e2579]
+                                - button [ref=e2581]
+                            - generic:
+                              - button
+                          - link "- PROSPER 44 m² min 540 000 € max" [ref=e2584] [cursor=pointer]:
+                            - /url: /acq/699cc7abe47e18009cf54901
+                            - generic [ref=e2585]:
+                              - generic [ref=e2587]: "-"
+                              - generic [ref=e2588]:
+                                - generic [ref=e2589]: PROSPER
+                                - generic [ref=e2591]: 44 m² min
+                                - generic [ref=e2593]: 540 000 € max
+                              - generic [ref=e2595]:
+                                - button [ref=e2596]
+                                - button [ref=e2598]
+                            - generic:
+                              - button
+                          - link "Olivier MENART Christelle REN 60 m² min 600 000 € max" [ref=e2601] [cursor=pointer]:
+                            - /url: /acq/699dc16f626a5c29dcc1ef80
+                            - generic [ref=e2602]:
+                              - img "Olivier MENART" [ref=e2604]
+                              - generic [ref=e2605]:
+                                - generic [ref=e2606]: Christelle REN
+                                - generic [ref=e2608]: 60 m² min
+                                - generic [ref=e2610]: 600 000 € max
+                              - generic [ref=e2612]:
+                                - button [ref=e2613]
+                                - button [ref=e2615]
+                            - generic:
+                              - button
+                          - link "- Jérémy VALVERDE 35 m² min 543 000 € max" [ref=e2618] [cursor=pointer]:
+                            - /url: /acq/699cc5b0e47e18009c703e5c
+                            - generic [ref=e2619]:
+                              - generic [ref=e2621]: "-"
+                              - generic [ref=e2622]:
+                                - generic [ref=e2623]: Jérémy VALVERDE
+                                - generic [ref=e2625]: 35 m² min
+                                - generic [ref=e2627]: 543 000 € max
+                              - generic [ref=e2629]:
+                                - button [ref=e2630]
+                                - button [ref=e2632]
+                            - generic:
+                              - button
+                          - link "- Kim CAVERT 40 m² min 850 000 € max" [ref=e2635] [cursor=pointer]:
+                            - /url: /acq/699cc362e47e18009cd4cf1e
+                            - generic [ref=e2636]:
+                              - generic [ref=e2638]: "-"
+                              - generic [ref=e2639]:
+                                - generic [ref=e2640]: Kim CAVERT
+                                - generic [ref=e2642]: 40 m² min
+                                - generic [ref=e2644]: 850 000 € max
+                              - generic [ref=e2646]:
+                                - button [ref=e2647]
+                                - button [ref=e2649]
+                            - generic:
+                              - button
+                          - link "- Charles GACHET 45 m² min 600 000 € max" [ref=e2652] [cursor=pointer]:
+                            - /url: /acq/699cca65e47e18009cabb94d
+                            - generic [ref=e2653]:
+                              - generic [ref=e2655]: "-"
+                              - generic [ref=e2656]:
+                                - generic [ref=e2657]: Charles GACHET
+                                - generic [ref=e2659]: 45 m² min
+                                - generic [ref=e2661]: 600 000 € max
+                              - generic [ref=e2663]:
+                                - button [ref=e2664]
+                                - button [ref=e2666]
+                            - generic:
+                              - button
+                          - link "- Théophile LOISON 53 m² min 700 000 € max" [ref=e2669] [cursor=pointer]:
+                            - /url: /acq/699cc90de47e18009c529a66
+                            - generic [ref=e2670]:
+                              - generic [ref=e2672]: "-"
+                              - generic [ref=e2673]:
+                                - generic [ref=e2674]: Théophile LOISON
+                                - generic [ref=e2676]: 53 m² min
+                                - generic [ref=e2678]: 700 000 € max
+                              - generic [ref=e2680]:
+                                - button [ref=e2681]
+                                - button [ref=e2683]
+                            - generic:
+                              - button
+                          - link "- Nicole DANA 53 m² min 550 000 € max" [ref=e2686] [cursor=pointer]:
+                            - /url: /acq/699cc52ce47e18009c4dd2c7
+                            - generic [ref=e2687]:
+                              - generic [ref=e2689]: "-"
+                              - generic [ref=e2690]:
+                                - generic [ref=e2691]: Nicole DANA
+                                - generic [ref=e2693]: 53 m² min
+                                - generic [ref=e2695]: 550 000 € max
+                              - generic [ref=e2697]:
+                                - button [ref=e2698]
+                                - button [ref=e2700]
+                            - generic:
+                              - button
+                          - link "- Giulia CATTARUZZA 55 m² min 670 000 € max" [ref=e2703] [cursor=pointer]:
+                            - /url: /acq/699ccaa7e47e18009cbc9e6e
+                            - generic [ref=e2704]:
+                              - generic [ref=e2706]: "-"
+                              - generic [ref=e2707]:
+                                - generic [ref=e2708]: Giulia CATTARUZZA
+                                - generic [ref=e2710]: 55 m² min
+                                - generic [ref=e2712]: 670 000 € max
+                              - generic [ref=e2714]:
+                                - button [ref=e2715]
+                                - button [ref=e2717]
+                            - generic:
+                              - button
+                          - link "- PROSPER 48 m² min 700 000 € max" [ref=e2720] [cursor=pointer]:
+                            - /url: /acq/699cc5e0e47e18009c7ccca0
+                            - generic [ref=e2721]:
+                              - generic [ref=e2723]: "-"
+                              - generic [ref=e2724]:
+                                - generic [ref=e2725]: PROSPER
+                                - generic [ref=e2727]: 48 m² min
+                                - generic [ref=e2729]: 700 000 € max
+                              - generic [ref=e2731]:
+                                - button [ref=e2732]
+                                - button [ref=e2734]
+                            - generic:
+                              - button
+                          - link "- Martine GUITTON 34 m² min 559 000 € max" [ref=e2737] [cursor=pointer]:
+                            - /url: /acq/699cc79ae47e18009cf0d10f
+                            - generic [ref=e2738]:
+                              - generic [ref=e2740]: "-"
+                              - generic [ref=e2741]:
+                                - generic [ref=e2742]: Martine GUITTON
+                                - generic [ref=e2744]: 34 m² min
+                                - generic [ref=e2746]: 559 000 € max
+                              - generic [ref=e2748]:
+                                - button [ref=e2749]
+                                - button [ref=e2751]
+                            - generic:
+                              - button
+                          - link "- Camille DEVIVO 50 m² min 800 000 € max" [ref=e2754] [cursor=pointer]:
+                            - /url: /acq/699ccae9e47e18009cce2130
+                            - generic [ref=e2755]:
+                              - generic [ref=e2757]: "-"
+                              - generic [ref=e2758]:
+                                - generic [ref=e2759]: Camille DEVIVO
+                                - generic [ref=e2761]: 50 m² min
+                                - generic [ref=e2763]: 800 000 € max
+                              - generic [ref=e2765]:
+                                - button [ref=e2766]
+                                - button [ref=e2768]
+                            - generic:
+                              - button
+                          - link "- Thomas GANGNERON-PARSAL 32 m² min 700 000 € max" [ref=e2771] [cursor=pointer]:
+                            - /url: /acq/699cc250e47e18009c8c65fb
+                            - generic [ref=e2772]:
+                              - generic [ref=e2774]: "-"
+                              - generic [ref=e2775]:
+                                - generic [ref=e2776]: Thomas GANGNERON-PARSAL
+                                - generic [ref=e2778]: 32 m² min
+                                - generic [ref=e2780]: 700 000 € max
+                              - generic [ref=e2782]:
+                                - button [ref=e2783]
+                                - button [ref=e2785]
+                            - generic:
+                              - button
+                          - link "- Celinepan CELINEPAN 30 m² min 715 000 € max" [ref=e2788] [cursor=pointer]:
+                            - /url: /acq/699cc899e47e18009c33e80c
+                            - generic [ref=e2789]:
+                              - generic [ref=e2791]: "-"
+                              - generic [ref=e2792]:
+                                - generic [ref=e2793]: Celinepan CELINEPAN
+                                - generic [ref=e2795]: 30 m² min
+                                - generic [ref=e2797]: 715 000 € max
+                              - generic [ref=e2799]:
+                                - button [ref=e2800]
+                                - button [ref=e2802]
+                            - generic:
+                              - button
+                          - link "- HOME SELECT 55 m² min 750 000 € max" [ref=e2805] [cursor=pointer]:
+                            - /url: /acq/699cc578e47e18009c61b14a
+                            - generic [ref=e2806]:
+                              - generic [ref=e2808]: "-"
+                              - generic [ref=e2809]:
+                                - generic [ref=e2810]: HOME SELECT
+                                - generic [ref=e2812]: 55 m² min
+                                - generic [ref=e2814]: 750 000 € max
+                              - generic [ref=e2816]:
+                                - button [ref=e2817]
+                                - button [ref=e2819]
+                            - generic:
+                              - button
+                          - link "- Gwénaëlle Benon BENON 55 m² min 750 000 € max" [ref=e2822] [cursor=pointer]:
+                            - /url: /acq/699cc550e47e18009c5749d5
+                            - generic [ref=e2823]:
+                              - generic [ref=e2825]: "-"
+                              - generic [ref=e2826]:
+                                - generic [ref=e2827]: Gwénaëlle Benon BENON
+                                - generic [ref=e2829]: 55 m² min
+                                - generic [ref=e2831]: 750 000 € max
+                              - generic [ref=e2833]:
+                                - button [ref=e2834]
+                                - button [ref=e2836]
+                            - generic:
+                              - button
+                          - link "- Justine AZAIS 40 m² min 650 000 € max" [ref=e2839] [cursor=pointer]:
+                            - /url: /acq/699cc9ede47e18009c8d16cd
+                            - generic [ref=e2840]:
+                              - generic [ref=e2842]: "-"
+                              - generic [ref=e2843]:
+                                - generic [ref=e2844]: Justine AZAIS
+                                - generic [ref=e2846]: 40 m² min
+                                - generic [ref=e2848]: 650 000 € max
+                              - generic [ref=e2850]:
+                                - button [ref=e2851]
+                                - button [ref=e2853]
+                            - generic:
+                              - button
+                          - link "- Giulia CATTARUZZA 40 m² min 635 000 € max" [ref=e2856] [cursor=pointer]:
+                            - /url: /acq/699cc71be47e18009ccf75d1
+                            - generic [ref=e2857]:
+                              - generic [ref=e2859]: "-"
+                              - generic [ref=e2860]:
+                                - generic [ref=e2861]: Giulia CATTARUZZA
+                                - generic [ref=e2863]: 40 m² min
+                                - generic [ref=e2865]: 635 000 € max
+                              - generic [ref=e2867]:
+                                - button [ref=e2868]
+                                - button [ref=e2870]
+                            - generic:
+                              - button
+                          - link "- Gwénaëlle Benon BENON 50 m² min 800 000 € max" [ref=e2873] [cursor=pointer]:
+                            - /url: /acq/699cca86e47e18009cb4469a
+                            - generic [ref=e2874]:
+                              - generic [ref=e2876]: "-"
+                              - generic [ref=e2877]:
+                                - generic [ref=e2878]: Gwénaëlle Benon BENON
+                                - generic [ref=e2880]: 50 m² min
+                                - generic [ref=e2882]: 800 000 € max
+                              - generic [ref=e2884]:
+                                - button [ref=e2885]
+                                - button [ref=e2887]
+                            - generic:
+                              - button
+                          - link "- Camille DEVIVO 49 m² min 850 000 € max" [ref=e2890] [cursor=pointer]:
+                            - /url: /acq/699cc915e47e18009c54b8df
+                            - generic [ref=e2891]:
+                              - generic [ref=e2893]: "-"
+                              - generic [ref=e2894]:
+                                - generic [ref=e2895]: Camille DEVIVO
+                                - generic [ref=e2897]: 49 m² min
+                                - generic [ref=e2899]: 850 000 € max
+                              - generic [ref=e2901]:
+                                - button [ref=e2902]
+                                - button [ref=e2904]
+                            - generic:
+                              - button
+                          - link "- - 644 000 € max" [ref=e2907] [cursor=pointer]:
+                            - /url: /acq/699cc205e47e18009c788daf
+                            - generic [ref=e2908]:
+                              - generic [ref=e2910]: "-"
+                              - generic [ref=e2911]:
+                                - generic [ref=e2912]: "-"
+                                - generic [ref=e2914]: 644 000 € max
+                              - generic [ref=e2916]:
+                                - button [ref=e2917]
+                                - button [ref=e2919]
+                            - generic:
+                              - button
+                          - link "- Fabrice SANCHEZ 50 m² min 850 000 € max" [ref=e2922] [cursor=pointer]:
+                            - /url: /acq/699cc39be47e18009ce3c2d7
+                            - generic [ref=e2923]:
+                              - generic [ref=e2925]: "-"
+                              - generic [ref=e2926]:
+                                - generic [ref=e2927]: Fabrice SANCHEZ
+                                - generic [ref=e2929]: 50 m² min
+                                - generic [ref=e2931]: 850 000 € max
+                              - generic [ref=e2933]:
+                                - button [ref=e2934]
+                                - button [ref=e2936]
+                            - generic:
+                              - button
+                          - link "- Laura WAI 55 m² min 850 000 € max" [ref=e2939] [cursor=pointer]:
+                            - /url: /acq/699cc392e47e18009ce13877
+                            - generic [ref=e2940]:
+                              - generic [ref=e2942]: "-"
+                              - generic [ref=e2943]:
+                                - generic [ref=e2944]: Laura WAI
+                                - generic [ref=e2946]: 55 m² min
+                                - generic [ref=e2948]: 850 000 € max
+                              - generic [ref=e2950]:
+                                - button [ref=e2951]
+                                - button [ref=e2953]
+                            - generic:
+                              - button
+                          - link "- Céline PLESSIS VILLEY 30 m² min 774 000 € max" [ref=e2956] [cursor=pointer]:
+                            - /url: /acq/699cc554e47e18009c58644a
+                            - generic [ref=e2957]:
+                              - generic [ref=e2959]: "-"
+                              - generic [ref=e2960]:
+                                - generic [ref=e2961]: Céline PLESSIS VILLEY
+                                - generic [ref=e2963]: 30 m² min
+                                - generic [ref=e2965]: 774 000 € max
+                              - generic [ref=e2967]:
+                                - button [ref=e2968]
+                                - button [ref=e2970]
+                            - generic:
+                              - button
+                          - link "- Robert KADIJEVIC 35 m² min 550 000 € max" [ref=e2973] [cursor=pointer]:
+                            - /url: /acq/699cc512e47e18009c4707e8
+                            - generic [ref=e2974]:
+                              - generic [ref=e2976]: "-"
+                              - generic [ref=e2977]:
+                                - generic [ref=e2978]: Robert KADIJEVIC
+                                - generic [ref=e2980]: 35 m² min
+                                - generic [ref=e2982]: 550 000 € max
+                              - generic [ref=e2984]:
+                                - button [ref=e2985]
+                                - button [ref=e2987]
+                            - generic:
+                              - button
+                          - link "- Arthur Bohan ARTHUR BOHAN 700 000 € max" [ref=e2990] [cursor=pointer]:
+                            - /url: /acq/699cc8eee47e18009c4a466d
+                            - generic [ref=e2991]:
+                              - generic [ref=e2993]: "-"
+                              - generic [ref=e2994]:
+                                - generic [ref=e2995]: Arthur Bohan ARTHUR BOHAN
+                                - generic [ref=e2997]: 700 000 € max
+                              - generic [ref=e2999]:
+                                - button [ref=e3000]
+                                - button [ref=e3002]
+                            - generic:
+                              - button
+                          - link "Isabelle FRANCIS Helene TIMSIT 40 m² min 1 500 000 € max" [ref=e3005] [cursor=pointer]:
+                            - /url: /acq/699cc978e47e18009c6ed127
+                            - generic [ref=e3006]:
+                              - img "Isabelle FRANCIS" [ref=e3008]
+                              - generic [ref=e3009]:
+                                - generic [ref=e3010]: Helene TIMSIT
+                                - generic [ref=e3012]: 40 m² min
+                                - generic [ref=e3014]: 1 500 000 € max
+                              - generic [ref=e3016]:
+                                - button [ref=e3017]
+                                - button [ref=e3019]
+                            - generic:
+                              - button
+                          - link "- Julie GAY 37 m² min 649 000 € max" [ref=e3022] [cursor=pointer]:
+                            - /url: /acq/699cc2c3e47e18009caaca18
+                            - generic [ref=e3023]:
+                              - generic [ref=e3025]: "-"
+                              - generic [ref=e3026]:
+                                - generic [ref=e3027]: Julie GAY
+                                - generic [ref=e3029]: 37 m² min
+                                - generic [ref=e3031]: 649 000 € max
+                              - generic [ref=e3033]:
+                                - button [ref=e3034]
+                                - button [ref=e3036]
+                            - generic:
+                              - button
+                          - link "- Olivier GIVERDON 50 m² min 1 200 000 € max" [ref=e3039] [cursor=pointer]:
+                            - /url: /acq/699cc390e47e18009ce0cc0b
+                            - generic [ref=e3040]:
+                              - generic [ref=e3042]: "-"
+                              - generic [ref=e3043]:
+                                - generic [ref=e3044]: Olivier GIVERDON
+                                - generic [ref=e3046]: 50 m² min
+                                - generic [ref=e3048]: 1 200 000 € max
+                              - generic [ref=e3050]:
+                                - button [ref=e3051]
+                                - button [ref=e3053]
+                            - generic:
+                              - button
+                          - link "- DE LUSSIGNY 60 m² min 590 000 € max" [ref=e3056] [cursor=pointer]:
+                            - /url: /acq/699cc6f9e47e18009cc679f4
+                            - generic [ref=e3057]:
+                              - generic [ref=e3059]: "-"
+                              - generic [ref=e3060]:
+                                - generic [ref=e3061]: DE LUSSIGNY
+                                - generic [ref=e3063]: 60 m² min
+                                - generic [ref=e3065]: 590 000 € max
+                              - generic [ref=e3067]:
+                                - button [ref=e3068]
+                                - button [ref=e3070]
+                            - generic:
+                              - button
+                          - link "- Sabine MELSAB 657 000 € max" [ref=e3073] [cursor=pointer]:
+                            - /url: /acq/699cc55fe47e18009c5b5448
+                            - generic [ref=e3074]:
+                              - generic [ref=e3076]: "-"
+                              - generic [ref=e3077]:
+                                - generic [ref=e3078]: Sabine MELSAB
+                                - generic [ref=e3080]: 657 000 € max
+                              - generic [ref=e3082]:
+                                - button [ref=e3083]
+                                - button [ref=e3085]
+                            - generic:
+                              - button
+                          - link "- Camille BRUN D’ARRE 34 m² min 559 000 € max" [ref=e3088] [cursor=pointer]:
+                            - /url: /acq/699cc9a3e47e18009c79f25b
+                            - generic [ref=e3089]:
+                              - generic [ref=e3091]: "-"
+                              - generic [ref=e3092]:
+                                - generic [ref=e3093]: Camille BRUN D’ARRE
+                                - generic [ref=e3095]: 34 m² min
+                                - generic [ref=e3097]: 559 000 € max
+                              - generic [ref=e3099]:
+                                - button [ref=e3100]
+                                - button [ref=e3102]
+                            - generic:
+                              - button
+                          - link "- CAMILLE SERGENT 34 m² min 559 000 € max" [ref=e3105] [cursor=pointer]:
+                            - /url: /acq/699cca20e47e18009c9a2b4c
+                            - generic [ref=e3106]:
+                              - generic [ref=e3108]: "-"
+                              - generic [ref=e3109]:
+                                - generic [ref=e3110]: CAMILLE SERGENT
+                                - generic [ref=e3112]: 34 m² min
+                                - generic [ref=e3114]: 559 000 € max
+                              - generic [ref=e3116]:
+                                - button [ref=e3117]
+                                - button [ref=e3119]
+                            - generic:
+                              - button
+                          - link "- ELEONORE GEISSLER 34 m² min 559 000 € max" [ref=e3122] [cursor=pointer]:
+                            - /url: /acq/699cca60e47e18009caa7acb
+                            - generic [ref=e3123]:
+                              - generic [ref=e3125]: "-"
+                              - generic [ref=e3126]:
+                                - generic [ref=e3127]: ELEONORE GEISSLER
+                                - generic [ref=e3129]: 34 m² min
+                                - generic [ref=e3131]: 559 000 € max
+                              - generic [ref=e3133]:
+                                - button [ref=e3134]
+                                - button [ref=e3136]
+                            - generic:
+                              - button
+                          - link "- Catherine Ziegler ZIEGLER 50 m² min 900 000 € max" [ref=e3139] [cursor=pointer]:
+                            - /url: /acq/699ccaabe47e18009cbdb246
+                            - generic [ref=e3140]:
+                              - generic [ref=e3142]: "-"
+                              - generic [ref=e3143]:
+                                - generic [ref=e3144]: Catherine Ziegler ZIEGLER
+                                - generic [ref=e3146]: 50 m² min
+                                - generic [ref=e3148]: 900 000 € max
+                              - generic [ref=e3150]:
+                                - button [ref=e3151]
+                                - button [ref=e3153]
+                            - generic:
+                              - button
+                          - link "- CEDRIC 663 000 € max" [ref=e3156] [cursor=pointer]:
+                            - /url: /acq/699cc2cfe47e18009cae0109
+                            - generic [ref=e3157]:
+                              - generic [ref=e3159]: "-"
+                              - generic [ref=e3160]:
+                                - generic [ref=e3161]: CEDRIC
+                                - generic [ref=e3163]: 663 000 € max
+                              - generic [ref=e3165]:
+                                - button [ref=e3166]
+                                - button [ref=e3168]
+                            - generic:
+                              - button
+                          - link "- Erwan BEAUCHESNE 663 000 € max" [ref=e3171] [cursor=pointer]:
+                            - /url: /acq/699cc27de47e18009c986b60
+                            - generic [ref=e3172]:
+                              - generic [ref=e3174]: "-"
+                              - generic [ref=e3175]:
+                                - generic [ref=e3176]: Erwan BEAUCHESNE
+                                - generic [ref=e3178]: 663 000 € max
+                              - generic [ref=e3180]:
+                                - button [ref=e3181]
+                                - button [ref=e3183]
+                            - generic:
+                              - button
+                          - link "- Matthieu NICOLESCU 663 000 € max" [ref=e3186] [cursor=pointer]:
+                            - /url: /acq/699cc279e47e18009c974896
+                            - generic [ref=e3187]:
+                              - generic [ref=e3189]: "-"
+                              - generic [ref=e3190]:
+                                - generic [ref=e3191]: Matthieu NICOLESCU
+                                - generic [ref=e3193]: 663 000 € max
+                              - generic [ref=e3195]:
+                                - button [ref=e3196]
+                                - button [ref=e3198]
+                            - generic:
+                              - button
+                          - link "- BOULOS 657 000 € max" [ref=e3201] [cursor=pointer]:
+                            - /url: /acq/699cc5c5e47e18009c75b300
+                            - generic [ref=e3202]:
+                              - generic [ref=e3204]: "-"
+                              - generic [ref=e3205]:
+                                - generic [ref=e3206]: BOULOS
+                                - generic [ref=e3208]: 657 000 € max
+                              - generic [ref=e3210]:
+                                - button [ref=e3211]
+                                - button [ref=e3213]
+                            - generic:
+                              - button
+                          - link "- Sabine MELSAB 649 000 € max" [ref=e3216] [cursor=pointer]:
+                            - /url: /acq/699cc411e47e18009c02f940
+                            - generic [ref=e3217]:
+                              - generic [ref=e3219]: "-"
+                              - generic [ref=e3220]:
+                                - generic [ref=e3221]: Sabine MELSAB
+                                - generic [ref=e3223]: 649 000 € max
+                              - generic [ref=e3225]:
+                                - button [ref=e3226]
+                                - button [ref=e3228]
+                            - generic:
+                              - button
+                          - link "- Charvet CAROLINE 50 m² min 900 000 € max" [ref=e3231] [cursor=pointer]:
+                            - /url: /acq/699cc7ebe47e18009c061440
+                            - generic [ref=e3232]:
+                              - generic [ref=e3234]: "-"
+                              - generic [ref=e3235]:
+                                - generic [ref=e3236]: Charvet CAROLINE
+                                - generic [ref=e3238]: 50 m² min
+                                - generic [ref=e3240]: 900 000 € max
+                              - generic [ref=e3242]:
+                                - button [ref=e3243]
+                                - button [ref=e3245]
+                            - generic:
+                              - button
+                          - link "- Catherine Ziegler ZIEGLER 50 m² min 950 000 € max" [ref=e3248] [cursor=pointer]:
+                            - /url: /acq/699cc3d7e47e18009cf38412
+                            - generic [ref=e3249]:
+                              - generic [ref=e3251]: "-"
+                              - generic [ref=e3252]:
+                                - generic [ref=e3253]: Catherine Ziegler ZIEGLER
+                                - generic [ref=e3255]: 50 m² min
+                                - generic [ref=e3257]: 950 000 € max
+                              - generic [ref=e3259]:
+                                - button [ref=e3260]
+                                - button [ref=e3262]
+                            - generic:
+                              - button
+                          - link "- Edgar UX301LA 35 m² min 728 000 € max" [ref=e3265] [cursor=pointer]:
+                            - /url: /acq/699cc940e47e18009c603702
+                            - generic [ref=e3266]:
+                              - generic [ref=e3268]: "-"
+                              - generic [ref=e3269]:
+                                - generic [ref=e3270]: Edgar UX301LA
+                                - generic [ref=e3272]: 35 m² min
+                                - generic [ref=e3274]: 728 000 € max
+                              - generic [ref=e3276]:
+                                - button [ref=e3277]
+                                - button [ref=e3279]
+                            - generic:
+                              - button
+                          - link "- Cieslak SYLVIE 40 m² min 843 000 € max" [ref=e3282] [cursor=pointer]:
+                            - /url: /acq/699cc41ce47e18009c05b84e
+                            - generic [ref=e3283]:
+                              - generic [ref=e3285]: "-"
+                              - generic [ref=e3286]:
+                                - generic [ref=e3287]: Cieslak SYLVIE
+                                - generic [ref=e3289]: 40 m² min
+                                - generic [ref=e3291]: 843 000 € max
+                              - generic [ref=e3293]:
+                                - button [ref=e3294]
+                                - button [ref=e3296]
+                            - generic:
+                              - button
+                          - link "Adrien PIOT Sophie RIVIÈRE 50 m² min 600 000 € max" [ref=e3299] [cursor=pointer]:
+                            - /url: /acq/69b15999c3573062905b9b15
+                            - generic [ref=e3300]:
+                              - img "Adrien PIOT" [ref=e3302]
+                              - generic [ref=e3303]:
+                                - generic [ref=e3304]: Sophie RIVIÈRE
+                                - generic [ref=e3306]: 50 m² min
+                                - generic [ref=e3308]: 600 000 € max
+                              - generic [ref=e3310]:
+                                - button [ref=e3311]
+                                - button [ref=e3313]
+                            - generic:
+                              - button
+                          - link "- CAMILLE DEVIVO 60 m² min 850 000 € max" [ref=e3316] [cursor=pointer]:
+                            - /url: /acq/699cc3a5e47e18009ce68cca
+                            - generic [ref=e3317]:
+                              - generic [ref=e3319]: "-"
+                              - generic [ref=e3320]:
+                                - generic [ref=e3321]: CAMILLE DEVIVO
+                                - generic [ref=e3323]: 60 m² min
+                                - generic [ref=e3325]: 850 000 € max
+                              - generic [ref=e3327]:
+                                - button [ref=e3328]
+                                - button [ref=e3330]
+                            - generic:
+                              - button
+                          - link "- Celinepan CELINEPAN 35 m² min 754 000 € max" [ref=e3333] [cursor=pointer]:
+                            - /url: /acq/699cc5f6e47e18009c82846c
+                            - generic [ref=e3334]:
+                              - generic [ref=e3336]: "-"
+                              - generic [ref=e3337]:
+                                - generic [ref=e3338]: Celinepan CELINEPAN
+                                - generic [ref=e3340]: 35 m² min
+                                - generic [ref=e3342]: 754 000 € max
+                              - generic [ref=e3344]:
+                                - button [ref=e3345]
+                                - button [ref=e3347]
+                            - generic:
+                              - button
+                          - link "- Med MED 35 m² min 754 000 € max" [ref=e3350] [cursor=pointer]:
+                            - /url: /acq/699cc842e47e18009c1d1586
+                            - generic [ref=e3351]:
+                              - generic [ref=e3353]: "-"
+                              - generic [ref=e3354]:
+                                - generic [ref=e3355]: Med MED
+                                - generic [ref=e3357]: 35 m² min
+                                - generic [ref=e3359]: 754 000 € max
+                              - generic [ref=e3361]:
+                                - button [ref=e3362]
+                                - button [ref=e3364]
+                            - generic:
+                              - button
+                          - link "- Louison RUBIN 35 m² min 754 000 € max" [ref=e3367] [cursor=pointer]:
+                            - /url: /acq/699cc338e47e18009cc982ed
+                            - generic [ref=e3368]:
+                              - generic [ref=e3370]: "-"
+                              - generic [ref=e3371]:
+                                - generic [ref=e3372]: Louison RUBIN
+                                - generic [ref=e3374]: 35 m² min
+                                - generic [ref=e3376]: 754 000 € max
+                              - generic [ref=e3378]:
+                                - button [ref=e3379]
+                                - button [ref=e3381]
+                            - generic:
+                              - button
+                          - link "- Georgina GEORGINA VARDY 760 000 € max" [ref=e3384] [cursor=pointer]:
+                            - /url: /acq/699cc55ae47e18009c59ee57
+                            - generic [ref=e3385]:
+                              - generic [ref=e3387]: "-"
+                              - generic [ref=e3388]:
+                                - generic [ref=e3389]: Georgina GEORGINA VARDY
+                                - generic [ref=e3391]: 760 000 € max
+                              - generic [ref=e3393]:
+                                - button [ref=e3394]
+                                - button [ref=e3396]
+                            - generic:
+                              - button
+                          - link "- Antoine VALETTE 760 000 € max" [ref=e3399] [cursor=pointer]:
+                            - /url: /acq/699cc624e47e18009c8ea516
+                            - generic [ref=e3400]:
+                              - generic [ref=e3402]: "-"
+                              - generic [ref=e3403]:
+                                - generic [ref=e3404]: Antoine VALETTE
+                                - generic [ref=e3406]: 760 000 € max
+                              - generic [ref=e3408]:
+                                - button [ref=e3409]
+                                - button [ref=e3411]
+                            - generic:
+                              - button
+                          - link "- XAVICOCO 760 000 € max" [ref=e3414] [cursor=pointer]:
+                            - /url: /acq/699cc7bde47e18009cf9f538
+                            - generic [ref=e3415]:
+                              - generic [ref=e3417]: "-"
+                              - generic [ref=e3418]:
+                                - generic [ref=e3419]: XAVICOCO
+                                - generic [ref=e3421]: 760 000 € max
+                              - generic [ref=e3423]:
+                                - button [ref=e3424]
+                                - button [ref=e3426]
+                            - generic:
+                              - button
+                          - link "- Tran Dung PHAM 760 000 € max" [ref=e3429] [cursor=pointer]:
+                            - /url: /acq/699cc98de47e18009c74542c
+                            - generic [ref=e3430]:
+                              - generic [ref=e3432]: "-"
+                              - generic [ref=e3433]:
+                                - generic [ref=e3434]: Tran Dung PHAM
+                                - generic [ref=e3436]: 760 000 € max
+                              - generic [ref=e3438]:
+                                - button [ref=e3439]
+                                - button [ref=e3441]
+                            - generic:
+                              - button
+                          - link "- Ariane ANGELOGLOU 50 m² min 1 350 000 € max" [ref=e3444] [cursor=pointer]:
+                            - /url: /acq/699cc828e47e18009c164a73
+                            - generic [ref=e3445]:
+                              - generic [ref=e3447]: "-"
+                              - generic [ref=e3448]:
+                                - generic [ref=e3449]: Ariane ANGELOGLOU
+                                - generic [ref=e3451]: 50 m² min
+                                - generic [ref=e3453]: 1 350 000 € max
+                              - generic [ref=e3455]:
+                                - button [ref=e3456]
+                                - button [ref=e3458]
+                            - generic:
+                              - button
+                          - link "- AMELIE KAUFEISEN 31 m² min 774 000 € max" [ref=e3461] [cursor=pointer]:
+                            - /url: /acq/699cc440e47e18009c0f2dc3
+                            - generic [ref=e3462]:
+                              - generic [ref=e3464]: "-"
+                              - generic [ref=e3465]:
+                                - generic [ref=e3466]: AMELIE KAUFEISEN
+                                - generic [ref=e3468]: 31 m² min
+                                - generic [ref=e3470]: 774 000 € max
+                              - generic [ref=e3472]:
+                                - button [ref=e3473]
+                                - button [ref=e3475]
+                            - generic:
+                              - button
+                          - link "- Sabrina CORDIER 31 m² min 774 000 € max" [ref=e3478] [cursor=pointer]:
+                            - /url: /acq/699cc894e47e18009c32cd6f
+                            - generic [ref=e3479]:
+                              - generic [ref=e3481]: "-"
+                              - generic [ref=e3482]:
+                                - generic [ref=e3483]: Sabrina CORDIER
+                                - generic [ref=e3485]: 31 m² min
+                                - generic [ref=e3487]: 774 000 € max
+                              - generic [ref=e3489]:
+                                - button [ref=e3490]
+                                - button [ref=e3492]
+                            - generic:
+                              - button
+                          - link "- Nicolas VALEYRE 35 m² min 780 000 € max" [ref=e3495] [cursor=pointer]:
+                            - /url: /acq/699cc7c3e47e18009cfb7bee
+                            - generic [ref=e3496]:
+                              - generic [ref=e3498]: "-"
+                              - generic [ref=e3499]:
+                                - generic [ref=e3500]: Nicolas VALEYRE
+                                - generic [ref=e3502]: 35 m² min
+                                - generic [ref=e3504]: 780 000 € max
+                              - generic [ref=e3506]:
+                                - button [ref=e3507]
+                                - button [ref=e3509]
+                            - generic:
+                              - button
+                          - link "- Christophe DROUET 35 m² min 780 000 € max" [ref=e3512] [cursor=pointer]:
+                            - /url: /acq/699cc819e47e18009c12279b
+                            - generic [ref=e3513]:
+                              - generic [ref=e3515]: "-"
+                              - generic [ref=e3516]:
+                                - generic [ref=e3517]: Christophe DROUET
+                                - generic [ref=e3519]: 35 m² min
+                                - generic [ref=e3521]: 780 000 € max
+                              - generic [ref=e3523]:
+                                - button [ref=e3524]
+                                - button [ref=e3526]
+                            - generic:
+                              - button
+                          - link "- Giulia CATTARUZZA 60 m² min 940 000 € max" [ref=e3529] [cursor=pointer]:
+                            - /url: /acq/699cca8ce47e18009cb5c9de
+                            - generic [ref=e3530]:
+                              - generic [ref=e3532]: "-"
+                              - generic [ref=e3533]:
+                                - generic [ref=e3534]: Giulia CATTARUZZA
+                                - generic [ref=e3536]: 60 m² min
+                                - generic [ref=e3538]: 940 000 € max
+                              - generic [ref=e3540]:
+                                - button [ref=e3541]
+                                - button [ref=e3543]
+                            - generic:
+                              - button
+                          - link "- Christine THOMAS 60 m² min 1 000 000 € max" [ref=e3546] [cursor=pointer]:
+                            - /url: /acq/699cc949e47e18009c628c15
+                            - generic [ref=e3547]:
+                              - generic [ref=e3549]: "-"
+                              - generic [ref=e3550]:
+                                - generic [ref=e3551]: Christine THOMAS
+                                - generic [ref=e3553]: 60 m² min
+                                - generic [ref=e3555]: 1 000 000 € max
+                              - generic [ref=e3557]:
+                                - button [ref=e3558]
+                                - button [ref=e3560]
+                            - generic:
+                              - button
+                          - link "- Amélie Cailliez AMELIE 60 m² min 950 000 € max" [ref=e3563] [cursor=pointer]:
+                            - /url: /acq/699cc271e47e18009c9512e5
+                            - generic [ref=e3564]:
+                              - generic [ref=e3566]: "-"
+                              - generic [ref=e3567]:
+                                - generic [ref=e3568]: Amélie Cailliez AMELIE
+                                - generic [ref=e3570]: 60 m² min
+                                - generic [ref=e3572]: 950 000 € max
+                              - generic [ref=e3574]:
+                                - button [ref=e3575]
+                                - button [ref=e3577]
+                            - generic:
+                              - button
+                          - link "- Jennifer TIE TIE 900 000 € max" [ref=e3580] [cursor=pointer]:
+                            - /url: /acq/699cc39de47e18009ce45382
+                            - generic [ref=e3581]:
+                              - generic [ref=e3583]: "-"
+                              - generic [ref=e3584]:
+                                - generic [ref=e3585]: Jennifer TIE TIE
+                                - generic [ref=e3587]: 900 000 € max
+                              - generic [ref=e3589]:
+                                - button [ref=e3590]
+                                - button [ref=e3592]
+                            - generic:
+                              - button
+              - separator [ref=e1516]
+              - generic [ref=e1520]:
+                - tablist [ref=e1523]:
+                  - tab "Activités" [selected] [ref=e1524] [cursor=pointer]:
+                    - generic [ref=e1526]: Activités
+                  - tab "Emails 2" [ref=e1527] [cursor=pointer]:
+                    - generic [ref=e1529]: Emails
+                    - generic [ref=e1530]: "2"
+                  - tab "Notes 0" [ref=e1531] [cursor=pointer]:
+                    - generic [ref=e1533]: Notes
+                    - generic [ref=e1534]: "0"
+                  - tab "Fichiers 16" [ref=e1535] [cursor=pointer]:
+                    - generic [ref=e1537]: Fichiers
+                    - generic [ref=e1538]: "16"
+                  - tab "Journal" [ref=e1539] [cursor=pointer]:
+                    - generic [ref=e1541]: Journal
+                - generic [ref=e1545]:
+                  - generic:
+                    - generic:
+                      - paragraph: Déposez vos fichiers ici pour les ajouter à cette fiche
+                  - generic [ref=e1546]:
+                    - heading "Prochaine activité" [level=2] [ref=e1547]
+                    - button "Ajouter une note" [ref=e1549] [cursor=pointer]:
+                      - generic [ref=e1551]: Ajouter une note
+                  - alert [ref=e1554]:
+                    - generic [ref=e1556]:
+                      - generic [ref=e1557]:
+                        - paragraph [ref=e1558]: Pas de prochaine activité
+                        - paragraph [ref=e1559]: Vous pouvez créer une activité en cliquant sur le bouton ci-dessous
+                      - button "Créer une activité" [ref=e1560] [cursor=pointer]: Créer une activité
+                  - heading "Historique" [level=2] [ref=e1563]
+                  - generic [ref=e1566]:
+                    - generic [ref=e1567]:
+                      - generic [ref=e1570]: Cette semaine
+                      - generic [ref=e1572]:
+                        - generic [ref=e1574]:
+                          - generic [ref=e1586]:
+                            - text: Olivier MENARTa terminé une tâche
+                            - generic [ref=e1587]: Le 25 mai 2026 à 18:32
+                          - generic [ref=e1593]:
+                            - textbox "Titre de la note" [ref=e1597]: CHECKLIST MANDAT
+                            - textbox [ref=e1603]:
+                              - list [ref=e1604]:
+                                - listitem [ref=e1605]:
+                                  - checkbox "Task item checkbox for Compléter l'évaluation TRACFIN sur les vendeurs (sur MyNotary)" [ref=e1607]
+                                  - paragraph [ref=e1609]: Compléter l'évaluation TRACFIN sur les vendeurs (sur MyNotary)
+                                - listitem [ref=e1610]:
+                                  - checkbox "Task item checkbox for Charger les documents dans la fiche Avest (voir ci-dessous)" [ref=e1612]
+                                  - paragraph [ref=e1614]: Charger les documents dans la fiche Avest (voir ci-dessous)
+                                - listitem [ref=e1615]:
+                                  - checkbox "Task item checkbox for Vérifier date de prochaine AG de copropriété" [ref=e1617]
+                                  - paragraph [ref=e1619]: Vérifier date de prochaine AG de copropriété
+                              - paragraph [ref=e1620]
+                              - paragraph [ref=e1621]: "Vendeurs :"
+                              - list [ref=e1622]:
+                                - listitem [ref=e1623]:
+                                  - checkbox "Task item checkbox for Pièces d'identité de l'ensemble des indivisaires" [ref=e1625]
+                                  - paragraph [ref=e1627]: Pièces d'identité de l'ensemble des indivisaires
+                                - listitem [ref=e1628]:
+                                  - checkbox "Task item checkbox for Titre de propriété" [ref=e1630]
+                                  - paragraph [ref=e1632]: Titre de propriété
+                                - listitem [ref=e1633]:
+                                  - checkbox "Task item checkbox for Dernier avis d’imposition à la taxe foncière" [ref=e1635]
+                                  - paragraph [ref=e1637]: Dernier avis d’imposition à la taxe foncière
+                                - listitem [ref=e1638]:
+                                  - checkbox "Task item checkbox for Mandat (lien dossier avec MyNotary)" [ref=e1640]
+                                  - paragraph [ref=e1642]: Mandat (lien dossier avec MyNotary)
+                                - listitem [ref=e1643]:
+                                  - checkbox "Task item checkbox for Offre contre signée" [ref=e1645]
+                                  - paragraph [ref=e1647]: Offre contre signée
+                              - paragraph [ref=e1648]: "Bien vendu :"
+                              - list [ref=e1649]:
+                                - listitem [ref=e1650]:
+                                  - 'checkbox "Task item checkbox for DDT : collecter les diagnostics et vérifier validité" [ref=e1652]'
+                                  - paragraph [ref=e1654]: "DDT : collecter les diagnostics et vérifier validité"
+                              - paragraph [ref=e1655]: "Copro :"
+                              - list [ref=e1656]:
+                                - listitem [ref=e1657]:
+                                  - checkbox "Task item checkbox for Fiche synthétique de la copropriété (registre des copropriétés), sinon attestation de immatriculation de l’immeuble" [ref=e1659]
+                                  - paragraph [ref=e1661]: Fiche synthétique de la copropriété (registre des copropriétés), sinon attestation de immatriculation de l’immeuble
+                                - listitem [ref=e1662]:
+                                  - checkbox "Task item checkbox for 3 derniers PV d'AG" [ref=e1664]
+                                  - paragraph [ref=e1666]: 3 derniers PV d'AG
+                                - listitem [ref=e1667]:
+                                  - checkbox "Task item checkbox for RCP avec état descriptif de division et modificatifs" [ref=e1669]
+                                  - paragraph [ref=e1671]: RCP avec état descriptif de division et modificatifs
+                                - listitem [ref=e1672]:
+                                  - checkbox "Task item checkbox for Carnet d’entretien de l’immeuble" [ref=e1674]
+                                  - paragraph [ref=e1676]: Carnet d’entretien de l’immeuble
+                                - listitem [ref=e1677]:
+                                  - checkbox "Task item checkbox for Appels de charge" [ref=e1679]
+                                  - paragraph [ref=e1681]: Appels de charge
+                                - listitem [ref=e1682]:
+                                  - checkbox "Task item checkbox for (si disponible) convocation future AG" [ref=e1684]
+                                  - paragraph [ref=e1686]: (si disponible) convocation future AG
+                              - paragraph [ref=e1687]
+                        - generic [ref=e1692]:
+                          - generic [ref=e1702]:
+                            - text: Olivier MENART
+                            - generic [ref=e1703]: a été à un rendez-vous qui était planifié le 21 avril 2026 de 11:00 à 11:30
+                            - generic [ref=e1704]: Le 25 mai 2026 à 18:32
+                          - generic [ref=e1710]:
+                            - textbox "Titre de la note" [ref=e1714]: Rendez-vous estimation
+                            - textbox [ref=e1720]:
+                              - paragraph [ref=e1721]: Ajouter du contenu à cette note
+                        - generic [ref=e1724]:
+                          - generic [ref=e1736]:
+                            - text: Avesta importé un contrat depuis MyNotary
+                            - generic [ref=e1737]: Le 25 mai 2026 à 18:22
+                          - generic [ref=e1742] [cursor=pointer]:
+                            - img [ref=e1744]
+                            - generic [ref=e1752]: Annexe_2.pdf
+                        - generic [ref=e1754]:
+                          - generic [ref=e1766]:
+                            - text: Avesta importé un contrat depuis MyNotary
+                            - generic [ref=e1767]: Le 25 mai 2026 à 18:22
+                          - generic [ref=e1772] [cursor=pointer]:
+                            - img [ref=e1774]
+                            - generic [ref=e1782]: Mandat de vente - MyNotary.pdf
+                        - generic [ref=e1793]:
+                          - text: Olivier MENART
+                          - generic [ref=e1794]: a déplacé cette fiche de Estimation (R1) vers Mandat signé
+                          - generic [ref=e1795]: Le 25 mai 2026 à 17:31
+                    - generic [ref=e1799]:
+                      - generic [ref=e1802]: avril 2026
+                      - generic [ref=e1804]:
+                        - generic [ref=e1816]:
+                          - text: Olivier MENART
+                          - generic [ref=e1817]: a déplacé cette fiche de Nouveau vers Estimation (R1), le rendez-vous d'estimation est planifiée le 21/04/2026 de 11:00 à 12:30
+                          - generic [ref=e1818]: Le 20 avr. 2026 à 10:13
+                        - generic [ref=e1823]:
+                          - generic [ref=e1835]:
+                            - text: Avesta indiqué cette activité comme terminée car la séquence activité est terminée
+                            - generic [ref=e1836]: Le 20 avr. 2026 à 10:13
+                          - generic [ref=e1842]:
+                            - textbox "Titre de la note" [ref=e1846]: Confirmer le rendez-vous du 21/4/2026 à 12h00 (1/7)
+                            - textbox [ref=e1852]:
+                              - paragraph [ref=e1853]: Ajouter du contenu à cette note
+                        - generic [ref=e1856]:
+                          - generic [ref=e1868]:
+                            - text: Avesta envoyé un email
+                            - generic [ref=e1869]: Le 18 avr. 2026 à 16:01
+                          - generic [ref=e1874] [cursor=pointer]:
+                            - generic [ref=e1876]:
+                              - generic [ref=e1877]: Votre rendez-vous d'estimation Passage de la Bonne Graine à Paris
+                              - generic [ref=e1878]:
+                                - text: Olivier MENART
+                                - generic [ref=e1880]: remy.hochart@gmail.com
+                            - generic [ref=e1881]:
+                              - generic [ref=e1882]: "Bonjour, je vous confirme avoir bien reçu votre demande de rendez-vous d’estimation pour un bien situé Passage de la Bonne Graine à Paris. Je vais vous recontacter dans les meilleurs délais afin de confirmer ce rendez-vous. Voici mes coordonnées à toutes fins utiles : 06 70 74 49 35, olivier@abriculteurs.com. Cordialement, Olivier MENART Conseiller immobilier +33 6 70 74 49 35 olivier@abriculteurs.com abriculteurs.com"
+                              - generic [ref=e1883]:
+                                - button [ref=e1884]
+                                - button [ref=e1887]
+                        - generic [ref=e1891]:
+                          - generic [ref=e1903]:
+                            - text: Olivier MENARTa effectué un appel
+                            - generic [ref=e1904]: Le 18 avr. 2026 à 16:01
+                          - generic [ref=e1910]:
+                            - textbox "Titre de la note" [ref=e1914]: Appel de qualification 1/7
+                            - textbox [ref=e1920]:
+                              - paragraph [ref=e1921]: Ajouter du contenu à cette note
+                        - generic [ref=e1934]:
+                          - generic [ref=e1935]: Un rendez-vous d'estimation a été demandé pour le 21/04/2026 à 12:00
+                          - generic [ref=e1936]: Le 18 avr. 2026 à 16:01
+                        - generic [ref=e1941]:
+                          - generic [ref=e1953]:
+                            - text: Avesta envoyé un email
+                            - generic [ref=e1954]: Le 18 avr. 2026 à 15:57
+                          - generic [ref=e1959] [cursor=pointer]:
+                            - generic [ref=e1961]:
+                              - generic [ref=e1962]: "Re: Votre Appartement Passage de la Bonne Graine"
+                              - generic [ref=e1963]:
+                                - text: Olivier MENART
+                                - generic [ref=e1965]: remy.hochart@gmail.com
+                            - generic [ref=e1966]:
+                              - generic [ref=e1967]: "Bonjour, Suite à votre demande d’estimation sur le site de notre agence pour un bien situé Passage de la Bonne Graine à Paris, veuillez trouver ci-dessous notre pré-estimation prenant en compte les caractéristiques que vous avez renseignées : > Prix de marché : 598 000 €> Prix “coup de coeur” : 658 000 € Spécialiste à Paris, je me tiens à votre disposition pour échanger sur votre projet et affiner l'estimation de votre bien.Je suis joignable sur mon portable au 06 70 74 49 35 ou par email olivier@abriculteurs.com. Vous pouvez prendre rendez-vous pour une estimation sur place gratuite et sans engagement en suivant ce lien :https://abriculteurs.data-immo.com/rendez-vous/creneau Abriculteurs PARIS • ÎLE-DE-FRANCE est une agence immobilière innovante qui s’est affirmée comme un acteur incontournable à Paris grâce à son équipe dynamique et expérimentée, un fichier d'acheteurs actifs et qualifiés, et des stratégies de commercialisation personnalisées. Nos clients sont satisfaits et nous recommandent. Cordialement, Olivier MENART Conseiller immobilier +33 6 70 74 49 35 olivier@abriculteurs.com abriculteurs.com"
+                              - generic [ref=e1968]:
+                                - button [ref=e1969]
+                                - button [ref=e1972]
+                        - generic [ref=e1978]:
+                          - img [ref=e1985]
+                          - generic [ref=e1991]:
+                            - generic [ref=e1992]: Avesta créé cette fiche suite à une estimation en ligne
+                            - generic [ref=e1993]: Le 18 avr. 2026 à 15:57
+          - button
+    - region "Notifications alt+T"
+  - iframe [ref=e792]:
+    

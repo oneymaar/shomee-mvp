@@ -1,0 +1,340 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "A Abriculteurs PARIS • ÎLE-DE-FRANCE" [ref=e8] [cursor=pointer]:
+            - generic [ref=e11]: A
+            - generic [ref=e12]: Abriculteurs PARIS • ÎLE-DE-FRANCE
+          - button "button.toggleSidebar" [ref=e14] [cursor=pointer]:
+            - generic [ref=e16]: Toggle Sidebar
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - generic [ref=e20]:
+              - button "Rechercher" [ref=e22] [cursor=pointer]:
+                - generic [ref=e24]: Rechercher
+              - button [ref=e26] [cursor=pointer]
+          - listitem [ref=e28]:
+            - link "Carte" [ref=e29] [cursor=pointer]:
+              - /url: /map-insights
+              - generic [ref=e31]: Carte
+        - list [ref=e34]:
+          - listitem [ref=e36]:
+            - button "Prospects vendeurs" [expanded] [ref=e37] [cursor=pointer]:
+              - generic [ref=e40]: Prospects vendeurs
+            - list [ref=e43]:
+              - listitem [ref=e44]:
+                - link "Suivi des opportunités" [ref=e45] [cursor=pointer]:
+                  - /url: /sellers/tracking-board
+                  - generic [ref=e48]: Suivi des opportunités
+              - listitem [ref=e49]:
+                - link "Pioche" [ref=e50] [cursor=pointer]:
+                  - /url: /sellers/stack
+                  - generic [ref=e53]: Pioche
+              - listitem [ref=e54]:
+                - link "Préqualification" [ref=e55] [cursor=pointer]:
+                  - /url: /sellers/prequalification
+                  - generic [ref=e58]: Préqualification
+              - listitem [ref=e59]:
+                - link "Prospection terrain" [ref=e60] [cursor=pointer]:
+                  - /url: /sellers/terrain
+                  - generic [ref=e63]: Prospection terrain
+              - listitem [ref=e64]:
+                - link "Archivés" [ref=e65] [cursor=pointer]:
+                  - /url: /sellers/archives
+                  - generic [ref=e68]: Archivés
+          - listitem [ref=e69]:
+            - link "Mandats de vente" [ref=e70] [cursor=pointer]:
+              - /url: /mandates/tracking-board
+              - generic [ref=e73]: Mandats de vente
+          - listitem [ref=e74]:
+            - link "Demandes acquéreurs" [ref=e75] [cursor=pointer]:
+              - /url: /matches/tracking-board
+              - generic [ref=e78]: Demandes acquéreurs
+          - separator [ref=e79]
+          - listitem [ref=e81]:
+            - button "Prospects bailleurs" [ref=e82] [cursor=pointer]:
+              - generic [ref=e85]: Prospects bailleurs
+          - listitem [ref=e87]:
+            - link "Mandats de location" [ref=e88] [cursor=pointer]:
+              - /url: /rental/management/tracking-board
+              - generic [ref=e91]: Mandats de location
+          - separator [ref=e92]
+          - listitem [ref=e93]:
+            - link "Annonces" [ref=e94] [cursor=pointer]:
+              - /url: /listings
+              - generic [ref=e97]: Annonces
+          - listitem [ref=e98]:
+            - link "Fichier acquéreurs" [ref=e99] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e102]: Fichier acquéreurs
+        - generic [ref=e103]:
+          - separator [ref=e104]
+          - button "? Support client" [ref=e105] [cursor=pointer]:
+            - generic [ref=e106]: "?"
+            - generic [ref=e107]: Support client
+          - generic [ref=e108]:
+            - text: "2026"
+            - link "Avest" [ref=e109] [cursor=pointer]:
+              - /url: https://avest.fr
+            - text: "- v1.31.0"
+        - button "Toggle Sidebar" [ref=e110] [cursor=pointer]
+      - main [ref=e111]:
+        - navigation "breadcrumb" [ref=e117]:
+          - list [ref=e118]:
+            - button [ref=e119] [cursor=pointer]
+            - link "Fichier acquéreurs" [ref=e121] [cursor=pointer]:
+              - /url: /acquisitions/contacts
+              - generic [ref=e122]: Fichier acquéreurs
+            - listitem [ref=e123]: /
+            - generic [ref=e124]:
+              - img [ref=e125]
+              - generic [ref=e127]: À qualifier
+            - listitem [ref=e128]: /
+            - link "1547DYGS" [disabled] [ref=e129]:
+              - generic [ref=e130]: 1547DYGS
+              - button [disabled] [ref=e131] [cursor=pointer]
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - generic [ref=e137]:
+                - generic [ref=e138]:
+                  - generic [ref=e139]:
+                    - generic [ref=e143]: Acquisition
+                    - generic [ref=e145]: Elisabeth PHILIPPS
+                  - generic [ref=e148]:
+                    - generic [ref=e151]: 699 000 €
+                    - generic [ref=e152]: Max
+                  - generic [ref=e155]:
+                    - generic [ref=e156]: 49 m²
+                    - generic [ref=e157]: Min
+                  - generic [ref=e160]:
+                    - generic [ref=e161]: "75011"
+                    - generic [ref=e162]: "+2"
+                - generic [ref=e166]:
+                  - button "Non assigné" [ref=e167] [cursor=pointer]:
+                    - generic [ref=e170]: Non assigné
+                  - button "À qualifier" [ref=e171] [cursor=pointer]:
+                    - generic [ref=e172]:
+                      - img [ref=e173]
+                      - generic [ref=e175]: À qualifier
+                  - button "Ajouter une étiquette" [ref=e177] [cursor=pointer]:
+                    - generic [ref=e180]: Ajouter une étiquette
+              - generic [ref=e181]:
+                - button "Archiver" [ref=e182] [cursor=pointer]: Archiver
+                - button "Changer d'étape" [ref=e184] [cursor=pointer]: Changer d'étape
+                - button [ref=e186] [cursor=pointer]
+                - button [ref=e188] [cursor=pointer]:
+                  - img [ref=e190]
+            - generic [ref=e195]:
+              - generic [ref=e199]:
+                - tablist [ref=e202]:
+                  - tab "Description" [ref=e203] [cursor=pointer]: Description
+                  - button "Rapproch. 0" [ref=e205] [cursor=pointer]:
+                    - tab "Rapproch. 0" [ref=e206]:
+                      - text: Rapproch.
+                      - generic [ref=e209]: "0"
+                  - button "Demandes 1" [ref=e210] [cursor=pointer]:
+                    - tab "Demandes 1" [selected] [ref=e211]:
+                      - text: Demandes
+                      - generic [ref=e214]: "1"
+                - tabpanel "Demandes 1" [ref=e217]:
+                  - region [ref=e218]:
+                    - generic [ref=e219]:
+                      - generic [ref=e220]:
+                        - heading "Suivi des demandes d'infos et visites de biens" [level=3] [ref=e222]:
+                          - button "Suivi des demandes d'infos et visites de biens" [expanded] [ref=e223] [cursor=pointer]:
+                            - generic [ref=e228]: Suivi des demandes d'infos et visites de biens
+                        - generic [ref=e230]:
+                          - button [ref=e231] [cursor=pointer]
+                          - button [ref=e233] [cursor=pointer]
+                      - region "Suivi des demandes d'infos et visites de biens" [ref=e235]:
+                        - link "Olivier MENART HOCHART - 18 Passage de la Bonne Graine (75011) Step 2 of 5 Demande d'information" [ref=e238] [cursor=pointer]:
+                          - /url: /card/69e38dbc9ecc67b2d70cc31f/activity?tab=matching
+                          - generic [ref=e239]:
+                            - button "Olivier MENART" [ref=e241]:
+                              - img "Olivier MENART" [ref=e243]
+                            - generic [ref=e245]:
+                              - generic [ref=e246]: HOCHART -
+                              - generic [ref=e247]: 18 Passage de la Bonne Graine
+                              - generic [ref=e248]: (75011)
+                          - generic [ref=e250]:
+                            - button "Step 2 of 5 Demande d'information" [expanded] [ref=e251]:
+                              - generic [ref=e252]:
+                                - img "Step 2 of 5" [ref=e253]
+                                - generic [ref=e256]: Demande d'information
+                            - dialog [active] [ref=e607]:
+                              - listbox "Suggestions" [ref=e610]:
+                                - generic [ref=e611]:
+                                  - group [ref=e612]:
+                                    - option "Step 2 of 5 Demande d'information" [selected] [ref=e613]:
+                                      - generic [ref=e615]:
+                                        - img "Step 2 of 5" [ref=e616]
+                                        - text: Demande d'information
+                                    - option "Step 3 of 5 Visite" [ref=e621]:
+                                      - generic [ref=e623]:
+                                        - img "Step 3 of 5" [ref=e624]
+                                        - text: Visite
+                                    - option "Step 4 of 5 Négo. / offre" [ref=e627]:
+                                      - generic [ref=e629]:
+                                        - img "Step 4 of 5" [ref=e630]
+                                        - text: Négo. / offre
+                                    - option "Offre acceptée" [ref=e633]:
+                                      - generic [ref=e635]:
+                                        - img [ref=e636]
+                                        - text: Offre acceptée
+                                  - separator [ref=e638]
+                                  - group [ref=e639]:
+                                    - option "Sans suite" [ref=e640]:
+                                      - generic [ref=e642]:
+                                        - img [ref=e643]
+                                        - text: Sans suite
+              - separator [ref=e257]
+              - generic [ref=e261]:
+                - tablist [ref=e264]:
+                  - tab "Activités" [selected] [ref=e265] [cursor=pointer]:
+                    - generic [ref=e267]: Activités
+                  - tab "Emails 2" [ref=e268] [cursor=pointer]:
+                    - generic [ref=e270]: Emails
+                    - generic [ref=e271]: "2"
+                  - tab "Notes 0" [ref=e272] [cursor=pointer]:
+                    - generic [ref=e274]: Notes
+                    - generic [ref=e275]: "0"
+                  - tab "Fichiers 0" [ref=e276] [cursor=pointer]:
+                    - generic [ref=e278]: Fichiers
+                    - generic [ref=e279]: "0"
+                  - tab "Journal" [ref=e280] [cursor=pointer]:
+                    - generic [ref=e282]: Journal
+                - generic [ref=e286]:
+                  - generic:
+                    - generic:
+                      - paragraph: Déposez vos fichiers ici pour les ajouter à cette fiche
+                  - generic [ref=e287]:
+                    - heading "Prochaine activité" [level=2] [ref=e288]
+                    - generic [ref=e289]:
+                      - button "Créer une activité" [ref=e290] [cursor=pointer]:
+                        - generic [ref=e292]: Créer une activité
+                      - button "Ajouter une note" [ref=e293] [cursor=pointer]:
+                        - generic [ref=e295]: Ajouter une note
+                  - generic [ref=e298]:
+                    - generic [ref=e302]:
+                      - button "Appel" [ref=e304] [cursor=pointer]:
+                        - generic [ref=e307]: Appel
+                      - button "Aujourd'hui" [ref=e308] [cursor=pointer]:
+                        - generic [ref=e311]: Aujourd'hui
+                      - button "Ajouter à mon agenda" [ref=e312] [cursor=pointer]:
+                        - generic [ref=e315]: Ajouter à mon agenda
+                      - button "Ajouter à mon agenda" [ref=e317] [cursor=pointer]:
+                        - generic [ref=e318]:
+                          - generic: Ajouter à mon agenda
+                    - generic [ref=e321]:
+                      - textbox [ref=e325]: Appel de qualification 1/2
+                      - textbox [ref=e331]:
+                        - paragraph [ref=e332]: Ajouter du contenu à cette note
+                      - generic [ref=e334]:
+                        - button "Faux numéro" [ref=e335] [cursor=pointer]:
+                          - generic [ref=e337]: Faux numéro
+                        - button "Non répondu" [ref=e338] [cursor=pointer]:
+                          - generic [ref=e340]: Non répondu
+                        - button "Répondu" [ref=e341] [cursor=pointer]:
+                          - generic [ref=e343]: Répondu
+                  - heading "Historique" [level=2] [ref=e345]
+                  - generic [ref=e349]:
+                    - generic [ref=e352]: Aujourd'hui
+                    - generic [ref=e354]:
+                      - generic [ref=e356]:
+                        - generic [ref=e366]:
+                          - text: Le contacta ajouté une note à sa demande par email
+                          - generic [ref=e367]: Le 28 mai 2026 à 09:05
+                        - generic [ref=e373]: Je suis intéressé par votre offre et souhaite organiser un rendez-vous de visite. Merci de bien vouloir me contacter.
+                      - generic [ref=e375]:
+                        - generic [ref=e385]:
+                          - text: Le contacta mis à jour son projet via un formulaire acquéreur
+                          - generic [ref=e386]: Le 28 mai 2026 à 08:58
+                        - generic [ref=e392]:
+                          - button [ref=e394] [cursor=pointer]
+                          - generic [ref=e396]:
+                            - generic [ref=e397]:
+                              - generic [ref=e398]: "Code postal:"
+                              - generic [ref=e400]: "75011"
+                            - generic [ref=e401]:
+                              - generic [ref=e402]: "Code postal:"
+                              - generic [ref=e404]: 75010 (PARIS 10)
+                            - generic [ref=e405]:
+                              - generic [ref=e406]: "Code postal:"
+                              - generic [ref=e408]: 75002 (PARIS 02)
+                          - button "...Voir plus" [ref=e410] [cursor=pointer]
+                      - generic [ref=e412]:
+                        - generic [ref=e422]:
+                          - text: Avesta envoyé un email
+                          - generic [ref=e423]: Le 28 mai 2026 à 08:57
+                        - generic [ref=e428] [cursor=pointer]:
+                          - generic [ref=e430]:
+                            - generic [ref=e431]: "Re: Votre projet d'achat immobilier"
+                            - generic [ref=e432]:
+                              - text: Abriculteurs PARIS • ÎLE-DE-FRANCE
+                              - generic [ref=e434]: ephilipps@outlook.fr
+                          - generic [ref=e435]:
+                            - generic [ref=e436]: "Bonjour, Nous vous confirmons avoir bien pris note de votre projet d'acquisition avec les principaux critères ci-dessous : Zones : 75011, 75010, 75002 Types de bien : Appartement Budget maximum (hors frais de notaire) : 640 000 € Surface minimum : 49 m2 N'hésitez pas à conserver cet email pour pouvoir facilement mettre à jour vos critères à l'avenir. Mettre à jour mes critères Mon projet n'est plus d'actualité Si vous avez besoin de vendre pour acheter votre futur bien, prenez 2 minutes pour l'estimer en ligne : https://abriculteurs.data-immo.com/estimation Cordialement, +33 9 71 00 58 38 bonjour@abriculteurs.com abriculteurs.com"
+                            - generic [ref=e437]:
+                              - button [ref=e438]
+                              - button [ref=e441]
+                      - generic [ref=e445]:
+                        - generic [ref=e455]:
+                          - text: Le contacta mis à jour son projet via un formulaire acquéreur
+                          - generic [ref=e456]: Le 28 mai 2026 à 08:57
+                        - generic [ref=e462]:
+                          - button [ref=e464] [cursor=pointer]
+                          - generic [ref=e466]:
+                            - generic [ref=e467]:
+                              - generic [ref=e468]: "Code postal:"
+                              - generic [ref=e470]: "75011"
+                            - generic [ref=e471]:
+                              - generic [ref=e472]: "Code postal:"
+                              - generic [ref=e474]: "75011"
+                            - generic [ref=e475]:
+                              - generic [ref=e476]: "Code postal:"
+                              - generic [ref=e478]: 75010 (PARIS 10)
+                          - button "...Voir plus" [ref=e480] [cursor=pointer]
+                      - generic [ref=e482]:
+                        - generic [ref=e492]:
+                          - text: Avesta envoyé un email
+                          - generic [ref=e493]: Le 28 mai 2026 à 08:54
+                        - generic [ref=e498] [cursor=pointer]:
+                          - generic [ref=e500]:
+                            - generic [ref=e501]: "Re: Votre demande de renseignement Giraffe360"
+                            - generic [ref=e502]:
+                              - text: Abriculteurs PARIS • ÎLE-DE-FRANCE
+                              - generic [ref=e504]: ephilipps@outlook.fr
+                          - generic [ref=e505]:
+                            - generic [ref=e506]: Bonjour, Nous avons reçu une demande d'information de votre part depuis Giraffe360 concernant un bien que nous commercialisons. Afin de pouvoir vous recontacter dans les meilleurs délais, nous vous invitons à compléter le formulaire ci-dessous pour confirmer vos coordonnées et votre projet. Confirmer mon projet d'achat Cordialement, +33 9 71 00 58 38 bonjour@abriculteurs.com abriculteurs.com Si vous ne souhaitez plus recevoir de communication de notre part, cliquez ici.
+                            - generic [ref=e507]:
+                              - button [ref=e508]
+                              - button [ref=e511]
+                      - generic [ref=e517]:
+                        - img [ref=e524]
+                        - generic [ref=e531]:
+                          - generic [ref=e532]:
+                            - text: Une demande d'information a été faite sur la vente
+                            - link "Rémy HOCHART • 18 Passage de la Bonne Graine (75011)" [ref=e533] [cursor=pointer]:
+                              - /url: /card/69e38dbc9ecc67b2d70cc31f
+                            - text: via
+                            - generic [ref=e534]:
+                              - img "icon giraffe360" [ref=e536]
+                              - generic [ref=e537]: Giraffe360
+                          - generic [ref=e538]: Le 28 mai 2026 à 08:53
+                      - generic [ref=e545]:
+                        - img [ref=e552]
+                        - generic [ref=e558]:
+                          - generic [ref=e559]:
+                            - text: Avest
+                            - generic [ref=e560]:
+                              - text: a créé cette fiche suite à une demande d'information sur une annonce avec la référence KBQY0907 via
+                              - generic [ref=e561]:
+                                - img "icon giraffe360" [ref=e563]
+                                - generic [ref=e564]: Giraffe360
+                          - generic [ref=e565]: Le 28 mai 2026 à 08:53
+          - button
+    - region "Notifications alt+T"
+  - iframe [ref=e571]:
+    

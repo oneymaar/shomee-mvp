@@ -1,0 +1,2636 @@
+{
+  "Les halles 1|arr-1": {
+    "code_iris": "751010201",
+    "type_iris": "H"
+  },
+  "Les halles 2|arr-1": {
+    "code_iris": "751010202",
+    "type_iris": "H"
+  },
+  "Les halles 3|arr-1": {
+    "code_iris": "751010203",
+    "type_iris": "H"
+  },
+  "Les halles 4|arr-1": {
+    "code_iris": "751010204",
+    "type_iris": "H"
+  },
+  "Les halles 5|arr-1": {
+    "code_iris": "751010205",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Les halles 6|arr-1": {
+    "code_iris": "751010206",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Sainte-avoye 2|arr-3": {
+    "code_iris": "751031202",
+    "type_iris": "H"
+  },
+  "Sainte-avoye 3|arr-3": {
+    "code_iris": "751031203",
+    "type_iris": "H"
+  },
+  "Saint-merri 2|arr-4": {
+    "code_iris": "751041302",
+    "type_iris": "H"
+  },
+  "Saint-merri 3|arr-4": {
+    "code_iris": "751041303",
+    "type_iris": "H"
+  },
+  "Saint-germain l'auxerrois 4|arr-1": {
+    "code_iris": "751010104",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Tuileries|arr-1": {
+    "code_iris": "751010105",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Seine et berges|arr-1": {
+    "code_iris": "751010199",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Palais royal 1|arr-1": {
+    "code_iris": "751010301",
+    "type_iris": "H"
+  },
+  "Palais royal 3|arr-1": {
+    "code_iris": "751010303",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Place vendôme 1|arr-1": {
+    "code_iris": "751010401",
+    "type_iris": "H"
+  },
+  "Place vendôme 2|arr-1": {
+    "code_iris": "751010402",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Mail 1|arr-2": {
+    "code_iris": "751020701",
+    "type_iris": "H"
+  },
+  "Mail 2|arr-2": {
+    "code_iris": "751020702",
+    "type_iris": "H"
+  },
+  "Mail 3|arr-2": {
+    "code_iris": "751020703",
+    "type_iris": "H"
+  },
+  "Mail 4|arr-2": {
+    "code_iris": "751020704",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Bonne nouvelle 1|arr-2": {
+    "code_iris": "751020801",
+    "type_iris": "H"
+  },
+  "Bonne nouvelle 2|arr-2": {
+    "code_iris": "751020802",
+    "type_iris": "H"
+  },
+  "Bonne nouvelle 3|arr-2": {
+    "code_iris": "751020803",
+    "type_iris": "H"
+  },
+  "Bonne nouvelle 4|arr-2": {
+    "code_iris": "751020804",
+    "type_iris": "H"
+  },
+  "Bonne nouvelle 5|arr-2": {
+    "code_iris": "751020805",
+    "type_iris": "H"
+  },
+  "Arts et métiers 3|arr-3": {
+    "code_iris": "751030903",
+    "type_iris": "H"
+  },
+  "Arts et métiers 4|arr-3": {
+    "code_iris": "751030904",
+    "type_iris": "H"
+  },
+  "Enfants rouges 2|arr-3": {
+    "code_iris": "751031002",
+    "type_iris": "H"
+  },
+  "Enfants rouges 3|arr-3": {
+    "code_iris": "751031003",
+    "type_iris": "H"
+  },
+  "Enfants rouges 4|arr-3": {
+    "code_iris": "751031004",
+    "type_iris": "H"
+  },
+  "Les archives 1|arr-3": {
+    "code_iris": "751031101",
+    "type_iris": "H"
+  },
+  "Les archives 3|arr-3": {
+    "code_iris": "751031103",
+    "type_iris": "H"
+  },
+  "Les archives 4|arr-3": {
+    "code_iris": "751031104",
+    "type_iris": "H"
+  },
+  "Sainte-avoye 1|arr-3": {
+    "code_iris": "751031201",
+    "type_iris": "H"
+  },
+  "Les archives 2|arr-3": {
+    "code_iris": "751031102",
+    "type_iris": "H"
+  },
+  "Saint-merri 1|arr-4": {
+    "code_iris": "751041301",
+    "type_iris": "H"
+  },
+  "Saint-gervais 2|arr-4": {
+    "code_iris": "751041402",
+    "type_iris": "H"
+  },
+  "Saint-gervais 3|arr-4": {
+    "code_iris": "751041403",
+    "type_iris": "H"
+  },
+  "Saint-gervais 4|arr-4": {
+    "code_iris": "751041404",
+    "type_iris": "H"
+  },
+  "Arsenal 4|arr-4": {
+    "code_iris": "751041504",
+    "type_iris": "H"
+  },
+  "Notre-dame 1|arr-4": {
+    "code_iris": "751041601",
+    "type_iris": "H"
+  },
+  "Seine et berges 4|arr-4": {
+    "code_iris": "751041699",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Saint-merri 4|arr-4": {
+    "code_iris": "751041304",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Saint-merri 5|arr-4": {
+    "code_iris": "751041305",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Seine et berges 1|arr-4": {
+    "code_iris": "751041399",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Saint-gervais 1|arr-4": {
+    "code_iris": "751041401",
+    "type_iris": "H"
+  },
+  "Seine et berges 2|arr-4": {
+    "code_iris": "751041499",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Jardin des plantes 3|arr-5": {
+    "code_iris": "751051803",
+    "type_iris": "H"
+  },
+  "Jardin des plantes 7|arr-5": {
+    "code_iris": "751051807",
+    "type_iris": "H"
+  },
+  "Val de grâce 8|arr-5": {
+    "code_iris": "751051908",
+    "type_iris": "H"
+  },
+  "Saint-victor 1|arr-5": {
+    "code_iris": "751051701",
+    "type_iris": "H"
+  },
+  "Saint-victor 2|arr-5": {
+    "code_iris": "751051702",
+    "type_iris": "H"
+  },
+  "Saint-victor 3|arr-5": {
+    "code_iris": "751051703",
+    "type_iris": "H"
+  },
+  "Saint-victor 4|arr-5": {
+    "code_iris": "751051704",
+    "type_iris": "H"
+  },
+  "Saint-victor 6|arr-5": {
+    "code_iris": "751051706",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Jardin des plantes 8|arr-5": {
+    "code_iris": "751051808",
+    "type_iris": "H"
+  },
+  "Jardin des plantes 1|arr-5": {
+    "code_iris": "751051801",
+    "type_iris": "H"
+  },
+  "Jardin des plantes 2|arr-5": {
+    "code_iris": "751051802",
+    "type_iris": "H"
+  },
+  "Jardin des plantes 4|arr-5": {
+    "code_iris": "751051804",
+    "type_iris": "H"
+  },
+  "Jardin des plantes 5|arr-5": {
+    "code_iris": "751051805",
+    "type_iris": "H"
+  },
+  "Jardin des plantes 6|arr-5": {
+    "code_iris": "751051806",
+    "type_iris": "H"
+  },
+  "Jardin des plantes|arr-5": {
+    "code_iris": "751051809",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Seine et berges 2|arr-5": {
+    "code_iris": "751051899",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Val de grâce 1|arr-5": {
+    "code_iris": "751051901",
+    "type_iris": "H"
+  },
+  "Val de grâce 2|arr-5": {
+    "code_iris": "751051902",
+    "type_iris": "H"
+  },
+  "Val de grâce 3|arr-5": {
+    "code_iris": "751051903",
+    "type_iris": "H"
+  },
+  "Val de grâce 4|arr-5": {
+    "code_iris": "751051904",
+    "type_iris": "H"
+  },
+  "Val de grâce 5|arr-5": {
+    "code_iris": "751051905",
+    "type_iris": "H"
+  },
+  "Val de grâce 6|arr-5": {
+    "code_iris": "751051906",
+    "type_iris": "H"
+  },
+  "Val de grâce 7|arr-5": {
+    "code_iris": "751051907",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 1|arr-6": {
+    "code_iris": "751062301",
+    "type_iris": "H"
+  },
+  "Croulebarbe 6|arr-13": {
+    "code_iris": "751135206",
+    "type_iris": "H"
+  },
+  "Montparnasse 2|arr-14": {
+    "code_iris": "751145302",
+    "type_iris": "H"
+  },
+  "Montparnasse 9|arr-14": {
+    "code_iris": "751145309",
+    "type_iris": "H"
+  },
+  "Montparnasse 10|arr-14": {
+    "code_iris": "751145310",
+    "type_iris": "H"
+  },
+  "Montparnasse 11|arr-14": {
+    "code_iris": "751145311",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Sorbonne 1|arr-5": {
+    "code_iris": "751052001",
+    "type_iris": "H"
+  },
+  "Sorbonne 2|arr-5": {
+    "code_iris": "751052002",
+    "type_iris": "H"
+  },
+  "Sorbonne 3|arr-5": {
+    "code_iris": "751052003",
+    "type_iris": "H"
+  },
+  "Sorbonne 4|arr-5": {
+    "code_iris": "751052004",
+    "type_iris": "H"
+  },
+  "Sorbonne 5|arr-5": {
+    "code_iris": "751052005",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Monnaie 1|arr-6": {
+    "code_iris": "751062101",
+    "type_iris": "H"
+  },
+  "Odéon 4|arr-6": {
+    "code_iris": "751062204",
+    "type_iris": "H"
+  },
+  "Monnaie 2|arr-6": {
+    "code_iris": "751062102",
+    "type_iris": "H"
+  },
+  "Monnaie 3|arr-6": {
+    "code_iris": "751062103",
+    "type_iris": "H"
+  },
+  "Seine et berges 1|arr-6": {
+    "code_iris": "751062199",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Odéon 3|arr-6": {
+    "code_iris": "751062203",
+    "type_iris": "H"
+  },
+  "Saint-germain des prés 1|arr-6": {
+    "code_iris": "751062401",
+    "type_iris": "H"
+  },
+  "Saint-germain des prés 2|arr-6": {
+    "code_iris": "751062402",
+    "type_iris": "H"
+  },
+  "Seine et berges 2|arr-6": {
+    "code_iris": "751062499",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Saint-thomas d'aquin 1|arr-7": {
+    "code_iris": "751072501",
+    "type_iris": "H"
+  },
+  "Saint-thomas d'aquin 6|arr-7": {
+    "code_iris": "751072506",
+    "type_iris": "H"
+  },
+  "Odéon 2|arr-6": {
+    "code_iris": "751062202",
+    "type_iris": "H"
+  },
+  "Jardin du luxembourg|arr-6": {
+    "code_iris": "751062205",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Notre-dame des champs 4|arr-6": {
+    "code_iris": "751062304",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 10|arr-6": {
+    "code_iris": "751062310",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 11|arr-6": {
+    "code_iris": "751062311",
+    "type_iris": "H"
+  },
+  "Odéon 1|arr-6": {
+    "code_iris": "751062201",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 2|arr-6": {
+    "code_iris": "751062302",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 3|arr-6": {
+    "code_iris": "751062303",
+    "type_iris": "H"
+  },
+  "Seine et berges 3|arr-5": {
+    "code_iris": "751052099",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Seine et berges 1|arr-5": {
+    "code_iris": "751051799",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Saint-germain l'auxerrois 2|arr-1": {
+    "code_iris": "751010102",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Notre-dame 2|arr-4": {
+    "code_iris": "751041602",
+    "type_iris": "H"
+  },
+  "Notre-dame 3|arr-4": {
+    "code_iris": "751041603",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Notre-dame des champs 5|arr-6": {
+    "code_iris": "751062305",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 6|arr-6": {
+    "code_iris": "751062306",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 7|arr-6": {
+    "code_iris": "751062307",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 8|arr-6": {
+    "code_iris": "751062308",
+    "type_iris": "H"
+  },
+  "Notre-dame des champs 9|arr-6": {
+    "code_iris": "751062309",
+    "type_iris": "H"
+  },
+  "Saint-thomas d'aquin 2|arr-7": {
+    "code_iris": "751072502",
+    "type_iris": "H"
+  },
+  "Saint-thomas d'aquin 7|arr-7": {
+    "code_iris": "751072507",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Invalides 1|arr-7": {
+    "code_iris": "751072601",
+    "type_iris": "H"
+  },
+  "Invalides 2|arr-7": {
+    "code_iris": "751072602",
+    "type_iris": "H"
+  },
+  "Invalides 3|arr-7": {
+    "code_iris": "751072603",
+    "type_iris": "H"
+  },
+  "Invalides 4|arr-7": {
+    "code_iris": "751072604",
+    "type_iris": "H"
+  },
+  "Invalides 5|arr-7": {
+    "code_iris": "751072605",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Invalides 6|arr-7": {
+    "code_iris": "751072606",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Seine et berges 2|arr-7": {
+    "code_iris": "751072699",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "École militaire 5|arr-7": {
+    "code_iris": "751072705",
+    "type_iris": "H"
+  },
+  "Gros caillou 1|arr-7": {
+    "code_iris": "751072801",
+    "type_iris": "H"
+  },
+  "Gros caillou 2|arr-7": {
+    "code_iris": "751072802",
+    "type_iris": "H"
+  },
+  "Gros caillou 3|arr-7": {
+    "code_iris": "751072803",
+    "type_iris": "H"
+  },
+  "Gros caillou 4|arr-7": {
+    "code_iris": "751072804",
+    "type_iris": "H"
+  },
+  "Gros caillou 10|arr-7": {
+    "code_iris": "751072810",
+    "type_iris": "H"
+  },
+  "Gros caillou 11|arr-7": {
+    "code_iris": "751072811",
+    "type_iris": "H"
+  },
+  "Gros caillou 5|arr-7": {
+    "code_iris": "751072805",
+    "type_iris": "H"
+  },
+  "Gros caillou 6|arr-7": {
+    "code_iris": "751072806",
+    "type_iris": "H"
+  },
+  "Gros caillou 7|arr-7": {
+    "code_iris": "751072807",
+    "type_iris": "H"
+  },
+  "Gros caillou 8|arr-7": {
+    "code_iris": "751072808",
+    "type_iris": "H"
+  },
+  "Gros caillou 9|arr-7": {
+    "code_iris": "751072809",
+    "type_iris": "H"
+  },
+  "Champ de mars|arr-7": {
+    "code_iris": "751072812",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Grenelle 13|arr-15": {
+    "code_iris": "751155913",
+    "type_iris": "H"
+  },
+  "Grenelle 14|arr-15": {
+    "code_iris": "751155914",
+    "type_iris": "H"
+  },
+  "Grenelle 15|arr-15": {
+    "code_iris": "751155915",
+    "type_iris": "H"
+  },
+  "Grenelle 16|arr-15": {
+    "code_iris": "751155916",
+    "type_iris": "H"
+  },
+  "Grenelle 17|arr-15": {
+    "code_iris": "751155917",
+    "type_iris": "H"
+  },
+  "Grenelle 18|arr-15": {
+    "code_iris": "751155918",
+    "type_iris": "H"
+  },
+  "École militaire 3|arr-7": {
+    "code_iris": "751072703",
+    "type_iris": "H"
+  },
+  "École militaire 4|arr-7": {
+    "code_iris": "751072704",
+    "type_iris": "H"
+  },
+  "École militaire 7|arr-7": {
+    "code_iris": "751072707",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Necker 12|arr-15": {
+    "code_iris": "751155812",
+    "type_iris": "H"
+  },
+  "Necker 13|arr-15": {
+    "code_iris": "751155813",
+    "type_iris": "H"
+  },
+  "Necker 3|arr-15": {
+    "code_iris": "751155803",
+    "type_iris": "H"
+  },
+  "Necker 4|arr-15": {
+    "code_iris": "751155804",
+    "type_iris": "H"
+  },
+  "Necker 5|arr-15": {
+    "code_iris": "751155805",
+    "type_iris": "H"
+  },
+  "Necker 6|arr-15": {
+    "code_iris": "751155806",
+    "type_iris": "H"
+  },
+  "Necker 7|arr-15": {
+    "code_iris": "751155807",
+    "type_iris": "H"
+  },
+  "Necker 8|arr-15": {
+    "code_iris": "751155808",
+    "type_iris": "H"
+  },
+  "Necker 9|arr-15": {
+    "code_iris": "751155809",
+    "type_iris": "H"
+  },
+  "Necker 11|arr-15": {
+    "code_iris": "751155811",
+    "type_iris": "H"
+  },
+  "Necker 14|arr-15": {
+    "code_iris": "751155814",
+    "type_iris": "H"
+  },
+  "Necker 15|arr-15": {
+    "code_iris": "751155815",
+    "type_iris": "H"
+  },
+  "Necker 16|arr-15": {
+    "code_iris": "751155816",
+    "type_iris": "H"
+  },
+  "Necker 17|arr-15": {
+    "code_iris": "751155817",
+    "type_iris": "H"
+  },
+  "Seine et berges 3|arr-7": {
+    "code_iris": "751072899",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Madeleine 8|arr-8": {
+    "code_iris": "751083108",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Europe 1|arr-8": {
+    "code_iris": "751083201",
+    "type_iris": "H"
+  },
+  "Europe 5|arr-8": {
+    "code_iris": "751083205",
+    "type_iris": "H"
+  },
+  "Europe 6|arr-8": {
+    "code_iris": "751083206",
+    "type_iris": "H"
+  },
+  "Europe 7|arr-8": {
+    "code_iris": "751083207",
+    "type_iris": "H"
+  },
+  "Europe 8|arr-8": {
+    "code_iris": "751083208",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Saint-georges 5|arr-9": {
+    "code_iris": "751093305",
+    "type_iris": "H"
+  },
+  "Saint-georges 11|arr-9": {
+    "code_iris": "751093311",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Madeleine 1|arr-8": {
+    "code_iris": "751083101",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Madeleine 5|arr-8": {
+    "code_iris": "751083105",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Madeleine 6|arr-8": {
+    "code_iris": "751083106",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Madeleine 7|arr-8": {
+    "code_iris": "751083107",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 3|arr-9": {
+    "code_iris": "751093403",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Champs élysées 1|arr-8": {
+    "code_iris": "751082901",
+    "type_iris": "H"
+  },
+  "Champs élysées 2|arr-8": {
+    "code_iris": "751082902",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Champs élysées 3|arr-8": {
+    "code_iris": "751082903",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Champs élysées 4|arr-8": {
+    "code_iris": "751082904",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Champs élysées 5|arr-8": {
+    "code_iris": "751082905",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Champs élysées 6|arr-8": {
+    "code_iris": "751082906",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Concorde jardin champs élysées|arr-8": {
+    "code_iris": "751082907",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Faubourg du roule 3|arr-8": {
+    "code_iris": "751083003",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Faubourg du roule 4|arr-8": {
+    "code_iris": "751083004",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Faubourg du roule 5|arr-8": {
+    "code_iris": "751083005",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Madeleine 2|arr-8": {
+    "code_iris": "751083102",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 4|arr-9": {
+    "code_iris": "751093404",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 9|arr-9": {
+    "code_iris": "751093409",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Gaillon 1|arr-2": {
+    "code_iris": "751020501",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Gaillon 2|arr-2": {
+    "code_iris": "751020502",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Gaillon 3|arr-2": {
+    "code_iris": "751020503",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 1|arr-9": {
+    "code_iris": "751093401",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 2|arr-9": {
+    "code_iris": "751093402",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 5|arr-9": {
+    "code_iris": "751093405",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 6|arr-9": {
+    "code_iris": "751093406",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Europe 3|arr-8": {
+    "code_iris": "751083203",
+    "type_iris": "H"
+  },
+  "Plaine monceau 3|arr-17": {
+    "code_iris": "751176603",
+    "type_iris": "H"
+  },
+  "Plaine monceau 4|arr-17": {
+    "code_iris": "751176604",
+    "type_iris": "H"
+  },
+  "Faubourg du roule 1|arr-8": {
+    "code_iris": "751083001",
+    "type_iris": "H"
+  },
+  "Faubourg du roule 2|arr-8": {
+    "code_iris": "751083002",
+    "type_iris": "H"
+  },
+  "Ternes 1|arr-17": {
+    "code_iris": "751176501",
+    "type_iris": "H"
+  },
+  "Ternes 2|arr-17": {
+    "code_iris": "751176502",
+    "type_iris": "H"
+  },
+  "Ternes 3|arr-17": {
+    "code_iris": "751176503",
+    "type_iris": "H"
+  },
+  "Ternes 4|arr-17": {
+    "code_iris": "751176504",
+    "type_iris": "H"
+  },
+  "Ternes 8|arr-17": {
+    "code_iris": "751176508",
+    "type_iris": "H"
+  },
+  "Ternes 9|arr-17": {
+    "code_iris": "751176509",
+    "type_iris": "H"
+  },
+  "Ternes 10|arr-17": {
+    "code_iris": "751176510",
+    "type_iris": "H"
+  },
+  "Plaine monceau 6|arr-17": {
+    "code_iris": "751176606",
+    "type_iris": "H"
+  },
+  "Saint-georges 1|arr-9": {
+    "code_iris": "751093301",
+    "type_iris": "H"
+  },
+  "Saint-georges 10|arr-9": {
+    "code_iris": "751093310",
+    "type_iris": "H"
+  },
+  "Rochechouart 4|arr-9": {
+    "code_iris": "751093604",
+    "type_iris": "H"
+  },
+  "Rochechouart 5|arr-9": {
+    "code_iris": "751093605",
+    "type_iris": "H"
+  },
+  "Rochechouart 8|arr-9": {
+    "code_iris": "751093608",
+    "type_iris": "H"
+  },
+  "Rochechouart 9|arr-9": {
+    "code_iris": "751093609",
+    "type_iris": "H"
+  },
+  "Clignancourt 3|arr-18": {
+    "code_iris": "751187003",
+    "type_iris": "H"
+  },
+  "Clignancourt 4|arr-18": {
+    "code_iris": "751187004",
+    "type_iris": "H"
+  },
+  "Saint-georges 2|arr-9": {
+    "code_iris": "751093302",
+    "type_iris": "H"
+  },
+  "Saint-georges 3|arr-9": {
+    "code_iris": "751093303",
+    "type_iris": "H"
+  },
+  "Saint-georges 7|arr-9": {
+    "code_iris": "751093307",
+    "type_iris": "H"
+  },
+  "Saint-georges 9|arr-9": {
+    "code_iris": "751093309",
+    "type_iris": "H"
+  },
+  "Chaussée d'antin 7|arr-9": {
+    "code_iris": "751093407",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaussée d'antin 8|arr-9": {
+    "code_iris": "751093408",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Faubourg montmartre 2|arr-9": {
+    "code_iris": "751093502",
+    "type_iris": "H"
+  },
+  "Saint-georges 8|arr-9": {
+    "code_iris": "751093308",
+    "type_iris": "H"
+  },
+  "Rochechouart 3|arr-9": {
+    "code_iris": "751093603",
+    "type_iris": "H"
+  },
+  "Grandes carrières 1|arr-18": {
+    "code_iris": "751186901",
+    "type_iris": "H"
+  },
+  "Grandes carrières 2|arr-18": {
+    "code_iris": "751186902",
+    "type_iris": "H"
+  },
+  "Porte saint-martin 1|arr-10": {
+    "code_iris": "751103901",
+    "type_iris": "H"
+  },
+  "Porte saint-martin 2|arr-10": {
+    "code_iris": "751103902",
+    "type_iris": "H"
+  },
+  "Porte saint-martin 8|arr-10": {
+    "code_iris": "751103908",
+    "type_iris": "H"
+  },
+  "Porte saint-martin 9|arr-10": {
+    "code_iris": "751103909",
+    "type_iris": "H"
+  },
+  "Porte saint-martin 10|arr-10": {
+    "code_iris": "751103910",
+    "type_iris": "H"
+  },
+  "Canal saint-martin 1|arr-10": {
+    "code_iris": "751103988",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Hôpital saint-louis 7|arr-10": {
+    "code_iris": "751104007",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 8|arr-10": {
+    "code_iris": "751104008",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 9|arr-10": {
+    "code_iris": "751104009",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 10|arr-10": {
+    "code_iris": "751104010",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 11|arr-10": {
+    "code_iris": "751104011",
+    "type_iris": "H"
+  },
+  "Canal saint-martin 2|arr-10": {
+    "code_iris": "751104088",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Hôpital saint-louis 1|arr-10": {
+    "code_iris": "751104001",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 2|arr-10": {
+    "code_iris": "751104002",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 3|arr-10": {
+    "code_iris": "751104003",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 4|arr-10": {
+    "code_iris": "751104004",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 5|arr-10": {
+    "code_iris": "751104005",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 6|arr-10": {
+    "code_iris": "751104006",
+    "type_iris": "H"
+  },
+  "Hôpital saint-louis 12|arr-10": {
+    "code_iris": "751104012",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Saint-vincent de paul 3|arr-10": {
+    "code_iris": "751103703",
+    "type_iris": "H"
+  },
+  "Saint-vincent de paul 10|arr-10": {
+    "code_iris": "751103710",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Porte saint-denis 1|arr-10": {
+    "code_iris": "751103801",
+    "type_iris": "H"
+  },
+  "Folie méricourt 1|arr-11": {
+    "code_iris": "751114101",
+    "type_iris": "H"
+  },
+  "Folie méricourt 2|arr-11": {
+    "code_iris": "751114102",
+    "type_iris": "H"
+  },
+  "Folie méricourt 3|arr-11": {
+    "code_iris": "751114103",
+    "type_iris": "H"
+  },
+  "Folie méricourt 4|arr-11": {
+    "code_iris": "751114104",
+    "type_iris": "H"
+  },
+  "Folie méricourt 8|arr-11": {
+    "code_iris": "751114108",
+    "type_iris": "H"
+  },
+  "Saint-ambroise 1|arr-11": {
+    "code_iris": "751114201",
+    "type_iris": "H"
+  },
+  "Saint-ambroise 10|arr-11": {
+    "code_iris": "751114210",
+    "type_iris": "H"
+  },
+  "Saint-ambroise 12|arr-11": {
+    "code_iris": "751114212",
+    "type_iris": "H"
+  },
+  "Saint-ambroise 13|arr-11": {
+    "code_iris": "751114213",
+    "type_iris": "H"
+  },
+  "Saint-ambroise 14|arr-11": {
+    "code_iris": "751114214",
+    "type_iris": "H"
+  },
+  "Roquette 5|arr-11": {
+    "code_iris": "751114305",
+    "type_iris": "H"
+  },
+  "Roquette 6|arr-11": {
+    "code_iris": "751114306",
+    "type_iris": "H"
+  },
+  "Roquette 7|arr-11": {
+    "code_iris": "751114307",
+    "type_iris": "H"
+  },
+  "Roquette 8|arr-11": {
+    "code_iris": "751114308",
+    "type_iris": "H"
+  },
+  "Roquette 16|arr-11": {
+    "code_iris": "751114316",
+    "type_iris": "H"
+  },
+  "Roquette 17|arr-11": {
+    "code_iris": "751114317",
+    "type_iris": "H"
+  },
+  "Roquette 18|arr-11": {
+    "code_iris": "751114318",
+    "type_iris": "H"
+  },
+  "Roquette 9|arr-11": {
+    "code_iris": "751114309",
+    "type_iris": "H"
+  },
+  "Roquette 10|arr-11": {
+    "code_iris": "751114310",
+    "type_iris": "H"
+  },
+  "Roquette 11|arr-11": {
+    "code_iris": "751114311",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 4|arr-11": {
+    "code_iris": "751114404",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 5|arr-11": {
+    "code_iris": "751114405",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 6|arr-11": {
+    "code_iris": "751114406",
+    "type_iris": "H"
+  },
+  "Saint-ambroise 4|arr-11": {
+    "code_iris": "751114204",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 2|arr-11": {
+    "code_iris": "751114402",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 3|arr-11": {
+    "code_iris": "751114403",
+    "type_iris": "H"
+  },
+  "Picpus 21|arr-12": {
+    "code_iris": "751124621",
+    "type_iris": "H"
+  },
+  "Picpus 22|arr-12": {
+    "code_iris": "751124622",
+    "type_iris": "H"
+  },
+  "Picpus 23|arr-12": {
+    "code_iris": "751124623",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 7|arr-12": {
+    "code_iris": "751124807",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 9|arr-12": {
+    "code_iris": "751124809",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 10|arr-12": {
+    "code_iris": "751124810",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 13|arr-12": {
+    "code_iris": "751124813",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Sainte-marguerite 7|arr-11": {
+    "code_iris": "751114407",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 8|arr-11": {
+    "code_iris": "751114408",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 13|arr-11": {
+    "code_iris": "751114413",
+    "type_iris": "H"
+  },
+  "Arsenal 1|arr-4": {
+    "code_iris": "751041501",
+    "type_iris": "H"
+  },
+  "Arsenal 3|arr-4": {
+    "code_iris": "751041503",
+    "type_iris": "H"
+  },
+  "Bassin de l'arsenal|arr-4": {
+    "code_iris": "751041588",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Roquette 12|arr-11": {
+    "code_iris": "751114312",
+    "type_iris": "H"
+  },
+  "Roquette 13|arr-11": {
+    "code_iris": "751114313",
+    "type_iris": "H"
+  },
+  "Roquette 14|arr-11": {
+    "code_iris": "751114314",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 4|arr-12": {
+    "code_iris": "751124804",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 5|arr-12": {
+    "code_iris": "751124805",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 6|arr-12": {
+    "code_iris": "751124806",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 8|arr-12": {
+    "code_iris": "751124808",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 2|arr-12": {
+    "code_iris": "751124802",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 3|arr-12": {
+    "code_iris": "751124803",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 11|arr-12": {
+    "code_iris": "751124811",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Quinze-vingts 12|arr-12": {
+    "code_iris": "751124812",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Bassin de l'arsenal|arr-12": {
+    "code_iris": "751124888",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Picpus 18|arr-12": {
+    "code_iris": "751124618",
+    "type_iris": "H"
+  },
+  "Picpus 19|arr-12": {
+    "code_iris": "751124619",
+    "type_iris": "H"
+  },
+  "Picpus 20|arr-12": {
+    "code_iris": "751124620",
+    "type_iris": "H"
+  },
+  "Quinze-vingts 1|arr-12": {
+    "code_iris": "751124801",
+    "type_iris": "H"
+  },
+  "Picpus 14|arr-12": {
+    "code_iris": "751124614",
+    "type_iris": "H"
+  },
+  "Picpus 15|arr-12": {
+    "code_iris": "751124615",
+    "type_iris": "H"
+  },
+  "Picpus 16|arr-12": {
+    "code_iris": "751124616",
+    "type_iris": "H"
+  },
+  "Picpus 17|arr-12": {
+    "code_iris": "751124617",
+    "type_iris": "H"
+  },
+  "Picpus 24|arr-12": {
+    "code_iris": "751124624",
+    "type_iris": "H"
+  },
+  "Bel-air 1|arr-12": {
+    "code_iris": "751124501",
+    "type_iris": "H"
+  },
+  "Bel-air 2|arr-12": {
+    "code_iris": "751124502",
+    "type_iris": "H"
+  },
+  "Bel-air 3|arr-12": {
+    "code_iris": "751124503",
+    "type_iris": "H"
+  },
+  "Bel-air 4|arr-12": {
+    "code_iris": "751124504",
+    "type_iris": "H"
+  },
+  "Bel-air 5|arr-12": {
+    "code_iris": "751124505",
+    "type_iris": "H"
+  },
+  "Bel-air 6|arr-12": {
+    "code_iris": "751124506",
+    "type_iris": "H"
+  },
+  "Bel-air 7|arr-12": {
+    "code_iris": "751124507",
+    "type_iris": "H"
+  },
+  "Bel-air 8|arr-12": {
+    "code_iris": "751124508",
+    "type_iris": "H"
+  },
+  "Bel-air 9|arr-12": {
+    "code_iris": "751124509",
+    "type_iris": "H"
+  },
+  "Bel-air 10|arr-12": {
+    "code_iris": "751124510",
+    "type_iris": "H"
+  },
+  "Bel-air 11|arr-12": {
+    "code_iris": "751124511",
+    "type_iris": "H"
+  },
+  "Bel-air 12|arr-12": {
+    "code_iris": "751124512",
+    "type_iris": "H"
+  },
+  "Bel-air 13|arr-12": {
+    "code_iris": "751124513",
+    "type_iris": "H"
+  },
+  "Bel-air 14|arr-12": {
+    "code_iris": "751124514",
+    "type_iris": "H"
+  },
+  "Picpus 8|arr-12": {
+    "code_iris": "751124608",
+    "type_iris": "H"
+  },
+  "Picpus 6|arr-12": {
+    "code_iris": "751124606",
+    "type_iris": "H"
+  },
+  "Picpus 9|arr-12": {
+    "code_iris": "751124609",
+    "type_iris": "H"
+  },
+  "Picpus 10|arr-12": {
+    "code_iris": "751124610",
+    "type_iris": "H"
+  },
+  "Picpus 11|arr-12": {
+    "code_iris": "751124611",
+    "type_iris": "H"
+  },
+  "Picpus 12|arr-12": {
+    "code_iris": "751124612",
+    "type_iris": "H"
+  },
+  "Picpus 13|arr-12": {
+    "code_iris": "751124613",
+    "type_iris": "H"
+  },
+  "Bercy 1|arr-12": {
+    "code_iris": "751124701",
+    "type_iris": "H"
+  },
+  "Bercy 6|arr-12": {
+    "code_iris": "751124706",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Bercy 2|arr-12": {
+    "code_iris": "751124702",
+    "type_iris": "H"
+  },
+  "Bercy 3|arr-12": {
+    "code_iris": "751124703",
+    "type_iris": "H"
+  },
+  "Bercy 7|arr-12": {
+    "code_iris": "751124707",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Jardin de bercy|arr-12": {
+    "code_iris": "751124708",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Maison blanche 20|arr-13": {
+    "code_iris": "751135120",
+    "type_iris": "H"
+  },
+  "Maison blanche 21|arr-13": {
+    "code_iris": "751135121",
+    "type_iris": "H"
+  },
+  "Maison blanche 22|arr-13": {
+    "code_iris": "751135122",
+    "type_iris": "H"
+  },
+  "Maison blanche 23|arr-13": {
+    "code_iris": "751135123",
+    "type_iris": "H"
+  },
+  "Salpêtrière 4|arr-13": {
+    "code_iris": "751134904",
+    "type_iris": "H"
+  },
+  "Salpêtrière 5|arr-13": {
+    "code_iris": "751134905",
+    "type_iris": "H"
+  },
+  "Salpêtrière 6|arr-13": {
+    "code_iris": "751134906",
+    "type_iris": "H"
+  },
+  "Croulebarbe 1|arr-13": {
+    "code_iris": "751135201",
+    "type_iris": "H"
+  },
+  "Croulebarbe 2|arr-13": {
+    "code_iris": "751135202",
+    "type_iris": "H"
+  },
+  "Croulebarbe 3|arr-13": {
+    "code_iris": "751135203",
+    "type_iris": "H"
+  },
+  "Salpêtrière 3|arr-13": {
+    "code_iris": "751134903",
+    "type_iris": "H"
+  },
+  "Gare 28|arr-13": {
+    "code_iris": "751135028",
+    "type_iris": "H"
+  },
+  "Gare 29|arr-13": {
+    "code_iris": "751135029",
+    "type_iris": "H"
+  },
+  "Maison blanche 24|arr-13": {
+    "code_iris": "751135124",
+    "type_iris": "H"
+  },
+  "Maison blanche 6|arr-13": {
+    "code_iris": "751135106",
+    "type_iris": "H"
+  },
+  "Maison blanche 7|arr-13": {
+    "code_iris": "751135107",
+    "type_iris": "H"
+  },
+  "Maison blanche 9|arr-13": {
+    "code_iris": "751135109",
+    "type_iris": "H"
+  },
+  "Maison blanche 10|arr-13": {
+    "code_iris": "751135110",
+    "type_iris": "H"
+  },
+  "Maison blanche 11|arr-13": {
+    "code_iris": "751135111",
+    "type_iris": "H"
+  },
+  "Maison blanche 12|arr-13": {
+    "code_iris": "751135112",
+    "type_iris": "H"
+  },
+  "Maison blanche 13|arr-13": {
+    "code_iris": "751135113",
+    "type_iris": "H"
+  },
+  "Maison blanche 14|arr-13": {
+    "code_iris": "751135114",
+    "type_iris": "H"
+  },
+  "Maison blanche 15|arr-13": {
+    "code_iris": "751135115",
+    "type_iris": "H"
+  },
+  "Maison blanche 16|arr-13": {
+    "code_iris": "751135116",
+    "type_iris": "H"
+  },
+  "Gare 19|arr-13": {
+    "code_iris": "751135019",
+    "type_iris": "H"
+  },
+  "Gare 20|arr-13": {
+    "code_iris": "751135020",
+    "type_iris": "H"
+  },
+  "Gare 21|arr-13": {
+    "code_iris": "751135021",
+    "type_iris": "H"
+  },
+  "Gare 23|arr-13": {
+    "code_iris": "751135023",
+    "type_iris": "H"
+  },
+  "Gare 24|arr-13": {
+    "code_iris": "751135024",
+    "type_iris": "H"
+  },
+  "Gare 25|arr-13": {
+    "code_iris": "751135025",
+    "type_iris": "H"
+  },
+  "Gare 30|arr-13": {
+    "code_iris": "751135030",
+    "type_iris": "H"
+  },
+  "Gare 31|arr-13": {
+    "code_iris": "751135031",
+    "type_iris": "H"
+  },
+  "Gare 15|arr-13": {
+    "code_iris": "751135015",
+    "type_iris": "H"
+  },
+  "Gare 16|arr-13": {
+    "code_iris": "751135016",
+    "type_iris": "H"
+  },
+  "Gare 17|arr-13": {
+    "code_iris": "751135017",
+    "type_iris": "H"
+  },
+  "Gare 18|arr-13": {
+    "code_iris": "751135018",
+    "type_iris": "H"
+  },
+  "Seine et berges 2|arr-13": {
+    "code_iris": "751135099",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Parc de montsouris 1|arr-14": {
+    "code_iris": "751145401",
+    "type_iris": "H"
+  },
+  "Parc de montsouris 2|arr-14": {
+    "code_iris": "751145402",
+    "type_iris": "H"
+  },
+  "Montparnasse 3|arr-14": {
+    "code_iris": "751145303",
+    "type_iris": "H"
+  },
+  "Montparnasse 5|arr-14": {
+    "code_iris": "751145305",
+    "type_iris": "H"
+  },
+  "Petit montrouge 15|arr-14": {
+    "code_iris": "751145515",
+    "type_iris": "H"
+  },
+  "Petit montrouge 16|arr-14": {
+    "code_iris": "751145516",
+    "type_iris": "H"
+  },
+  "Montparnasse 6|arr-14": {
+    "code_iris": "751145306",
+    "type_iris": "H"
+  },
+  "Montparnasse 7|arr-14": {
+    "code_iris": "751145307",
+    "type_iris": "H"
+  },
+  "Montparnasse 8|arr-14": {
+    "code_iris": "751145308",
+    "type_iris": "H"
+  },
+  "Plaisance 24|arr-14": {
+    "code_iris": "751145624",
+    "type_iris": "H"
+  },
+  "Necker 18|arr-15": {
+    "code_iris": "751155818",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Necker 19|arr-15": {
+    "code_iris": "751155819",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Petit montrouge 5|arr-14": {
+    "code_iris": "751145505",
+    "type_iris": "H"
+  },
+  "Petit montrouge 6|arr-14": {
+    "code_iris": "751145506",
+    "type_iris": "H"
+  },
+  "Petit montrouge 7|arr-14": {
+    "code_iris": "751145507",
+    "type_iris": "H"
+  },
+  "Petit montrouge 8|arr-14": {
+    "code_iris": "751145508",
+    "type_iris": "H"
+  },
+  "Petit montrouge 9|arr-14": {
+    "code_iris": "751145509",
+    "type_iris": "H"
+  },
+  "Petit montrouge 10|arr-14": {
+    "code_iris": "751145510",
+    "type_iris": "H"
+  },
+  "Petit montrouge 11|arr-14": {
+    "code_iris": "751145511",
+    "type_iris": "H"
+  },
+  "Petit montrouge 12|arr-14": {
+    "code_iris": "751145512",
+    "type_iris": "H"
+  },
+  "Petit montrouge 13|arr-14": {
+    "code_iris": "751145513",
+    "type_iris": "H"
+  },
+  "Plaisance 8|arr-14": {
+    "code_iris": "751145608",
+    "type_iris": "H"
+  },
+  "Plaisance 9|arr-14": {
+    "code_iris": "751145609",
+    "type_iris": "H"
+  },
+  "Plaisance 10|arr-14": {
+    "code_iris": "751145610",
+    "type_iris": "H"
+  },
+  "Plaisance 11|arr-14": {
+    "code_iris": "751145611",
+    "type_iris": "H"
+  },
+  "Plaisance 14|arr-14": {
+    "code_iris": "751145614",
+    "type_iris": "H"
+  },
+  "Plaisance 15|arr-14": {
+    "code_iris": "751145615",
+    "type_iris": "H"
+  },
+  "Plaisance 16|arr-14": {
+    "code_iris": "751145616",
+    "type_iris": "H"
+  },
+  "Plaisance 19|arr-14": {
+    "code_iris": "751145619",
+    "type_iris": "H"
+  },
+  "Plaisance 25|arr-14": {
+    "code_iris": "751145625",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Javel 5|arr-15": {
+    "code_iris": "751156005",
+    "type_iris": "H"
+  },
+  "Javel 10|arr-15": {
+    "code_iris": "751156010",
+    "type_iris": "H"
+  },
+  "Javel 12|arr-15": {
+    "code_iris": "751156012",
+    "type_iris": "H"
+  },
+  "Javel 13|arr-15": {
+    "code_iris": "751156013",
+    "type_iris": "H"
+  },
+  "Javel 14|arr-15": {
+    "code_iris": "751156014",
+    "type_iris": "H"
+  },
+  "Javel 15|arr-15": {
+    "code_iris": "751156015",
+    "type_iris": "H"
+  },
+  "Javel 16|arr-15": {
+    "code_iris": "751156016",
+    "type_iris": "H"
+  },
+  "Javel 17|arr-15": {
+    "code_iris": "751156017",
+    "type_iris": "H"
+  },
+  "Javel 22|arr-15": {
+    "code_iris": "751156022",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Grenelle 1|arr-15": {
+    "code_iris": "751155901",
+    "type_iris": "H"
+  },
+  "Grenelle 2|arr-15": {
+    "code_iris": "751155902",
+    "type_iris": "H"
+  },
+  "Grenelle 3|arr-15": {
+    "code_iris": "751155903",
+    "type_iris": "H"
+  },
+  "Grenelle 5|arr-15": {
+    "code_iris": "751155905",
+    "type_iris": "H"
+  },
+  "Grenelle 11|arr-15": {
+    "code_iris": "751155911",
+    "type_iris": "H"
+  },
+  "Grenelle 12|arr-15": {
+    "code_iris": "751155912",
+    "type_iris": "H"
+  },
+  "Javel 19|arr-15": {
+    "code_iris": "751156019",
+    "type_iris": "H"
+  },
+  "Javel 20|arr-15": {
+    "code_iris": "751156020",
+    "type_iris": "H"
+  },
+  "Saint-lambert 23|arr-15": {
+    "code_iris": "751155723",
+    "type_iris": "H"
+  },
+  "Saint-lambert 24|arr-15": {
+    "code_iris": "751155724",
+    "type_iris": "H"
+  },
+  "Saint-lambert 29|arr-15": {
+    "code_iris": "751155729",
+    "type_iris": "H"
+  },
+  "Saint-lambert 30|arr-15": {
+    "code_iris": "751155730",
+    "type_iris": "H"
+  },
+  "Saint-lambert 6|arr-15": {
+    "code_iris": "751155706",
+    "type_iris": "H"
+  },
+  "Saint-lambert 7|arr-15": {
+    "code_iris": "751155707",
+    "type_iris": "H"
+  },
+  "Saint-lambert 8|arr-15": {
+    "code_iris": "751155708",
+    "type_iris": "H"
+  },
+  "Saint-lambert 9|arr-15": {
+    "code_iris": "751155709",
+    "type_iris": "H"
+  },
+  "Saint-lambert 32|arr-15": {
+    "code_iris": "751155732",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Saint-lambert 12|arr-15": {
+    "code_iris": "751155712",
+    "type_iris": "H"
+  },
+  "Saint-lambert 13|arr-15": {
+    "code_iris": "751155713",
+    "type_iris": "H"
+  },
+  "Saint-lambert 14|arr-15": {
+    "code_iris": "751155714",
+    "type_iris": "H"
+  },
+  "Saint-lambert 15|arr-15": {
+    "code_iris": "751155715",
+    "type_iris": "H"
+  },
+  "Saint-lambert 25|arr-15": {
+    "code_iris": "751155725",
+    "type_iris": "H"
+  },
+  "Grenelle 10|arr-15": {
+    "code_iris": "751155910",
+    "type_iris": "H"
+  },
+  "Muette 1|arr-16": {
+    "code_iris": "751166201",
+    "type_iris": "H"
+  },
+  "Muette 3|arr-16": {
+    "code_iris": "751166203",
+    "type_iris": "H"
+  },
+  "Muette 11|arr-16": {
+    "code_iris": "751166211",
+    "type_iris": "H"
+  },
+  "Muette 12|arr-16": {
+    "code_iris": "751166212",
+    "type_iris": "H"
+  },
+  "Muette 13|arr-16": {
+    "code_iris": "751166213",
+    "type_iris": "H"
+  },
+  "Muette 14|arr-16": {
+    "code_iris": "751166214",
+    "type_iris": "H"
+  },
+  "Muette 15|arr-16": {
+    "code_iris": "751166215",
+    "type_iris": "H"
+  },
+  "Muette 16|arr-16": {
+    "code_iris": "751166216",
+    "type_iris": "H"
+  },
+  "Muette 20|arr-16": {
+    "code_iris": "751166220",
+    "type_iris": "H"
+  },
+  "Muette 21|arr-16": {
+    "code_iris": "751166221",
+    "type_iris": "H"
+  },
+  "Auteuil 10|arr-16": {
+    "code_iris": "751166110",
+    "type_iris": "H"
+  },
+  "Auteuil 11|arr-16": {
+    "code_iris": "751166111",
+    "type_iris": "H"
+  },
+  "Auteuil 12|arr-16": {
+    "code_iris": "751166112",
+    "type_iris": "H"
+  },
+  "Auteuil 13|arr-16": {
+    "code_iris": "751166113",
+    "type_iris": "H"
+  },
+  "Auteuil 14|arr-16": {
+    "code_iris": "751166114",
+    "type_iris": "H"
+  },
+  "Auteuil 15|arr-16": {
+    "code_iris": "751166115",
+    "type_iris": "H"
+  },
+  "Auteuil 16|arr-16": {
+    "code_iris": "751166116",
+    "type_iris": "H"
+  },
+  "Auteuil 17|arr-16": {
+    "code_iris": "751166117",
+    "type_iris": "H"
+  },
+  "Auteuil 18|arr-16": {
+    "code_iris": "751166118",
+    "type_iris": "H"
+  },
+  "Auteuil 19|arr-16": {
+    "code_iris": "751166119",
+    "type_iris": "H"
+  },
+  "Auteuil 20|arr-16": {
+    "code_iris": "751166120",
+    "type_iris": "H"
+  },
+  "Auteuil 22|arr-16": {
+    "code_iris": "751166122",
+    "type_iris": "H"
+  },
+  "Auteuil 23|arr-16": {
+    "code_iris": "751166123",
+    "type_iris": "H"
+  },
+  "Auteuil 26|arr-16": {
+    "code_iris": "751166126",
+    "type_iris": "H"
+  },
+  "Auteuil 27|arr-16": {
+    "code_iris": "751166127",
+    "type_iris": "H"
+  },
+  "Auteuil 28|arr-16": {
+    "code_iris": "751166128",
+    "type_iris": "H"
+  },
+  "Auteuil 29|arr-16": {
+    "code_iris": "751166129",
+    "type_iris": "H"
+  },
+  "Muette 19|arr-16": {
+    "code_iris": "751166219",
+    "type_iris": "H"
+  },
+  "Porte dauphine 1|arr-16": {
+    "code_iris": "751166301",
+    "type_iris": "H"
+  },
+  "Chaillot 3|arr-16": {
+    "code_iris": "751166403",
+    "type_iris": "H"
+  },
+  "Chaillot 4|arr-16": {
+    "code_iris": "751166404",
+    "type_iris": "H"
+  },
+  "Chaillot 10|arr-16": {
+    "code_iris": "751166410",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Porte dauphine 7|arr-16": {
+    "code_iris": "751166307",
+    "type_iris": "H"
+  },
+  "Porte dauphine 8|arr-16": {
+    "code_iris": "751166308",
+    "type_iris": "H"
+  },
+  "Porte dauphine 9|arr-16": {
+    "code_iris": "751166309",
+    "type_iris": "H"
+  },
+  "Chaillot 5|arr-16": {
+    "code_iris": "751166405",
+    "type_iris": "H"
+  },
+  "Chaillot 6|arr-16": {
+    "code_iris": "751166406",
+    "type_iris": "H"
+  },
+  "Porte dauphine 10|arr-16": {
+    "code_iris": "751166310",
+    "type_iris": "H"
+  },
+  "Porte dauphine 11|arr-16": {
+    "code_iris": "751166311",
+    "type_iris": "H"
+  },
+  "Chaillot 7|arr-16": {
+    "code_iris": "751166407",
+    "type_iris": "H"
+  },
+  "Chaillot 9|arr-16": {
+    "code_iris": "751166409",
+    "type_iris": "H"
+  },
+  "Auteuil 24|arr-16": {
+    "code_iris": "751166124",
+    "type_iris": "H"
+  },
+  "Muette 5|arr-16": {
+    "code_iris": "751166205",
+    "type_iris": "H"
+  },
+  "Muette 6|arr-16": {
+    "code_iris": "751166206",
+    "type_iris": "H"
+  },
+  "Muette 7|arr-16": {
+    "code_iris": "751166207",
+    "type_iris": "H"
+  },
+  "Muette 8|arr-16": {
+    "code_iris": "751166208",
+    "type_iris": "H"
+  },
+  "Muette 9|arr-16": {
+    "code_iris": "751166209",
+    "type_iris": "H"
+  },
+  "Muette 10|arr-16": {
+    "code_iris": "751166210",
+    "type_iris": "H"
+  },
+  "Muette 23|arr-16": {
+    "code_iris": "751166223",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Chaillot 13|arr-16": {
+    "code_iris": "751166413",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Ternes 16|arr-17": {
+    "code_iris": "751176516",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Charles laffitte 2|92051": {
+    "code_iris": "920510202",
+    "type_iris": "H"
+  },
+  "Plaine des sablons 1|92051": {
+    "code_iris": "920510301",
+    "type_iris": "H"
+  },
+  "Porte dauphine 5|arr-16": {
+    "code_iris": "751166305",
+    "type_iris": "H"
+  },
+  "Porte dauphine 6|arr-16": {
+    "code_iris": "751166306",
+    "type_iris": "H"
+  },
+  "Bois de boulogne 3|arr-16": {
+    "code_iris": "751166377",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Batignolles 1|arr-17": {
+    "code_iris": "751176701",
+    "type_iris": "H"
+  },
+  "Batignolles 2|arr-17": {
+    "code_iris": "751176702",
+    "type_iris": "H"
+  },
+  "Batignolles 3|arr-17": {
+    "code_iris": "751176703",
+    "type_iris": "H"
+  },
+  "Batignolles 4|arr-17": {
+    "code_iris": "751176704",
+    "type_iris": "H"
+  },
+  "Batignolles 5|arr-17": {
+    "code_iris": "751176705",
+    "type_iris": "H"
+  },
+  "Batignolles 6|arr-17": {
+    "code_iris": "751176706",
+    "type_iris": "H"
+  },
+  "Batignolles 12|arr-17": {
+    "code_iris": "751176712",
+    "type_iris": "H"
+  },
+  "Batignolles 13|arr-17": {
+    "code_iris": "751176713",
+    "type_iris": "H"
+  },
+  "Batignolles 14|arr-17": {
+    "code_iris": "751176714",
+    "type_iris": "H"
+  },
+  "Épinettes 2|arr-17": {
+    "code_iris": "751176802",
+    "type_iris": "H"
+  },
+  "Épinettes 6|arr-17": {
+    "code_iris": "751176806",
+    "type_iris": "H"
+  },
+  "Europe 4|arr-8": {
+    "code_iris": "751083204",
+    "type_iris": "H"
+  },
+  "Plaine monceau 1|arr-17": {
+    "code_iris": "751176601",
+    "type_iris": "H"
+  },
+  "Batignolles 7|arr-17": {
+    "code_iris": "751176707",
+    "type_iris": "H"
+  },
+  "Batignolles 8|arr-17": {
+    "code_iris": "751176708",
+    "type_iris": "H"
+  },
+  "Batignolles 9|arr-17": {
+    "code_iris": "751176709",
+    "type_iris": "H"
+  },
+  "Ternes 7|arr-17": {
+    "code_iris": "751176507",
+    "type_iris": "H"
+  },
+  "Ternes 12|arr-17": {
+    "code_iris": "751176512",
+    "type_iris": "H"
+  },
+  "Ternes 13|arr-17": {
+    "code_iris": "751176513",
+    "type_iris": "H"
+  },
+  "Ternes 14|arr-17": {
+    "code_iris": "751176514",
+    "type_iris": "H"
+  },
+  "Plaine monceau 7|arr-17": {
+    "code_iris": "751176607",
+    "type_iris": "H"
+  },
+  "Plaine monceau 8|arr-17": {
+    "code_iris": "751176608",
+    "type_iris": "H"
+  },
+  "Plaine monceau 9|arr-17": {
+    "code_iris": "751176609",
+    "type_iris": "H"
+  },
+  "Plaine monceau 10|arr-17": {
+    "code_iris": "751176610",
+    "type_iris": "H"
+  },
+  "Plaine monceau 11|arr-17": {
+    "code_iris": "751176611",
+    "type_iris": "H"
+  },
+  "Plaine monceau 12|arr-17": {
+    "code_iris": "751176612",
+    "type_iris": "H"
+  },
+  "Plaine monceau 13|arr-17": {
+    "code_iris": "751176613",
+    "type_iris": "H"
+  },
+  "Batignolles 15|arr-17": {
+    "code_iris": "751176715",
+    "type_iris": "H"
+  },
+  "Batignolles 16|arr-17": {
+    "code_iris": "751176716",
+    "type_iris": "H"
+  },
+  "Épinettes 1|arr-17": {
+    "code_iris": "751176801",
+    "type_iris": "H"
+  },
+  "Épinettes 3|arr-17": {
+    "code_iris": "751176803",
+    "type_iris": "H"
+  },
+  "Épinettes 4|arr-17": {
+    "code_iris": "751176804",
+    "type_iris": "H"
+  },
+  "Épinettes 5|arr-17": {
+    "code_iris": "751176805",
+    "type_iris": "H"
+  },
+  "Épinettes 7|arr-17": {
+    "code_iris": "751176807",
+    "type_iris": "H"
+  },
+  "Épinettes 8|arr-17": {
+    "code_iris": "751176808",
+    "type_iris": "H"
+  },
+  "Épinettes 9|arr-17": {
+    "code_iris": "751176809",
+    "type_iris": "H"
+  },
+  "Épinettes 10|arr-17": {
+    "code_iris": "751176810",
+    "type_iris": "H"
+  },
+  "Épinettes 11|arr-17": {
+    "code_iris": "751176811",
+    "type_iris": "H"
+  },
+  "Épinettes 12|arr-17": {
+    "code_iris": "751176812",
+    "type_iris": "H"
+  },
+  "Épinettes 13|arr-17": {
+    "code_iris": "751176813",
+    "type_iris": "H"
+  },
+  "Épinettes 14|arr-17": {
+    "code_iris": "751176814",
+    "type_iris": "H"
+  },
+  "Épinettes 15|arr-17": {
+    "code_iris": "751176815",
+    "type_iris": "H"
+  },
+  "Grandes carrières 8|arr-18": {
+    "code_iris": "751186908",
+    "type_iris": "H"
+  },
+  "Grandes carrières 9|arr-18": {
+    "code_iris": "751186909",
+    "type_iris": "H"
+  },
+  "Grandes carrières 10|arr-18": {
+    "code_iris": "751186910",
+    "type_iris": "H"
+  },
+  "Grandes carrières 11|arr-18": {
+    "code_iris": "751186911",
+    "type_iris": "H"
+  },
+  "Grandes carrières 12|arr-18": {
+    "code_iris": "751186912",
+    "type_iris": "H"
+  },
+  "Grandes carrières 13|arr-18": {
+    "code_iris": "751186913",
+    "type_iris": "H"
+  },
+  "Clignancourt 5|arr-18": {
+    "code_iris": "751187005",
+    "type_iris": "H"
+  },
+  "Clignancourt 6|arr-18": {
+    "code_iris": "751187006",
+    "type_iris": "H"
+  },
+  "Clignancourt 7|arr-18": {
+    "code_iris": "751187007",
+    "type_iris": "H"
+  },
+  "Clignancourt 8|arr-18": {
+    "code_iris": "751187008",
+    "type_iris": "H"
+  },
+  "Clignancourt 9|arr-18": {
+    "code_iris": "751187009",
+    "type_iris": "H"
+  },
+  "Clignancourt 10|arr-18": {
+    "code_iris": "751187010",
+    "type_iris": "H"
+  },
+  "Clignancourt 11|arr-18": {
+    "code_iris": "751187011",
+    "type_iris": "H"
+  },
+  "Clignancourt 12|arr-18": {
+    "code_iris": "751187012",
+    "type_iris": "H"
+  },
+  "Grandes carrières 3|arr-18": {
+    "code_iris": "751186903",
+    "type_iris": "H"
+  },
+  "Grandes carrières 4|arr-18": {
+    "code_iris": "751186904",
+    "type_iris": "H"
+  },
+  "Grandes carrières 5|arr-18": {
+    "code_iris": "751186905",
+    "type_iris": "H"
+  },
+  "Grandes carrières 6|arr-18": {
+    "code_iris": "751186906",
+    "type_iris": "H"
+  },
+  "Grandes carrières 7|arr-18": {
+    "code_iris": "751186907",
+    "type_iris": "H"
+  },
+  "Grandes carrières 14|arr-18": {
+    "code_iris": "751186914",
+    "type_iris": "H"
+  },
+  "Grandes carrières 15|arr-18": {
+    "code_iris": "751186915",
+    "type_iris": "H"
+  },
+  "Grandes carrières 16|arr-18": {
+    "code_iris": "751186916",
+    "type_iris": "H"
+  },
+  "Grandes carrières 23|arr-18": {
+    "code_iris": "751186923",
+    "type_iris": "H"
+  },
+  "Clignancourt 13|arr-18": {
+    "code_iris": "751187013",
+    "type_iris": "H"
+  },
+  "Clignancourt 15|arr-18": {
+    "code_iris": "751187015",
+    "type_iris": "H"
+  },
+  "Clignancourt 21|arr-18": {
+    "code_iris": "751187021",
+    "type_iris": "H"
+  },
+  "Clignancourt 22|arr-18": {
+    "code_iris": "751187022",
+    "type_iris": "H"
+  },
+  "Clignancourt 23|arr-18": {
+    "code_iris": "751187023",
+    "type_iris": "H"
+  },
+  "Clignancourt 24|arr-18": {
+    "code_iris": "751187024",
+    "type_iris": "H"
+  },
+  "Amérique 10|arr-19": {
+    "code_iris": "751197510",
+    "type_iris": "H"
+  },
+  "Amérique 11|arr-19": {
+    "code_iris": "751197511",
+    "type_iris": "H"
+  },
+  "Amérique 13|arr-19": {
+    "code_iris": "751197513",
+    "type_iris": "H"
+  },
+  "Amérique 14|arr-19": {
+    "code_iris": "751197514",
+    "type_iris": "H"
+  },
+  "Amérique 16|arr-19": {
+    "code_iris": "751197516",
+    "type_iris": "H"
+  },
+  "Amérique 17|arr-19": {
+    "code_iris": "751197517",
+    "type_iris": "H"
+  },
+  "Amérique 7|arr-19": {
+    "code_iris": "751197507",
+    "type_iris": "H"
+  },
+  "Amérique 15|arr-19": {
+    "code_iris": "751197515",
+    "type_iris": "H"
+  },
+  "Amérique 23|arr-19": {
+    "code_iris": "751197523",
+    "type_iris": "H"
+  },
+  "Combat 2|arr-19": {
+    "code_iris": "751197602",
+    "type_iris": "H"
+  },
+  "Combat 3|arr-19": {
+    "code_iris": "751197603",
+    "type_iris": "H"
+  },
+  "Combat 4|arr-19": {
+    "code_iris": "751197604",
+    "type_iris": "H"
+  },
+  "Combat 9|arr-19": {
+    "code_iris": "751197609",
+    "type_iris": "H"
+  },
+  "Combat 12|arr-19": {
+    "code_iris": "751197612",
+    "type_iris": "H"
+  },
+  "Combat 13|arr-19": {
+    "code_iris": "751197613",
+    "type_iris": "H"
+  },
+  "Combat 14|arr-19": {
+    "code_iris": "751197614",
+    "type_iris": "H"
+  },
+  "Combat 15|arr-19": {
+    "code_iris": "751197615",
+    "type_iris": "H"
+  },
+  "Combat 16|arr-19": {
+    "code_iris": "751197616",
+    "type_iris": "H"
+  },
+  "Buttes chaumont|arr-19": {
+    "code_iris": "751197617",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Pont de flandre 1|arr-19": {
+    "code_iris": "751197401",
+    "type_iris": "H"
+  },
+  "Pont de flandre 2|arr-19": {
+    "code_iris": "751197402",
+    "type_iris": "H"
+  },
+  "Pont de flandre 3|arr-19": {
+    "code_iris": "751197403",
+    "type_iris": "H"
+  },
+  "Pont de flandre 4|arr-19": {
+    "code_iris": "751197404",
+    "type_iris": "H"
+  },
+  "Pont de flandre 5|arr-19": {
+    "code_iris": "751197405",
+    "type_iris": "H"
+  },
+  "Pont de flandre 6|arr-19": {
+    "code_iris": "751197406",
+    "type_iris": "H"
+  },
+  "Pont de flandre 7|arr-19": {
+    "code_iris": "751197407",
+    "type_iris": "H"
+  },
+  "Pont de flandre 11|arr-19": {
+    "code_iris": "751197411",
+    "type_iris": "H"
+  },
+  "Pont de flandre 12|arr-19": {
+    "code_iris": "751197412",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Pont de flandre 13|arr-19": {
+    "code_iris": "751197413",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Canal saint-denis|arr-19": {
+    "code_iris": "751197488",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Villette 3|arr-19": {
+    "code_iris": "751197303",
+    "type_iris": "H"
+  },
+  "Villette 4|arr-19": {
+    "code_iris": "751197304",
+    "type_iris": "H"
+  },
+  "Villette 5|arr-19": {
+    "code_iris": "751197305",
+    "type_iris": "H"
+  },
+  "Villette 11|arr-19": {
+    "code_iris": "751197311",
+    "type_iris": "H"
+  },
+  "Villette 12|arr-19": {
+    "code_iris": "751197312",
+    "type_iris": "H"
+  },
+  "Villette 13|arr-19": {
+    "code_iris": "751197313",
+    "type_iris": "H"
+  },
+  "Villette 14|arr-19": {
+    "code_iris": "751197314",
+    "type_iris": "H"
+  },
+  "Bassin de la villette|arr-19": {
+    "code_iris": "751197388",
+    "type_iris": "D",
+    "no_market_data": true
+  },
+  "Amérique 6|arr-19": {
+    "code_iris": "751197506",
+    "type_iris": "H"
+  },
+  "Combat 1|arr-19": {
+    "code_iris": "751197601",
+    "type_iris": "H"
+  },
+  "Belleville 2|arr-20": {
+    "code_iris": "751207702",
+    "type_iris": "H"
+  },
+  "Belleville 3|arr-20": {
+    "code_iris": "751207703",
+    "type_iris": "H"
+  },
+  "Belleville 4|arr-20": {
+    "code_iris": "751207704",
+    "type_iris": "H"
+  },
+  "Belleville 11|arr-20": {
+    "code_iris": "751207711",
+    "type_iris": "H"
+  },
+  "Belleville 12|arr-20": {
+    "code_iris": "751207712",
+    "type_iris": "H"
+  },
+  "Belleville 13|arr-20": {
+    "code_iris": "751207713",
+    "type_iris": "H"
+  },
+  "Folie méricourt 10|arr-11": {
+    "code_iris": "751114110",
+    "type_iris": "H"
+  },
+  "Folie méricourt 11|arr-11": {
+    "code_iris": "751114111",
+    "type_iris": "H"
+  },
+  "Belleville 5|arr-20": {
+    "code_iris": "751207705",
+    "type_iris": "H"
+  },
+  "Belleville 6|arr-20": {
+    "code_iris": "751207706",
+    "type_iris": "H"
+  },
+  "Belleville 7|arr-20": {
+    "code_iris": "751207707",
+    "type_iris": "H"
+  },
+  "Belleville 8|arr-20": {
+    "code_iris": "751207708",
+    "type_iris": "H"
+  },
+  "Belleville 9|arr-20": {
+    "code_iris": "751207709",
+    "type_iris": "H"
+  },
+  "Belleville 10|arr-20": {
+    "code_iris": "751207710",
+    "type_iris": "H"
+  },
+  "Père lachaise 1|arr-20": {
+    "code_iris": "751207901",
+    "type_iris": "H"
+  },
+  "Père lachaise 3|arr-20": {
+    "code_iris": "751207903",
+    "type_iris": "H"
+  },
+  "Père lachaise 4|arr-20": {
+    "code_iris": "751207904",
+    "type_iris": "H"
+  },
+  "Père lachaise 13|arr-20": {
+    "code_iris": "751207913",
+    "type_iris": "H"
+  },
+  "Père lachaise 14|arr-20": {
+    "code_iris": "751207914",
+    "type_iris": "H"
+  },
+  "Père lachaise 17|arr-20": {
+    "code_iris": "751207917",
+    "type_iris": "A",
+    "low_confidence": true
+  },
+  "Roquette 1|arr-11": {
+    "code_iris": "751114301",
+    "type_iris": "H"
+  },
+  "Père lachaise 2|arr-20": {
+    "code_iris": "751207902",
+    "type_iris": "H"
+  },
+  "Père lachaise 5|arr-20": {
+    "code_iris": "751207905",
+    "type_iris": "H"
+  },
+  "Père lachaise 9|arr-20": {
+    "code_iris": "751207909",
+    "type_iris": "H"
+  },
+  "Père lachaise 10|arr-20": {
+    "code_iris": "751207910",
+    "type_iris": "H"
+  },
+  "Charonne 15|arr-20": {
+    "code_iris": "751208015",
+    "type_iris": "H"
+  },
+  "Charonne 16|arr-20": {
+    "code_iris": "751208016",
+    "type_iris": "H"
+  },
+  "Charonne 17|arr-20": {
+    "code_iris": "751208017",
+    "type_iris": "H"
+  },
+  "Charonne 24|arr-20": {
+    "code_iris": "751208024",
+    "type_iris": "H"
+  },
+  "Charonne 25|arr-20": {
+    "code_iris": "751208025",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 10|arr-11": {
+    "code_iris": "751114410",
+    "type_iris": "H"
+  },
+  "Sainte-marguerite 11|arr-11": {
+    "code_iris": "751114411",
+    "type_iris": "H"
+  },
+  "Charonne 3|arr-20": {
+    "code_iris": "751208003",
+    "type_iris": "H"
+  },
+  "Charonne 4|arr-20": {
+    "code_iris": "751208004",
+    "type_iris": "H"
+  },
+  "Charonne 5|arr-20": {
+    "code_iris": "751208005",
+    "type_iris": "H"
+  },
+  "Charonne 6|arr-20": {
+    "code_iris": "751208006",
+    "type_iris": "H"
+  },
+  "Charonne 13|arr-20": {
+    "code_iris": "751208013",
+    "type_iris": "H"
+  },
+  "Charonne 14|arr-20": {
+    "code_iris": "751208014",
+    "type_iris": "H"
+  },
+  "Charonne 26|arr-20": {
+    "code_iris": "751208026",
+    "type_iris": "H"
+  }
+}
