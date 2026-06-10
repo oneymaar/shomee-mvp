@@ -10,6 +10,8 @@ export default defineConfig({
     reporters: ['verbose'],
   },
   resolve: {
-    alias: { '@': resolve(__dirname, '.') },
+    // Resolve the package self-reference to source so tests exercise the
+    // same modules consumers import (@shomee/core/geo/x → src/geo/x).
+    alias: { '@shomee/core': resolve(__dirname, 'src') },
   },
 })

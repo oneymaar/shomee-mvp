@@ -7,8 +7,8 @@ import {
   fetchParisIris,
   fetchSuburbanCommunes,
   type GeoZone,
-} from '../lib/services/geoDataService'
-import { resolveConstraints, type GeoConstraint } from '../lib/services/geoConstraintService'
+} from '@shomee/core/geo/geoDataService'
+import { resolveConstraints, type GeoConstraint } from '@shomee/core/geo/geoConstraintService'
 
 describe('fetchParisIris cache behavior', () => {
   it('CRITICAL: cache should NOT poison parentIds when called with empty params first', async () => {

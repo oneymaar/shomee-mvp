@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parseSpatialIntent } from '../lib/parsing/spatialIntentParser'
-import { intentToGeoConstraints, intentToAnalysisResponse } from '../lib/parsing/spatialIntentToGeoConstraints'
+import { parseSpatialIntent } from '@shomee/core/parsing/spatialIntentParser'
+import { intentToGeoConstraints, intentToAnalysisResponse } from '@shomee/core/parsing/spatialIntentToGeoConstraints'
 
 function parse(q: string) {
   return parseSpatialIntent(q)

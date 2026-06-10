@@ -13,18 +13,18 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest'
-import { findQuartierById } from '../lib/services/quartierMatchingService'
+import { findQuartierById } from '@shomee/core/geo/quartierMatchingService'
 import {
   fetchParisQuartiers,
   fetchParisIris,
   fetchSuburbanCommunes,
   type GeoZone,
-} from '../lib/services/geoDataService'
+} from '@shomee/core/geo/geoDataService'
 import {
   resolveConstraints,
   type GeoConstraint,
   poiRadius,
-} from '../lib/services/geoConstraintService'
+} from '@shomee/core/geo/geoConstraintService'
 
 // ─── Shared geo data (loaded once for all tests) ────────────────────────────
 

@@ -11,10 +11,10 @@ import {
   fetchParisIris,
   fetchSuburbanCommunes,
   type GeoZone,
-} from '../lib/services/geoDataService'
-import { resolveConstraints } from '../lib/services/geoConstraintService'
-import { parseSpatialIntent } from '../lib/parsing/spatialIntentParser'
-import { intentToGeoConstraints } from '../lib/parsing/spatialIntentToGeoConstraints'
+} from '@shomee/core/geo/geoDataService'
+import { resolveConstraints } from '@shomee/core/geo/geoConstraintService'
+import { parseSpatialIntent } from '@shomee/core/parsing/spatialIntentParser'
+import { intentToGeoConstraints } from '@shomee/core/parsing/spatialIntentToGeoConstraints'
 
 let iris: GeoZone[] = []
 let quartiers: GeoZone[] = []

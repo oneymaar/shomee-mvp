@@ -9,8 +9,8 @@ import {
   fetchParisIris,
   fetchSuburbanCommunes,
   type GeoZone,
-} from '../lib/services/geoDataService'
-import { resolveConstraints, type GeoConstraint } from '../lib/services/geoConstraintService'
+} from '@shomee/core/geo/geoDataService'
+import { resolveConstraints, type GeoConstraint } from '@shomee/core/geo/geoConstraintService'
 
 let iris: GeoZone[] = []
 let quartiers: GeoZone[] = []

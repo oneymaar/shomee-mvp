@@ -13,10 +13,10 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parseSpatialIntent } from '../lib/parsing/spatialIntentParser'
-import { intentToGeoConstraints } from '../lib/parsing/spatialIntentToGeoConstraints'
-import { resolveConstraints } from '../lib/services/geoConstraintService'
-import type { GeoZone } from '../lib/services/geoDataService'
+import { parseSpatialIntent } from '@shomee/core/parsing/spatialIntentParser'
+import { intentToGeoConstraints } from '@shomee/core/parsing/spatialIntentToGeoConstraints'
+import { resolveConstraints } from '@shomee/core/geo/geoConstraintService'
+import type { GeoZone } from '@shomee/core/geo/geoDataService'
 
 // ─── Mock helpers ─────────────────────────────────────────────────────────────
 

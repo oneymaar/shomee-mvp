@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { parseSpatialIntent } from '../lib/parsing/spatialIntentParser'
+import { parseSpatialIntent } from '@shomee/core/parsing/spatialIntentParser'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

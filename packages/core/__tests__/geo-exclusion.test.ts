@@ -12,8 +12,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { resolveConstraints, type GeoConstraint } from '../lib/services/geoConstraintService'
-import type { GeoZone } from '../lib/services/geoDataService'
+import { resolveConstraints, type GeoConstraint } from '@shomee/core/geo/geoConstraintService'
+import type { GeoZone } from '@shomee/core/geo/geoDataService'
 
 // ─── Mock helpers (same pattern as geo-constraint-inside-near.test.ts) ────────
 
