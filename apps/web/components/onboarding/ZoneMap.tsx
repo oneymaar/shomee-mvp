@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import type { GeoZone } from '@/lib/services/geoDataService'
-import rawStations from '@/src/data/transportStations.json'
+import type { GeoZone } from '@shomee/core/geo/geoDataService'
+import rawStations from '@shomee/core/data/transportStations.json'
 
 type RawStation = { label: string; type: string; lines: string[]; coordinates: { lat: number; lng: number } }
 

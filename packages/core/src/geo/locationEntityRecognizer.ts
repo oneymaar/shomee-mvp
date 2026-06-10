@@ -16,10 +16,10 @@
  *   5. Substring match in neighborhoods (min 6 chars)
  */
 
-import rawStations from '@/src/data/transportStations.json'
-import rawNeighborhoods from '@/src/data/semanticNeighborhoods.json'
-import rawCommuneNames from '@/src/data/communeNames.json'
-import type { LocationIntent } from '@/lib/searchStore'
+import rawStations from '../data/transportStations.json'
+import rawNeighborhoods from '../data/semanticNeighborhoods.json'
+import rawCommuneNames from '../data/communeNames.json'
+import type { LocationIntent } from '../stores/searchStore'
 import { matchQuartier, normalizeQ, type Quartier } from './quartierMatchingService'
 
 // ─── Types ─────────────────────────────────────────────────────────────────

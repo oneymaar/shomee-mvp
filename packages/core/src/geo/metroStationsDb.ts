@@ -5,7 +5,7 @@
  * Lines: '1'–'14' for metro, 'A'–'E' for RER.
  */
 
-import rawJsonStations from '@/src/data/transportStations.json'
+import rawJsonStations from '../data/transportStations.json'
 
 export interface MetroStation {
   name: string

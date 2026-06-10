@@ -23,9 +23,9 @@ import {
   fetchParisIris,
   fetchSuburbanCommunes,
   type GeoZone,
-} from './geoDataService'
-import { resolveConstraints, type GeoConstraint } from './geoConstraintService'
-import type { LocationIntentAnalysis } from './locationIntentAnalyzerService'
+} from '@shomee/core/geo/geoDataService'
+import { resolveConstraints, type GeoConstraint } from '@shomee/core/geo/geoConstraintService'
+import type { LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
 
 // ─── Brief shape (mirrors the server schema) ───────────────────────────────
 

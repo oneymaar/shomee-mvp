@@ -7,12 +7,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { ChevronRight, Loader2, MapPin, AlertCircle } from 'lucide-react'
-import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, matchQuartiersByName, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@/lib/services/geoDataService'
-import { findStation } from '@/lib/services/metroStationsDb'
-import { matchNeighborhood, neighborhoodToConstraints } from '@/lib/services/semanticNeighborhoodService'
+import { fetchParisGeoData, fetchParisIris, fetchSuburbanCommunes, matchArrondissements, matchCommunes, matchQuartiersByName, getChildQuartiers, polygonContainsPoint, type GeoZone } from '@shomee/core/geo/geoDataService'
+import { findStation } from '@shomee/core/geo/metroStationsDb'
+import { matchNeighborhood, neighborhoodToConstraints } from '@shomee/core/geo/semanticNeighborhoodService'
 import { geocodeBest } from '@/lib/services/geocodingService'
-import { parseLocationIntent } from '@/lib/services/locationIntentParser'
-import { resolveConstraints, poiRadius } from '@/lib/services/geoConstraintService'
+import { parseLocationIntent } from '@shomee/core/geo/locationIntentParser'
+import { resolveConstraints, poiRadius } from '@shomee/core/geo/geoConstraintService'
 import { useSearchStore } from '@/lib/searchStore'
 
 const ZoneMap = dynamic(() => import('./ZoneMap'), {
@@ -110,11 +110,11 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
   const quartiersRef = useRef<GeoZone[]>([])
   // Fully enriched constraints (with geometry/lat/lng) used in the last resolveConstraints call.
   // Required to re-run the resolver when a brief tag is removed individually.
-  const enrichedConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[]>([])
+  const enrichedConstraintsRef = useRef<import('@shomee/core/geo/geoConstraintService').GeoConstraint[]>([])
   // Constraints set directly by initMap's hasFineConstraint path.
   // loadIris prefers this over the store to avoid race conditions where the store
   // hasn't been updated yet when the useEffect fires.
-  const fineConstraintsRef = useRef<import('@/lib/services/geoConstraintService').GeoConstraint[] | null>(null)
+  const fineConstraintsRef = useRef<import('@shomee/core/geo/geoConstraintService').GeoConstraint[] | null>(null)
   // Tracks whether onReady has been called (must only fire once, after full map load)
   const onReadyCalledRef = useRef(false)
   // Set true by ZoneMap's whenReady callback — Leaflet instance is alive.
@@ -894,7 +894,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
   }, [locationIntent?.geoConstraints])
 
   // Returns the display label for a constraint — mirrors the briefTags computation.
-  const briefLabelOf = (c: import('@/lib/services/geoConstraintService').GeoConstraint): string =>
+  const briefLabelOf = (c: import('@shomee/core/geo/geoConstraintService').GeoConstraint): string =>
     c.type === 'transport_station' ? (c.stationName ?? c.label) :
     c.type === 'transport_line'    ? `Ligne ${c.line ?? c.label}` :
     c.label

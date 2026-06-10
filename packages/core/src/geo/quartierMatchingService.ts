@@ -10,7 +10,7 @@
  * Intentionally generic — no per-quartier rules, works for the whole DB.
  */
 
-import rawQuartiers from '@/src/data/quartiers.json'
+import rawQuartiers from '../data/quartiers.json'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

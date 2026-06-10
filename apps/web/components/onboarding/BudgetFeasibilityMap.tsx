@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
-import type { GeoZone } from '@/lib/services/geoDataService'
+import type { GeoZone } from '@shomee/core/geo/geoDataService'
 
 /**
  * Read-only map showing each selected IRIS polygon coloured by feasibility

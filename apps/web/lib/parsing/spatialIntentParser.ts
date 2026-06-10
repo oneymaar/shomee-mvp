@@ -17,9 +17,9 @@
  * Does NOT touch geoConstraintService, IRIS resolution, or LLM.
  */
 
-import rawStations from '@/src/data/transportStations.json'
-import rawNeighborhoods from '@/src/data/semanticNeighborhoods.json'
-import { matchQuartier } from '@/lib/services/quartierMatchingService'
+import rawStations from '@shomee/core/data/transportStations.json'
+import rawNeighborhoods from '@shomee/core/data/semanticNeighborhoods.json'
+import { matchQuartier } from '@shomee/core/geo/quartierMatchingService'
 import type { SpatialEntity, SpatialIntent, SpatialRelation } from './spatialTokens'
 
 // ─── Internal JSON shapes ─────────────────────────────────────────────────────

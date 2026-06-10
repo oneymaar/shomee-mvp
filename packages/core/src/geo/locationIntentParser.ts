@@ -1,4 +1,4 @@
-import type { LocationIntent } from '../searchStore'
+import type { LocationIntent } from '../stores/searchStore'
 
 const LIFESTYLE_KEYWORDS: Record<string, string[]> = {
   calme: ['calme', 'tranquille', 'paisible', 'résidentiel', 'serein'],

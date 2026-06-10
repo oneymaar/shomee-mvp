@@ -9,7 +9,7 @@
  */
 
 import type { GeoConstraint } from './geoConstraintService'
-import rawNeighborhoods from '@/src/data/semanticNeighborhoods.json'
+import rawNeighborhoods from '../data/semanticNeighborhoods.json'
 import { matchQuartier, findQuartierById } from './quartierMatchingService'
 
 export interface SemanticNeighborhood {

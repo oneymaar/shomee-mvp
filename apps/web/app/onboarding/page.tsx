@@ -14,9 +14,9 @@ import BudgetStep from '@/components/onboarding/BudgetStep'
 import CriteriaStep from '@/components/onboarding/CriteriaStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import AIBriefRecap from '@/components/onboarding/AIBriefRecap'
-import { parseLocationIntent } from '@/lib/services/locationIntentParser'
+import { parseLocationIntent } from '@shomee/core/geo/locationIntentParser'
 import { injectBrief, type AIOnboardingBrief } from '@/lib/services/aiBriefInjector'
-import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
+import type { ClarificationOption, LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
 
 // Coherent thinking steps for the pre-map analysis. Same visual system as
 // AIPreparationStep (typewriter + static dots + blinking caret). The overlay's

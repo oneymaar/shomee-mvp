@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronLeft } from 'lucide-react'
-import { parseLocationIntent } from '@/lib/services/locationIntentParser'
-import { analyzeLocationIntent, type LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
-import { recognizeLocationEntity, entityToIntent, type RecognizedLocationEntity } from '@/lib/services/locationEntityRecognizer'
+import { parseLocationIntent } from '@shomee/core/geo/locationIntentParser'
+import { analyzeLocationIntent, type LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
+import { recognizeLocationEntity, entityToIntent, type RecognizedLocationEntity } from '@shomee/core/geo/locationEntityRecognizer'
 import { useSearchStore } from '@/lib/searchStore'
 
 interface LocationStepProps {
@@ -114,7 +114,7 @@ export default function LocationStep({ onOpenMap, onStartMapLoading, onCancelMap
   const openMapWithQuery = useCallback((
     centerQuery: string,
     preselectZones?: string[],
-    geoConstraints?: import('@/lib/services/geoConstraintService').GeoConstraint[],
+    geoConstraints?: import('@shomee/core/geo/geoConstraintService').GeoConstraint[],
     resolutionStrategy?: string,
     rawInput?: string,
     parserSource?: 'spatial_intent_parser' | 'llm_fallback', // DEBUG

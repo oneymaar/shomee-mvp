@@ -4,13 +4,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronRight } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
-import { budgetSignal, medianBudgetFor, LEGEND_GRADIENT_CSS } from '@/lib/services/budgetFeasibility'
+import { budgetSignal, medianBudgetFor, LEGEND_GRADIENT_CSS } from '@shomee/core/geo/budgetFeasibility'
 import {
   fetchParisGeoData,
   fetchParisIris,
   fetchSuburbanCommunes,
   type GeoZone,
-} from '@/lib/services/geoDataService'
+} from '@shomee/core/geo/geoDataService'
 import BudgetFeasibilityMap from './BudgetFeasibilityMap'
 
 // Non-linear budget scale — denser at the bottom, coarser at the top:

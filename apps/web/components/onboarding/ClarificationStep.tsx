@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, HelpCircle } from 'lucide-react'
-import type { ClarificationOption, LocationIntentAnalysis } from '@/lib/services/locationIntentAnalyzerService'
+import type { ClarificationOption, LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
 
 interface ClarificationStepProps {
   /** Raw user input — surfaced as the searched-for phrase at the top */

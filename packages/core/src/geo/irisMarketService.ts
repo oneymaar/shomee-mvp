@@ -11,7 +11,7 @@
  * Remove the fallback table once iris_market.json is populated.
  */
 
-import rawIrisMarket from '@/src/data/iris_market.json'
+import rawIrisMarket from '../data/iris_market.json'
 
 type IrisMarketEntry = { median: number; n: number }
 type IrisMarketJson = Record<string, IrisMarketEntry | unknown>

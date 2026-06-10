@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { Loader2 } from 'lucide-react'
-import type { GeoZone } from '@/lib/services/geoDataService'
-import { computeFeasibility, NO_DATA_FILL } from '@/lib/services/budgetFeasibility'
+import type { GeoZone } from '@shomee/core/geo/geoDataService'
+import { computeFeasibility, NO_DATA_FILL } from '@shomee/core/geo/budgetFeasibility'
 
 const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
