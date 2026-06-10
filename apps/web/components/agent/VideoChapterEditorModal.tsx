@@ -6,7 +6,7 @@ import { Poppins } from 'next/font/google'
 import { ChevronLeft, Plus, Check, Loader2, RefreshCw, Play, Pause, RotateCcw } from 'lucide-react'
 import VideoChapterEditor, { type Chapter } from './VideoChapterEditor'
 import VideoProgressBar from '@/components/VideoProgressBar'
-import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
+import type { AutoSaveStatus } from '@shomee/core/hooks/useAutoSave'
 
 const poppinsBlack = Poppins({ subsets: ['latin'], weight: '900', display: 'swap' })
 

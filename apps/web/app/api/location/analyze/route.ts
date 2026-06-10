@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseSpatialIntent } from '@/lib/parsing/spatialIntentParser'
-import { intentToAnalysisResponse } from '@/lib/parsing/spatialIntentToGeoConstraints'
+import { parseSpatialIntent } from '@shomee/core/parsing/spatialIntentParser'
+import { intentToAnalysisResponse } from '@shomee/core/parsing/spatialIntentToGeoConstraints'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // System prompt — Moteur sémantique de localisation immobilière

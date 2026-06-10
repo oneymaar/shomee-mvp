@@ -7,16 +7,16 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { matchProperty } from '@/lib/matching/engine'
+import { matchProperty } from '@shomee/core/matching/engine'
 import type {
   PropertyProfile,
   PropertyStructuredAttributes,
   PropertySemanticScores,
-} from '@/lib/matching/types'
+} from '@shomee/core/matching/types'
 import type {
   ParsedCriterion,
   UserCriteriaBrief,
-} from '@/lib/criteria/types'
+} from '@shomee/core/criteria/types'
 
 // ─── Builders ────────────────────────────────────────────────────────────
 

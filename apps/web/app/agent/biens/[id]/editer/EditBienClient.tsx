@@ -15,7 +15,7 @@ import type { Chapter } from '@/components/agent/VideoChapterEditor'
 import VideoChapterEditorModal from '@/components/agent/VideoChapterEditorModal'
 import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
 import VideoProgressBar from '@/components/VideoProgressBar'
-import { useAutoSave } from '@/lib/hooks/useAutoSave'
+import { useAutoSave } from '@shomee/core/hooks/useAutoSave'
 
 const AGENT_BEARER_TOKEN = 'shomee_test_kr3tz_0001'
 

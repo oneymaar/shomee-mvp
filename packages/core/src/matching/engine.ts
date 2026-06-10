@@ -35,8 +35,8 @@ import type {
   RuleValue,
   StructuredRule,
   UserCriteriaBrief,
-} from '@/lib/criteria/types'
-import { isConditionalRule, isStructuredRule } from '@/lib/criteria/types'
+} from '../criteria/types'
+import { isConditionalRule, isStructuredRule } from '../criteria/types'
 import { resolveSemanticKey } from './semantic-map'
 import type {
   CriterionScore,

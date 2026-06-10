@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, MapPin, Check, Home } from 'lucide-react'
 import type { Property } from '@/lib/types'
-import { formatLocation } from '@/lib/format'
+import { formatLocation } from '@shomee/core/utils/format'
 
 interface PropertyOverlayProps {
   property: Property

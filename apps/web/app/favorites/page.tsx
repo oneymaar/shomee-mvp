@@ -6,7 +6,7 @@ import { Heart } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import { useShomeeStore } from '@/lib/store'
-import { properties } from '@/lib/mockData'
+import { properties } from '@shomee/core/utils/mockData'
 
 export default function FavoritesPage() {
   const { favorites } = useShomeeStore()

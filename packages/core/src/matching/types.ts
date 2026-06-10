@@ -13,7 +13,7 @@
 import type {
   CriterionImportance,
   CriterionMatchType,
-} from '@/lib/criteria/types'
+} from '../criteria/types'
 
 // ─── Property layers ────────────────────────────────────────────────────────
 

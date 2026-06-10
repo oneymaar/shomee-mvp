@@ -24,12 +24,12 @@ import {
   buildBriefFromSnapshot,
   type BriefSnapshot,
 } from '@/lib/matching/buyerBriefBuilder'
-import { matchProperty } from '@/lib/matching/engine'
+import { matchProperty } from '@shomee/core/matching/engine'
 import type {
   PropertyProfile,
   PropertyTypeStructured,
   DpeRating,
-} from '@/lib/matching/types'
+} from '@shomee/core/matching/types'
 import type { Property as ViewProperty } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'

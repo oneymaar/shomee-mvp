@@ -16,7 +16,7 @@ import type {
   CriterionCategory,
   ParsedCriterion,
   StructuredRule,
-} from './types'
+} from '@shomee/core/criteria/types'
 
 interface TagMapping {
   category: CriterionCategory

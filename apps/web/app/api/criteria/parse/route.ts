@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { CriteriaParseError, parseUserCriteria } from '@/lib/criteria/parser'
 import { tagsToCriteria } from '@/lib/criteria/tags'
-import type { UserCriteriaBrief } from '@/lib/criteria/types'
+import type { UserCriteriaBrief } from '@shomee/core/criteria/types'
 
 const BodySchema = z.object({
   raw_text: z.string().max(2000).optional().default(''),

@@ -6,9 +6,9 @@ import Image from 'next/image'
 import { ArrowLeft, Heart, Share2, MessageCircle, Phone, CalendarPlus, MapPin, Check } from 'lucide-react'
 import { motion } from 'framer-motion'
 import MobileFrame from '@/components/MobileFrame'
-import { properties } from '@/lib/mockData'
+import { properties } from '@shomee/core/utils/mockData'
 import { useShomeeStore } from '@/lib/store'
-import { formatLocation } from '@/lib/format'
+import { formatLocation } from '@shomee/core/utils/format'
 import clsx from 'clsx'
 
 const DPE_LABELS: Record<string, string> = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E', F: 'F', G: 'G' }

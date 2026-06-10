@@ -27,7 +27,7 @@ import type {
   ParsedCriterion,
   StructuredRule,
   UserCriteriaBrief,
-} from '../criteria/types'
+} from '@shomee/core/criteria/types'
 import { tagsToCriteria } from '../criteria/tags'
 
 /**

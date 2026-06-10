@@ -19,7 +19,7 @@
  */
 
 import type { SpatialEntity, SpatialIntent, SpatialRelation } from './spatialTokens'
-import type { GeoConstraint } from '@shomee/core/geo/geoConstraintService'
+import type { GeoConstraint } from '../geo/geoConstraintService'
 
 // ─── Entity-type helpers ──────────────────────────────────────────────────────
 

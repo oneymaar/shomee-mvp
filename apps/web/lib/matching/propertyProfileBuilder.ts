@@ -26,7 +26,7 @@ import type {
   PropertyStructuredAttributes,
   PropertySemanticScores,
   PropertyTypeStructured,
-} from './types'
+} from '@shomee/core/matching/types'
 
 const ALLOWED_ORIENTATIONS: ReadonlySet<Orientation> = new Set([
   'north',

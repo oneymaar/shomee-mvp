@@ -12,7 +12,7 @@ import {
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
 import { shareProperty } from '@/lib/share'
-import { formatLocation } from '@/lib/format'
+import { formatLocation } from '@shomee/core/utils/format'
 
 const MapZone = dynamic(() => import('./MapZone'), { ssr: false })
 

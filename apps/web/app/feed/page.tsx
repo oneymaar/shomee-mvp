@@ -16,7 +16,7 @@ import BAIAModal from '@/components/BAIAModal'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import { useShomeeStore } from '@/lib/store'
 import { useSearchStore } from '@/lib/searchStore'
-import { properties as mockProperties } from '@/lib/mockData'
+import { properties as mockProperties } from '@shomee/core/utils/mockData'
 import type { Property } from '@/lib/types'
 
 type FeedItem =

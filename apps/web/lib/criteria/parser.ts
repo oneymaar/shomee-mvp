@@ -26,7 +26,7 @@ import type {
   RuleOperator,
   StructuredRule,
   ConditionalRule,
-} from './types'
+} from '@shomee/core/criteria/types'
 
 // Model picked by the integrator — Sonnet handles structured-output tasks
 // reliably. The ID is configurable so the operator can roll forward to

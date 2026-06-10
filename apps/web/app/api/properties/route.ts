@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PropertyStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { toViewProperty } from '@/lib/serializers/property'
-import { matchProperty } from '@/lib/matching/engine'
+import { matchProperty } from '@shomee/core/matching/engine'
 import {
   toBuyerBrief,
   buildBriefFromSnapshot,
@@ -10,7 +10,7 @@ import {
 } from '@/lib/matching/buyerBriefBuilder'
 import { toPropertyProfile } from '@/lib/matching/propertyProfileBuilder'
 import type { Property as ViewProperty } from '@/lib/types'
-import type { UserCriteriaBrief } from '@/lib/criteria/types'
+import type { UserCriteriaBrief } from '@shomee/core/criteria/types'
 
 export const dynamic = 'force-dynamic'
 

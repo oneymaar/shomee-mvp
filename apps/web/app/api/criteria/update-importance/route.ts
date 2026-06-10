@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import type { CriterionImportance } from '@/lib/criteria/types'
+import type { CriterionImportance } from '@shomee/core/criteria/types'
 
 const IMPORTANCE_VALUES: ReadonlyArray<CriterionImportance> = [
   'desired',

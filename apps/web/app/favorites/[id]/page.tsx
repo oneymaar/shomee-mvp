@@ -12,7 +12,7 @@ import ActionRail from '@/components/ActionRail'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
 import { useShomeeStore } from '@/lib/store'
-import { properties as allProperties } from '@/lib/mockData'
+import { properties as allProperties } from '@shomee/core/utils/mockData'
 
 interface Props {
   params: Promise<{ id: string }>

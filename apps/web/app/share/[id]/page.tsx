@@ -7,7 +7,7 @@ import MobileFrame from '@/components/MobileFrame'
 import VideoCard from '@/components/VideoCard'
 import PropertyOverlay from '@/components/PropertyOverlay'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
-import { properties } from '@/lib/mockData'
+import { properties } from '@shomee/core/utils/mockData'
 
 export default function SharePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)

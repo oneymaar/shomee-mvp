@@ -13,9 +13,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { matchProperty } from '@/lib/matching/engine'
-import type { MatchResult, PropertyProfile } from '@/lib/matching/types'
-import type { UserCriteriaBrief, ParsedCriterion } from '@/lib/criteria/types'
+import { matchProperty } from '@shomee/core/matching/engine'
+import type { MatchResult, PropertyProfile } from '@shomee/core/matching/types'
+import type { UserCriteriaBrief, ParsedCriterion } from '@shomee/core/criteria/types'
 import { prisma } from '@/lib/prisma'
 import { toPropertyProfile } from '@/lib/matching/propertyProfileBuilder'
 import { toBuyerBrief } from '@/lib/matching/buyerBriefBuilder'

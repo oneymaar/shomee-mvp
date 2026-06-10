@@ -6,7 +6,7 @@ import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import { useShomeeStore } from '@/lib/store'
 import { useSearchStore } from '@/lib/searchStore'
-import { properties } from '@/lib/mockData'
+import { properties } from '@shomee/core/utils/mockData'
 
 const MENU_ITEMS = [
   { icon: Bell,     label: 'Notifications',  description: 'Alertes et rappels' },

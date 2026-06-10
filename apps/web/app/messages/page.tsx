@@ -7,9 +7,9 @@ import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import ConversationView from '@/components/ConversationView'
 import { useShomeeStore, hasUnread } from '@/lib/store'
-import { properties } from '@/lib/mockData'
+import { properties } from '@shomee/core/utils/mockData'
 import type { Conversation } from '@/lib/types'
-import { formatLocation } from '@/lib/format'
+import { formatLocation } from '@shomee/core/utils/format'
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })

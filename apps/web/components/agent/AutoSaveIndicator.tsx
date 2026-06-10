@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, Loader2, RefreshCw } from 'lucide-react'
-import type { AutoSaveStatus } from '@/lib/hooks/useAutoSave'
+import type { AutoSaveStatus } from '@shomee/core/hooks/useAutoSave'
 
 interface AutoSaveIndicatorProps {
   status: AutoSaveStatus
