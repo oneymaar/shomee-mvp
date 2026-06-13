@@ -10,6 +10,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@shomee/web",
+    "dev:mobile": "npm run start --workspace=@shomee/mobile",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "test": "turbo run test"
