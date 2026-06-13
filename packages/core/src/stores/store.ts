@@ -3,7 +3,6 @@ import { persist, createJSONStorage, type StateStorage } from 'zustand/middlewar
 import type { Conversation, ChatMessage, Property } from '../types/domain'
 
 interface ShomeeState {
-  currentIndex: number
   /**
    * Fiches complètes des biens favoris (générés ou statiques).
    * On stocke l'objet entier — et non juste l'id — pour que la vue Favoris
@@ -13,7 +12,6 @@ interface ShomeeState {
   favorites: Property[]
   conversations: Conversation[]
 
-  setCurrentIndex: (index: number) => void
   /** Ajoute une fiche complète aux favoris (no-op si déjà présente). */
   addFavorite: (property: Property) => void
   /** Retire un favori par son id. */
@@ -38,14 +36,8 @@ export function createShomeeStore(getStorage: () => StateStorage) {
   return create<ShomeeState>()(
   persist(
     (set, get) => ({
-      currentIndex: 0,
       favorites: [],
       conversations: [],
-
-      setCurrentIndex: (index: number) => {
-        if (index === get().currentIndex) return
-        set({ currentIndex: index })
-      },
 
       addFavorite: (property: Property) => {
         set((state) =>
@@ -108,8 +100,8 @@ export function createShomeeStore(getStorage: () => StateStorage) {
     {
       name: 'shomee-favorites',
       storage: createJSONStorage(getStorage),
-      // On ne persiste que les favoris — currentIndex et conversations
-      // restent éphémères.
+      // On ne persiste que les favoris — conversations reste éphémère
+      // (et currentIndex vit désormais dans le feedStore transient).
       partialize: (state) => ({ favorites: state.favorites }),
     },
   ),

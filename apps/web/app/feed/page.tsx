@@ -13,11 +13,16 @@ import SkipFeedbackCard from '@/components/SkipFeedbackCard'
 import EndOfFeedCard from '@/components/EndOfFeedCard'
 import PropertyDetailSheet from '@/components/PropertyDetailSheet'
 import BAIAModal from '@/components/BAIAModal'
-import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import { useShomeeStore } from '@/lib/store'
 import { useSearchStore } from '@/lib/searchStore'
+import { useFeedStore } from '@/lib/feedStore'
 import { properties as mockProperties } from '@shomee/core/utils/mockData'
 import type { Property } from '@/lib/types'
+
+// Identifiant de génération du feed — pour que feedStore.hasFeed() réponde vrai
+// aux montages suivants (retour navigation interne) sans re-fetch ni loader.
+const makeFeedSessionId = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())
 
 type FeedItem =
   | { type: 'property';     property: Property }
@@ -39,56 +44,49 @@ export default function FeedPage() {
   const [detailProperty, setDetailProperty] = useState<Property | null>(null)
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
   const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
-  // Start empty so no VideoCard renders (and no .mp4 starts playing) before
-  // the real feed arrives. Falling back to mockProperties as the initial
-  // value caused a visible flash: the first mock video would auto-play for
-  // a beat before the API response swapped it for the top-ranked bien.
-  const [properties, setProperties] = useState<Property[]>([])
+  // Le feed vit dans le feedStore (transient, en mémoire) → il survit aux
+  // navigations internes (favoris/messages/feed) sans re-fetch ni loader.
+  const properties = useFeedStore((s) => s.properties)
   const [feedReady, setFeedReady] = useState(false)
-  // Le loader plein écran (AIPreparationStep) s'affiche dès qu'on doit faire un
-  // fetch LLM live (≈10 s) faute de feed pré-généré en cache. Depuis l'onboarding
-  // natif, l'AIPreparationStep a déjà tourné et déposé le feed en sessionStorage
-  // → /feed le lit direct, liveFetch reste false, pas de loader rejoué. Mais via
-  // une recherche LLM sans cache (ou si le pré-fetch onboarding a échoué), on
-  // affiche bien le loader au lieu d'un écran vide. Mis à jour en effet pour
-  // éviter tout mismatch d'hydratation.
-  const [liveFetch, setLiveFetch] = useState(false)
 
   useEffect(() => {
     let cancelled = false
 
-    // Pre-generated feed déposé par l'AIPreparationStep — la fetch
-    // /api/feed/generate a déjà tourné pendant l'animation onboarding.
-    // Si présent, on l'utilise direct et on saute le fetch local.
-    let cachedFeed: Property[] | null = null
+    // (a) Feed déjà en mémoire (retour navigation interne) → affichage immédiat.
+    //     Pas de lecture sessionStorage, pas de fetch, pas d'écran narratif.
+    if (useFeedStore.getState().hasFeed()) {
+      queueMicrotask(() => { if (!cancelled) setFeedReady(true) })
+      return () => { cancelled = true }
+    }
+
+    // (b) Handoff de fin d'onboarding : feed pré-généré déposé en sessionStorage
+    //     par AIPreparationStep (consume-once). On le transfère dans le store —
+    //     le feed est déjà prêt, donc aucun loader.
+    let handoff: Property[] | null = null
     try {
       const cached = sessionStorage.getItem('shomee:pregen-feed')
       if (cached) {
         sessionStorage.removeItem('shomee:pregen-feed')
         const data = JSON.parse(cached) as Property[]
-        if (Array.isArray(data) && data.length > 0) cachedFeed = data
+        if (Array.isArray(data) && data.length > 0) handoff = data
       }
     } catch {
       // sessionStorage indispo / JSON cassé → fallback fetch normal.
     }
 
-    if (cachedFeed) {
-      // Defer to a microtask so we don't setState synchronously in the
-      // effect body (évite les cascades de rendus signalées par le linter).
-      const feed = cachedFeed
+    if (handoff) {
+      const feed = handoff
       queueMicrotask(() => {
         if (cancelled) return
-        setProperties(feed)
+        useFeedStore.getState().setFeed(feed, makeFeedSessionId())
         setFeedReady(true)
       })
       return () => { cancelled = true }
     }
 
-    // Pas de cache → on va faire un fetch live (LLM generate ou /api/properties).
-    // On bascule le loader plein écran pour ne pas laisser un écran vide pendant
-    // la latence. queueMicrotask : on évite un setState synchrone dans le corps
-    // de l'effet (cascades de rendus signalées par le linter).
-    queueMicrotask(() => { if (!cancelled) setLiveFetch(true) })
+    // (c) Ni feed en mémoire, ni handoff → fetch live SILENCIEUX. Aucun écran
+    //     d'analyse : AIPreparationStep n'a de sens qu'en fin d'onboarding.
+    //     Tant que le feed n'est pas prêt, feedItems reste vide (conteneur vide).
 
     // Read a fresh snapshot at the moment of fetch — Zustand's getState()
     // bypasses the subscription model so we don't re-render the feed when
@@ -168,7 +166,7 @@ export default function FeedPage() {
           }
         }
         if (Array.isArray(data) && data.length > 0) {
-          setProperties(data)
+          useFeedStore.getState().setFeed(data, makeFeedSessionId())
           setFeedReady(true)
           return
         }
@@ -182,20 +180,20 @@ export default function FeedPage() {
           const fallbackData = (await r2.json()) as Property[]
           if (cancelled) return
           if (Array.isArray(fallbackData) && fallbackData.length > 0) {
-            setProperties(fallbackData)
+            useFeedStore.getState().setFeed(fallbackData, makeFeedSessionId())
           } else {
-            setProperties(mockProperties)
+            useFeedStore.getState().setFeed(mockProperties, makeFeedSessionId())
           }
         } catch {
           if (cancelled) return
-          setProperties(mockProperties)
+          useFeedStore.getState().setFeed(mockProperties, makeFeedSessionId())
         }
         setFeedReady(true)
       })
       .catch((err) => {
         if (cancelled) return
         console.warn('[feed] /api/properties unavailable, using mock fallback', err)
-        setProperties(mockProperties)
+        useFeedStore.getState().setFeed(mockProperties, makeFeedSessionId())
         setFeedReady(true)
       })
     return () => {
@@ -212,7 +210,8 @@ export default function FeedPage() {
   const specialCardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const router = useRouter()
-  const { currentIndex, favorites, toggleFavorite } = useShomeeStore()
+  const { favorites, toggleFavorite } = useShomeeStore()
+  const currentIndex = useFeedStore((s) => s.currentIndex)
 
   const handleToggleFavorite = useCallback((property: Property, heartRect: DOMRect, currentlyFavorite: boolean) => {
     if (currentlyFavorite) {
@@ -314,7 +313,7 @@ export default function FeedPage() {
             const id = (entry.target as HTMLDivElement).dataset.propertyId
             const idx = properties.findIndex((p) => p.id === id)
             if (idx !== -1) {
-              useShomeeStore.getState().setCurrentIndex(idx)
+              useFeedStore.getState().setCurrentIndex(idx)
               setIsOnSpecialCard(false)
             }
           }
@@ -345,15 +344,9 @@ export default function FeedPage() {
 
   return (
     <MobileFrame>
-      {/* Écran d'attente pendant le fetch LLM live (≈10 s) : on réutilise tel
-          quel l'AIPreparationStep de l'onboarding. Disparaît dès que feedReady
-          passe à true. Non affiché quand le feed vient du cache pré-généré
-          (onboarding natif) : liveFetch reste false → pas de loader rejoué. */}
-      {liveFetch && !feedReady && (
-        <div className="absolute inset-0 z-50">
-          <AIPreparationStep onReady={() => {}} />
-        </div>
-      )}
+      {/* Fetch live silencieux : aucun écran narratif ici. AIPreparationStep ne
+          joue que dans le tunnel d'onboarding. Tant que le feed n'est pas prêt,
+          feedItems est vide → conteneur vide (pas de loader théâtral). */}
       <div
         ref={containerRef}
         className="absolute inset-x-0 top-0 overflow-y-scroll scrollbar-hide"

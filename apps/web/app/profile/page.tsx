@@ -6,6 +6,7 @@ import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import { useShomeeStore } from '@/lib/store'
 import { useSearchStore } from '@/lib/searchStore'
+import { useFeedStore } from '@/lib/feedStore'
 import { properties } from '@shomee/core/utils/mockData'
 
 const MENU_ITEMS = [
@@ -27,6 +28,9 @@ export default function ProfilePage() {
 
   const handleResetOnboarding = () => {
     resetOnboarding()
+    // Invalide le feed en mémoire pour forcer une régénération au prochain
+    // onboarding (sinon /feed afficherait l'ancien feed via hasFeed()).
+    useFeedStore.getState().clearFeed()
     router.push('/onboarding')
   }
 
