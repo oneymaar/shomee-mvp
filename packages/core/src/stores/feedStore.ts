@@ -12,6 +12,14 @@ interface FeedState {
    * useShomeeStore) : c'est une donnée de feed, on garde une source unique.
    */
   currentIndex: number
+  /**
+   * True une fois la séquence de révélation (blocked→pre-reveal→revealed) jouée
+   * pour le feed courant. Vit dans le store — au même titre que `properties` —
+   * pour que l'état « révélé » survive aux navigations internes : un feed déjà
+   * révélé qu'on réaffiche s'ouvre directement en `'revealed'` (cf. feed/page),
+   * sans rejouer la révélation ni désaligner les IntersectionObserver.
+   */
+  hasRevealed: boolean
 
   /** Pose le feed + son identifiant de génération. Remet l'index à 0. */
   setFeed: (properties: Property[], sessionId: string) => void
@@ -20,6 +28,8 @@ interface FeedState {
   /** True si un feed est déjà en mémoire. */
   hasFeed: () => boolean
   setCurrentIndex: (index: number) => void
+  /** Marque (ou réinitialise) l'état « révélé » du feed courant. */
+  setHasRevealed: (value: boolean) => void
 }
 
 /**
@@ -38,17 +48,29 @@ export function createFeedStore(_getStorage: () => StateStorage) {
     properties: [],
     feedSessionId: null,
     currentIndex: 0,
+    hasRevealed: false,
 
+    // Un feed fraîchement posé arrive NON-révélé : la séquence blocked→…→revealed
+    // doit jouer pour lui. On ne touche donc pas `hasRevealed` ici — il passe à
+    // true seulement quand la révélation s'achève (feed/page → setHasRevealed).
     setFeed: (properties, sessionId) =>
       set({ properties, feedSessionId: sessionId, currentIndex: 0 }),
 
-    clearFeed: () => set({ properties: [], feedSessionId: null, currentIndex: 0 }),
+    // Un feed effacé n'est plus révélé : on remet le flag à false pour que le
+    // prochain feed (reset onboarding / changement de brief) rejoue sa révélation.
+    clearFeed: () =>
+      set({ properties: [], feedSessionId: null, currentIndex: 0, hasRevealed: false }),
 
     hasFeed: () => get().properties.length > 0,
 
     setCurrentIndex: (index) => {
       if (index === get().currentIndex) return
       set({ currentIndex: index })
+    },
+
+    setHasRevealed: (value) => {
+      if (value === get().hasRevealed) return
+      set({ hasRevealed: value })
     },
   }))
 }

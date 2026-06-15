@@ -44,7 +44,13 @@ export default function FeedPage() {
   const [baiaOpen, setBaiaOpen] = useState(false)
   const [detailProperty, setDetailProperty] = useState<Property | null>(null)
   const [isOnSpecialCard, setIsOnSpecialCard] = useState(false)
-  const [resultsStage, setResultsStage] = useState<ResultsStage>('blocked')
+  // Init dérivée du store (lecture au montage seulement, via la forme lazy) :
+  // un feed déjà révélé (retour navigation interne) s'ouvre directement en
+  // 'revealed' — sinon la structure tronquée 'blocked' désaligne les observers
+  // et fige les vidéos. Un nouveau feed (hasRevealed=false) part bien en 'blocked'.
+  const [resultsStage, setResultsStage] = useState<ResultsStage>(() =>
+    useFeedStore.getState().hasRevealed ? 'revealed' : 'blocked',
+  )
   // Le feed vit dans le feedStore (transient, en mémoire) → il survit aux
   // navigations internes (favoris/messages/feed) sans re-fetch ni loader.
   const properties = useFeedStore((s) => s.properties)
@@ -287,6 +293,9 @@ export default function FeedPage() {
     // After smooth scroll completes: switch to revealed and correct scroll position
     setTimeout(() => {
       setResultsStage('revealed')
+      // Mémorise la révélation dans le store : tout retour ultérieur sur /feed
+      // rouvrira ce feed directement en 'revealed' (cf. init de resultsStage).
+      useFeedStore.getState().setHasRevealed(true)
       requestAnimationFrame(() => {
         const el = cardRefs.current.get(properties[3]?.id)
         const container = containerRef.current
@@ -341,7 +350,14 @@ export default function FeedPage() {
       propObserver.disconnect()
       specialObserver.disconnect()
     }
-  }, [resultsStage, properties])
+    // Dépend de `feedItems` (et non `[resultsStage, properties]`) : l'observer
+    // doit se (ré)attacher quand la LISTE RENDUE change — donc aussi à la bascule
+    // feedReady=true (cartes montées). Au retour navigation, `properties` est déjà
+    // peuplé depuis le store sans changer de référence ; seul `feedItems` reflète
+    // l'apparition réelle des cartes dans le DOM. `feedItems` étant recalculé à
+    // chaque changement de properties/resultsStage/feedReady, le closure
+    // `properties.findIndex` reste frais.
+  }, [feedItems])
 
   return (
     <MobileFrame>
