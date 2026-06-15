@@ -33,10 +33,14 @@ function tokenValid(req: Request): boolean {
 }
 
 /**
- * Allowlist d'origines web : `SHOMEE_WEB_ORIGINS` (CSV) + fallback localhost +
- * URLs Vercel de CE déploiement (self) + suffixe `*.vercel.app` (preview/prod
- * Vercel). À resserrer au go-live : ajouter le domaine de prod final à
- * `SHOMEE_WEB_ORIGINS` et retirer le filet `.vercel.app` (cf. dette notée).
+ * Allowlist d'origines web — origines EXACTES uniquement, aucun wildcard :
+ *   - `SHOMEE_WEB_ORIGINS` (CSV)
+ *   - fallback localhost (dev)
+ *   - URLs Vercel de CE déploiement : VERCEL_URL / VERCEL_BRANCH_URL /
+ *     VERCEL_PROJECT_PRODUCTION_URL (injectées par Vercel)
+ * PAS de filet `*.vercel.app` : un autre déploiement Vercel n'est pas autorisé,
+ * même en preview. À ajouter au go-live : le domaine de prod final dans
+ * `SHOMEE_WEB_ORIGINS`.
  */
 function exactAllowed(): string[] {
   const csv = process.env.SHOMEE_WEB_ORIGINS
@@ -54,14 +58,7 @@ function exactAllowed(): string[] {
 
 function originAllowed(origin: string | null): boolean {
   if (!origin) return false
-  if (exactAllowed().includes(origin)) return true
-  try {
-    // Filet preview/prod Vercel — les URLs de preview sont dynamiques.
-    if (new URL(origin).host.endsWith('.vercel.app')) return true
-  } catch {
-    /* origin malformé → refus */
-  }
-  return false
+  return exactAllowed().includes(origin)
 }
 
 /** Routes mortes (criteria/parse, criteria/update-importance, matching/score) :
