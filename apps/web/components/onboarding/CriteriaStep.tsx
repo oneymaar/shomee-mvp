@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, ArrowRight, Check, X, Loader2, Plus } from 'lucide-react'
 import { useSearchStore, type ChipState } from '@/lib/searchStore'
+import { apiFetch } from '@/lib/apiFetch'
 
 const PROPERTY_TAGS: string[] = [
   'Extérieur',
@@ -145,7 +146,7 @@ export default function CriteriaStep({ onNext, onFocusChange }: CriteriaStepProp
     setAnalyzing(true)
     setError(null)
     try {
-      const res = await fetch('/api/criteria/analyze', {
+      const res = await apiFetch('/api/criteria/analyze', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ input }),

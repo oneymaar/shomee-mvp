@@ -8,6 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppToken } from '@/lib/auth/appToken'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { z } from 'zod'
 import { CriteriaParseError, parseUserCriteria } from '@/lib/criteria/parser'
 import { tagsToCriteria } from '@/lib/criteria/tags'
@@ -21,6 +23,10 @@ const BodySchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  const guard = requireAppToken(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
+  const rl = checkRateLimit(req)
+  if (!rl.ok) return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers })
   let body: unknown
   try {
     body = await req.json()

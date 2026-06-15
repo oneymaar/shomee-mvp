@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 // Île-de-France bounding box
 const IDF = { minLat: 48.1, maxLat: 49.2, minLng: 1.4, maxLng: 3.7 }
@@ -136,6 +138,10 @@ async function fetchPoiWaysOverpass(
  * Response:  { results: GeocodedPlace[] }
  */
 export async function POST(req: NextRequest) {
+  const guard = requireAppTokenOrTrustedOrigin(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
+  const rl = checkRateLimit(req)
+  if (!rl.ok) return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers })
   try {
     const { places } = (await req.json()) as { places: Array<{ label: string; poiType?: string }> }
     if (!Array.isArray(places) || places.length === 0) {

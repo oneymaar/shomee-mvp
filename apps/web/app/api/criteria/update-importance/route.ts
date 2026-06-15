@@ -14,6 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppToken } from '@/lib/auth/appToken'
 import { z } from 'zod'
 import type { CriterionImportance } from '@shomee/core/criteria/types'
 
@@ -41,6 +42,8 @@ const STORE: Map<string, ImportanceOverride> = (globalThis as unknown as {
 }).__shomeeCriteriaOverrides ??= new Map()
 
 export async function PATCH(req: NextRequest) {
+  const guard = requireAppToken(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
   let body: unknown
   try {
     body = await req.json()

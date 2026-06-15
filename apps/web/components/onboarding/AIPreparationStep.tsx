@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchStore } from '@/lib/searchStore'
+import { apiFetch } from '@/lib/apiFetch'
 
 // Clé sessionStorage où l'AIPreparationStep dépose le feed pré-généré
 // que la page /feed lira en priorité (évite le second loader).
@@ -116,7 +117,7 @@ export default function AIPreparationStep({ onReady }: AIPreparationStepProps) {
         irisIds: s.selectedIrisIds,
       }
       try { sessionStorage.removeItem(PREFETCH_KEY) } catch {}
-      fetch('/api/feed/generate', {
+      apiFetch('/api/feed/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(briefBody),

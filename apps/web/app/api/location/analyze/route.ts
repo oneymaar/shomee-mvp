@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
+import { checkRateLimit } from '@/lib/rateLimit'
 import { parseSpatialIntent } from '@shomee/core/parsing/spatialIntentParser'
 import { intentToAnalysisResponse } from '@shomee/core/parsing/spatialIntentToGeoConstraints'
 
@@ -445,6 +447,10 @@ Si tu nommes Vanves dans le label sans la mettre dans geoConstraints, l'option e
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const guard = requireAppTokenOrTrustedOrigin(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
+  const rl = checkRateLimit(req)
+  if (!rl.ok) return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers })
   try {
     const { input } = await req.json()
     if (!input?.trim()) return NextResponse.json({ error: 'input required' }, { status: 400 })

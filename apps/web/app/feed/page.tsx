@@ -16,6 +16,7 @@ import BAIAModal from '@/components/BAIAModal'
 import { useShomeeStore } from '@/lib/store'
 import { useSearchStore } from '@/lib/searchStore'
 import { useFeedStore } from '@/lib/feedStore'
+import { apiFetch } from '@/lib/apiFetch'
 import { properties as mockProperties } from '@shomee/core/utils/mockData'
 import type { Property } from '@/lib/types'
 
@@ -129,12 +130,12 @@ export default function FeedPage() {
     // With a brief → LLM-generated feed, matched to real video tags.
     // Without a brief → chronological feed (legacy /api/properties GET).
     const fetchPromise = hasBrief
-      ? fetch('/api/feed/generate', {
+      ? apiFetch('/api/feed/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(briefBody),
         })
-      : fetch('/api/properties')
+      : apiFetch('/api/properties')
 
     fetchPromise
       .then(async (r) => {
@@ -176,7 +177,7 @@ export default function FeedPage() {
         // eslint-disable-next-line no-console
         console.warn('[Feed] empty response — falling back to /api/properties')
         try {
-          const r2 = await fetch('/api/properties')
+          const r2 = await apiFetch('/api/properties')
           const fallbackData = (await r2.json()) as Property[]
           if (cancelled) return
           if (Array.isArray(fallbackData) && fallbackData.length > 0) {

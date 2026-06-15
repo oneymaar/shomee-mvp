@@ -14,6 +14,7 @@ import { geocodeBest } from '@/lib/services/geocodingService'
 import { parseLocationIntent } from '@shomee/core/geo/locationIntentParser'
 import { resolveConstraints, poiRadius } from '@shomee/core/geo/geoConstraintService'
 import { useSearchStore } from '@/lib/searchStore'
+import { apiFetch } from '@/lib/apiFetch'
 
 const ZoneMap = dynamic(() => import('./ZoneMap'), {
   ssr: false,
@@ -321,7 +322,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
         const stillNeedsGeocode = poiMissing.filter(c => !poiGeocodedRef.current.has(c.label))
         if (stillNeedsGeocode.length > 0) {
           try {
-            const gr = await fetch('/api/location/geocode', {
+            const gr = await apiFetch('/api/location/geocode', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({ places: stillNeedsGeocode.map(c => ({ label: c.label, poiType: c.poiType })) }),
@@ -553,7 +554,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
       )
       if (unknownExcludedStations.length > 0) {
         try {
-          const gRes = await fetch('/api/location/geocode', {
+          const gRes = await apiFetch('/api/location/geocode', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ places: unknownExcludedStations.map(c => ({ label: c.label, poiType: 'poi' })) }),
@@ -575,7 +576,7 @@ export default function LocationMapStep({ onValidate, onBack, onReady }: Locatio
       const poiCs = enrichedConstraints.filter(c => c.type === 'poi' && c.geometry == null && c.lat === undefined)
       if (poiCs.length > 0) {
         try {
-          const res = await fetch('/api/location/geocode', {
+          const res = await apiFetch('/api/location/geocode', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ places: poiCs.map(c => ({ label: c.label, poiType: c.poiType })) }),

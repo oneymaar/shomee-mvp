@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppToken } from '@/lib/auth/appToken'
 import { z } from 'zod'
 import { matchProperty } from '@shomee/core/matching/engine'
 import type { MatchResult, PropertyProfile } from '@shomee/core/matching/types'
@@ -127,6 +128,8 @@ const BodySchema = z.object({
 // ─── Route handler ───────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const guard = requireAppToken(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
   let body: unknown
   try {
     body = await req.json()
@@ -183,6 +186,8 @@ export async function POST(req: NextRequest) {
  * as POST so downstream consumers can switch transparently.
  */
 export async function GET(req: NextRequest) {
+  const guard = requireAppToken(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
   const buyerProfileId = req.nextUrl.searchParams.get('buyerProfileId')
   if (!buyerProfileId) {
     return NextResponse.json(

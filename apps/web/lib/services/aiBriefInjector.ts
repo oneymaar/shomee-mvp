@@ -26,6 +26,7 @@ import {
 } from '@shomee/core/geo/geoDataService'
 import { resolveConstraints, type GeoConstraint } from '@shomee/core/geo/geoConstraintService'
 import type { LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
+import { apiFetch } from '@/lib/apiFetch'
 
 // ─── Brief shape (mirrors the server schema) ───────────────────────────────
 
@@ -51,7 +52,7 @@ export async function injectBrief(brief: AIOnboardingBrief): Promise<void> {
   //    user can still see and edit the rest of the brief.
   let analysis: LocationIntentAnalysis | null = null
   try {
-    const res = await fetch('/api/location/analyze', {
+    const res = await apiFetch('/api/location/analyze', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ input: brief.locationQuery }),

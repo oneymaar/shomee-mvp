@@ -16,6 +16,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
+import { checkRateLimit } from '@/lib/rateLimit'
 import fs from 'node:fs'
 import path from 'node:path'
 import Anthropic from '@anthropic-ai/sdk'
@@ -1028,6 +1030,11 @@ function ficheToView(
 // ─── Route ───────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const guard = requireAppTokenOrTrustedOrigin(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
+  const rl = checkRateLimit(req)
+  if (!rl.ok) return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers })
+
   let body: unknown
   try {
     body = await req.json()

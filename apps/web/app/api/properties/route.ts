@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
 import { PropertyStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { toViewProperty } from '@/lib/serializers/property'
@@ -104,6 +105,10 @@ function projectPropertyExtras(
  * agency badge and the segmented timeline without a follow-up fetch.
  */
 export async function GET(req: NextRequest) {
+  // GET nu (fetch('/api/properties')) : le navigateur n'envoie pas toujours
+  // Origin sur un GET same-origin → fallback Referer autorisé ici uniquement.
+  const guard = requireAppTokenOrTrustedOrigin(req, { allowReferer: true })
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
   try {
     const buyerProfileId = req.nextUrl.searchParams.get('buyerProfileId')
 
@@ -146,6 +151,8 @@ export async function GET(req: NextRequest) {
  * when the user has expressed enough preferences to make scoring useful.
  */
 export async function POST(req: NextRequest) {
+  const guard = requireAppTokenOrTrustedOrigin(req, { allowReferer: true })
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
   let body: unknown
   try {
     body = await req.json()

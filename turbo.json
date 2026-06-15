@@ -12,7 +12,9 @@
         "CLOUDINARY_API_SECRET",
         "NEXT_PUBLIC_APP_URL",
         "SHOMEE_CRITERIA_MODEL",
-        "ADMIN_SECRET"
+        "ADMIN_SECRET",
+        "SHOMEE_APP_TOKEN",
+        "SHOMEE_WEB_ORIGINS"
       ]
     },
     "dev": {

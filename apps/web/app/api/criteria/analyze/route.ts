@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 // Parse free-text French property preferences into structured positive
 // (criteria the user wants) and negative (criteria the user excludes) items.
@@ -75,6 +77,10 @@ function stripNegationPrefix(label: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = requireAppTokenOrTrustedOrigin(req)
+  if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
+  const rl = checkRateLimit(req)
+  if (!rl.ok) return NextResponse.json(rl.body, { status: rl.status, headers: rl.headers })
   try {
     const { input } = await req.json()
     if (!input?.trim()) return NextResponse.json({ error: 'input required' }, { status: 400 })
