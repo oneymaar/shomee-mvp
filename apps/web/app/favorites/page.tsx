@@ -7,6 +7,7 @@ import MobileFrame from '@/components/MobileFrame'
 import BottomNav from '@/components/BottomNav'
 import { useShomeeStore } from '@/lib/store'
 import { properties } from '@shomee/core/utils/mockData'
+import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 
 export default function FavoritesPage() {
   const { favorites } = useShomeeStore()
@@ -63,7 +64,7 @@ export default function FavoritesPage() {
                   <div className="bg-white border border-black/8 rounded-2xl overflow-hidden active:scale-[0.97] transition-transform">
                     <div className="relative h-36">
                       <Image
-                        src={property.imageUrlFallback}
+                        src={property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE}
                         alt={property.title}
                         fill
                         className="object-cover"

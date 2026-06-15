@@ -13,6 +13,7 @@ import clsx from 'clsx'
 import type { Property } from '@/lib/types'
 import { shareProperty } from '@/lib/share'
 import { formatLocation } from '@shomee/core/utils/format'
+import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 
 const MapZone = dynamic(() => import('./MapZone'), { ssr: false })
 
@@ -233,6 +234,9 @@ export default function PropertyDetailSheet({
   const brandLogo = property.agencyLogo ?? property.agentAvatar
 
   const gallery = property.gallery
+  // Garde défensive : ne jamais passer une src vide/undefined à <Image>.
+  // gallery peut être vide (source qui n'aurait pas de visuel) → repli.
+  const currentPhoto = gallery[photoState.index] ?? DEFAULT_FALLBACK_IMAGE
   const fmtPrice = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
   const fmtPpm = property.pricePerSqm
     ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.pricePerSqm)
@@ -275,7 +279,7 @@ export default function PropertyDetailSheet({
       onClick={() => setLightbox(false)}
     >
       <div className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
-        <Image src={gallery[photoState.index]} alt="" fill className="object-contain" sizes="100vw" />
+        <Image src={currentPhoto} alt="" fill className="object-contain" sizes="100vw" />
         <button
           onClick={() => setLightbox(false)}
           className="absolute right-4 w-9 h-9 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
@@ -440,7 +444,7 @@ export default function PropertyDetailSheet({
                                 className="absolute inset-0"
                               >
                                 <Image
-                                  src={gallery[photoState.index]}
+                                  src={currentPhoto}
                                   alt={`Photo ${photoState.index + 1}`}
                                   fill
                                   className="object-cover"

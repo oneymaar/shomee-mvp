@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import {
   PropertyStatus,
   MandatType,
@@ -153,9 +154,6 @@ function deriveTitle(adresse: string): string {
   const street = adresse.split(',')[0]?.trim()
   return street && street.length > 0 ? street : 'Nouvelle annonce'
 }
-
-const DEFAULT_FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=1400&fit=crop&q=80'
 
 // ─── POST ──────────────────────────────────────────────────────────────────
 

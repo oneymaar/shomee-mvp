@@ -27,6 +27,7 @@ import {
   type BriefSnapshot,
 } from '@/lib/matching/buyerBriefBuilder'
 import { matchProperty } from '@shomee/core/matching/engine'
+import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import type {
   PropertyProfile,
   PropertyTypeStructured,
@@ -352,6 +353,23 @@ function resolveAgencyName(address: string): string {
 function extractCloudinaryId(videoUrl: string): string {
   const match = videoUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.mp4/)
   return match?.[1] ?? videoUrl
+}
+
+/**
+ * Dérive une vignette JPEG depuis l'URL vidéo Cloudinary, avec la même
+ * transformation que `videoAnalysisService` (frame à `so_0`, format `f_jpg`,
+ * 800×600 c_fill) pour rester cohérent. Repli sur `DEFAULT_FALLBACK_IMAGE` si
+ * l'URL n'est pas une vidéo Cloudinary `.mp4` exploitable.
+ */
+function derivePosterUrl(videoUrl: string | null | undefined): string {
+  if (!videoUrl) return DEFAULT_FALLBACK_IMAGE
+  const publicId = extractCloudinaryId(videoUrl)
+  if (publicId === videoUrl) return DEFAULT_FALLBACK_IMAGE // pas de match .mp4
+  const poster = videoUrl.replace(
+    /\/upload\/(?:v\d+\/)?.+?\.mp4/,
+    `/upload/so_0,w_800,h_600,c_fill,f_jpg/${publicId}.jpg`,
+  )
+  return poster === videoUrl ? DEFAULT_FALLBACK_IMAGE : poster
 }
 
 // ─── Video matching with progressive widening ────────────────────────────
@@ -973,6 +991,9 @@ function ficheToView(
     ? fiche.nearbyPOI.filter((p): p is string => typeof p === 'string').slice(0, 5)
     : []
 
+  // Vignette dérivée de la vidéo (poster Cloudinary), repli image par défaut.
+  const poster = derivePosterUrl(video.videoUrl)
+
   return {
     id,
     title: fiche.title,
@@ -1020,8 +1041,8 @@ function ficheToView(
     shareCount: randomInt(50, 300),
     videoUrl: video.videoUrl,
     chapters: chapters as ViewProperty['chapters'] | undefined,
-    imageUrlFallback: '',
-    gallery: [],
+    imageUrlFallback: poster,
+    gallery: [poster],
     matchScore: matchScore01,
     isExcluded,
   }

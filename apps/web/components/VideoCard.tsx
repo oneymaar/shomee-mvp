@@ -4,6 +4,7 @@ import { useRef, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { Poppins } from 'next/font/google'
 import type { Property } from '@/lib/types'
+import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import VideoProgressBar, { type VideoProgressBarHandle } from './VideoProgressBar'
 
 const poppinsBlack = Poppins({ subsets: ['latin'], weight: '900', display: 'swap' })
@@ -249,7 +250,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
 
       {/* Fallback image */}
       <Image
-        src={property.imageUrlFallback}
+        src={property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE}
         alt={property.title}
         fill
         className="object-cover"
