@@ -260,7 +260,7 @@ export default function VideoTaggerClient({ secret }: { secret: string }) {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch(`/api/admin/videos?secret=${encodeURIComponent(secret)}`)
+        const res = await fetch('/api/admin/videos', { headers: { 'x-admin-secret': secret } })
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`)
         }
@@ -313,10 +313,10 @@ export default function VideoTaggerClient({ secret }: { secret: string }) {
     setSaveMsg(null)
     try {
       const res = await fetch(
-        `/api/admin/video-tags?secret=${encodeURIComponent(secret)}`,
+        '/api/admin/video-tags',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret },
           body: JSON.stringify(tags),
         },
       )

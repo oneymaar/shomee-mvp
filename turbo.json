@@ -11,7 +11,8 @@
         "CLOUDINARY_API_KEY",
         "CLOUDINARY_API_SECRET",
         "NEXT_PUBLIC_APP_URL",
-        "SHOMEE_CRITERIA_MODEL"
+        "SHOMEE_CRITERIA_MODEL",
+        "ADMIN_SECRET"
       ]
     },
     "dev": {

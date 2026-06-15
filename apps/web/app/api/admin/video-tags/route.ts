@@ -1,11 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'node:fs'
 import path from 'node:path'
+import { timingSafeEqual } from 'node:crypto'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_SECRET = 'shomee_admin'
 const TAGS_FILE = path.join(process.cwd(), 'src', 'data', 'video-tags.json')
+
+/**
+ * Admin auth — secret lu UNIQUEMENT depuis le header `x-admin-secret`, comparé
+ * en timing-safe à `process.env.ADMIN_SECRET`. Refuse par défaut si l'env n'est
+ * pas configurée. Jamais de secret en query string ni en dur dans le code.
+ */
+function checkAdminSecret(req: Request): boolean {
+  const expected = process.env.ADMIN_SECRET
+  if (!expected) return false
+  const provided = req.headers.get('x-admin-secret')
+  if (!provided) return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
+}
 
 type VideoTag = {
   videoId: string
@@ -63,7 +79,7 @@ function validate(body: unknown): VideoTag[] | null {
 }
 
 /**
- * POST /api/admin/video-tags?secret=shomee_admin
+ * POST /api/admin/video-tags  (header `x-admin-secret: <ADMIN_SECRET>`)
  *
  * Persiste l'intégralité du tagging vidéo dans src/data/video-tags.json.
  *
@@ -74,9 +90,8 @@ function validate(body: unknown): VideoTag[] | null {
  * la nouvelle config.
  */
 export async function POST(req: NextRequest) {
-  const secret = req.nextUrl.searchParams.get('secret')
-  if (secret !== ADMIN_SECRET) {
-    return new NextResponse('Not Found', { status: 404 })
+  if (!checkAdminSecret(req)) {
+    return new NextResponse('Unauthorized', { status: 401 })
   }
 
   let body: unknown

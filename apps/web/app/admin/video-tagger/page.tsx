@@ -3,15 +3,15 @@ import VideoTaggerClient from './VideoTaggerClient'
 
 export const dynamic = 'force-dynamic'
 
-const ADMIN_SECRET = 'shomee_admin'
-
 export default async function VideoTaggerPage({
   searchParams,
 }: {
   searchParams: Promise<{ secret?: string }>
 }) {
   const { secret } = await searchParams
-  if (secret !== ADMIN_SECRET) notFound()
+  const expected = process.env.ADMIN_SECRET
+  // Refuse par défaut si l'env n'est pas configurée. Le secret n'est plus en dur.
+  if (!expected || secret !== expected) notFound()
 
   return <VideoTaggerClient secret={secret} />
 }
