@@ -34,6 +34,11 @@ import type {
   DpeRating,
 } from '@shomee/core/matching/types'
 import type { Property as ViewProperty } from '@/lib/types'
+// Données géo importées statiquement (bundlées par Next) plutôt que lues à
+// l'exécution : `quartiers.json` vit désormais dans `@shomee/core/data`, et un
+// `readFileSync(process.cwd()/src/data/...)` jetait un ENOENT en silence.
+import rawQuartiers from '@shomee/core/data/quartiers.json'
+import irisCodesInsee from '@/src/data/iris_codes_insee.json'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -131,22 +136,17 @@ function arrFromAdminQuartierId(id: string): number | null {
 type QuartierRaw = { id: string; irisNames?: string[] }
 type IrisIndex = Record<string, unknown>
 
-// Lazy single-shot map building — évite de re-lire les JSON à chaque
-// requête. Charge `quartiers.json` + `iris_codes_insee.json` depuis
-// `src/data/` au premier appel, puis met en cache.
+// Lazy single-shot map building — construite une fois à partir des JSON
+// importés statiquement (`quartiers.json` via @shomee/core, `iris_codes_insee`
+// web-only), puis mise en cache.
 let QUARTIER_TO_ARRS: Map<string, number[]> | null = null
 
 function getQuartierToArrs(): Map<string, number[]> {
   if (QUARTIER_TO_ARRS) return QUARTIER_TO_ARRS
   const out = new Map<string, number[]>()
   try {
-    const root = path.join(process.cwd(), 'src', 'data')
-    const quartiers = JSON.parse(
-      fs.readFileSync(path.join(root, 'quartiers.json'), 'utf-8'),
-    ) as QuartierRaw[]
-    const irisCodes = JSON.parse(
-      fs.readFileSync(path.join(root, 'iris_codes_insee.json'), 'utf-8'),
-    ) as IrisIndex
+    const quartiers = rawQuartiers as QuartierRaw[]
+    const irisCodes = irisCodesInsee as IrisIndex
 
     // Index irisName → arr (le 1er trouvé suffit, les IRIS sont quasi-uniques).
     const nameToArr = new Map<string, number>()
