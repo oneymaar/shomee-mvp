@@ -33,6 +33,7 @@
 - **Hydratation (mécanisme seul, pas d'UX)** : hook `apps/mobile/src/lib/useStoreHydrated.ts` lit `persist.hasHydrated()` + `onFinishHydration()` du middleware Zustand → **zéro modif core** (neutre pour le web).
 - **Écran de fumée JETABLE** `apps/mobile/src/app/index.tsx` (marqué `TEMP — Session 4`) : compteur favoris + ids, `hasHydrated`, budgetMax, boutons ajout/reset/set-budget.
 - Vérifs : `turbo type-check` + `test --filter=@shomee/core` (173/173) + `build --filter=@shomee/web` **verts** ; `tsc` mobile propre côté `src/`.
+- **Déblocage `expo start`** : le 1er démarrage crashait (`Cannot find module 'expo-router/_ctx-shared'`) dans la génération des **typed-routes** du CLI — `expo-router` est dans `apps/mobile/node_modules` (non hoisté), inatteignable par `@expo/cli` (racine). Désactivé `experiments.typedRoutes` dans `app.json` (Metro bundle sans). Serveur OK (`localhost:8081/status` = 200). Expo a auto-nettoyé `tsconfig.json#include` (retrait `.expo/types`/`expo-env.d.ts`, déjà couverts par `**/*.ts`). **Sans rapport avec les stores.**
 - ⏳ **Reste à valider par Olivier (runtime, le vrai juge)** : `expo start`, ajouter un favori test, **kill app + relance** → favori persisté + `hasHydrated` false→true.
 - Périmètre S3 restant (hors stores) : tabs `expo-router`, prototype feed `FlatList`, décisions auth/cartes.
 
@@ -63,6 +64,7 @@
 - **Cold-start Postgres** : `GET /api/properties` ~38 s à froid vs ~180 ms à chaud (adaptateur `pg`).
 - **Allowlist d'origine sans wildcard** : preview hors `VERCEL_URL`/`VERCEL_BRANCH_URL`/`VERCEL_PROJECT_PRODUCTION_URL` → 401 (ajouter à `SHOMEE_WEB_ORIGINS`).
 - **3 tests `geo-resolution.test.ts` flaky** (appels live Overpass/Nominatim) — à mocker/skip. 170 autres stables.
+- **`expo-router` non hoisté + typedRoutes désactivé** : `expo-router` vit dans `apps/mobile/node_modules` (pas à la racine), donc la génération typed-routes de `@expo/cli` (racine) ne le résout pas → `expo start` crashait. Contourné en désactivant `experiments.typedRoutes`. **Fix propre** : hoister `expo-router` à la racine (ou config npm), puis ré-activer typedRoutes. À faire avant de câbler les vraies routes (S4).
 - **`tsc` mobile ↔ namespace global `GeoJSON`** : dès qu'`apps/mobile` importe `@shomee/core/stores` (→ `searchStore` → `import('../geo/geoConstraintService')`), un `tsc` sur le projet mobile remonte `Cannot find namespace 'GeoJSON'` dans `geoConstraintService.ts`/`geoDataService.ts`. Core s'appuie sur le global ambient `GeoJSON` de `@types/geojson` (non inclus par le tsconfig mobile). **Sans impact** : mobile n'a pas de tâche `type-check`, Metro strippe les types, `turbo type-check` reste vert. **Fix propre (quand mobile aura son type-check)** : dans core, remplacer les `GeoJSON.X` par `import type { X } from 'geojson'` (auto-suffisant pour tout consommateur).
 - **Token statique extractible** (mobile) → App Attest iOS (S9).
 - **Données embarquées** ~460 KB JSON : décider embarqué vs CDN (S3/S7).
