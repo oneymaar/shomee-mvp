@@ -26,6 +26,16 @@
 **Éponge dette (2026-06-16)** — non déployé/mergé
 - **`feed/generate` ENOENT `quartiers.json`** : remplacé `readFileSync(process.cwd()/src/data/...)` par des imports statiques (`@shomee/core/data/quartiers.json` + `@/src/data/iris_codes_insee.json`). Le `try` jetait sur la 1re lecture → map `QUARTIER_TO_ARRS` **vide depuis la migration** (local + prod). Restaurée : 109/112 entrées peuplées. Type-check vert.
 
+**Session 3 — Stores Zustand mobile (2026-06-16)** — non déployé/mergé
+- **Barrel core** `packages/core/src/stores/index.ts` (`export *` des 3 stores, aucune collision) + entrée `exports` explicite `"./stores"` dans `packages/core/package.json`. Les shims web importent par sous-chemin (`./stores/store` via `./*`) → **inchangés**.
+- **AsyncStorage** : `@react-native-async-storage/async-storage@2.2.0` ajouté à `apps/mobile` via `expo install` (aligné SDK 56).
+- **Shim mobile consolidé** `apps/mobile/src/lib/stores.ts` : `createShomee/Search/FeedStore(() => AsyncStorage)` depuis `@shomee/core/stores`. Un seul module (pas d'ambiguïté de ré-export). Clés/partialize inchangés (`shomee-favorites`, `shomee-search-v2`).
+- **Hydratation (mécanisme seul, pas d'UX)** : hook `apps/mobile/src/lib/useStoreHydrated.ts` lit `persist.hasHydrated()` + `onFinishHydration()` du middleware Zustand → **zéro modif core** (neutre pour le web).
+- **Écran de fumée JETABLE** `apps/mobile/src/app/index.tsx` (marqué `TEMP — Session 4`) : compteur favoris + ids, `hasHydrated`, budgetMax, boutons ajout/reset/set-budget.
+- Vérifs : `turbo type-check` + `test --filter=@shomee/core` (173/173) + `build --filter=@shomee/web` **verts** ; `tsc` mobile propre côté `src/`.
+- ⏳ **Reste à valider par Olivier (runtime, le vrai juge)** : `expo start`, ajouter un favori test, **kill app + relance** → favori persisté + `hasHydrated` false→true.
+- Périmètre S3 restant (hors stores) : tabs `expo-router`, prototype feed `FlatList`, décisions auth/cartes.
+
 ---
 
 ## 🔜 Reste à faire — Sessions 3–9
@@ -53,6 +63,7 @@
 - **Cold-start Postgres** : `GET /api/properties` ~38 s à froid vs ~180 ms à chaud (adaptateur `pg`).
 - **Allowlist d'origine sans wildcard** : preview hors `VERCEL_URL`/`VERCEL_BRANCH_URL`/`VERCEL_PROJECT_PRODUCTION_URL` → 401 (ajouter à `SHOMEE_WEB_ORIGINS`).
 - **3 tests `geo-resolution.test.ts` flaky** (appels live Overpass/Nominatim) — à mocker/skip. 170 autres stables.
+- **`tsc` mobile ↔ namespace global `GeoJSON`** : dès qu'`apps/mobile` importe `@shomee/core/stores` (→ `searchStore` → `import('../geo/geoConstraintService')`), un `tsc` sur le projet mobile remonte `Cannot find namespace 'GeoJSON'` dans `geoConstraintService.ts`/`geoDataService.ts`. Core s'appuie sur le global ambient `GeoJSON` de `@types/geojson` (non inclus par le tsconfig mobile). **Sans impact** : mobile n'a pas de tâche `type-check`, Metro strippe les types, `turbo type-check` reste vert. **Fix propre (quand mobile aura son type-check)** : dans core, remplacer les `GeoJSON.X` par `import type { X } from 'geojson'` (auto-suffisant pour tout consommateur).
 - **Token statique extractible** (mobile) → App Attest iOS (S9).
 - **Données embarquées** ~460 KB JSON : décider embarqué vs CDN (S3/S7).
 

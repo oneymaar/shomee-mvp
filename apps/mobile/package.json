@@ -3,8 +3,9 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
-    "@shomee/core": "*",
     "@expo/ui": "~56.0.16",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@shomee/core": "*",
     "expo": "~56.0.9",
     "expo-constants": "~56.0.17",
     "expo-device": "~56.0.4",
