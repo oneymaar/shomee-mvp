@@ -1,9 +1,12 @@
 import { Stack } from 'expo-router'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { Image } from 'expo-image'
 import { useShomeeStore, useSearchStore } from '@/lib/stores'
 import { useStoreHydrated } from '@/lib/useStoreHydrated'
+
+const LOGO = require('../../assets/images/logo-shomee-terracotta.png')
 
 const BRAND = '#A64B27'
 const BG = '#FDF5F2'
@@ -38,7 +41,7 @@ export default function RootLayout() {
           </Stack>
         ) : (
           <View style={styles.splash}>
-            <Text style={styles.brand}>Shomee</Text>
+            <Image source={LOGO} style={styles.logo} contentFit="contain" />
             <ActivityIndicator color={BRAND} />
           </View>
         )}
@@ -49,6 +52,6 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  splash: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: BG },
-  brand: { fontSize: 28, fontWeight: '800', color: BRAND, letterSpacing: 0.5 },
+  splash: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, backgroundColor: BG },
+  logo: { width: 120, height: 136 },
 })
