@@ -1,4 +1,6 @@
+import { useCallback } from 'react'
 import { Stack } from 'expo-router'
+import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
@@ -10,6 +12,11 @@ const LOGO = require('../../assets/images/logo-shomee-terracotta.png')
 
 const BRAND = '#A64B27'
 const BG = '#FDF5F2'
+
+// Empêche le splash NATIF de s'auto-masquer dès le 1er render : sans ça, sur un
+// dev build (bundle déjà chargé) il flashe en quelques ms et reste invisible.
+// On le tient affiché jusqu'à ce que notre 1er écran soit posé (onLayout).
+SplashScreen.preventAutoHideAsync().catch(() => {})
 
 /**
  * Layout racine.
@@ -32,8 +39,15 @@ export default function RootLayout() {
   const searchHydrated = useStoreHydrated(useSearchStore)
   const hydrated = favHydrated && searchHydrated
 
+  // Masque le splash NATIF une fois notre 1er écran (splash JS ou app) effectivement
+  // posé → pas de blank flash, et transition fluide vers le splash JS (même fond +
+  // logo). À partir de là, le gating d'hydratation est porté par le splash JS.
+  const onLayout = useCallback(() => {
+    SplashScreen.hideAsync().catch(() => {})
+  }, [])
+
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={styles.root} onLayout={onLayout}>
       <SafeAreaProvider>
         {hydrated ? (
           <Stack screenOptions={{ headerShown: false }}>
