@@ -30,10 +30,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
+          "image": "./assets/images/logo-shomee-terracotta.png",
+          "imageWidth": 140,
+          "backgroundColor": "#FDF5F2",
+          "dark": {
+            "image": "./assets/images/logo-shomee-terracotta.png",
+            "backgroundColor": "#FDF5F2"
           }
         }
       ]
