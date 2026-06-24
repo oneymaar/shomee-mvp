@@ -9,6 +9,7 @@
     "lint": "eslint",
     "type-check": "tsc --noEmit",
     "db:seed": "node --experimental-strip-types prisma/seed.ts",
+    "feed:seed": "node --experimental-strip-types scripts/gen-feed-seed.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

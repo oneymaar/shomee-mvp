@@ -18,6 +18,7 @@ import { useSearchStore } from '@/lib/searchStore'
 import { useFeedStore } from '@/lib/feedStore'
 import { apiFetch } from '@/lib/apiFetch'
 import { properties as mockProperties } from '@shomee/core/utils/mockData'
+import feedSeed from '@/lib/feedSeed.json'
 import type { Property } from '@/lib/types'
 
 // Identifiant de génération du feed — pour que feedStore.hasFeed() réponde vrai
@@ -109,6 +110,33 @@ export default function FeedPage() {
          (s.selectedArrIds?.length ?? 0) > 0 ||
          (s.selectedCommuneIds?.length ?? 0) > 0)
 
+    // (c.1) Accès direct SANS critères → seed instantané depuis le snapshot
+    //       statique des biens récents (bundlé, aucun réseau). Le feed n'affiche
+    //       de toute façon que 4 biens (b1..b4) : le snapshot EST le feed → aucun
+    //       écran vide, aucun loader. On rafraîchit ensuite en arrière-plan, sans
+    //       déranger : on ne remplace que si le catalogue a changé ET que
+    //       l'utilisateur n'a pas encore scrollé (currentIndex === 0).
+    if (!hasBrief) {
+      const seed = feedSeed as unknown as Property[]
+      queueMicrotask(() => {
+        if (cancelled) return
+        useFeedStore.getState().setFeed(seed, makeFeedSessionId())
+        setFeedReady(true)
+      })
+      apiFetch('/api/properties')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((live: Property[] | null) => {
+          if (cancelled || !Array.isArray(live) || live.length === 0) return
+          const seedIds = seed.map((p) => p.id).join(',')
+          const liveIds = live.slice(0, 4).map((p) => p.id).join(',')
+          if (liveIds === seedIds) return // catalogue inchangé → rien à faire
+          if (useFeedStore.getState().currentIndex !== 0) return // ne pas arracher l'utilisateur
+          useFeedStore.getState().setFeed(live, makeFeedSessionId())
+        })
+        .catch(() => {}) // rafraîchissement best-effort ; le seed reste affiché
+      return () => { cancelled = true }
+    }
+
     const briefBody = {
       minSurface: s.minSurface,
       maxSurface: s.maxSurface,
@@ -133,15 +161,13 @@ export default function FeedPage() {
     // eslint-disable-next-line no-console
     console.log('[Feed] hasBrief=' + hasBrief, '| brief=', briefBody)
 
-    // With a brief → LLM-generated feed, matched to real video tags.
-    // Without a brief → chronological feed (legacy /api/properties GET).
-    const fetchPromise = hasBrief
-      ? apiFetch('/api/feed/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(briefBody),
-        })
-      : apiFetch('/api/properties')
+    // On n'arrive ici qu'AVEC un brief (le cas sans critères est servi plus haut
+    // par le seed instantané) → feed généré par le LLM, matché aux tags vidéo.
+    const fetchPromise = apiFetch('/api/feed/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(briefBody),
+    })
 
     fetchPromise
       .then(async (r) => {
