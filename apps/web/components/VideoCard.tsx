@@ -24,6 +24,7 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   const holdTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHeldRef      = useRef(false)
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null)
+  const lastTouchEndRef = useRef(0)
   const lastChapterIdxRef = useRef<number>(-1)
   const chapterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [videoDuration, setVideoDuration] = useState(0)
@@ -188,6 +189,9 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   }
 
   const onTouchEnd = (e: React.TouchEvent) => {
+    // Mark that a touch just ended so the browser-synthesized "ghost click"
+    // that follows (~300ms later) doesn't navigate a second time.
+    lastTouchEndRef.current = Date.now()
     if (releaseHold()) return
 
     const start = tapStartRef.current
@@ -205,6 +209,9 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
   }
 
   const onMouseClick = (e: React.MouseEvent) => {
+    // Ignore the ghost click synthesized after a touch (already handled by
+    // onTouchEnd) — otherwise a single tap navigates two chapters at once.
+    if (Date.now() - lastTouchEndRef.current < 700) return
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect()
     handleTap(e.clientX, rect)
   }
