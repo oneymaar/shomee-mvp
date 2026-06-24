@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Volume2, VolumeX, Heart } from 'lucide-react'
 import MobileFrame from '@/components/MobileFrame'
@@ -55,6 +56,11 @@ export default function FeedPage() {
   // navigations internes (favoris/messages/feed) sans re-fetch ni loader.
   const properties = useFeedStore((s) => s.properties)
   const [feedReady, setFeedReady] = useState(false)
+  // Vrai uniquement sur le chemin (c) — fetch réseau réel (accès direct au feed
+  // sans feed en mémoire ni handoff). Pilote l'écran de chargement de marque.
+  // Les chemins instantanés (mémoire / handoff) le laissent à false → pas de
+  // loader, pas de fondu parasite.
+  const [feedLoading, setFeedLoading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -91,9 +97,11 @@ export default function FeedPage() {
       return () => { cancelled = true }
     }
 
-    // (c) Ni feed en mémoire, ni handoff → fetch live SILENCIEUX. Aucun écran
-    //     d'analyse : AIPreparationStep n'a de sens qu'en fin d'onboarding.
-    //     Tant que le feed n'est pas prêt, feedItems reste vide (conteneur vide).
+    // (c) Ni feed en mémoire, ni handoff → fetch live. AIPreparationStep n'a de
+    //     sens qu'en fin d'onboarding ; ici (accès direct au feed) on affiche un
+    //     écran de chargement de marque le temps que la route réponde, plutôt
+    //     qu'un conteneur vide pendant le cold-start serverless/DB.
+    queueMicrotask(() => { if (!cancelled) setFeedLoading(true) })
 
     // Read a fresh snapshot at the moment of fetch — Zustand's getState()
     // bypasses the subscription model so we don't re-render the feed when
@@ -463,6 +471,38 @@ export default function FeedPage() {
           )
         })}
       </div>
+
+      {/* Écran de chargement de marque — uniquement sur l'accès direct au feed
+          (fetch réseau réel). Couvre la nav pour éviter le « vide + barre de
+          nav » pendant le cold-start. Invisible sur les chemins instantanés. */}
+      <AnimatePresence>
+        {feedLoading && !feedReady && (
+          <motion.div
+            key="feed-loading"
+            className="absolute inset-0 z-[60] flex flex-col items-center justify-center gap-6"
+            style={{ backgroundColor: '#0E0E0E' }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.08, 1], opacity: [0.8, 1, 0.8] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <Image
+                src="/logo blanc.png"
+                alt="SHOMEE"
+                width={78}
+                height={88}
+                priority
+                className="object-contain"
+              />
+            </motion.div>
+            <div className="w-6 h-6 rounded-full border-2 border-white/15 border-t-white/80 animate-spin" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {!isOnSpecialCard && (
         <motion.button
