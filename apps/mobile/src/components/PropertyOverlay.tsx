@@ -128,8 +128,9 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   addr: { color: '#fff', fontSize: 15, fontWeight: '700', flexShrink: 1 },
   spec: { color: '#fff', fontSize: 15, flexShrink: 1 },
-  features: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 1 },
-  feature: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // Une seule ligne, clippée (comme le web) — pas de wrap multi-ligne qui déborde.
+  features: { flexDirection: 'row', gap: 12, marginTop: 1, overflow: 'hidden' },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 },
   featureTxt: { color: '#fff', fontSize: 13 },
   more: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
   moreTxt: { color: '#fff', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
