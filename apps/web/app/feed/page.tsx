@@ -18,7 +18,7 @@ import { useSearchStore } from '@/lib/searchStore'
 import { useFeedStore } from '@/lib/feedStore'
 import { apiFetch } from '@/lib/apiFetch'
 import { properties as mockProperties } from '@shomee/core/utils/mockData'
-import feedSeed from '@/lib/feedSeed.json'
+import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@/lib/types'
 
 // Identifiant de génération du feed — pour que feedStore.hasFeed() réponde vrai

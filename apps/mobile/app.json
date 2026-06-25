@@ -19,7 +19,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.shomee.app"
     },
     "web": {
       "output": "single",
@@ -38,7 +39,8 @@
             "backgroundColor": "#FDF5F2"
           }
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "reactCompiler": true

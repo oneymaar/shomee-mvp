@@ -1,8 +1,9 @@
 /**
- * Génère lib/feedSeed.json — snapshot statique des 4 biens publiés les plus
- * récents, projetés EXACTEMENT comme /api/properties (GET sans brief). Importé
- * dans le bundle client pour un accès instantané au feed (aucun fetch, aucun
- * écran vide) lors de l'accès direct sans critères.
+ * Génère packages/core/src/data/feedSeed.json — snapshot statique des 4 biens
+ * publiés les plus récents, projetés EXACTEMENT comme /api/properties (GET sans
+ * brief). Source unique partagée web + mobile (importée via @shomee/core/data).
+ * Sert à un accès instantané au feed (aucun fetch, aucun écran vide) lors de
+ * l'accès direct sans critères.
  *
  * Régénérer après tout changement notable du catalogue :
  *   node --experimental-strip-types scripts/gen-feed-seed.ts
@@ -45,7 +46,7 @@ async function main() {
     }
   })
 
-  const out = join(dirname(fileURLToPath(import.meta.url)), '../lib/feedSeed.json')
+  const out = join(dirname(fileURLToPath(import.meta.url)), '../../../packages/core/src/data/feedSeed.json')
   writeFileSync(out, JSON.stringify(seed, null, 2) + '\n')
   console.log(`wrote ${seed.length} biens -> ${out}`)
   for (const p of seed) {
