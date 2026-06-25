@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
+import MaskedView from '@react-native-masked-view/masked-view'
 import { Image } from 'expo-image'
 import { Check, ChevronDown, Home, MapPin } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
@@ -79,7 +80,23 @@ export function PropertyOverlay({ property, onMore }: Props) {
             </View>
 
             {features.length > 0 && (
-              <View style={styles.featuresWrap}>
+              // MaskedView : le masque (alpha) fait baisser l'opacité du TEXTE
+              // lui-même jusqu'à 0 sur les 30px droits → la vidéo se voit à
+              // travers (vrai fondu, pas un calque sombre). Équivalent maskImage web.
+              <MaskedView
+                style={styles.featuresMask}
+                maskElement={
+                  <View style={styles.maskRow}>
+                    <View style={styles.maskSolid} />
+                    <LinearGradient
+                      colors={['#000', 'transparent']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.maskFade}
+                    />
+                  </View>
+                }
+              >
                 <View style={styles.features}>
                   {features.map((f) => (
                     <View key={f} style={styles.feature}>
@@ -88,16 +105,7 @@ export function PropertyOverlay({ property, onMore }: Props) {
                     </View>
                   ))}
                 </View>
-                {/* Fondu à droite (transparent → sombre) : adoucit la coupe des
-                    features qui dépassent, comme le maskImage du web. */}
-                <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.85)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.featuresFade}
-                  pointerEvents="none"
-                />
-              </View>
+              </MaskedView>
             )}
 
             <Pressable onPress={onMore} style={styles.more} hitSlop={8}>
@@ -139,12 +147,16 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   addr: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 19, flexShrink: 1 },
   spec: { color: '#fff', fontSize: 15, lineHeight: 19, flexShrink: 1 },
-  // Une seule ligne, clippée (comme le web) + fondu droit via LinearGradient.
-  featuresWrap: { position: 'relative', marginTop: 1, overflow: 'hidden' },
-  features: { flexDirection: 'row', gap: 12 },
+  // Une seule ligne ; le MaskedView (alpha) fond le texte vers la transparence
+  // sur les 30px droits. `alignSelf: stretch` → le cadre = largeur de la colonne
+  // (le fondu tombe donc au bord droit, pas au bout du texte).
+  featuresMask: { alignSelf: 'stretch', height: 20, marginTop: 1 },
+  maskRow: { flex: 1, flexDirection: 'row' },
+  maskSolid: { flex: 1, backgroundColor: '#000' },
+  maskFade: { width: 30 },
+  features: { flexDirection: 'row', gap: 12, alignItems: 'center', height: 20 },
   feature: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 },
   featureTxt: { color: '#fff', fontSize: 13 },
-  featuresFade: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 40 },
   more: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
   moreTxt: { color: '#fff', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
   match: {
