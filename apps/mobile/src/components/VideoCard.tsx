@@ -8,6 +8,8 @@ import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 interface Props {
   property: Property
   isActive: boolean
+  /** Son coupé — global au feed (feedStore.muted). */
+  muted: boolean
 }
 
 /**
@@ -17,13 +19,18 @@ interface Props {
  * `useVideoPlayer` gère le cycle de vie : le player est libéré quand la carte
  * se démonte (recyclage FlatList) → pas de lecteur fantôme jouant en fond.
  */
-export function VideoCard({ property, isActive }: Props) {
+export function VideoCard({ property, isActive, muted }: Props) {
   const hasVideo = Boolean(property.videoUrl)
 
   const player = useVideoPlayer(property.videoUrl ?? '', (p) => {
     p.loop = true
-    p.muted = false
+    p.muted = muted
   })
+
+  // Mute global synchronisé en continu (le flag vit dans le feedStore).
+  useEffect(() => {
+    player.muted = muted
+  }, [muted, player])
 
   // Seule la carte active joue ; les autres sont en pause et rembobinées à 0
   // (donc une vidéo rejouée repart du début quand on y revient).

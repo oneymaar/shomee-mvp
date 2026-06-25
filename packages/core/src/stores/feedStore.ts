@@ -20,6 +20,12 @@ interface FeedState {
    * sans rejouer la révélation ni désaligner les IntersectionObserver.
    */
   hasRevealed: boolean
+  /**
+   * Son coupé — global au feed (comme TikTok), pas par carte. Initialisé à
+   * `false` (son activé au lancement, choix produit). La carte active applique
+   * ce flag au lecteur.
+   */
+  muted: boolean
 
   /** Pose le feed + son identifiant de génération. Remet l'index à 0. */
   setFeed: (properties: Property[], sessionId: string) => void
@@ -30,6 +36,9 @@ interface FeedState {
   setCurrentIndex: (index: number) => void
   /** Marque (ou réinitialise) l'état « révélé » du feed courant. */
   setHasRevealed: (value: boolean) => void
+  /** Bascule le son global du feed. */
+  toggleMuted: () => void
+  setMuted: (value: boolean) => void
 }
 
 /**
@@ -49,6 +58,7 @@ export function createFeedStore(_getStorage: () => StateStorage) {
     feedSessionId: null,
     currentIndex: 0,
     hasRevealed: false,
+    muted: false,
 
     // Un feed fraîchement posé arrive NON-révélé : la séquence blocked→…→revealed
     // doit jouer pour lui. On ne touche donc pas `hasRevealed` ici — il passe à
@@ -71,6 +81,12 @@ export function createFeedStore(_getStorage: () => StateStorage) {
     setHasRevealed: (value) => {
       if (value === get().hasRevealed) return
       set({ hasRevealed: value })
+    },
+
+    toggleMuted: () => set({ muted: !get().muted }),
+    setMuted: (value) => {
+      if (value === get().muted) return
+      set({ muted: value })
     },
   }))
 }
