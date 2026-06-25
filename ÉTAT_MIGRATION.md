@@ -2,8 +2,8 @@
 
 > **But** : repartir d'une session fraîche sans rien reconstruire.
 > **Branche** : `feat/monorepo` (poussée sur `origin`). **Retour de secours** : tag `pwa-stable-pre-monorepo`.
-> **Mis à jour** : 2026-06-15.
-> Détail archi : `ARCHITECTURE.md` · audit RN : `MIGRATION_AUDIT.md` · détail S1–2 : `SESSION_2_OUTCOME.md`.
+> **Mis à jour** : 2026-06-25.
+> Détail archi : `ARCHITECTURE.md` · audit RN : `MIGRATION_AUDIT.md` · détail S1–2 : `SESSION_2_OUTCOME.md` · brouillon spec S4 : `SESSION_4_PLAN_DRAFT.md`.
 
 ---
 
@@ -39,6 +39,19 @@
 - **Device iOS natif non testé** : Xcode pas complètement installé (pas de simulateur) + Expo Go App Store trop ancien pour SDK 56 (« Project is incompatible »). Le chemin disque AsyncStorage natif reste donc à exercer sur device/dev-build — couvert pour l'instant par « le bundle iOS compile ».
 - Périmètre S3 restant (hors stores) : tabs `expo-router`, prototype feed `FlatList`, décisions auth/cartes.
 
+**Session 4 — Feed acquéreur mobile (2026-06-18 → 25)** — non déployé/mergé · dernier commit `e8d4510`
+
+> Runtime : **dev build iOS validé** (Xcode 26.5). Expo Go inutilisable (SDK 56 trop récent). Itération UI = `expo start --web` (SPA) ; comportement natif (vidéo/gestes/splash) = `expo prebuild --clean && expo run:ios`. Cf. mémoire `project_mobile_runtime_testing`.
+
+- **Splash** (`app.json` + `src/app/_layout.tsx`) : natif (expo-splash-screen) **crème `#FDF5F2` + logo terracotta** (`assets/images/logo-shomee-terracotta.png`, copié du web), top-level iOS+Android + dark (⚠️ baké → `prebuild --clean`). Côté JS : `preventAutoHideAsync()` au load + `hideAsync()` quand hydraté ; non-hydraté → rien (le splash natif couvre). **Aucun loader JS** (un spinner sur fond noir a été retiré).
+- **S4a — Coquille d'onglets** (`src/app/(tabs)/`) : `<Tabs>` depuis **`expo-router/js-tabs`** (import depuis `expo-router` déprécié SDK 56). 4 onglets Biens/Favoris/Messages/Profil, icônes `lucide-react-native`, actif `#A64B27`/inactif `#A3A3A3`/fond `#FDF5F2`+safe-area, badge Messages sur `hasUnread` réel (0→masqué). `index`=Biens, `favorites` (compteur store réel), `messages`/`profile` placeholders. Smoke screen S3 supprimé. Root = `GestureHandlerRootView` + `SafeAreaProvider` + gating hydratation.
+- **S4b-v1 — Feed vidéo nu** : `feedSeed.json` **déplacé** `apps/web/lib` → `packages/core/src/data/` (source unique web+mobile ; import web + `gen-feed-seed.ts` maj). `expo-video@56.1.4` ; `src/components/VideoCard.tsx` (`useVideoPlayer` loop, play/pause sur `isActive`, inactive→pause+seek 0, poster expo-image, player libéré à l'unmount). `(tabs)/index.tsx` : `FlatList` plein écran (hauteur via onLayout), `pagingEnabled`, carte active via `onViewableItemsChanged` (ref stable, 60%) → `feedStore.currentIndex`. **Une seule vidéo joue à la fois.**
+- **S4b-v2a — Surcouches** : `feedStore.muted` (core, global, init `false`=son ON) + `toggleMuted` ; VideoCard sync `player.muted` ; bouton mute unique haut-droite. `PropertyOverlay.tsx` (dégradés haut/bas `expo-linear-gradient`, badge agence, adresse `formatLocation`, ligne bien, **features 1 ligne avec fondu droit via MaskedView alpha** — le texte devient transparent, pas de calque ; « Voir l'annonce » no-op → v2b ; **MatchBadge rendue seulement si `matchScore` réel** → invisible sur le seed). `ActionRail.tsx` (Cœur favori toggle+pulse+likeCount ; **Téléphone** `Linking.openURL('tel:')` lit `agencyPhone` sinon **numéro de test marqué TODO** ; Message placeholder S5 ; Partage natif `Share.share`). `FeedItem.tsx` empile vidéo+overlay+rail, `pointerEvents="box-none"`.
+- **Crash natif résolu** : `expo install expo-video` avait tiré 56.1.4 sur un SDK dérivé (expo 56.0.9) → `dyld Symbol not found ExpoModulesCore.Record.from(...)`. `expo install --fix` a réaligné (expo ~56.0.12, **expo-modules-core 56.0.17** qui contient le symbole). **Leçon : `expo install --check` après tout ajout de module natif + `prebuild --clean`.**
+- Modules natifs mobile ajoutés en S3/S4 : `@react-native-async-storage/async-storage`, `expo-video`, `expo-linear-gradient`, `lucide-react-native`, `react-native-svg`, `@react-native-masked-view/masked-view` (0.3.2 = pod `RNCMaskedView` déjà lié via expo-router).
+- Vérifs (chaque étape) : `tsc` mobile propre (src/), `turbo type-check` (core+web) vert, `build web` vert, `expo export ios` EXIT 0.
+- ⏳ **Validation simulateur finale par Olivier** en cours (feed vidéo + surcouches sur le dev build).
+
 ---
 
 ## 🔜 Reste à faire — Sessions 3–9
@@ -47,8 +60,8 @@
 
 | Session | Périmètre | Points durs |
 |---|---|---|
-| **3 — Fondations RN** | Décisions archi (auth, cartes, embarqué). Tabs `expo-router`, NativeWind vs StyleSheet, `lucide-react-native`, hydratation AsyncStorage (`hasHydrated`), suppr. `MobileFrame`/`ServiceWorkerRegistrar`. **Prototype feed `FlatList`**. | Auth (Sign in with Apple si social login), hydratation async |
-| **4 — Feed acquéreur** | `FlatList` (`pagingEnabled`/`snapToInterval`/`onViewableItemsChanged`) → play/pause. `VideoCard` (`expo-video` + `react-native-gesture-handler`). `PropertyDetailSheet` → `@gorhom/bottom-sheet`. | Remplace `IntersectionObserver` + `createPortal` ; logique chapitres réutilisable |
+| **3 — Fondations RN** ✅ | Stores AsyncStorage + hydratation, tabs `expo-router`, `lucide-react-native`. StyleSheet retenu (pas NativeWind). | _fait_ |
+| **4 — Feed acquéreur** 🟡 | ✅ v1 (FlatList paginé + `expo-video`, play/pause via `onViewableItemsChanged`) + v2a (overlay, favori, mute, partage, appeler, fondu features MaskedView). **Reste v2b** : hold-to-pause (`Gesture.LongPress`) + `PropertyDetailSheet` (`@gorhom/bottom-sheet`) ; puis **feed live** (brief+token) → MatchBadge + chapitres. | bottom-sheet natif (rebuild) ; shim apiFetch mobile (base URL+token) |
 | **5 — Favoris + Messages** | Favoris (AsyncStorage), Assistant/Messages (`FlatList` + `KeyboardAvoidingView`), navigation. | `localStorage`→AsyncStorage |
 | **6 — Onboarding** | Étapes du brief (hors cartes), magic-link en **deep-link** (`expo-router`), remplacement `sessionStorage`/`useSearchParams`. | Handoff feed sans `sessionStorage` |
 | **7 — Cartes** | `ZoneMap` (~800 lignes Leaflet) + `MapZone` → **MapLibre RN** (polygones vectoriels, sélection hiérarchique). Logique toggle déjà dans `searchStore`. | **Plus gros chantier UI** |
@@ -70,6 +83,8 @@
   - ❌ **Ne PAS hoister via le `package.json` racine** (testé 2026-06-18 → ERESOLVE) : remonter expo-router à la racine force npm à réconcilier React web (**19.2.7**, via Next/`react-server-dom-webpack`) et mobile (**19.2.3**, pinné Expo SDK 56) → conflit de peer dep dur. Tant qu'expo-router reste niché, chaque app garde sa version.
   - ✅ **État actuel = stable, pas un pansement.** typedRoutes (DX) et web-static (inutile, le vrai web = Next/apps/web) ne sont pas des bloqueurs. Si typedRoutes redevient souhaité : aligner les versions React (impossible sans toucher au SDK) **ou** migrer le monorepo vers **pnpm** (isolation par défaut) — décision séparée, hors S4.
 - **`tsc` mobile ↔ namespace global `GeoJSON`** : dès qu'`apps/mobile` importe `@shomee/core/stores` (→ `searchStore` → `import('../geo/geoConstraintService')`), un `tsc` sur le projet mobile remonte `Cannot find namespace 'GeoJSON'` dans `geoConstraintService.ts`/`geoDataService.ts`. Core s'appuie sur le global ambient `GeoJSON` de `@types/geojson` (non inclus par le tsconfig mobile). **Sans impact** : mobile n'a pas de tâche `type-check`, Metro strippe les types, `turbo type-check` reste vert. **Fix propre (quand mobile aura son type-check)** : dans core, remplacer les `GeoJSON.X` par `import type { X } from 'geojson'` (auto-suffisant pour tout consommateur).
+- **Feed mobile = seed statique (v1/v2a)** : `feedSeed.json` (4 biens) n'a pas de `matchScore`, `chapters`, ni `agencyPhone` → **MatchBadge masquée**, **nav chapitres indisponible**, **téléphone = numéro de test marqué `// TODO`** dans `ActionRail.tsx`. Tout réapparaît avec le **feed live** (POST /api/feed/generate via shim apiFetch mobile + base URL d'alias de branche + appToken). Le numéro d'agence devra venir d'un champ `agencyPhone` (à projeter côté serializer).
+- **Modules natifs mobile** : tout ajout (`expo install <module natif>`) exige `expo install --check` (éviter le skew de version, cf. crash expo-video) **puis** `expo prebuild --clean && expo run:ios` (le `ios/` est gitignoré, régénéré). Un simple reload ne suffit pas pour le natif.
 - **Token statique extractible** (mobile) → App Attest iOS (S9).
 - **Données embarquées** ~460 KB JSON : décider embarqué vs CDN (S3/S7).
 
@@ -77,10 +92,13 @@
 
 ## ▶️ Point de reprise précis
 
-1. **État git** : sur `feat/monorepo`, working tree propre, 2 commits feed poussés (`e3b7279`, `f979841`) au-dessus de `e667158`. **Rien à déployer/merger sans avoir réglé `DATABASE_URL` prod + le blocage deploy CLI.**
-2. **Si tu veux déployer** : régler le doublement Root Directory (cf. dette), puis `vercel --prod` ; confirmer `DATABASE_URL` en Production d'abord.
-3. **Si tu veux merger `feat/monorepo` → `main`** : valider build prod monorepo en preview d'abord (jamais testé).
-4. **Si tu démarres le mobile** : commencer **Session 3** → prototyper le **feed `FlatList`** (pattern central, dé-risque tout le reste) avant l'onboarding/les cartes.
-5. **Vérif rapide d'environnement** : `npx turbo run type-check` (web+core), `npx turbo run test --filter=@shomee/core` (173 tests, 3 flaky réseau), `npx turbo run build --filter=@shomee/web`.
+1. **État git** : sur `feat/monorepo`, working tree propre (seul `ARCHITECTURE.md` apparaît modifié — changement pré-existant non lié, laissé tel quel). Dernier commit **`e8d4510`**. **`feat/monorepo` = `main` + 34 commits, 0 divergence** → merge fast-forward possible, MAIS **rien déployé/mergé** (dette `DATABASE_URL` prod + deploy CLI).
+2. **Mobile — prochaine étape = S4b-v2b** :
+   - **(a) hold-to-pause** : `Gesture.LongPress` (react-native-gesture-handler déjà là, `GestureHandlerRootView` en place) sur la VideoCard → pause au maintien, reprise au relâché.
+   - **(b) PropertyDetailSheet** : `expo install @gorhom/bottom-sheet` (natif → rebuild) ; « Voir l'annonce » (déjà no-op dans l'overlay) l'ouvre ; port des ~797 lignes de `apps/web/components/PropertyDetailSheet.tsx` par champs clés d'abord.
+   - **(c) feed live** : créer `apps/mobile/src/lib/apiFetch.ts` = `createApiFetch({ baseUrl: <alias de branche `shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app`>, appToken: <app.json>extra> })` ; POST `/api/feed/generate` depuis le snapshot `searchStore` (réutiliser la logique web de `feed/page.tsx`, sans `sessionStorage`). Fait **réapparaître MatchBadge** (matchScore réel) **+ chapitres** (nav tap gauche/droite — le hack ghost-click web n'est PAS à porter, gesture-handler est source unique).
+3. **Lancer le mobile** : `cd apps/mobile && npx expo run:ios` (dev build natif). Itération UI pure (pas de natif touché) : `npx expo start --web`. Après tout `expo install` de module natif : `expo install --check` puis `expo prebuild --clean && expo run:ios`.
+4. **Si deploy/merge prod** : régler `DATABASE_URL` Production + doublement Root Directory (cf. dette), valider build prod monorepo en preview d'abord (jamais testé).
+5. **Vérif env** : `npx turbo run type-check` (web+core) ; `npx turbo run test --filter=@shomee/core` (173, 3 flaky réseau) ; `npx turbo run build --filter=@shomee/web` ; côté mobile `cd apps/mobile && npx tsc --noEmit -p tsconfig.json` (propre sur `src/` ; erreurs `GeoJSON` dans core = dette connue) et `npx expo export --platform ios` (depuis `apps/mobile`).
 
-> Aucune tâche en cours, aucun serveur dev actif. État stable.
+> Aucune tâche en cours, aucun serveur dev actif requis. `SESSION_4_PLAN_DRAFT.md` = brouillon de spec S4 (archivable). État stable.
