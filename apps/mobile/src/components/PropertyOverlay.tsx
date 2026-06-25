@@ -79,13 +79,24 @@ export function PropertyOverlay({ property, onMore }: Props) {
             </View>
 
             {features.length > 0 && (
-              <View style={styles.features}>
-                {features.map((f) => (
-                  <View key={f} style={styles.feature}>
-                    <Check size={11} color="#34d399" />
-                    <Text style={styles.featureTxt}>{f}</Text>
-                  </View>
-                ))}
+              <View style={styles.featuresWrap}>
+                <View style={styles.features}>
+                  {features.map((f) => (
+                    <View key={f} style={styles.feature}>
+                      <Check size={11} color="#34d399" />
+                      <Text style={styles.featureTxt}>{f}</Text>
+                    </View>
+                  ))}
+                </View>
+                {/* Fondu à droite (transparent → sombre) : adoucit la coupe des
+                    features qui dépassent, comme le maskImage du web. */}
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.85)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.featuresFade}
+                  pointerEvents="none"
+                />
               </View>
             )}
 
@@ -124,14 +135,16 @@ const styles = StyleSheet.create({
   agencyName: { color: '#fff', fontSize: 15, fontWeight: '600', flexShrink: 1 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 16, paddingHorizontal: 12 },
   bottomRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
-  infoCol: { flex: 1, minWidth: 0, gap: 5 },
+  infoCol: { flex: 1, minWidth: 0, gap: 3 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  addr: { color: '#fff', fontSize: 15, fontWeight: '700', flexShrink: 1 },
-  spec: { color: '#fff', fontSize: 15, flexShrink: 1 },
-  // Une seule ligne, clippée (comme le web) — pas de wrap multi-ligne qui déborde.
-  features: { flexDirection: 'row', gap: 12, marginTop: 1, overflow: 'hidden' },
+  addr: { color: '#fff', fontSize: 15, fontWeight: '700', lineHeight: 19, flexShrink: 1 },
+  spec: { color: '#fff', fontSize: 15, lineHeight: 19, flexShrink: 1 },
+  // Une seule ligne, clippée (comme le web) + fondu droit via LinearGradient.
+  featuresWrap: { position: 'relative', marginTop: 1, overflow: 'hidden' },
+  features: { flexDirection: 'row', gap: 12 },
   feature: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 },
   featureTxt: { color: '#fff', fontSize: 13 },
+  featuresFade: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 40 },
   more: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
   moreTxt: { color: '#fff', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
   match: {
