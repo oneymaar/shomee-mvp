@@ -1,7 +1,12 @@
 import { useRef } from 'react'
-import { Animated, Pressable, Share, StyleSheet, Text, View } from 'react-native'
-import { Heart, MessageCircle, Send } from 'lucide-react-native'
+import { Animated, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native'
+import { Heart, MessageCircle, Phone, Send } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
+
+// TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
+// Property n'a pas encore de champ agencyPhone ; quand il existera, il sera
+// utilisé en priorité (cf. handleCall) et cette constante deviendra inutile.
+const TEST_PHONE = '0660704935'
 
 function formatPrice(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €'
@@ -38,6 +43,12 @@ export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
     }).catch(() => {})
   }
 
+  const handleCall = () => {
+    // Téléphone de l'agence si présent (feed live), sinon numéro de test.
+    const phone = (property as { agencyPhone?: string }).agencyPhone ?? TEST_PHONE
+    Linking.openURL(`tel:${phone}`).catch(() => {})
+  }
+
   const likeCount = isFavorite ? (property.likeCount ?? 0) + 1 : (property.likeCount ?? 0)
 
   return (
@@ -45,6 +56,11 @@ export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
       {/* Message — placeholder (S5) */}
       <Pressable onPress={() => {}} style={styles.btn} hitSlop={8}>
         <MessageCircle size={28} color="#fff" strokeWidth={1.5} />
+      </Pressable>
+
+      {/* Téléphone — ouvre l'app téléphone native (tel:) */}
+      <Pressable onPress={handleCall} style={styles.btn} hitSlop={8}>
+        <Phone size={25} color="#fff" strokeWidth={1.5} />
       </Pressable>
 
       {/* Cœur — favori fonctionnel */}
