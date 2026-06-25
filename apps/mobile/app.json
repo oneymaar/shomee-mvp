@@ -40,7 +40,8 @@
           }
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-image"
     ],
     "experiments": {
       "reactCompiler": true
