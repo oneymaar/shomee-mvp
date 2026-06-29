@@ -119,7 +119,21 @@
     "marketAvgPricePerSqm": 15800,
     "marketEvolution10y": "+31%",
     "marketHighPrice": 19500,
-    "marketLowPrice": 12800
+    "marketLowPrice": 12800,
+    "irisZone": "Saint-Germain-des-Prés",
+    "irisDescription": "Rive gauche historique : galeries d'art, maisons d'édition et cafés littéraires entre le Bon Marché et l'Odéon.",
+    "transports": [
+      "M10 Sèvres-Babylone",
+      "M12 Sèvres-Babylone",
+      "M4 Saint-Sulpice",
+      "Bus 63",
+      "Bus 87"
+    ],
+    "nearbyPlaces": [
+      "Le Bon Marché",
+      "Jardin du Luxembourg",
+      "Marché Raspail"
+    ]
   },
   {
     "id": "cmpxvhi3k001cqy3164mggr2n",
@@ -246,7 +260,20 @@
     "marketAvgPricePerSqm": 9800,
     "marketEvolution10y": "+24%",
     "marketHighPrice": 12200,
-    "marketLowPrice": 7600
+    "marketLowPrice": 7600,
+    "irisZone": "Pernety – Montparnasse",
+    "irisDescription": "Sud de Montparnasse à l'esprit village : rues commerçantes, ateliers d'artistes et brasseries.",
+    "transports": [
+      "M13 Pernety",
+      "M6 Montparnasse-Bienvenüe",
+      "M4 Montparnasse-Bienvenüe",
+      "Bus 58"
+    ],
+    "nearbyPlaces": [
+      "Gare Montparnasse",
+      "Parc Montsouris",
+      "Marché Edgar Quinet"
+    ]
   },
   {
     "id": "cmpxvhi2z001bqy31lm05lojx",
@@ -368,7 +395,21 @@
     "marketAvgPricePerSqm": 9000,
     "marketEvolution10y": "+19%",
     "marketHighPrice": 11500,
-    "marketLowPrice": 7200
+    "marketLowPrice": 7200,
+    "irisZone": "Le Sentier",
+    "irisDescription": "Ancien quartier du textile devenu hub créatif et tech, à deux pas de Montorgueil et des Grands Boulevards.",
+    "transports": [
+      "M3 Sentier",
+      "M4 Réaumur-Sébastopol",
+      "M8 Grands Boulevards",
+      "M9 Grands Boulevards",
+      "Bus 20"
+    ],
+    "nearbyPlaces": [
+      "Rue Montorgueil",
+      "Passage du Grand-Cerf",
+      "Place des Victoires"
+    ]
   },
   {
     "id": "cmpxvhi2f001aqy311l7k4361",
@@ -489,6 +530,19 @@
     "marketAvgPricePerSqm": 7100,
     "marketEvolution10y": "+22%",
     "marketHighPrice": 8900,
-    "marketLowPrice": 5600
+    "marketLowPrice": 5600,
+    "irisZone": "Plaine – Gare",
+    "irisDescription": "Secteur pavillonnaire résidentiel proche du centre-ville et des bords de Seine, à 15 min de La Défense.",
+    "transports": [
+      "RER A Rueil-Malmaison",
+      "Bus 144",
+      "Bus 244",
+      "Bus 567"
+    ],
+    "nearbyPlaces": [
+      "Bords de Seine",
+      "Centre-ville de Rueil",
+      "Parc de Bois-Préau"
+    ]
   }
 ]
