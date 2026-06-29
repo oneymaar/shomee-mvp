@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { useVideoPlayer, VideoView } from 'expo-video'
@@ -50,26 +50,19 @@ export function VideoCard({ property, isActive, muted }: Props) {
     }
   }, [isActive, hasVideo, player])
 
-  // On ne reprend la lecture au relâché que si c'est bien NOUS qui avons mis en
-  // pause (évite un play() parasite sur un simple tap ou sur une carte inactive).
-  const pausedByHold = useRef(false)
+  // Pause à l'ACTIVATION du long-press (après 200 ms d'immobilité), reprise au
+  // relâché. `runOnJS(true)` car player.pause()/play() sont des appels JS (les
+  // callbacks du geste tournent sinon sur le thread UI). onFinalize rejoue
+  // inconditionnellement : indépendant de la logique isActive, qu'on ne touche pas.
   const holdPause = useMemo(
     () =>
       Gesture.LongPress()
         .minDuration(200)
-        .maxDistance(12)
+        .maxDistance(10)
         .runOnJS(true)
-        .onStart(() => {
-          if (!hasVideo) return
-          pausedByHold.current = true
-          player.pause()
-        })
-        .onFinalize(() => {
-          if (!pausedByHold.current) return
-          pausedByHold.current = false
-          if (hasVideo && isActive) player.play()
-        }),
-    [player, hasVideo, isActive],
+        .onStart(() => player.pause())
+        .onFinalize(() => player.play()),
+    [player],
   )
 
   return (
