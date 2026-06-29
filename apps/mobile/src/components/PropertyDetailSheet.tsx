@@ -99,13 +99,13 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
         return (
           <BottomSheetFooter {...props} bottomInset={insets.bottom}>
             <View style={styles.footer}>
-              {/* Pill gauche — 3 CTA */}
+              {/* Pill gauche — 3 CTA à parts égales (flex:1 chacun) */}
               <View style={[styles.pill, styles.pillLeft]}>
-                <CtaButton icon={MessageCircle} label="Message" onPress={() => {}} />
+                <CtaButton icon={MessageCircle} label="Message" onPress={() => {}} grow />
                 <Divider />
-                <CtaButton icon={Phone} label="Appeler" onPress={handleCall} />
+                <CtaButton icon={Phone} label="Appeler" onPress={handleCall} grow />
                 <Divider />
-                <CtaButton icon={CalendarPlus} label="Visiter" onPress={() => {}} />
+                <CtaButton icon={CalendarPlus} label="Visiter" onPress={() => {}} grow />
               </View>
               {/* Pill droite — Like + Share */}
               <View style={[styles.pill, styles.pillRight]}>
@@ -262,14 +262,18 @@ function CtaButton({
   label,
   onPress,
   active,
+  grow,
 }: {
   icon: typeof Phone
   label: string
   onPress: () => void
   active?: boolean
+  /** flex:1 → utilisé seulement dans la pill gauche (3 boutons à parts égales).
+   *  La pill droite (Like/Share) reste dimensionnée par son contenu. */
+  grow?: boolean
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.cta} hitSlop={6}>
+    <Pressable onPress={onPress} style={[styles.cta, grow && styles.ctaGrow]} hitSlop={6}>
       <Icon size={18} strokeWidth={1.8} color={active ? '#ef4444' : '#fff'} fill={active ? '#ef4444' : 'transparent'} />
       <Text style={styles.ctaLabel}>{label}</Text>
     </Pressable>
@@ -328,9 +332,10 @@ const styles = StyleSheet.create({
 
   footer: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 8 },
   pill: { backgroundColor: ACCENT, borderRadius: 9999, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
-  pillLeft: { flex: 1, justifyContent: 'space-around' },
+  pillLeft: { flex: 1 },
   pillRight: { paddingHorizontal: 4 },
-  cta: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 10, paddingHorizontal: 10 },
+  cta: { alignItems: 'center', gap: 2, paddingVertical: 10, paddingHorizontal: 12 },
+  ctaGrow: { flex: 1 },
   ctaLabel: { color: '#fff', fontSize: 10, fontWeight: '600' },
   ctaDivider: { width: StyleSheet.hairlineWidth, height: 24, backgroundColor: 'rgba(255,255,255,0.2)' },
 })
