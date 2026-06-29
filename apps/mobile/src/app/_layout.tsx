@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StyleSheet } from 'react-native'
 import { useShomeeStore, useSearchStore } from '@/lib/stores'
@@ -15,7 +16,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 /**
  * Layout racine.
  *
- *  - `GestureHandlerRootView` + `SafeAreaProvider` à la racine (gestes + insets).
+ *  - `GestureHandlerRootView` + `SafeAreaProvider` + `BottomSheetModalProvider`
+ *    à la racine (gestes + insets + sheets modaux type PropertyDetailSheet).
  *  - Gating d'hydratation SANS loader JS : tant que les stores persistés
  *    (favoris + brief) n'ont pas réhydraté, on ne rend RIEN — le splash natif
  *    (tenu via `preventAutoHideAsync`) reste seul à l'écran. Pas de spinner,
@@ -39,9 +41,11 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG } }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
+        <BottomSheetModalProvider>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG } }}>
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )

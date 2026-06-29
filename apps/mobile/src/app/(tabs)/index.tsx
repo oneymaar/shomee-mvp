@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, View, type ViewToken } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import type { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { Volume2, VolumeX } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@shomee/core/types/domain'
 import { useFeedStore } from '@/lib/stores'
 import { FeedItem } from '@/components/FeedItem'
+import { PropertyDetailSheet } from '@/components/PropertyDetailSheet'
 
 // Seed bundlé (4 biens, URLs Cloudinary absolues) — source unique partagée avec
 // le web (@shomee/core/data). v1 : seed uniquement, pas de feed live (brief/token).
@@ -28,6 +30,15 @@ export default function BiensScreen() {
   const currentIndex = useFeedStore((s) => s.currentIndex)
   const muted = useFeedStore((s) => s.muted)
   const toggleMuted = useFeedStore((s) => s.toggleMuted)
+
+  // PropertyDetailSheet : un seul modal au niveau du feed, présenté avec le bien
+  // sélectionné depuis la carte (« Voir l'annonce » de l'overlay).
+  const sheetRef = useRef<BottomSheetModal>(null)
+  const [detail, setDetail] = useState<Property | null>(null)
+  const openDetail = useCallback((p: Property) => {
+    setDetail(p)
+    sheetRef.current?.present()
+  }, [])
 
   // Seed instantané si le feed transient est vide (réutilise le feedStore S1/S3).
   useEffect(() => {
@@ -54,9 +65,10 @@ export default function BiensScreen() {
         isActive={index === currentIndex}
         muted={muted}
         height={viewportH}
+        onOpenDetail={openDetail}
       />
     ),
-    [viewportH, currentIndex, muted],
+    [viewportH, currentIndex, muted, openDetail],
   )
 
   return (
@@ -91,6 +103,9 @@ export default function BiensScreen() {
       >
         {muted ? <VolumeX size={16} color="#fff" /> : <Volume2 size={16} color="#fff" />}
       </Pressable>
+
+      {/* Detail sheet — partagé par toutes les cartes, présenté à la demande */}
+      <PropertyDetailSheet ref={sheetRef} property={detail} />
     </View>
   )
 }
