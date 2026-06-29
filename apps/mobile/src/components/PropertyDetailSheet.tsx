@@ -74,7 +74,14 @@ function DiagBadge({ kind, grade, label }: { kind: 'dpe' | 'ges'; grade: Grade; 
       <Text style={styles.diagLabel}>{label}</Text>
       <Svg width={W} height={H}>
         <Path d={shape} fill={color} />
-        <SvgText x={12} y={R + 7} fontSize={20} fontWeight="900" fill="#fff" stroke="#000" strokeWidth={1.2} textAnchor="start">
+        {/* Lettre contourée en DEUX passes : stroke noir derrière, fill blanc
+            devant → émule le paintOrder:'stroke fill' du web et évite le double
+            tracé d'un stroke+fill sur un seul <SvgText> (contour centré sur le
+            glyphe, donc visible des deux côtés). */}
+        <SvgText x={12} y={R + 7} fontSize={20} fontWeight="900" textAnchor="start" fill="#000" stroke="#000" strokeWidth={2.4}>
+          {grade}
+        </SvgText>
+        <SvgText x={12} y={R + 7} fontSize={20} fontWeight="900" textAnchor="start" fill="#fff">
           {grade}
         </SvgText>
       </Svg>
@@ -155,6 +162,12 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
     // déjà listé dans Caractéristiques) pour la cohérence visuelle.
     const features = property ? (property.features ?? []).filter((f) => f !== 'Cave') : []
 
+    // Badge agence — même logique que le feed (PropertyOverlay) : logo agence,
+    // sinon avatar agent, sinon initiale. Repris pour la cohérence visuelle.
+    const brandName = property ? property.agencyName ?? property.agentName : ''
+    const brandLogo = property ? property.agencyLogo ?? property.agentAvatar : null
+    const brandInitial = (brandName.trim().charAt(0) || '?').toUpperCase()
+
     const renderBackdrop = useCallback(
       (props: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} opacity={0.4} />
@@ -233,6 +246,20 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
 
             {/* En-tête texte */}
             <View style={styles.header}>
+              {/* Badge agence — logo rond + nom, repris du feed (cohérence) */}
+              <View style={styles.agencyRow}>
+                <View style={styles.logo}>
+                  {brandLogo ? (
+                    <Image source={{ uri: brandLogo }} style={styles.logoImg} contentFit="contain" />
+                  ) : (
+                    <Text style={styles.logoInitial}>{brandInitial}</Text>
+                  )}
+                </View>
+                <Text style={styles.agencyName} numberOfLines={1}>
+                  {brandName}
+                </Text>
+              </View>
+
               <Text style={styles.title}>{property.title}</Text>
               <Text style={styles.subtitle}>
                 {property.arrondissement} · {property.surface} m² · {property.rooms} pièces
@@ -457,6 +484,14 @@ const styles = StyleSheet.create({
   hero: { width: '100%', height: 220, backgroundColor: '#E7E5E4' },
 
   header: { paddingHorizontal: 16, paddingTop: 16 },
+  agencyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  logo: {
+    width: 32, height: 32, borderRadius: 16, overflow: 'hidden', backgroundColor: '#171717',
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)', alignItems: 'center', justifyContent: 'center',
+  },
+  logoImg: { width: '100%', height: '100%' },
+  logoInitial: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  agencyName: { color: '#1C1917', fontSize: 14, fontWeight: '600', flexShrink: 1 },
   title: { color: '#1C1917', fontSize: 20, fontWeight: '800' },
   subtitle: { color: '#78716C', fontSize: 13, marginTop: 4 },
   price: { color: '#1C1917', fontSize: 22, fontWeight: '900', marginTop: 8 },
@@ -522,7 +557,7 @@ const styles = StyleSheet.create({
 
   // Diagnostics
   diagBox: { paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', gap: 24 },
-  diag: { flexShrink: 1 },
+  diag: { flex: 1 },
   diagLabel: {
     color: '#A8A29E', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
     letterSpacing: 1, marginBottom: 8,
