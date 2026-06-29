@@ -9,7 +9,7 @@ import {
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
-import { CalendarPlus, Heart, MessageCircle, Phone, Send } from 'lucide-react-native'
+import { CalendarPlus, Check, Heart, MessageCircle, Phone, Send } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
@@ -71,6 +71,10 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
       property ? s.favorites.some((f) => f.id === property.id) : false,
     )
     const toggleFavorite = useShomeeStore((s) => s.toggleFavorite)
+
+    // Features → puces ✓ sous l'en-tête. Même filtre que le feed (« Cave » est
+    // déjà listé dans Caractéristiques) pour la cohérence visuelle.
+    const features = property ? (property.features ?? []).filter((f) => f !== 'Cave') : []
 
     const renderBackdrop = useCallback(
       (props: BottomSheetBackdropProps) => (
@@ -155,6 +159,19 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 {property.arrondissement} · {property.surface} m² · {property.rooms} pièces
               </Text>
               <Text style={styles.price}>{euro(property.price)}</Text>
+
+              {/* Équipements — puces ✓ vertes (même rendu que le feed ; texte
+                  sombre car fond clair, retour à la ligne autorisé). */}
+              {features.length > 0 && (
+                <View style={styles.featuresRow}>
+                  {features.map((f) => (
+                    <View key={f} style={styles.chip}>
+                      <Check size={11} color="#34d399" strokeWidth={3} />
+                      <Text style={styles.chipTxt}>{f}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
 
             <View style={styles.sections}>
@@ -295,6 +312,10 @@ const styles = StyleSheet.create({
   title: { color: '#1C1917', fontSize: 20, fontWeight: '800' },
   subtitle: { color: '#78716C', fontSize: 13, marginTop: 4 },
   price: { color: '#1C1917', fontSize: 22, fontWeight: '900', marginTop: 8 },
+
+  featuresRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 8, marginTop: 12 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  chipTxt: { color: '#44403C', fontSize: 13 },
 
   sections: { paddingHorizontal: 16, paddingTop: 24, gap: 28 },
 
