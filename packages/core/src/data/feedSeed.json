@@ -85,7 +85,41 @@
     "propertyTaxSource": null,
     "compositionSource": null,
     "agencyName": "Barnes Tour Eiffel",
-    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/barnes.jpg"
+    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/barnes.jpg",
+    "composition": [
+      {
+        "label": "Séjour double",
+        "surface": 32
+      },
+      {
+        "label": "Cuisine",
+        "surface": 11
+      },
+      {
+        "label": "Chambre 1",
+        "surface": 16
+      },
+      {
+        "label": "Chambre 2",
+        "surface": 13
+      },
+      {
+        "label": "Salle de bains",
+        "surface": 6
+      },
+      {
+        "label": "Salle d'eau",
+        "surface": 4
+      },
+      {
+        "label": "Entrée / dégagement",
+        "surface": 6
+      }
+    ],
+    "marketAvgPricePerSqm": 15800,
+    "marketEvolution10y": "+31%",
+    "marketHighPrice": 19500,
+    "marketLowPrice": 12800
   },
   {
     "id": "cmpxvhi3k001cqy3164mggr2n",
@@ -174,7 +208,45 @@
     "propertyTaxSource": null,
     "compositionSource": null,
     "agencyName": "Morriss Montparnasse",
-    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/morriss.jpg"
+    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/morriss.jpg",
+    "composition": [
+      {
+        "label": "Séjour",
+        "surface": 42
+      },
+      {
+        "label": "Cuisine",
+        "surface": 14
+      },
+      {
+        "label": "Chambre 1",
+        "surface": 18
+      },
+      {
+        "label": "Chambre 2",
+        "surface": 15
+      },
+      {
+        "label": "Bureau",
+        "surface": 12
+      },
+      {
+        "label": "Salle de bains",
+        "surface": 7
+      },
+      {
+        "label": "Salle d'eau",
+        "surface": 5
+      },
+      {
+        "label": "Entrée / dégagement",
+        "surface": 12
+      }
+    ],
+    "marketAvgPricePerSqm": 9800,
+    "marketEvolution10y": "+24%",
+    "marketHighPrice": 12200,
+    "marketLowPrice": 7600
   },
   {
     "id": "cmpxvhi2z001bqy31lm05lojx",
@@ -262,7 +334,41 @@
     "propertyTaxSource": null,
     "compositionSource": null,
     "agencyName": "L'Agence des Enfants Rouges",
-    "agencyLogo": null
+    "agencyLogo": null,
+    "composition": [
+      {
+        "label": "Séjour",
+        "surface": 36
+      },
+      {
+        "label": "Cuisine",
+        "surface": 10
+      },
+      {
+        "label": "Mezzanine / bureau",
+        "surface": 12
+      },
+      {
+        "label": "Chambre",
+        "surface": 16
+      },
+      {
+        "label": "Salle de bains",
+        "surface": 7
+      },
+      {
+        "label": "Dressing",
+        "surface": 5
+      },
+      {
+        "label": "Escalier / dégagement",
+        "surface": 6
+      }
+    ],
+    "marketAvgPricePerSqm": 9000,
+    "marketEvolution10y": "+19%",
+    "marketHighPrice": 11500,
+    "marketLowPrice": 7200
   },
   {
     "id": "cmpxvhi2f001aqy311l7k4361",
@@ -349,6 +455,40 @@
     "propertyTaxSource": null,
     "compositionSource": null,
     "agencyName": "Orpi Saint-Cloud Sèvres",
-    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/orpi.jpg"
+    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/orpi.jpg",
+    "composition": [
+      {
+        "label": "Séjour",
+        "surface": 30
+      },
+      {
+        "label": "Cuisine",
+        "surface": 12
+      },
+      {
+        "label": "Chambre 1",
+        "surface": 14
+      },
+      {
+        "label": "Chambre 2",
+        "surface": 11
+      },
+      {
+        "label": "Salle de bains",
+        "surface": 6
+      },
+      {
+        "label": "WC",
+        "surface": 2
+      },
+      {
+        "label": "Entrée / dégagement",
+        "surface": 7
+      }
+    ],
+    "marketAvgPricePerSqm": 7100,
+    "marketEvolution10y": "+22%",
+    "marketHighPrice": 8900,
+    "marketLowPrice": 5600
   }
 ]
