@@ -50,9 +50,9 @@ export function VideoCard({ property, isActive, muted }: Props) {
     }
   }, [isActive, hasVideo, player])
 
-  // Pause à l'ACTIVATION du long-press (après 200 ms d'immobilité), reprise au
-  // relâché. `runOnJS(true)` car player.pause()/play() sont des appels JS (les
-  // callbacks du geste tournent sinon sur le thread UI). onFinalize rejoue
+  // Hold-pause : pause à l'ACTIVATION du long-press (après 200 ms d'immobilité),
+  // reprise au relâché. `runOnJS(true)` car player.pause()/play() sont des appels
+  // JS (les callbacks du geste tournent sinon sur le thread UI). onFinalize rejoue
   // inconditionnellement : indépendant de la logique isActive, qu'on ne touche pas.
   const holdPause = useMemo(
     () =>
@@ -65,8 +65,30 @@ export function VideoCard({ property, isActive, muted }: Props) {
     [player],
   )
 
+  // Composition des gestes de la carte. `Gesture.Race` = le premier geste qui
+  // s'active gagne et annule les autres ; tap rapide et hold se distinguent
+  // naturellement (le tap se résout au lever avant le seuil 200 ms du hold, le
+  // hold s'active doigt immobile). Aujourd'hui seul le hold-pause est branché ;
+  // cette structure existe pour accueillir le tap-chapitres sans re-câbler le
+  // GestureDetector — il suffira de l'ajouter en 1er argument de Race().
+  const cardGesture = useMemo(
+    () =>
+      Gesture.Race(
+        // TODO feed live : Gesture.Tap() zones gauche/droite → chapitre préc/suiv.
+        //   const tapChapter = Gesture.Tap()
+        //     .maxDuration(250)
+        //     .runOnJS(true)
+        //     .onEnd((e) => (e.x < width / 2 ? goPrevChapter() : goNextChapter()))
+        //   → l'insérer ICI (1er argument, priorité) ; le hold-pause reste inchangé.
+        //   Le seed n'a pas de chapitres → rien à brancher tant que le feed live
+        //   ne fournit pas property.chapters.
+        holdPause,
+      ),
+    [holdPause],
+  )
+
   return (
-    <GestureDetector gesture={holdPause}>
+    <GestureDetector gesture={cardGesture}>
       <View style={styles.container}>
         {/* Poster de fallback SOUS la vidéo (couche de base) — visible le temps que
             la vidéo charge / pour les cartes sans vidéo. */}
