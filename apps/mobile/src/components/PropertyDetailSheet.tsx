@@ -9,8 +9,9 @@ import {
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
-import { CalendarPlus, Check, Heart, MessageCircle, Phone, Send } from 'lucide-react-native'
+import { CalendarPlus, Check, Heart, Map, MessageCircle, Phone, Send } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import Svg, { Path, Text as SvgText } from 'react-native-svg'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
@@ -48,18 +49,96 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   )
 }
 
+/* ── Diagnostics DPE/GES — formes SVG + couleurs ADEME (miroir web) ────────── */
+type Grade = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
+const DPE_COLORS: Record<Grade, string> = {
+  A: '#309630', B: '#59B340', C: '#C3D635', D: '#F2CA00', E: '#F49B14', F: '#E8601A', G: '#C82020',
+}
+const GES_COLORS: Record<Grade, string> = {
+  A: '#C0D5E8', B: '#92B7D3', C: '#6495BE', D: '#4D7DA8', E: '#366592', F: '#214D7C', G: '#0F3566',
+}
+
+/** Badge diagnostic : flèche (DPE) ou pilule arrondie à droite (GES), lettre
+ *  blanche contourée noir — tout en SVG pour reproduire le WebkitTextStroke web. */
+function DiagBadge({ kind, grade, label }: { kind: 'dpe' | 'ges'; grade: Grade; label: string }) {
+  const W = 76
+  const H = 36
+  const R = H / 2
+  const color = (kind === 'dpe' ? DPE_COLORS : GES_COLORS)[grade]
+  const shape =
+    kind === 'dpe'
+      ? `M0 0 H${W - 11} L${W} ${R} L${W - 11} ${H} H0 Z` // flèche pointant à droite
+      : `M0 0 H${W - R} A${R} ${R} 0 0 1 ${W - R} ${H} H0 Z` // pilule arrondie à droite
+  return (
+    <View style={styles.diag}>
+      <Text style={styles.diagLabel}>{label}</Text>
+      <Svg width={W} height={H}>
+        <Path d={shape} fill={color} />
+        <SvgText x={12} y={R + 7} fontSize={20} fontWeight="900" fill="#fff" stroke="#000" strokeWidth={1.2} textAnchor="start">
+          {grade}
+        </SvgText>
+      </Svg>
+    </View>
+  )
+}
+
+/* ── Transports — parsing + couleurs lignes (miroir web) ───────────────────── */
+const METRO_COLORS: Record<string, string> = {
+  '1': '#FFCD00', '2': '#003CA6', '3': '#837902', '3b': '#6EC4E8', '4': '#CF009E',
+  '5': '#FF7E2E', '6': '#6ECA97', '7': '#FA9ABA', '7b': '#6ECA97', '8': '#E19BDF',
+  '9': '#B6BD00', '10': '#C9910D', '11': '#704B1C', '12': '#007852', '13': '#98D4E2', '14': '#62259D',
+}
+const RER_COLORS: Record<string, string> = {
+  A: '#FF2442', B: '#4DA4DC', C: '#FFD200', D: '#00814F', E: '#C25BAA',
+}
+function parseLine(str: string): { number: string; name: string; color: string; darkText: boolean } {
+  const metro = str.match(/^M(\d{1,2}[ab]?)\s*(.*)$/)
+  if (metro) {
+    const n = metro[1]
+    return { number: n, name: metro[2], color: METRO_COLORS[n] || '#999', darkText: n === '1' || n === '9' || n === '13' }
+  }
+  const rer = str.match(/^RER\s+([A-E])\s*(.*)$/)
+  if (rer) {
+    const l = rer[1]
+    return { number: l, name: rer[2] || `RER ${l}`, color: RER_COLORS[l] || '#999', darkText: l === 'C' }
+  }
+  const bus = str.match(/^Bus\s+(.+)$/)
+  if (bus) return { number: bus[1], name: `Bus ${bus[1]}`, color: '#5A9FC9', darkText: false }
+  return { number: str, name: str, color: '#666', darkText: false }
+}
+function getTransportType(str: string): 'metro' | 'rer' | 'tramway' | 'bus' {
+  if (str.match(/^M\d/)) return 'metro'
+  if (str.match(/^RER/)) return 'rer'
+  if (str.match(/^T\d/)) return 'tramway'
+  return 'bus'
+}
+const TRANSPORT_ORDER = ['metro', 'rer', 'tramway', 'bus'] as const
+const TRANSPORT_LABELS: Record<string, string> = { metro: 'Métro', rer: 'RER', tramway: 'Tramway', bus: 'Bus' }
+
+function TransportItem({ line }: { line: string }) {
+  const p = parseLine(line)
+  return (
+    <View style={styles.transportItem}>
+      <View style={[styles.lineBadge, { backgroundColor: p.color }]}>
+        <Text style={[styles.lineNumber, { color: p.darkText ? '#000' : '#fff' }]}>{p.number}</Text>
+      </View>
+      <Text style={styles.transportName}>{p.name}</Text>
+    </View>
+  )
+}
+
 /* ── Composant ─────────────────────────────────────────────────────────────── */
 interface Props {
   property: Property | null
 }
 
 /**
- * PropertyDetailSheet mobile — Pass 1 (S4b-v2b).
+ * PropertyDetailSheet mobile — Pass 1+2 (S4b-v2b).
  *
  * Ossature `@gorhom/bottom-sheet` (modal présenté impérativement par le feed) +
- * image principale (poster, galerie différée) + sections texte/données mirrorées
- * du sheet web : Description, Caractéristiques, Composition, Marché.
- * Diagnostics (DPE/GES) et Quartier (carte) → Pass 2. Galerie → passe média.
+ * image principale (poster, galerie différée) + sections mirrorées du sheet web :
+ * Description, Quartier (carte → placeholder), Caractéristiques, Diagnostics
+ * (DPE/GES en SVG), Composition, Marché. Galerie → passe média ultérieure.
  */
 export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
   function PropertyDetailSheet({ property }, ref) {
@@ -183,6 +262,66 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 </GreyBox>
               </View>
 
+              {/* Quartier */}
+              {(property.irisZone ||
+                (property.transports?.length ?? 0) > 0 ||
+                (property.nearbyPlaces?.length ?? 0) > 0 ||
+                property.neighborhoodVibe) && (
+                <View>
+                  <SectionTitle>Quartier</SectionTitle>
+
+                  {property.irisZone && (
+                    <View style={styles.irisBlock}>
+                      <Text style={styles.irisZone}>{property.irisZone}</Text>
+                      {property.irisDescription && (
+                        <Text style={styles.irisDesc}>{property.irisDescription}</Text>
+                      )}
+                    </View>
+                  )}
+
+                  {/* Carte différée → placeholder (passe média ultérieure) */}
+                  <GreyBox style={styles.mapPlaceholder}>
+                    <Map size={26} color="#D6D3D1" />
+                    <Text style={styles.mapPlaceholderTxt}>Carte du quartier bientôt disponible</Text>
+                  </GreyBox>
+
+                  {/* Transports groupés par type (métro / RER / tram / bus) */}
+                  {property.transports && property.transports.length > 0 && (
+                    <GreyBox style={[styles.boxRows, styles.qSpace]}>
+                      {TRANSPORT_ORDER.map((type) => {
+                        const lines = (property.transports ?? []).filter((t) => getTransportType(t) === type)
+                        if (!lines.length) return null
+                        return (
+                          <View key={type}>
+                            <Text style={styles.transportGroup}>{TRANSPORT_LABELS[type]}</Text>
+                            {lines.map((t) => (
+                              <TransportItem key={t} line={t} />
+                            ))}
+                          </View>
+                        )
+                      })}
+                    </GreyBox>
+                  )}
+
+                  {/* À proximité + Ambiance */}
+                  {((property.nearbyPlaces?.length ?? 0) > 0 || property.neighborhoodVibe) && (
+                    <GreyBox style={styles.boxRows}>
+                      {property.nearbyPlaces && property.nearbyPlaces.length > 0 && (
+                        <View style={styles.row}>
+                          <Text style={styles.rowLabel}>À proximité</Text>
+                          <View style={styles.nearbyCol}>
+                            {property.nearbyPlaces.map((pl) => (
+                              <Text key={pl} style={styles.nearbyItem}>{pl}</Text>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                      <Row label="Ambiance" value={property.neighborhoodVibe} />
+                    </GreyBox>
+                  )}
+                </View>
+              )}
+
               {/* Caractéristiques */}
               <View>
                 <SectionTitle>Caractéristiques</SectionTitle>
@@ -216,6 +355,15 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                   />
                   <Row label="Charges mensuelles" value={property.monthlyCharges != null ? euro(property.monthlyCharges) : undefined} />
                   <Row label="Taxe foncière" value={property.propertyTax != null ? euro(property.propertyTax) : undefined} />
+                </GreyBox>
+              </View>
+
+              {/* Diagnostics — DPE flèche, GES pilule (SVG) */}
+              <View>
+                <SectionTitle>Diagnostics</SectionTitle>
+                <GreyBox style={styles.diagBox}>
+                  <DiagBadge kind="dpe" grade={property.dpe} label="DPE — Énergie" />
+                  {property.ges && <DiagBadge kind="ges" grade={property.ges} label="GES — Climat" />}
                 </GreyBox>
               </View>
 
@@ -350,6 +498,35 @@ const styles = StyleSheet.create({
   marketPrice: { color: '#1C1917', fontSize: 20, fontWeight: '900' },
   marketPpm: { color: '#78716C', fontSize: 12 },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(0,0,0,0.08)', marginVertical: 12 },
+
+  // Quartier
+  irisBlock: { marginBottom: 12 },
+  irisZone: { color: '#1C1917', fontSize: 14, fontWeight: '600' },
+  irisDesc: { color: '#78716C', fontSize: 12, lineHeight: 17, marginTop: 2 },
+  mapPlaceholder: { height: 150, alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 },
+  mapPlaceholderTxt: { color: '#A8A29E', fontSize: 12 },
+  qSpace: { marginBottom: 12 },
+  transportGroup: {
+    color: '#A8A29E', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
+    letterSpacing: 1, paddingTop: 8, paddingBottom: 2,
+  },
+  transportItem: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  lineBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  lineNumber: { fontSize: 11, fontWeight: '900' },
+  transportName: { color: '#57534E', fontSize: 14, flexShrink: 1 },
+  nearbyCol: { alignItems: 'flex-end', gap: 2, flexShrink: 1 },
+  nearbyItem: { color: '#57534E', fontSize: 14, textAlign: 'right' },
+
+  // Diagnostics
+  diagBox: { paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', gap: 24 },
+  diag: { flexShrink: 1 },
+  diagLabel: {
+    color: '#A8A29E', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
+    letterSpacing: 1, marginBottom: 8,
+  },
 
   footer: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 8 },
   pill: { backgroundColor: ACCENT, borderRadius: 9999, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
