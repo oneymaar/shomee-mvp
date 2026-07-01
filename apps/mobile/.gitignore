@@ -32,6 +32,9 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+# ...mais on committe le gabarit (le root .gitignore ignore .env* — on ré-inclut).
+!.env.example
 
 # typescript
 *.tsbuildinfo

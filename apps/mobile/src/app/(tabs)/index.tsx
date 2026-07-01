@@ -6,6 +6,7 @@ import { Volume2, VolumeX } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@shomee/core/types/domain'
 import { useFeedStore } from '@/lib/stores'
+import { apiFetch } from '@/lib/api'
 import { FeedItem } from '@/components/FeedItem'
 import { PropertyDetailSheet } from '@/components/PropertyDetailSheet'
 
@@ -40,10 +41,39 @@ export default function BiensScreen() {
     sheetRef.current?.present()
   }, [])
 
-  // Seed instantané si le feed transient est vide (réutilise le feedStore S1/S3).
+  // Feed : seed instantané (transient) puis refresh live best-effort.
+  //
+  // (1) feedStore vide → on affiche la seed bundlée immédiatement : aucun loader,
+  //     aucun écran vide (couvre aussi le cold-start Postgres ~38s).
+  // (2) En arrière-plan, GET /api/properties renvoie un TABLEAU NU de biens
+  //     PUBLISHED (newest first). On ne remplace la seed que si le catalogue a
+  //     réellement changé ET que l'utilisateur n'a pas encore scrollé — sinon on
+  //     ne l'arrache pas. Échec / réponse vide → la seed reste (best-effort).
   useEffect(() => {
+    let cancelled = false
+
     if (!useFeedStore.getState().hasFeed()) {
       useFeedStore.getState().setFeed(SEED, String(Date.now()))
+    }
+
+    apiFetch('/api/properties')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((live: Property[] | null) => {
+        if (cancelled || !Array.isArray(live) || live.length === 0) return
+        const seedIds = SEED.map((p) => p.id).join(',')
+        const liveIds = live.slice(0, SEED.length).map((p) => p.id).join(',')
+        // Le seed n'est qu'un aperçu (SEED.length biens, = les plus récents de la
+        // base) ; le live porte tout le catalogue publié. On swap sauf si le live
+        // est STRICTEMENT identique au seed (même taille ET mêmes ids) — cas rare
+        // où la base n'aurait que ces biens. live[0] === seed[0] → aucun flash.
+        if (live.length === SEED.length && liveIds === seedIds) return
+        if (useFeedStore.getState().currentIndex !== 0) return // ne pas arracher l'utilisateur
+        useFeedStore.getState().setFeed(live, String(Date.now()))
+      })
+      .catch(() => {}) // best-effort : la seed reste affichée
+
+    return () => {
+      cancelled = true
     }
   }, [])
 

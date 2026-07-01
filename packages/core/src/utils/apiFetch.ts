@@ -16,14 +16,22 @@ export interface ApiFetchConfig {
   baseUrl?: string
   /** Token applicatif. Injecté côté mobile ; jamais fourni côté web. */
   appToken?: string
+  /** En-têtes statiques additionnels, appliqués à chaque requête (ex. bypass
+   *  d'infra d'un preview protégé). Génériques : core ne connaît aucune
+   *  plateforme — le nom d'en-tête est fourni par l'appelant.
+   *  Précédence : extraHeaders < init.headers < appToken. */
+  extraHeaders?: Record<string, string>
 }
 
 export type ApiFetch = (path: string, init?: RequestInit) => Promise<Response>
 
 export function createApiFetch(config: ApiFetchConfig = {}): ApiFetch {
-  const { baseUrl = '', appToken } = config
+  const { baseUrl = '', appToken, extraHeaders } = config
   return (path, init) => {
-    const headers = new Headers(init?.headers)
+    // Base : en-têtes statiques de config ; surchargés par ceux de l'appel ;
+    // le token applicatif garde la priorité absolue.
+    const headers = new Headers(extraHeaders)
+    new Headers(init?.headers).forEach((value, key) => headers.set(key, value))
     if (appToken) headers.set('x-shomee-app-token', appToken)
     return fetch(`${baseUrl}${path}`, { ...init, headers })
   }
