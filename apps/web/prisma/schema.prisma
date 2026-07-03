@@ -237,6 +237,11 @@ model Property {
   completionRate        Float           @default(0)
   collaborateurIds      String[]        @default([])
 
+  // ── Démo / enrichissement ──
+  // true = champs enrichis peuplés par le backfill démo (données fausses mais
+  // plausibles) ; false = vrai bien (chemin IRIS/DVF réel, à venir).
+  isDemoData            Boolean         @default(false)
+
   llmFilledFields        String[]        @default([])
 
   // ── Source fields (populated by LLM import) ──
