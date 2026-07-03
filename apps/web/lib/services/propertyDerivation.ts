@@ -164,7 +164,17 @@ function buildDerivationPrompt(
   count: number,
   caption: string,
   extracted: ExtractedInfo,
+  zones: string[],
 ): string {
+  const zoneRule =
+    zones.length > 0
+      ? `- ZONES — CONTRAINTE STRICTE : utilise EXCLUSIVEMENT ces zones autorisées, AUCUNE autre : ${zones.join(', ')}.
+  Le champ "arrondissement" de CHAQUE bien doit être EXACTEMENT l'une de ces valeurs (recopie la chaîne à l'identique, casse et accents compris). ${
+    zones.length === 1
+      ? `Une seule zone autorisée : TOUS les biens sont dans "${zones[0]}".`
+      : `Répartis les ${count} biens de façon équilibrée sur ces ${zones.length} zones.`
+  }`
+      : `- ZONES variées mais crédibles pour ce standing : répartis les biens sur plusieurs arrondissements parisiens (format "Paris Xème") ET quelques communes de proche banlieue de standing comparable parmi : ${COMMUNES.join(', ')}. Ne mets pas tous les biens dans le même arrondissement.`
   return `Tu es un expert immobilier parisien. À partir d'UNE vidéo immobilière réelle, tu génères des biens de DÉMO plausibles pour une app immobilière.
 
 PROFIL DE LA VIDÉO SOURCE (déduit de sa caption) :
@@ -182,7 +192,7 @@ RÈGLES DE COHÉRENCE (impératives) :
 - Type de bien globalement cohérent (un appartement familial reste un appartement familial ; ne dérive pas un loft industriel d'une vidéo haussmannienne).
 
 RÈGLES DE VARIÉTÉ (impératives) :
-- ZONES variées mais crédibles pour ce standing : répartis les biens sur plusieurs arrondissements parisiens (format "Paris Xème") ET quelques communes de proche banlieue de standing comparable parmi : ${COMMUNES.join(', ')}. Ne mets pas tous les biens dans le même arrondissement.
+${zoneRule}
 - BUDGETS variés mais cohérents : fais varier prix et surface autour du profil source (±40 % environ), en gardant un prix/m² réaliste pour chaque zone choisie.
 - Varie les styles cohérents avec le standing (haussmannien, années 30, contemporain rénové, pierre de taille…), les étages, les orientations, les atouts extérieurs.
 
@@ -190,7 +200,7 @@ Retourne UNIQUEMENT un JSON array valide, aucun texte autour, aucun markdown.
 Chaque bien doit avoir EXACTEMENT ces champs :
 {
   "title": string,
-  "arrondissement": string,   // "Paris Xème" ou une commune de la liste
+  "arrondissement": string,   // OBLIGATOIREMENT une des zones autorisées ci-dessus (copie exacte)
   "district": string,         // quartier précis
   "subtitle": string,         // ex: "Appartement haussmannien avec balcon"
   "location": string,         // même que district
@@ -240,6 +250,8 @@ export interface DeriveInput {
   caption: string
   extracted: ExtractedInfo
   count: number
+  /** Zones autorisées (arrondissements/communes cochés). Vide = variété libre. */
+  zones: string[]
 }
 
 export async function deriveProperties(
@@ -247,12 +259,16 @@ export async function deriveProperties(
   input: DeriveInput,
 ): Promise<GeneratedProperty[]> {
   const count = clampCount(input.count)
+  const zones = input.zones ?? []
   const resp = await anthropic.messages.create({
     model: MODEL,
     // ~500 tokens/bien pour la forme riche, + marge.
     max_tokens: Math.min(16000, 1500 + count * 700),
     messages: [
-      { role: 'user', content: buildDerivationPrompt(count, input.caption, input.extracted) },
+      {
+        role: 'user',
+        content: buildDerivationPrompt(count, input.caption, input.extracted, zones),
+      },
     ],
   })
 
@@ -265,7 +281,25 @@ export async function deriveProperties(
   const arr = JSON.parse(match[0]) as unknown[]
   if (!Array.isArray(arr)) throw new Error("Sortie Claude n'est pas un tableau")
 
-  return arr
+  const props = arr
     .map(coerceToProperty)
     .filter((p): p is GeneratedProperty => p !== null)
+
+  // Filet de sécurité : si le LLM sort d'une zone autorisée malgré la consigne,
+  // on rabat l'arrondissement sur une zone cochée (round-robin). Garantit que
+  // le libellé affiché == une zone validée par Olivier (le point de la feature).
+  if (zones.length > 0) {
+    const allowed = new Set(zones)
+    let k = 0
+    for (const p of props) {
+      if (!allowed.has(p.arrondissement)) {
+        const z = zones[k % zones.length]
+        if (p.location === p.arrondissement) p.location = z
+        p.arrondissement = z
+        k++
+      }
+    }
+  }
+
+  return props
 }

@@ -16,19 +16,63 @@ export type Orientation = 'north' | 'south' | 'east' | 'west'
 export const VALID_DPE: ReadonlyArray<DpeRating> = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 export const VALID_ORIENT: ReadonlyArray<Orientation> = ['north', 'south', 'east', 'west']
 
-/** Communes de proche banlieue autorisées (miroir de seed/video-tagger). */
+/** Communes directement limitrophes de Paris (proche banlieue). */
 export const COMMUNES: ReadonlyArray<string> = [
   'Neuilly-sur-Seine',
   'Levallois-Perret',
-  'Boulogne-Billancourt',
-  'Issy-les-Moulineaux',
+  'Clichy',
+  'Saint-Ouen-sur-Seine',
+  'Saint-Denis',
+  'Aubervilliers',
+  'Pantin',
+  'Le Pré-Saint-Gervais',
+  'Les Lilas',
+  'Bagnolet',
+  'Montreuil',
   'Vincennes',
   'Saint-Mandé',
-  'Saint-Cloud',
-  'Sèvres',
-  'Montrouge',
   'Charenton-le-Pont',
+  'Ivry-sur-Seine',
+  'Le Kremlin-Bicêtre',
+  'Gentilly',
+  'Montrouge',
+  'Malakoff',
+  'Vanves',
+  'Issy-les-Moulineaux',
+  'Boulogne-Billancourt',
 ]
+
+/** Les 20 arrondissements en libellé canonique ("Paris 1er", "Paris 2ème"…). */
+export const ARRONDISSEMENT_LABELS: ReadonlyArray<string> = Array.from(
+  { length: 20 },
+  (_, i) => (i === 0 ? 'Paris 1er' : `Paris ${i + 1}ème`),
+)
+
+/** Toutes les zones cochables : 20 arrondissements + communes limitrophes. */
+export const ALL_ZONES: ReadonlyArray<string> = [...ARRONDISSEMENT_LABELS, ...COMMUNES]
+
+function arrLabelFromNumber(n: number): string {
+  return n === 1 ? 'Paris 1er' : `Paris ${n}ème`
+}
+
+/**
+ * Rapproche le champ `arrondissement` extrait de la caption (ex: "Paris 7ème",
+ * "Paris 8", "Boulogne-Billancourt") d'un libellé canonique de ALL_ZONES.
+ * Sert à pré-cocher la zone réelle de la vidéo. null si aucun match.
+ */
+export function matchZoneLabel(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const m = raw.match(/(\d{1,2})/)
+  if (m) {
+    const n = parseInt(m[1], 10)
+    if (n >= 1 && n <= 20) return arrLabelFromNumber(n)
+  }
+  const low = raw.trim().toLowerCase()
+  const commune = COMMUNES.find(
+    (c) => low.includes(c.toLowerCase()) || c.toLowerCase().includes(low),
+  )
+  return commune ?? null
+}
 
 /**
  * Infos extraites de la CAPTION TikTok (miroir de `ExtractedInfo` de

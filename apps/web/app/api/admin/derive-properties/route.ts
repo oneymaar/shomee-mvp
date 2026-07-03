@@ -14,6 +14,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { checkAdminSecret } from '@/lib/auth/adminSecret'
 import { deriveProperties, suggestCount, clampCount } from '@/lib/services/propertyDerivation'
 import type { ExtractedInfo } from '@/lib/admin/tiktokStudioTypes'
+import { ALL_ZONES } from '@/lib/admin/tiktokStudioTypes'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -36,11 +37,20 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 })
   }
-  const b = body as { caption?: unknown; extracted?: unknown; count?: unknown }
+  const b = body as {
+    caption?: unknown
+    extracted?: unknown
+    count?: unknown
+    zones?: unknown
+  }
   const caption = typeof b.caption === 'string' ? b.caption : ''
   if (!isExtractedInfo(b.extracted)) {
     return NextResponse.json({ error: 'extracted_required' }, { status: 400 })
   }
+  // Ne retenir que des zones connues (anti-injection de libellés arbitraires).
+  const zones = Array.isArray(b.zones)
+    ? b.zones.filter((z): z is string => typeof z === 'string' && ALL_ZONES.includes(z))
+    : []
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: 'missing_anthropic_key' }, { status: 500 })
   }
@@ -57,6 +67,7 @@ export async function POST(req: NextRequest) {
       caption,
       extracted: b.extracted,
       count,
+      zones,
     })
     if (properties.length === 0) {
       return NextResponse.json(

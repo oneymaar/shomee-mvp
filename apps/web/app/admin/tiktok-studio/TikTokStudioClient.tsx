@@ -6,7 +6,12 @@ import type {
   GeneratedProperty,
   IngestResult,
 } from '@/lib/admin/tiktokStudioTypes'
-import { VALID_DPE } from '@/lib/admin/tiktokStudioTypes'
+import {
+  VALID_DPE,
+  ARRONDISSEMENT_LABELS,
+  COMMUNES,
+  matchZoneLabel,
+} from '@/lib/admin/tiktokStudioTypes'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -40,6 +45,19 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
   const [deriveError, setDeriveError] = useState<string | null>(null)
   const [properties, setProperties] = useState<GeneratedProperty[]>([])
 
+  // Zones autorisées pour la génération (arrondissements/communes cochés).
+  // Pré-coché sur la zone réelle de la vidéo après analyse.
+  const [zones, setZones] = useState<Set<string>>(new Set())
+
+  const toggleZone = useCallback((z: string) => {
+    setZones((prev) => {
+      const next = new Set(prev)
+      if (next.has(z)) next.delete(z)
+      else next.add(z)
+      return next
+    })
+  }, [])
+
   const headers = {
     'content-type': 'application/json',
     'x-admin-secret': secret,
@@ -51,6 +69,7 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     setIngestError(null)
     setIngest(null)
     setProperties([])
+    setZones(new Set())
     try {
       const res = await fetch('/api/admin/ingest-tiktok', {
         method: 'POST',
@@ -62,7 +81,12 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
         setIngestError(errMessage(data, `Erreur ${res.status}`))
         return
       }
-      setIngest(data as IngestResult)
+      const result = data as IngestResult
+      setIngest(result)
+      // Pré-coche la zone réelle déduite de la caption (arrondissement affiché
+      // à l'écran dans la vidéo). Olivier valide ou en ajoute d'autres.
+      const matched = matchZoneLabel(result.extracted?.arrondissement)
+      setZones(new Set(matched ? [matched] : []))
     } catch (e) {
       setIngestError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -83,6 +107,7 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
           caption: ingest.caption,
           extracted: ingest.extracted,
           count,
+          zones: Array.from(zones),
         }),
       })
       const data = await res.json()
@@ -99,7 +124,7 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
       setGenerating(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingest, generating, count, secret])
+  }, [ingest, generating, count, zones, secret])
 
   const updateProperty = useCallback(
     (idx: number, patch: Partial<GeneratedProperty>) => {
@@ -182,8 +207,61 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
               </div>
             </div>
 
-            {/* Colonne droite — génération + cards */}
+            {/* Colonne droite — zones + génération + cards */}
             <div>
+              {/* Zones autorisées — pré-coché sur l'arrondissement de la vidéo */}
+              <div className="mb-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-neutral-300">
+                    Zones autorisées{' '}
+                    <span className="text-neutral-500">
+                      ({zones.size} cochée{zones.size > 1 ? 's' : ''})
+                    </span>
+                  </span>
+                  <span className="text-xs text-neutral-500">
+                    la génération n&apos;utilisera QUE ces zones
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-neutral-500">
+                  Pré-coché : l&apos;arrondissement déduit de la vidéo. Coche/décoche selon ce
+                  qui est réellement affiché à l&apos;écran.
+                </p>
+
+                <div className="mt-3 text-[11px] uppercase tracking-wide text-neutral-500">
+                  Arrondissements
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {ARRONDISSEMENT_LABELS.map((z) => (
+                    <ZoneChip
+                      key={z}
+                      label={zoneShort(z)}
+                      checked={zones.has(z)}
+                      onClick={() => toggleZone(z)}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-3 text-[11px] uppercase tracking-wide text-neutral-500">
+                  Communes limitrophes
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {COMMUNES.map((z) => (
+                    <ZoneChip
+                      key={z}
+                      label={z}
+                      checked={zones.has(z)}
+                      onClick={() => toggleZone(z)}
+                    />
+                  ))}
+                </div>
+
+                {zones.size === 0 && (
+                  <p className="mt-2 text-[11px] text-amber-400/80">
+                    Aucune zone cochée : la génération variera librement les zones.
+                  </p>
+                )}
+              </div>
+
               <div className="flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
                 <span className="text-sm text-neutral-300">Biens à proposer :</span>
                 <div className="flex items-center gap-1">
@@ -403,5 +481,36 @@ function Chip({ children }: { children: React.ReactNode }) {
     <span className="rounded-full border border-neutral-700 bg-neutral-800 px-2 py-0.5 text-neutral-300">
       {children}
     </span>
+  )
+}
+
+/** "Paris 8ème" → "8ème" pour des puces d'arrondissement compactes. */
+function zoneShort(z: string): string {
+  return z.startsWith('Paris ') ? z.slice(6) : z
+}
+
+function ZoneChip({
+  label,
+  checked,
+  onClick,
+}: {
+  label: string
+  checked: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={checked}
+      className={
+        'rounded-full border px-2.5 py-1 text-xs transition-colors ' +
+        (checked
+          ? 'border-white bg-white font-medium text-neutral-900'
+          : 'border-neutral-700 bg-neutral-950 text-neutral-400 hover:border-neutral-500')
+      }
+    >
+      {label}
+    </button>
   )
 }
