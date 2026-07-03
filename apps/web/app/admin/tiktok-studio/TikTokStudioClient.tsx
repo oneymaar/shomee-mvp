@@ -1,0 +1,407 @@
+'use client'
+
+import { useCallback, useState } from 'react'
+import type {
+  DpeRating,
+  GeneratedProperty,
+  IngestResult,
+} from '@/lib/admin/tiktokStudioTypes'
+import { VALID_DPE } from '@/lib/admin/tiktokStudioTypes'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function errMessage(data: unknown, fallback: string): string {
+  if (data && typeof data === 'object') {
+    const o = data as { message?: unknown; error?: unknown }
+    if (typeof o.message === 'string') return o.message
+    if (typeof o.error === 'string') return o.error
+  }
+  return fallback
+}
+
+function fmtPrice(n: number): string {
+  return n >= 1000 ? `${Math.round(n / 1000)}k€` : `${n}€`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Composant
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function TikTokStudioClient({ secret }: { secret: string }) {
+  const [url, setUrl] = useState('')
+  const [analyzing, setAnalyzing] = useState(false)
+  const [ingestError, setIngestError] = useState<string | null>(null)
+  const [ingest, setIngest] = useState<IngestResult | null>(null)
+
+  const [count, setCount] = useState(6)
+  const [generating, setGenerating] = useState(false)
+  const [deriveError, setDeriveError] = useState<string | null>(null)
+  const [properties, setProperties] = useState<GeneratedProperty[]>([])
+
+  const headers = {
+    'content-type': 'application/json',
+    'x-admin-secret': secret,
+  }
+
+  const analyze = useCallback(async () => {
+    if (!url.trim() || analyzing) return
+    setAnalyzing(true)
+    setIngestError(null)
+    setIngest(null)
+    setProperties([])
+    try {
+      const res = await fetch('/api/admin/ingest-tiktok', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ url: url.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setIngestError(errMessage(data, `Erreur ${res.status}`))
+        return
+      }
+      setIngest(data as IngestResult)
+    } catch (e) {
+      setIngestError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setAnalyzing(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, analyzing, secret])
+
+  const generate = useCallback(async () => {
+    if (!ingest || generating) return
+    setGenerating(true)
+    setDeriveError(null)
+    try {
+      const res = await fetch('/api/admin/derive-properties', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caption: ingest.caption,
+          extracted: ingest.extracted,
+          count,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setDeriveError(errMessage(data, `Erreur ${res.status}`))
+        return
+      }
+      const props = (data as { properties: GeneratedProperty[] }).properties
+      setProperties(props)
+      setCount(props.length)
+    } catch (e) {
+      setDeriveError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setGenerating(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ingest, generating, count, secret])
+
+  const updateProperty = useCallback(
+    (idx: number, patch: Partial<GeneratedProperty>) => {
+      setProperties((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)))
+    },
+    [],
+  )
+
+  const removeProperty = useCallback((idx: number) => {
+    setProperties((prev) => prev.filter((_, i) => i !== idx))
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold">TikTok Studio — biens de démo</h1>
+          <p className="mt-1 text-sm text-neutral-400">
+            Colle une URL TikTok → analyse → propose N biens dérivés. Aucun bien n&apos;est
+            écrit en base à ce stade (Jalons 1 &amp; 2).
+          </p>
+        </header>
+
+        {/* Barre URL */}
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') analyze()
+            }}
+            placeholder="https://www.tiktok.com/@agence/video/…"
+            className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+          />
+          <button
+            onClick={analyze}
+            disabled={analyzing || !url.trim()}
+            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-40"
+          >
+            {analyzing ? 'Analyse…' : 'Analyser'}
+          </button>
+        </div>
+        {ingestError && (
+          <p className="mt-3 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+            {ingestError}
+          </p>
+        )}
+
+        {ingest && (
+          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
+            {/* Colonne gauche — vidéo source + infos extraites */}
+            <div className="lg:sticky lg:top-6 lg:self-start">
+              <div className="overflow-hidden rounded-xl border border-neutral-800 bg-black">
+                <video
+                  src={ingest.videoUrl}
+                  poster={ingest.thumbnailUrl}
+                  controls
+                  playsInline
+                  className="aspect-[9/16] w-full bg-black"
+                />
+              </div>
+              <div className="mt-3 space-y-2 text-xs">
+                <div className="text-neutral-400">
+                  Source : {ingest.source.handle ? `@${ingest.source.handle}` : 'inconnu'} · id{' '}
+                  {ingest.source.videoId}
+                </div>
+                <details className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
+                  <summary className="cursor-pointer text-neutral-300">Caption brute</summary>
+                  <p className="mt-2 whitespace-pre-wrap text-neutral-400">
+                    {ingest.caption || '(vide)'}
+                  </p>
+                </details>
+                <details className="rounded-lg border border-neutral-800 bg-neutral-900 p-3" open>
+                  <summary className="cursor-pointer text-neutral-300">Champs extraits (JSON)</summary>
+                  <pre className="mt-2 overflow-x-auto text-[11px] leading-relaxed text-neutral-400">
+                    {JSON.stringify(ingest.extracted, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            </div>
+
+            {/* Colonne droite — génération + cards */}
+            <div>
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+                <span className="text-sm text-neutral-300">Biens à proposer :</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCount((c) => Math.max(1, c - 1))}
+                    className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center text-sm tabular-nums">{count}</span>
+                  <button
+                    onClick={() => setCount((c) => Math.min(14, c + 1))}
+                    className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  onClick={generate}
+                  disabled={generating}
+                  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-40"
+                >
+                  {generating
+                    ? 'Génération…'
+                    : properties.length
+                      ? 'Régénérer'
+                      : 'Générer les biens'}
+                </button>
+                {properties.length > 0 && (
+                  <span className="text-xs text-neutral-500">{properties.length} proposés</span>
+                )}
+              </div>
+              {deriveError && (
+                <p className="mt-3 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                  {deriveError}
+                </p>
+              )}
+
+              <div className="mt-4 space-y-3">
+                {properties.map((p, i) => (
+                  <PropertyCard
+                    key={i}
+                    index={i}
+                    property={p}
+                    onChange={(patch) => updateProperty(i, patch)}
+                    onRemove={() => removeProperty(i)}
+                  />
+                ))}
+              </div>
+
+              {properties.length > 0 && (
+                <div className="mt-6 rounded-xl border border-dashed border-neutral-700 bg-neutral-900/50 p-4">
+                  <button
+                    disabled
+                    title="Écriture en base — arrive au Jalon 3"
+                    className="cursor-not-allowed rounded-lg bg-emerald-700/40 px-4 py-2 text-sm font-medium text-emerald-200/60"
+                  >
+                    Valider et créer ({properties.length}) — Jalon 3
+                  </button>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    L&apos;écriture en base (isDemoData: true) sera branchée au Jalon 3. Pour
+                    l&apos;instant, aucun bien n&apos;est créé.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card éditable
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PropertyCard({
+  index,
+  property,
+  onChange,
+  onRemove,
+}: {
+  index: number
+  property: GeneratedProperty
+  onChange: (patch: Partial<GeneratedProperty>) => void
+  onRemove: () => void
+}) {
+  const p = property
+  const numPatch = (key: keyof GeneratedProperty) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = Number(e.target.value)
+    onChange({ [key]: Number.isFinite(v) ? v : 0 } as Partial<GeneratedProperty>)
+  }
+  const strPatch = (key: keyof GeneratedProperty) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => onChange({ [key]: e.target.value } as Partial<GeneratedProperty>)
+
+  return (
+    <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs text-neutral-500">
+          <span className="rounded bg-neutral-800 px-2 py-0.5 tabular-nums">#{index + 1}</span>
+          <span>
+            {p.surface} m² · {p.rooms}P · {fmtPrice(p.price)}
+          </span>
+        </div>
+        <button
+          onClick={onRemove}
+          className="text-xs text-neutral-500 hover:text-red-400"
+          title="Retirer ce bien"
+        >
+          retirer
+        </button>
+      </div>
+
+      <input
+        value={p.title}
+        onChange={strPatch('title')}
+        className="mb-2 w-full rounded-lg border border-neutral-700 bg-neutral-950 px-2 py-1.5 text-sm font-medium outline-none focus:border-neutral-500"
+      />
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <Field label="Arrondissement / commune">
+          <input value={p.arrondissement} onChange={strPatch('arrondissement')} className={inputCls} />
+        </Field>
+        <Field label="Quartier">
+          <input value={p.district} onChange={strPatch('district')} className={inputCls} />
+        </Field>
+        <Field label="Prix (€)">
+          <input type="number" value={p.price} onChange={numPatch('price')} className={inputCls} />
+        </Field>
+        <Field label="Surface (m²)">
+          <input type="number" value={p.surface} onChange={numPatch('surface')} className={inputCls} />
+        </Field>
+        <Field label="Pièces">
+          <input type="number" value={p.rooms} onChange={numPatch('rooms')} className={inputCls} />
+        </Field>
+        <Field label="Chambres">
+          <input type="number" value={p.bedrooms} onChange={numPatch('bedrooms')} className={inputCls} />
+        </Field>
+        <Field label="Étage">
+          <input type="number" value={p.floor} onChange={numPatch('floor')} className={inputCls} />
+        </Field>
+        <Field label="DPE">
+          <select
+            value={p.dpe}
+            onChange={(e) => onChange({ dpe: e.target.value as DpeRating })}
+            className={inputCls}
+          >
+            {VALID_DPE.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="GES">
+          <select
+            value={p.ges}
+            onChange={(e) => onChange({ ges: e.target.value as DpeRating })}
+            className={inputCls}
+          >
+            {VALID_DPE.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+        {p.hasTerrace && <Chip>terrasse{p.terraceSurfaceM2 ? ` ${p.terraceSurfaceM2}m²` : ''}</Chip>}
+        {p.hasBalcony && <Chip>balcon</Chip>}
+        {p.hasGarden && <Chip>jardin</Chip>}
+        {p.hasParking && <Chip>parking</Chip>}
+        {p.hasElevator && <Chip>ascenseur</Chip>}
+        {p.hasConcierge && <Chip>gardien</Chip>}
+        {p.hasCellar && <Chip>cave</Chip>}
+      </div>
+
+      <details className="mt-3">
+        <summary className="cursor-pointer text-xs text-neutral-500">Description &amp; détails</summary>
+        <textarea
+          value={p.description}
+          onChange={strPatch('description')}
+          rows={3}
+          className="mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-950 px-2 py-1.5 text-xs outline-none focus:border-neutral-500"
+        />
+        <div className="mt-2 text-[11px] text-neutral-500">
+          Quartier (vibe) : {p.neighborhoodVibe || '—'} · année {p.yearBuilt} · charges{' '}
+          {p.monthlyCharges}€/mois · orientation {p.orientationStructured.join('/') || '—'}
+        </div>
+        <div className="mt-1 text-[11px] text-neutral-500">
+          scores — lum {p.luminosity} · calme {p.quietness} · charme {p.charm} · espace{' '}
+          {p.spaciousness}
+        </div>
+      </details>
+    </div>
+  )
+}
+
+const inputCls =
+  'w-full rounded-lg border border-neutral-700 bg-neutral-950 px-2 py-1.5 text-sm outline-none focus:border-neutral-500'
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] text-neutral-500">{label}</span>
+      {children}
+    </label>
+  )
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full border border-neutral-700 bg-neutral-800 px-2 py-0.5 text-neutral-300">
+      {children}
+    </span>
+  )
+}
