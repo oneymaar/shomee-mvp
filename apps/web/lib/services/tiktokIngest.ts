@@ -27,7 +27,9 @@ const execFileAsync = promisify(execFile)
 
 const TMP_DIR = '/tmp/shomee_tiktok'
 const YTDLP_BIN = process.env.YTDLP_BIN || 'yt-dlp'
-const CLAUDE_MODEL = 'claude-sonnet-4-20250514'
+// Sonnet 4 (claude-sonnet-4-20250514) renvoie un 404 not_found sur le compte —
+// remplacé par le Sonnet courant. scrape-and-seed.ts porte encore l'ancien ID.
+const CLAUDE_MODEL = 'claude-sonnet-4-6'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // URL guard — TikTok-only (Instagram = hors scope, nécessite cookies).
