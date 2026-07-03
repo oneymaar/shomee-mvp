@@ -101,6 +101,7 @@ export function coerceToProperty(raw: unknown): GeneratedProperty | null {
     district: str('district', arrondissement),
     subtitle: str('subtitle', title),
     location: str('location', str('district', arrondissement)),
+    address: str('address'),
     price: Math.round(num('price', 500000)),
     surface: num('surface', 60),
     rooms: Math.round(num('rooms', 3)),
@@ -204,6 +205,7 @@ Chaque bien doit avoir EXACTEMENT ces champs :
   "district": string,         // quartier précis
   "subtitle": string,         // ex: "Appartement haussmannien avec balcon"
   "location": string,         // même que district
+  "address": string,          // adresse exacte PLAUSIBLE : numéro + vraie rue de la zone + CP + ville (ex: "12 rue Saint-Dominique, 75007 Paris"). DOIT être située dans l'arrondissement/commune du bien
   "price": number,            // cohérent avec le standing source
   "surface": number,
   "rooms": number,

@@ -156,6 +156,9 @@ model Property {
   bedrooms              Int?
   location              String
   district              String
+  // Adresse exacte — back-office uniquement, jamais affichée en front. Fondation
+  // du futur chemin IRIS/DVF réel (géocodage → zone IRIS). Nullable : legacy + vrais biens.
+  address               String?
   description           String          @db.Text
   tags                  String[]        @default([])
   features              String[]        @default([])

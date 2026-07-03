@@ -123,6 +123,8 @@ export interface GeneratedProperty {
   district: string
   subtitle: string
   location: string
+  /** Adresse exacte (back-office). Numéro + rue + code postal + ville. */
+  address: string
   price: number
   surface: number
   rooms: number

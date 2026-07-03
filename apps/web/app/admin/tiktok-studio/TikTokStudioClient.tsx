@@ -58,6 +58,11 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     })
   }, [])
 
+  // Jalon 3 — write en base.
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [createdCount, setCreatedCount] = useState<number | null>(null)
+
   const headers = {
     'content-type': 'application/json',
     'x-admin-secret': secret,
@@ -70,6 +75,8 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     setIngest(null)
     setProperties([])
     setZones(new Set())
+    setCreatedCount(null)
+    setCreateError(null)
     try {
       const res = await fetch('/api/admin/ingest-tiktok', {
         method: 'POST',
@@ -99,6 +106,8 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     if (!ingest || generating) return
     setGenerating(true)
     setDeriveError(null)
+    setCreatedCount(null)
+    setCreateError(null)
     try {
       const res = await fetch('/api/admin/derive-properties', {
         method: 'POST',
@@ -125,6 +134,34 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ingest, generating, count, zones, secret])
+
+  const createProperties = useCallback(async () => {
+    if (!ingest || properties.length === 0 || creating) return
+    setCreating(true)
+    setCreateError(null)
+    try {
+      const res = await fetch('/api/admin/create-properties', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          properties,
+          videoUrl: ingest.videoUrl,
+          imageUrlFallback: ingest.thumbnailUrl,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCreateError(errMessage(data, `Erreur ${res.status}`))
+        return
+      }
+      setCreatedCount((data as { count: number }).count)
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setCreating(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ingest, properties, creating, secret])
 
   const updateProperty = useCallback(
     (idx: number, patch: Partial<GeneratedProperty>) => {
@@ -313,18 +350,37 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
               </div>
 
               {properties.length > 0 && (
-                <div className="mt-6 rounded-xl border border-dashed border-neutral-700 bg-neutral-900/50 p-4">
-                  <button
-                    disabled
-                    title="Écriture en base — arrive au Jalon 3"
-                    className="cursor-not-allowed rounded-lg bg-emerald-700/40 px-4 py-2 text-sm font-medium text-emerald-200/60"
-                  >
-                    Valider et créer ({properties.length}) — Jalon 3
-                  </button>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    L&apos;écriture en base (isDemoData: true) sera branchée au Jalon 3. Pour
-                    l&apos;instant, aucun bien n&apos;est créé.
-                  </p>
+                <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+                  {createdCount != null ? (
+                    <p className="text-sm text-emerald-300">
+                      ✓ {createdCount} bien{createdCount > 1 ? 's' : ''} créé
+                      {createdCount > 1 ? 's' : ''} en base (isDemoData). Visible
+                      {createdCount > 1 ? 's' : ''} dans le feed.
+                    </p>
+                  ) : (
+                    <>
+                      <button
+                        onClick={createProperties}
+                        disabled={creating}
+                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                      >
+                        {creating
+                          ? 'Création…'
+                          : `Valider et créer ${properties.length} bien${
+                              properties.length > 1 ? 's' : ''
+                            } en base`}
+                      </button>
+                      <p className="mt-2 text-xs text-neutral-500">
+                        Écrit en base avec isDemoData: true, statut PUBLISHED, adresse incluse.
+                        Action définitive (biens purgeables via isDemoData).
+                      </p>
+                      {createError && (
+                        <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                          {createError}
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -382,6 +438,18 @@ function PropertyCard({
         onChange={strPatch('title')}
         className="mb-2 w-full rounded-lg border border-neutral-700 bg-neutral-950 px-2 py-1.5 text-sm font-medium outline-none focus:border-neutral-500"
       />
+
+      <label className="mb-2 block">
+        <span className="mb-1 block text-[11px] text-neutral-500">
+          Adresse exacte (back-office)
+        </span>
+        <input
+          value={p.address}
+          onChange={strPatch('address')}
+          placeholder="12 rue Saint-Dominique, 75007 Paris"
+          className={inputCls}
+        />
+      </label>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         <Field label="Arrondissement / commune">
