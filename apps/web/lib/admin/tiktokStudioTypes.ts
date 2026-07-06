@@ -30,29 +30,52 @@ function clampRange(r: NumRange, b: NumRange): NumRange {
   return { min: Math.min(min, max), max: Math.max(min, max) }
 }
 
-/**
- * Fourchettes par défaut, ancrées sur la valeur détectée par l'analyse (comme la
- * zone pré-cochée). Bande modérée autour du détecté → variété légère qu'Olivier
- * peut élargir/resserrer ; large par défaut si rien n'a été détecté. Le nombre
- * de pièces (souvent en filigrane) est verrouillé exactement par défaut.
- */
-export function defaultPriceRange(v: number | null | undefined): NumRange {
-  if (v && v > 0) {
-    const round = (x: number) => Math.round(x / 10000) * 10000
-    return clampRange({ min: round(v * 0.9), max: round(v * 1.1) }, PRICE_BOUNDS)
-  }
-  return { min: 400000, max: 3000000 }
+// Prix au m² appliqué aux bornes de surface pour dériver la fourchette de prix.
+const PRICE_PER_SQM_LOW = 10000
+const PRICE_PER_SQM_HIGH = 16000
+// Surface de repli quand l'analyse n'a pas détecté de surface.
+const FALLBACK_SURFACE = 70
+
+/** Barème métier surface (m²) → nombre de pièces. */
+export function roomsForSurface(s: number): number {
+  if (s < 30) return 1
+  if (s < 50) return 2
+  if (s < 80) return 3
+  if (s < 120) return 4
+  if (s < 160) return 5
+  if (s <= 250) return 6
+  return 7
 }
+
+/** Fourchette de surface : ±20 % autour de la surface détectée (repli 70 m²). */
 export function defaultSurfaceRange(v: number | null | undefined): NumRange {
-  if (v && v > 0) return clampRange({ min: v - 10, max: v + 10 }, SURFACE_BOUNDS)
-  return { min: 30, max: 150 }
+  const s = v && v > 0 ? v : FALLBACK_SURFACE
+  return clampRange({ min: Math.round(s * 0.8), max: Math.round(s * 1.2) }, SURFACE_BOUNDS)
 }
-export function defaultRoomsRange(v: number | null | undefined): NumRange {
-  if (v && v > 0) {
-    const n = Math.round(v)
-    return clampRange({ min: n, max: n }, ROOMS_BOUNDS)
-  }
-  return { min: 1, max: 6 }
+
+/**
+ * Fourchettes par défaut ANCRÉES SUR LA SURFACE détectée (comme la zone
+ * pré-cochée) :
+ *  - surface = surface détectée ±20 %
+ *  - pièces  = barème appliqué aux bornes de surface (basse←surface basse, haute←surface haute)
+ *  - prix    = borne basse surface × 10 000 €/m²  →  borne haute surface × 16 000 €/m²
+ * Olivier élargit/resserre ensuite. Surface inconnue → repli 70 m².
+ */
+export function defaultRangesFromSurface(surface: number | null | undefined): {
+  price: NumRange
+  surface: NumRange
+  rooms: NumRange
+} {
+  const s = defaultSurfaceRange(surface)
+  const rooms = clampRange(
+    { min: roomsForSurface(s.min), max: roomsForSurface(s.max) },
+    ROOMS_BOUNDS,
+  )
+  const price = clampRange(
+    { min: s.min * PRICE_PER_SQM_LOW, max: s.max * PRICE_PER_SQM_HIGH },
+    PRICE_BOUNDS,
+  )
+  return { price, surface: s, rooms }
 }
 
 export const VALID_DPE: ReadonlyArray<DpeRating> = ['A', 'B', 'C', 'D', 'E', 'F', 'G']

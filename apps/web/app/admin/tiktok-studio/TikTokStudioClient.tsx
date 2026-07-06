@@ -12,9 +12,7 @@ import {
   ARRONDISSEMENT_LABELS,
   COMMUNES,
   matchZoneLabel,
-  defaultPriceRange,
-  defaultSurfaceRange,
-  defaultRoomsRange,
+  defaultRangesFromSurface,
 } from '@/lib/admin/tiktokStudioTypes'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -81,14 +79,15 @@ interface VideoItem {
 }
 
 function emptyItem(url: string): VideoItem {
+  const r = defaultRangesFromSurface(null)
   return {
     url,
     status: 'pending',
     existingInDb: 0,
     zones: new Set<string>(),
-    priceRange: defaultPriceRange(null),
-    surfaceRange: defaultSurfaceRange(null),
-    roomsRange: defaultRoomsRange(null),
+    priceRange: r.price,
+    surfaceRange: r.surface,
+    roomsRange: r.rooms,
     count: 6,
     properties: [],
     generating: false,
@@ -172,6 +171,7 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
           }
           const ingest = data as IngestResult
           const matched = matchZoneLabel(ingest.extracted?.arrondissement)
+          const r = defaultRangesFromSurface(ingest.extracted?.surface)
           setItems((prev) =>
             prev.map((it, idx) =>
               idx === i
@@ -181,9 +181,9 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
                     ingest,
                     existingInDb: ingest.existingInDb ?? 0,
                     zones: new Set(matched ? [matched] : []),
-                    priceRange: defaultPriceRange(ingest.extracted?.price),
-                    surfaceRange: defaultSurfaceRange(ingest.extracted?.surface),
-                    roomsRange: defaultRoomsRange(ingest.extracted?.rooms),
+                    priceRange: r.price,
+                    surfaceRange: r.surface,
+                    roomsRange: r.rooms,
                   }
                 : it,
             ),
