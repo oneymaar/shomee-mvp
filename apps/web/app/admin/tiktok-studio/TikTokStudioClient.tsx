@@ -34,6 +34,10 @@ function fmtPrice(n: number): string {
   return n >= 1000 ? `${Math.round(n / 1000)}k€` : `${n}€`
 }
 
+function exMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e)
+}
+
 /** "Paris 8ème" → "8ème" pour des puces d'arrondissement compactes. */
 function zoneShort(z: string): string {
   return z.startsWith('Paris ') ? z.slice(6) : z
@@ -199,32 +203,57 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     setAnalyzing(false)
   }, [urlsText, analyzing, headers])
 
-  // ── Génération d'un item ───────────────────────────────────────────────────
+  // ── Requêtes bas niveau (sans état → réutilisables pour chaîner) ────────────
+  const deriveRequest = useCallback(
+    async (item: VideoItem): Promise<GeneratedProperty[]> => {
+      if (!item.ingest) throw new Error('vidéo non analysée')
+      const res = await fetch('/api/admin/derive-properties', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caption: item.ingest.caption,
+          extracted: item.ingest.extracted,
+          count: item.count,
+          zones: Array.from(item.zones),
+          priceRange: item.priceRange,
+          surfaceRange: item.surfaceRange,
+          roomsRange: item.roomsRange,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(errMessage(data, `Erreur ${res.status}`))
+      return (data as { properties: GeneratedProperty[] }).properties
+    },
+    [headers],
+  )
+
+  const createRequest = useCallback(
+    async (item: VideoItem, props: GeneratedProperty[]): Promise<number> => {
+      if (!item.ingest) throw new Error('vidéo non analysée')
+      const res = await fetch('/api/admin/create-properties', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          properties: props,
+          videoUrl: item.ingest.videoUrl,
+          imageUrlFallback: item.ingest.thumbnailUrl,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(errMessage(data, `Erreur ${res.status}`))
+      return (data as { count: number }).count
+    },
+    [headers],
+  )
+
+  // ── Aperçu : générer un item (sans créer) — optionnel ──────────────────────
   const generateItem = useCallback(
     async (i: number) => {
       const item = itemsRef.current[i]
       if (!item?.ingest || item.generating) return
       patchItem(i, { generating: true, deriveError: undefined })
       try {
-        const res = await fetch('/api/admin/derive-properties', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            caption: item.ingest.caption,
-            extracted: item.ingest.extracted,
-            count: item.count,
-            zones: Array.from(item.zones),
-            priceRange: item.priceRange,
-            surfaceRange: item.surfaceRange,
-            roomsRange: item.roomsRange,
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) {
-          patchItem(i, { deriveError: errMessage(data, `Erreur ${res.status}`) })
-          return
-        }
-        const props = (data as { properties: GeneratedProperty[] }).properties
+        const props = await deriveRequest(item)
         patchItem(i, {
           properties: props,
           count: props.length,
@@ -232,15 +261,15 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
           createError: undefined,
         })
       } catch (e) {
-        patchItem(i, { deriveError: e instanceof Error ? e.message : String(e) })
+        patchItem(i, { deriveError: exMsg(e) })
       } finally {
         patchItem(i, { generating: false })
       }
     },
-    [patchItem, headers],
+    [patchItem, deriveRequest],
   )
 
-  // ── Création d'un item ─────────────────────────────────────────────────────
+  // ── Créer un item déjà généré — optionnel ──────────────────────────────────
   const createItem = useCallback(
     async (i: number) => {
       const item = itemsRef.current[i]
@@ -248,59 +277,69 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
         return
       patchItem(i, { creating: true, createError: undefined })
       try {
-        const res = await fetch('/api/admin/create-properties', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            properties: item.properties,
-            videoUrl: item.ingest.videoUrl,
-            imageUrlFallback: item.ingest.thumbnailUrl,
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) {
-          patchItem(i, { createError: errMessage(data, `Erreur ${res.status}`) })
-          return
-        }
-        patchItem(i, { createdCount: (data as { count: number }).count })
+        const count = await createRequest(item, item.properties)
+        patchItem(i, { createdCount: count })
       } catch (e) {
-        patchItem(i, { createError: e instanceof Error ? e.message : String(e) })
+        patchItem(i, { createError: exMsg(e) })
       } finally {
         patchItem(i, { creating: false })
       }
     },
-    [patchItem, headers],
+    [patchItem, createRequest],
   )
 
-  const generateAll = useCallback(async () => {
-    const idxs = itemsRef.current
-      .map((it, i) => ({ it, i }))
-      .filter(({ it }) => it.status === 'ok' && it.properties.length === 0 && !it.generating)
-      .map(({ i }) => i)
-    await runPool(idxs, (i) => generateItem(i), 2)
-  }, [generateItem])
+  // ── Générer PUIS créer un item, sans validation manuelle. Réutilise les biens
+  //    déjà générés (aperçu édité) s'il y en a, sinon génère à la volée. ───────
+  const generateAndCreateItem = useCallback(
+    async (i: number) => {
+      const item = itemsRef.current[i]
+      if (!item?.ingest || item.generating || item.creating || item.createdCount != null) return
+      patchItem(i, {
+        generating: true,
+        creating: true,
+        deriveError: undefined,
+        createError: undefined,
+      })
+      try {
+        let props = item.properties
+        if (props.length === 0) {
+          try {
+            props = await deriveRequest(item)
+            patchItem(i, { properties: props, count: props.length })
+          } catch (e) {
+            patchItem(i, { deriveError: exMsg(e) })
+            return
+          }
+        }
+        patchItem(i, { generating: false })
+        const count = await createRequest(item, props)
+        patchItem(i, { createdCount: count })
+      } catch (e) {
+        patchItem(i, { createError: exMsg(e) })
+      } finally {
+        patchItem(i, { generating: false, creating: false })
+      }
+    },
+    [patchItem, deriveRequest, createRequest],
+  )
 
-  const createAll = useCallback(async () => {
+  // ── UN CLIC : générer + créer toutes les vidéos ok non encore créées ────────
+  const runAll = useCallback(async () => {
     const idxs = itemsRef.current
       .map((it, i) => ({ it, i }))
       .filter(
-        ({ it }) =>
-          it.status === 'ok' && it.properties.length > 0 && it.createdCount == null && !it.creating,
+        ({ it }) => it.status === 'ok' && it.createdCount == null && !it.creating && !it.generating,
       )
       .map(({ i }) => i)
-    await runPool(idxs, (i) => createItem(i), 2)
-  }, [createItem])
+    await runPool(idxs, (i) => generateAndCreateItem(i), 2)
+  }, [generateAndCreateItem])
 
   // ── Compteurs dérivés ──────────────────────────────────────────────────────
   const okCount = items.filter((i) => i.status === 'ok').length
   const failedCount = items.filter((i) => i.status === 'failed').length
   const pendingCount = items.filter((i) => i.status === 'pending' || i.status === 'ingesting').length
-  const proposedTotal = items.reduce((n, i) => n + i.properties.length, 0)
   const createdTotal = items.reduce((n, i) => n + (i.createdCount ?? 0), 0)
-  const canGenerateAll = items.some((i) => i.status === 'ok' && i.properties.length === 0)
-  const canCreateAll = items.some(
-    (i) => i.status === 'ok' && i.properties.length > 0 && i.createdCount == null,
-  )
+  const toDoCount = items.filter((i) => i.status === 'ok' && i.createdCount == null).length
   const busy = items.some((i) => i.generating || i.creating)
 
   return (
@@ -333,33 +372,30 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
           </button>
         </div>
 
-        {/* Barre batch (multi-vidéos) */}
-        {items.length > 1 && (
+        {/* Barre d'action — un clic pour tout générer + créer */}
+        {items.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3 text-sm">
             <span className="text-neutral-300">
               {okCount} ok
-              {failedCount > 0 && <span className="text-red-400"> · {failedCount} échec{failedCount > 1 ? 's' : ''}</span>}
-              {pendingCount > 0 && <span className="text-neutral-500"> · {pendingCount} en cours…</span>}
+              {failedCount > 0 && (
+                <span className="text-red-400">
+                  {' '}
+                  · {failedCount} échec{failedCount > 1 ? 's' : ''}
+                </span>
+              )}
+              {pendingCount > 0 && (
+                <span className="text-neutral-500"> · {pendingCount} en cours…</span>
+              )}
             </span>
-            <span className="text-neutral-500">
-              {proposedTotal} proposés · {createdTotal} créés
-            </span>
-            <div className="ml-auto flex gap-2">
-              <button
-                onClick={generateAll}
-                disabled={!canGenerateAll || busy}
-                className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs disabled:opacity-40"
-              >
-                Tout générer
-              </button>
-              <button
-                onClick={createAll}
-                disabled={!canCreateAll || busy}
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
-              >
-                Tout créer
-              </button>
-            </div>
+            <span className="text-neutral-500">{createdTotal} biens créés</span>
+            <button
+              onClick={runAll}
+              disabled={toDoCount === 0 || busy || pendingCount > 0}
+              className="ml-auto rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+              title="Génère et crée automatiquement tous les biens des vidéos ok — aucune validation par bien"
+            >
+              {busy ? 'Génération + création…' : `Générer et créer tout (${toDoCount})`}
+            </button>
           </div>
         )}
 
