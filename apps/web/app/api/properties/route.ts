@@ -120,7 +120,9 @@ export async function GET(req: NextRequest) {
 
     if (!buyerProfileId) {
       return NextResponse.json(
-        properties.map((p) => projectPropertyExtras(p, toViewProperty(p))),
+        dedupeByVideoUrl(properties, (p) => p.videoUrl).map((p) =>
+          projectPropertyExtras(p, toViewProperty(p)),
+        ),
       )
     }
 
@@ -130,7 +132,9 @@ export async function GET(req: NextRequest) {
       // l'UI ; le badge restera absent côté client.
       console.warn(`[GET /api/properties] buyerProfile ${buyerProfileId} introuvable`)
       return NextResponse.json(
-        properties.map((p) => projectPropertyExtras(p, toViewProperty(p))),
+        dedupeByVideoUrl(properties, (p) => p.videoUrl).map((p) =>
+          projectPropertyExtras(p, toViewProperty(p)),
+        ),
       )
     }
 
@@ -195,22 +199,45 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * Déduplication par vidéo : au plus un bien par `videoUrl` dans un même jeu de
+ * résultats. Plusieurs biens (démo ou seed synthétique) partagent la même vidéo
+ * source — on ne veut jamais tomber deux fois sur la même vidéo dans une même
+ * recherche. L'ordre d'entrée décide du gagnant (déjà trié par score, ou par
+ * date). Les biens sans vidéo (`videoUrl` null) sont toujours conservés.
+ */
+function dedupeByVideoUrl<T>(items: T[], getUrl: (x: T) => string | null): T[] {
+  const seen = new Set<string>()
+  const out: T[] = []
+  for (const it of items) {
+    const url = getUrl(it)
+    if (url) {
+      if (seen.has(url)) continue
+      seen.add(url)
+    }
+    out.push(it)
+  }
+  return out
+}
+
+/**
  * Shared scoring + projection pipeline. Excluded properties are dropped;
- * survivors are sorted by descending global score and decorated with the
- * agency/chapters/matchScore overlay needed by the feed.
+ * survivors are sorted by descending global score, deduped by video, and
+ * decorated with the agency/chapters/matchScore overlay needed by the feed.
  */
 function scoreAndProject(
   properties: PrismaPropertyWithRels[],
   brief: UserCriteriaBrief,
 ): ViewProperty[] {
-  return properties
+  const ranked = properties
     .map((p) => ({
       property: p,
       result: matchProperty(toPropertyProfile(p), brief),
     }))
     .filter(({ result }) => !result.is_excluded)
     .sort((a, b) => b.result.global_score - a.result.global_score)
-    .map(({ property, result }) => {
+
+  return dedupeByVideoUrl(ranked, ({ property }) => property.videoUrl).map(
+    ({ property, result }) => {
       const view = toViewProperty(property)
       const enriched = projectPropertyExtras(property, view)
       return {
@@ -218,5 +245,6 @@ function scoreAndProject(
         matchScore: result.global_score / 100,
         isExcluded: result.is_excluded,
       }
-    })
+    },
+  )
 }
