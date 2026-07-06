@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { prisma } from '@/lib/prisma'
 import { checkAdminSecret } from '@/lib/auth/adminSecret'
 import {
   isTikTokUrl,
@@ -86,11 +87,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'extraction_failed', message }, { status: 502 })
     }
 
+    // Dédup inter-sessions : combien de biens existent déjà pour cette vidéo
+    // (même public_id Cloudinary = md5 de l'URL). Non bloquant — juste un flag.
+    let existingInDb = 0
+    try {
+      existingInDb = await prisma.property.count({
+        where: { videoUrl: { contains: `shomee/videos/${dl.prefix}` } },
+      })
+    } catch {
+      /* non bloquant */
+    }
+
     const result: IngestResult = {
       videoUrl: upload.videoUrl,
       thumbnailUrl: upload.thumbnailUrl,
       caption: dl.caption,
       extracted,
+      existingInDb,
       source: {
         videoId: dl.videoId,
         handle: dl.handle,

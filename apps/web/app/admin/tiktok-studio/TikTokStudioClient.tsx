@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   DpeRating,
   GeneratedProperty,
@@ -30,149 +30,262 @@ function fmtPrice(n: number): string {
   return n >= 1000 ? `${Math.round(n / 1000)}k€` : `${n}€`
 }
 
+/** "Paris 8ème" → "8ème" pour des puces d'arrondissement compactes. */
+function zoneShort(z: string): string {
+  return z.startsWith('Paris ') ? z.slice(6) : z
+}
+
+/** Pool de concurrence : exécute `worker` sur chaque item, `n` en parallèle max. */
+async function runPool<T>(items: T[], worker: (item: T) => Promise<void>, n: number): Promise<void> {
+  let idx = 0
+  const runners = Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (idx < items.length) {
+      const cur = items[idx++]
+      await worker(cur)
+    }
+  })
+  await Promise.all(runners)
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Composant
+// État par vidéo
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ItemStatus = 'pending' | 'ingesting' | 'ok' | 'failed'
+
+interface VideoItem {
+  url: string
+  status: ItemStatus
+  error?: string
+  ingest?: IngestResult
+  existingInDb: number
+  zones: Set<string>
+  count: number
+  properties: GeneratedProperty[]
+  generating: boolean
+  deriveError?: string
+  creating: boolean
+  createError?: string
+  createdCount: number | null
+}
+
+function emptyItem(url: string): VideoItem {
+  return {
+    url,
+    status: 'pending',
+    existingInDb: 0,
+    zones: new Set<string>(),
+    count: 6,
+    properties: [],
+    generating: false,
+    creating: false,
+    createdCount: null,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Composant racine
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function TikTokStudioClient({ secret }: { secret: string }) {
-  const [url, setUrl] = useState('')
+  const [urlsText, setUrlsText] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
-  const [ingestError, setIngestError] = useState<string | null>(null)
-  const [ingest, setIngest] = useState<IngestResult | null>(null)
+  const [items, setItems] = useState<VideoItem[]>([])
 
-  const [count, setCount] = useState(6)
-  const [generating, setGenerating] = useState(false)
-  const [deriveError, setDeriveError] = useState<string | null>(null)
-  const [properties, setProperties] = useState<GeneratedProperty[]>([])
+  // Ref pour lire l'état courant dans les callbacks async (évite les closures périmées).
+  const itemsRef = useRef(items)
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
 
-  // Zones autorisées pour la génération (arrondissements/communes cochés).
-  // Pré-coché sur la zone réelle de la vidéo après analyse.
-  const [zones, setZones] = useState<Set<string>>(new Set())
-
-  const toggleZone = useCallback((z: string) => {
-    setZones((prev) => {
-      const next = new Set(prev)
-      if (next.has(z)) next.delete(z)
-      else next.add(z)
-      return next
-    })
-  }, [])
-
-  // Jalon 3 — write en base.
-  const [creating, setCreating] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-  const [createdCount, setCreatedCount] = useState<number | null>(null)
-
-  const headers = {
-    'content-type': 'application/json',
-    'x-admin-secret': secret,
-  }
-
-  const analyze = useCallback(async () => {
-    if (!url.trim() || analyzing) return
-    setAnalyzing(true)
-    setIngestError(null)
-    setIngest(null)
-    setProperties([])
-    setZones(new Set())
-    setCreatedCount(null)
-    setCreateError(null)
-    try {
-      const res = await fetch('/api/admin/ingest-tiktok', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ url: url.trim() }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setIngestError(errMessage(data, `Erreur ${res.status}`))
-        return
-      }
-      const result = data as IngestResult
-      setIngest(result)
-      // Pré-coche la zone réelle déduite de la caption (arrondissement affiché
-      // à l'écran dans la vidéo). Olivier valide ou en ajoute d'autres.
-      const matched = matchZoneLabel(result.extracted?.arrondissement)
-      setZones(new Set(matched ? [matched] : []))
-    } catch (e) {
-      setIngestError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setAnalyzing(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, analyzing, secret])
-
-  const generate = useCallback(async () => {
-    if (!ingest || generating) return
-    setGenerating(true)
-    setDeriveError(null)
-    setCreatedCount(null)
-    setCreateError(null)
-    try {
-      const res = await fetch('/api/admin/derive-properties', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          caption: ingest.caption,
-          extracted: ingest.extracted,
-          count,
-          zones: Array.from(zones),
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setDeriveError(errMessage(data, `Erreur ${res.status}`))
-        return
-      }
-      const props = (data as { properties: GeneratedProperty[] }).properties
-      setProperties(props)
-      setCount(props.length)
-    } catch (e) {
-      setDeriveError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setGenerating(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingest, generating, count, zones, secret])
-
-  const createProperties = useCallback(async () => {
-    if (!ingest || properties.length === 0 || creating) return
-    setCreating(true)
-    setCreateError(null)
-    try {
-      const res = await fetch('/api/admin/create-properties', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          properties,
-          videoUrl: ingest.videoUrl,
-          imageUrlFallback: ingest.thumbnailUrl,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setCreateError(errMessage(data, `Erreur ${res.status}`))
-        return
-      }
-      setCreatedCount((data as { count: number }).count)
-    } catch (e) {
-      setCreateError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setCreating(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ingest, properties, creating, secret])
-
-  const updateProperty = useCallback(
-    (idx: number, patch: Partial<GeneratedProperty>) => {
-      setProperties((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)))
-    },
-    [],
+  const headers = useMemo(
+    () => ({ 'content-type': 'application/json', 'x-admin-secret': secret }),
+    [secret],
   )
 
-  const removeProperty = useCallback((idx: number) => {
-    setProperties((prev) => prev.filter((_, i) => i !== idx))
+  // URLs uniques (dédup intra-liste) pour le libellé du bouton.
+  const urlCount = useMemo(() => {
+    const seen = new Set<string>()
+    for (const raw of urlsText.split('\n')) {
+      const u = raw.trim()
+      if (u) seen.add(u)
+    }
+    return seen.size
+  }, [urlsText])
+
+  const patchItem = useCallback((i: number, patch: Partial<VideoItem>) => {
+    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, ...patch } : it)))
   }, [])
+
+  // ── Analyse batch ────────────────────────────────────────────────────────
+  const analyzeAll = useCallback(async () => {
+    if (analyzing) return
+    // Parse + dédup intra-liste.
+    const seen = new Set<string>()
+    const urls: string[] = []
+    for (const raw of urlsText.split('\n')) {
+      const u = raw.trim()
+      if (!u || seen.has(u)) continue
+      seen.add(u)
+      urls.push(u)
+    }
+    if (urls.length === 0) return
+
+    setAnalyzing(true)
+    const initial = urls.map(emptyItem)
+    setItems(initial)
+
+    await runPool(
+      urls.map((_, i) => i),
+      async (i) => {
+        setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, status: 'ingesting' } : it)))
+        try {
+          const res = await fetch('/api/admin/ingest-tiktok', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ url: urls[i] }),
+          })
+          const data = await res.json()
+          if (!res.ok) {
+            setItems((prev) =>
+              prev.map((it, idx) =>
+                idx === i
+                  ? { ...it, status: 'failed', error: errMessage(data, `Erreur ${res.status}`) }
+                  : it,
+              ),
+            )
+            return
+          }
+          const ingest = data as IngestResult
+          const matched = matchZoneLabel(ingest.extracted?.arrondissement)
+          setItems((prev) =>
+            prev.map((it, idx) =>
+              idx === i
+                ? {
+                    ...it,
+                    status: 'ok',
+                    ingest,
+                    existingInDb: ingest.existingInDb ?? 0,
+                    zones: new Set(matched ? [matched] : []),
+                  }
+                : it,
+            ),
+          )
+        } catch (e) {
+          setItems((prev) =>
+            prev.map((it, idx) =>
+              idx === i
+                ? { ...it, status: 'failed', error: e instanceof Error ? e.message : String(e) }
+                : it,
+            ),
+          )
+        }
+      },
+      3,
+    )
+    setAnalyzing(false)
+  }, [urlsText, analyzing, headers])
+
+  // ── Génération d'un item ───────────────────────────────────────────────────
+  const generateItem = useCallback(
+    async (i: number) => {
+      const item = itemsRef.current[i]
+      if (!item?.ingest || item.generating) return
+      patchItem(i, { generating: true, deriveError: undefined })
+      try {
+        const res = await fetch('/api/admin/derive-properties', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            caption: item.ingest.caption,
+            extracted: item.ingest.extracted,
+            count: item.count,
+            zones: Array.from(item.zones),
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          patchItem(i, { deriveError: errMessage(data, `Erreur ${res.status}`) })
+          return
+        }
+        const props = (data as { properties: GeneratedProperty[] }).properties
+        patchItem(i, {
+          properties: props,
+          count: props.length,
+          createdCount: null,
+          createError: undefined,
+        })
+      } catch (e) {
+        patchItem(i, { deriveError: e instanceof Error ? e.message : String(e) })
+      } finally {
+        patchItem(i, { generating: false })
+      }
+    },
+    [patchItem, headers],
+  )
+
+  // ── Création d'un item ─────────────────────────────────────────────────────
+  const createItem = useCallback(
+    async (i: number) => {
+      const item = itemsRef.current[i]
+      if (!item?.ingest || item.properties.length === 0 || item.creating || item.createdCount != null)
+        return
+      patchItem(i, { creating: true, createError: undefined })
+      try {
+        const res = await fetch('/api/admin/create-properties', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            properties: item.properties,
+            videoUrl: item.ingest.videoUrl,
+            imageUrlFallback: item.ingest.thumbnailUrl,
+          }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          patchItem(i, { createError: errMessage(data, `Erreur ${res.status}`) })
+          return
+        }
+        patchItem(i, { createdCount: (data as { count: number }).count })
+      } catch (e) {
+        patchItem(i, { createError: e instanceof Error ? e.message : String(e) })
+      } finally {
+        patchItem(i, { creating: false })
+      }
+    },
+    [patchItem, headers],
+  )
+
+  const generateAll = useCallback(async () => {
+    const idxs = itemsRef.current
+      .map((it, i) => ({ it, i }))
+      .filter(({ it }) => it.status === 'ok' && it.properties.length === 0 && !it.generating)
+      .map(({ i }) => i)
+    await runPool(idxs, (i) => generateItem(i), 2)
+  }, [generateItem])
+
+  const createAll = useCallback(async () => {
+    const idxs = itemsRef.current
+      .map((it, i) => ({ it, i }))
+      .filter(
+        ({ it }) =>
+          it.status === 'ok' && it.properties.length > 0 && it.createdCount == null && !it.creating,
+      )
+      .map(({ i }) => i)
+    await runPool(idxs, (i) => createItem(i), 2)
+  }, [createItem])
+
+  // ── Compteurs dérivés ──────────────────────────────────────────────────────
+  const okCount = items.filter((i) => i.status === 'ok').length
+  const failedCount = items.filter((i) => i.status === 'failed').length
+  const pendingCount = items.filter((i) => i.status === 'pending' || i.status === 'ingesting').length
+  const proposedTotal = items.reduce((n, i) => n + i.properties.length, 0)
+  const createdTotal = items.reduce((n, i) => n + (i.createdCount ?? 0), 0)
+  const canGenerateAll = items.some((i) => i.status === 'ok' && i.properties.length === 0)
+  const canCreateAll = items.some(
+    (i) => i.status === 'ok' && i.properties.length > 0 && i.createdCount == null,
+  )
+  const busy = items.some((i) => i.generating || i.creating)
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
@@ -180,212 +293,280 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
         <header className="mb-6">
           <h1 className="text-2xl font-semibold">TikTok Studio — biens de démo</h1>
           <p className="mt-1 text-sm text-neutral-400">
-            Colle une URL TikTok → analyse → propose N biens dérivés. Aucun bien n&apos;est
-            écrit en base à ce stade (Jalons 1 &amp; 2).
+            Colle une ou plusieurs URLs TikTok (une par ligne) → analyse → propose N biens
+            dérivés par vidéo → valide/édite → crée en base (isDemoData). Les échecs de download
+            n&apos;affectent que leur ligne ; les URLs en double sont ignorées.
           </p>
         </header>
 
-        {/* Barre URL */}
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') analyze()
-            }}
-            placeholder="https://www.tiktok.com/@agence/video/…"
-            className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+        {/* Saisie multi-URL */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <textarea
+            value={urlsText}
+            onChange={(e) => setUrlsText(e.target.value)}
+            placeholder={'Une URL TikTok par ligne (colle jusqu’à ~50)…'}
+            rows={items.length > 0 ? 2 : 4}
+            className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 font-mono text-xs outline-none focus:border-neutral-500"
           />
           <button
-            onClick={analyze}
-            disabled={analyzing || !url.trim()}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-40"
+            onClick={analyzeAll}
+            disabled={analyzing || urlCount === 0}
+            className="h-10 shrink-0 rounded-lg bg-white px-4 text-sm font-medium text-neutral-900 disabled:opacity-40"
           >
-            {analyzing ? 'Analyse…' : 'Analyser'}
+            {analyzing ? 'Analyse…' : `Analyser${urlCount > 1 ? ` (${urlCount})` : ''}`}
           </button>
         </div>
-        {ingestError && (
-          <p className="mt-3 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-            {ingestError}
-          </p>
-        )}
 
-        {ingest && (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
-            {/* Colonne gauche — vidéo source + infos extraites */}
-            <div className="lg:sticky lg:top-6 lg:self-start">
-              <div className="overflow-hidden rounded-xl border border-neutral-800 bg-black">
-                <video
-                  src={ingest.videoUrl}
-                  poster={ingest.thumbnailUrl}
-                  controls
-                  playsInline
-                  className="aspect-[9/16] w-full bg-black"
-                />
-              </div>
-              <div className="mt-3 space-y-2 text-xs">
-                <div className="text-neutral-400">
-                  Source : {ingest.source.handle ? `@${ingest.source.handle}` : 'inconnu'} · id{' '}
-                  {ingest.source.videoId}
-                </div>
-                <details className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-                  <summary className="cursor-pointer text-neutral-300">Caption brute</summary>
-                  <p className="mt-2 whitespace-pre-wrap text-neutral-400">
-                    {ingest.caption || '(vide)'}
-                  </p>
-                </details>
-                <details className="rounded-lg border border-neutral-800 bg-neutral-900 p-3" open>
-                  <summary className="cursor-pointer text-neutral-300">Champs extraits (JSON)</summary>
-                  <pre className="mt-2 overflow-x-auto text-[11px] leading-relaxed text-neutral-400">
-                    {JSON.stringify(ingest.extracted, null, 2)}
-                  </pre>
-                </details>
-              </div>
-            </div>
-
-            {/* Colonne droite — zones + génération + cards */}
-            <div>
-              {/* Zones autorisées — pré-coché sur l'arrondissement de la vidéo */}
-              <div className="mb-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-neutral-300">
-                    Zones autorisées{' '}
-                    <span className="text-neutral-500">
-                      ({zones.size} cochée{zones.size > 1 ? 's' : ''})
-                    </span>
-                  </span>
-                  <span className="text-xs text-neutral-500">
-                    la génération n&apos;utilisera QUE ces zones
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-neutral-500">
-                  Pré-coché : l&apos;arrondissement déduit de la vidéo. Coche/décoche selon ce
-                  qui est réellement affiché à l&apos;écran.
-                </p>
-
-                <div className="mt-3 text-[11px] uppercase tracking-wide text-neutral-500">
-                  Arrondissements
-                </div>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {ARRONDISSEMENT_LABELS.map((z) => (
-                    <ZoneChip
-                      key={z}
-                      label={zoneShort(z)}
-                      checked={zones.has(z)}
-                      onClick={() => toggleZone(z)}
-                    />
-                  ))}
-                </div>
-
-                <div className="mt-3 text-[11px] uppercase tracking-wide text-neutral-500">
-                  Communes limitrophes
-                </div>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {COMMUNES.map((z) => (
-                    <ZoneChip
-                      key={z}
-                      label={z}
-                      checked={zones.has(z)}
-                      onClick={() => toggleZone(z)}
-                    />
-                  ))}
-                </div>
-
-                {zones.size === 0 && (
-                  <p className="mt-2 text-[11px] text-amber-400/80">
-                    Aucune zone cochée : la génération variera librement les zones.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
-                <span className="text-sm text-neutral-300">Biens à proposer :</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCount((c) => Math.max(1, c - 1))}
-                    className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
-                  >
-                    −
-                  </button>
-                  <span className="w-8 text-center text-sm tabular-nums">{count}</span>
-                  <button
-                    onClick={() => setCount((c) => Math.min(14, c + 1))}
-                    className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
-                  >
-                    +
-                  </button>
-                </div>
-                <button
-                  onClick={generate}
-                  disabled={generating}
-                  className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-40"
-                >
-                  {generating
-                    ? 'Génération…'
-                    : properties.length
-                      ? 'Régénérer'
-                      : 'Générer les biens'}
-                </button>
-                {properties.length > 0 && (
-                  <span className="text-xs text-neutral-500">{properties.length} proposés</span>
-                )}
-              </div>
-              {deriveError && (
-                <p className="mt-3 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                  {deriveError}
-                </p>
-              )}
-
-              <div className="mt-4 space-y-3">
-                {properties.map((p, i) => (
-                  <PropertyCard
-                    key={i}
-                    index={i}
-                    property={p}
-                    onChange={(patch) => updateProperty(i, patch)}
-                    onRemove={() => removeProperty(i)}
-                  />
-                ))}
-              </div>
-
-              {properties.length > 0 && (
-                <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-                  {createdCount != null ? (
-                    <p className="text-sm text-emerald-300">
-                      ✓ {createdCount} bien{createdCount > 1 ? 's' : ''} créé
-                      {createdCount > 1 ? 's' : ''} en base (isDemoData). Visible
-                      {createdCount > 1 ? 's' : ''} dans le feed.
-                    </p>
-                  ) : (
-                    <>
-                      <button
-                        onClick={createProperties}
-                        disabled={creating}
-                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
-                      >
-                        {creating
-                          ? 'Création…'
-                          : `Valider et créer ${properties.length} bien${
-                              properties.length > 1 ? 's' : ''
-                            } en base`}
-                      </button>
-                      <p className="mt-2 text-xs text-neutral-500">
-                        Écrit en base avec isDemoData: true, statut PUBLISHED, adresse incluse.
-                        Action définitive (biens purgeables via isDemoData).
-                      </p>
-                      {createError && (
-                        <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                          {createError}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
+        {/* Barre batch (multi-vidéos) */}
+        {items.length > 1 && (
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3 text-sm">
+            <span className="text-neutral-300">
+              {okCount} ok
+              {failedCount > 0 && <span className="text-red-400"> · {failedCount} échec{failedCount > 1 ? 's' : ''}</span>}
+              {pendingCount > 0 && <span className="text-neutral-500"> · {pendingCount} en cours…</span>}
+            </span>
+            <span className="text-neutral-500">
+              {proposedTotal} proposés · {createdTotal} créés
+            </span>
+            <div className="ml-auto flex gap-2">
+              <button
+                onClick={generateAll}
+                disabled={!canGenerateAll || busy}
+                className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs disabled:opacity-40"
+              >
+                Tout générer
+              </button>
+              <button
+                onClick={createAll}
+                disabled={!canCreateAll || busy}
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+              >
+                Tout créer
+              </button>
             </div>
           </div>
         )}
+
+        {/* Panneaux vidéo */}
+        <div className="mt-6 space-y-6">
+          {items.map((it, i) => (
+            <VideoPanel
+              key={it.url}
+              item={it}
+              patch={(p) => patchItem(i, p)}
+              onGenerate={() => generateItem(i)}
+              onCreate={() => createItem(i)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Panneau d'une vidéo
+// ─────────────────────────────────────────────────────────────────────────────
+
+function VideoPanel({
+  item,
+  patch,
+  onGenerate,
+  onCreate,
+}: {
+  item: VideoItem
+  patch: (p: Partial<VideoItem>) => void
+  onGenerate: () => void
+  onCreate: () => void
+}) {
+  if (item.status === 'failed') {
+    return (
+      <div className="rounded-xl border border-red-900/60 bg-red-950/20 p-4">
+        <div className="truncate text-sm text-neutral-300">{item.url}</div>
+        <div className="mt-1 text-xs text-red-300">✗ {item.error}</div>
+      </div>
+    )
+  }
+  if (item.status !== 'ok' || !item.ingest) {
+    return (
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+        <div className="truncate text-sm text-neutral-400">{item.url}</div>
+        <div className="mt-1 text-xs text-neutral-500">
+          {item.status === 'ingesting' ? 'Analyse en cours…' : 'En attente…'}
+        </div>
+      </div>
+    )
+  }
+
+  const ingest = item.ingest
+
+  const toggleZone = (z: string) => {
+    const next = new Set(item.zones)
+    if (next.has(z)) next.delete(z)
+    else next.add(z)
+    patch({ zones: next })
+  }
+  const updateProperty = (idx: number, p: Partial<GeneratedProperty>) =>
+    patch({ properties: item.properties.map((pp, ii) => (ii === idx ? { ...pp, ...p } : pp)) })
+  const removeProperty = (idx: number) =>
+    patch({ properties: item.properties.filter((_, ii) => ii !== idx) })
+
+  return (
+    <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_1fr]">
+        {/* Vidéo + source */}
+        <div>
+          <div className="overflow-hidden rounded-xl border border-neutral-800 bg-black">
+            <video
+              src={ingest.videoUrl}
+              poster={ingest.thumbnailUrl}
+              controls
+              playsInline
+              className="aspect-[9/16] w-full bg-black"
+            />
+          </div>
+          <div className="mt-2 text-xs text-neutral-400">
+            {ingest.source.handle ? `@${ingest.source.handle}` : 'source inconnue'} ·{' '}
+            {ingest.extracted.arrondissement}
+          </div>
+          {item.existingInDb > 0 && (
+            <div className="mt-2 rounded-lg border border-amber-900/60 bg-amber-950/30 px-2 py-1 text-[11px] text-amber-300">
+              ⚠ Déjà {item.existingInDb} bien{item.existingInDb > 1 ? 's' : ''} en base pour cette
+              vidéo (dédup).
+            </div>
+          )}
+          <details className="mt-2 rounded-lg border border-neutral-800 bg-neutral-900 p-2 text-xs">
+            <summary className="cursor-pointer text-neutral-300">Caption &amp; champs extraits</summary>
+            <p className="mt-2 whitespace-pre-wrap text-neutral-400">{ingest.caption || '(vide)'}</p>
+            <pre className="mt-2 overflow-x-auto text-[11px] text-neutral-500">
+              {JSON.stringify(ingest.extracted, null, 2)}
+            </pre>
+          </details>
+        </div>
+
+        {/* Zones + génération + cards */}
+        <div>
+          {/* Zones autorisées */}
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-neutral-300">
+                Zones autorisées{' '}
+                <span className="text-neutral-500">({item.zones.size})</span>
+              </span>
+              <span className="text-xs text-neutral-500">génération = uniquement ces zones</span>
+            </div>
+            <div className="mt-2 text-[11px] uppercase tracking-wide text-neutral-500">
+              Arrondissements
+            </div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {ARRONDISSEMENT_LABELS.map((z) => (
+                <ZoneChip
+                  key={z}
+                  label={zoneShort(z)}
+                  checked={item.zones.has(z)}
+                  onClick={() => toggleZone(z)}
+                />
+              ))}
+            </div>
+            <div className="mt-3 text-[11px] uppercase tracking-wide text-neutral-500">
+              Communes limitrophes
+            </div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {COMMUNES.map((z) => (
+                <ZoneChip
+                  key={z}
+                  label={z}
+                  checked={item.zones.has(z)}
+                  onClick={() => toggleZone(z)}
+                />
+              ))}
+            </div>
+            {item.zones.size === 0 && (
+              <p className="mt-2 text-[11px] text-amber-400/80">
+                Aucune zone cochée : variété libre.
+              </p>
+            )}
+          </div>
+
+          {/* Génération */}
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+            <span className="text-sm text-neutral-300">Biens :</span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => patch({ count: Math.max(1, item.count - 1) })}
+                className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
+              >
+                −
+              </button>
+              <span className="w-8 text-center text-sm tabular-nums">{item.count}</span>
+              <button
+                onClick={() => patch({ count: Math.min(14, item.count + 1) })}
+                className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
+              >
+                +
+              </button>
+            </div>
+            <button
+              onClick={onGenerate}
+              disabled={item.generating}
+              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-40"
+            >
+              {item.generating ? 'Génération…' : item.properties.length ? 'Régénérer' : 'Générer'}
+            </button>
+          </div>
+          {item.deriveError && (
+            <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+              {item.deriveError}
+            </p>
+          )}
+
+          {/* Cards */}
+          <div className="mt-3 space-y-3">
+            {item.properties.map((p, i) => (
+              <PropertyCard
+                key={i}
+                index={i}
+                property={p}
+                onChange={(patchP) => updateProperty(i, patchP)}
+                onRemove={() => removeProperty(i)}
+              />
+            ))}
+          </div>
+
+          {/* Création */}
+          {item.properties.length > 0 && (
+            <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+              {item.createdCount != null ? (
+                <p className="text-sm text-emerald-300">
+                  ✓ {item.createdCount} bien{item.createdCount > 1 ? 's' : ''} créé
+                  {item.createdCount > 1 ? 's' : ''} en base (isDemoData).
+                </p>
+              ) : (
+                <>
+                  <button
+                    onClick={onCreate}
+                    disabled={item.creating}
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                  >
+                    {item.creating
+                      ? 'Création…'
+                      : `Valider et créer ${item.properties.length} bien${
+                          item.properties.length > 1 ? 's' : ''
+                        }`}
+                  </button>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    isDemoData: true · statut PUBLISHED · adresse incluse. Purgeable via isDemoData.
+                  </p>
+                  {item.createError && (
+                    <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                      {item.createError}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -411,9 +592,10 @@ function PropertyCard({
     const v = Number(e.target.value)
     onChange({ [key]: Number.isFinite(v) ? v : 0 } as Partial<GeneratedProperty>)
   }
-  const strPatch = (key: keyof GeneratedProperty) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => onChange({ [key]: e.target.value } as Partial<GeneratedProperty>)
+  const strPatch =
+    (key: keyof GeneratedProperty) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      onChange({ [key]: e.target.value } as Partial<GeneratedProperty>)
 
   return (
     <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
@@ -440,9 +622,7 @@ function PropertyCard({
       />
 
       <label className="mb-2 block">
-        <span className="mb-1 block text-[11px] text-neutral-500">
-          Adresse exacte (back-office)
-        </span>
+        <span className="mb-1 block text-[11px] text-neutral-500">Adresse exacte (back-office)</span>
         <input
           value={p.address}
           onChange={strPatch('address')}
@@ -523,10 +703,6 @@ function PropertyCard({
           Quartier (vibe) : {p.neighborhoodVibe || '—'} · année {p.yearBuilt} · charges{' '}
           {p.monthlyCharges}€/mois · orientation {p.orientationStructured.join('/') || '—'}
         </div>
-        <div className="mt-1 text-[11px] text-neutral-500">
-          scores — lum {p.luminosity} · calme {p.quietness} · charme {p.charm} · espace{' '}
-          {p.spaciousness}
-        </div>
       </details>
     </div>
   )
@@ -550,11 +726,6 @@ function Chip({ children }: { children: React.ReactNode }) {
       {children}
     </span>
   )
-}
-
-/** "Paris 8ème" → "8ème" pour des puces d'arrondissement compactes. */
-function zoneShort(z: string): string {
-  return z.startsWith('Paris ') ? z.slice(6) : z
 }
 
 function ZoneChip({

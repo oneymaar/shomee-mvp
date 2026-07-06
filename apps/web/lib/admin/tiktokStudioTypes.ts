@@ -105,6 +105,8 @@ export interface IngestResult {
   thumbnailUrl: string
   caption: string
   extracted: ExtractedInfo
+  /** Biens déjà en base pour cette vidéo (dédup). 0 = jamais ingérée. */
+  existingInDb?: number
   source: {
     videoId: string
     handle: string | null
