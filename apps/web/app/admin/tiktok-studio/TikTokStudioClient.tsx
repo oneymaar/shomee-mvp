@@ -5,12 +5,16 @@ import type {
   DpeRating,
   GeneratedProperty,
   IngestResult,
+  NumRange,
 } from '@/lib/admin/tiktokStudioTypes'
 import {
   VALID_DPE,
   ARRONDISSEMENT_LABELS,
   COMMUNES,
   matchZoneLabel,
+  defaultPriceRange,
+  defaultSurfaceRange,
+  defaultRoomsRange,
 } from '@/lib/admin/tiktokStudioTypes'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,6 +64,9 @@ interface VideoItem {
   ingest?: IngestResult
   existingInDb: number
   zones: Set<string>
+  priceRange: NumRange
+  surfaceRange: NumRange
+  roomsRange: NumRange
   count: number
   properties: GeneratedProperty[]
   generating: boolean
@@ -75,6 +82,9 @@ function emptyItem(url: string): VideoItem {
     status: 'pending',
     existingInDb: 0,
     zones: new Set<string>(),
+    priceRange: defaultPriceRange(null),
+    surfaceRange: defaultSurfaceRange(null),
+    roomsRange: defaultRoomsRange(null),
     count: 6,
     properties: [],
     generating: false,
@@ -167,6 +177,9 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
                     ingest,
                     existingInDb: ingest.existingInDb ?? 0,
                     zones: new Set(matched ? [matched] : []),
+                    priceRange: defaultPriceRange(ingest.extracted?.price),
+                    surfaceRange: defaultSurfaceRange(ingest.extracted?.surface),
+                    roomsRange: defaultRoomsRange(ingest.extracted?.rooms),
                   }
                 : it,
             ),
@@ -201,6 +214,9 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
             extracted: item.ingest.extracted,
             count: item.count,
             zones: Array.from(item.zones),
+            priceRange: item.priceRange,
+            surfaceRange: item.surfaceRange,
+            roomsRange: item.roomsRange,
           }),
         })
         const data = await res.json()
@@ -488,6 +504,39 @@ function VideoPanel({
             )}
           </div>
 
+          {/* Fourchettes — pré-réglées sur ce que l'analyse a détecté */}
+          <div className="mt-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-neutral-300">Fourchettes</span>
+              <span className="text-xs text-neutral-500">
+                pré-réglées sur la vidéo · bornent la génération
+              </span>
+            </div>
+            <div className="mt-2 space-y-2">
+              <RangeRow
+                label="Prix"
+                unit="€"
+                step={50000}
+                range={item.priceRange}
+                onChange={(r) => patch({ priceRange: r })}
+              />
+              <RangeRow
+                label="Surface"
+                unit="m²"
+                step={5}
+                range={item.surfaceRange}
+                onChange={(r) => patch({ surfaceRange: r })}
+              />
+              <RangeRow
+                label="Pièces"
+                unit="p."
+                step={1}
+                range={item.roomsRange}
+                onChange={(r) => patch({ roomsRange: r })}
+              />
+            </div>
+          </div>
+
           {/* Génération */}
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
             <span className="text-sm text-neutral-300">Biens :</span>
@@ -751,5 +800,43 @@ function ZoneChip({
     >
       {label}
     </button>
+  )
+}
+
+function RangeRow({
+  label,
+  unit,
+  step,
+  range,
+  onChange,
+}: {
+  label: string
+  unit: string
+  step: number
+  range: NumRange
+  onChange: (r: NumRange) => void
+}) {
+  const numInput =
+    'w-24 rounded-lg border border-neutral-700 bg-neutral-950 px-2 py-1 text-xs tabular-nums outline-none focus:border-neutral-500'
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-16 shrink-0 text-xs text-neutral-400">{label}</span>
+      <input
+        type="number"
+        value={range.min}
+        step={step}
+        onChange={(e) => onChange({ min: Number(e.target.value), max: range.max })}
+        className={numInput}
+      />
+      <span className="text-neutral-600">–</span>
+      <input
+        type="number"
+        value={range.max}
+        step={step}
+        onChange={(e) => onChange({ min: range.min, max: Number(e.target.value) })}
+        className={numInput}
+      />
+      <span className="text-[11px] text-neutral-500">{unit}</span>
+    </div>
   )
 }

@@ -13,6 +13,48 @@
 export type DpeRating = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
 export type Orientation = 'north' | 'south' | 'east' | 'west'
 
+/** Fourchette [min, max] pour contraindre prix / surface / pièces. */
+export interface NumRange {
+  min: number
+  max: number
+}
+
+// Bornes globales des curseurs (garde-fous — au-delà = irréaliste pour la démo).
+export const PRICE_BOUNDS: NumRange = { min: 150000, max: 12000000 }
+export const SURFACE_BOUNDS: NumRange = { min: 9, max: 500 }
+export const ROOMS_BOUNDS: NumRange = { min: 1, max: 12 }
+
+function clampRange(r: NumRange, b: NumRange): NumRange {
+  const min = Math.max(b.min, Math.min(r.min, b.max))
+  const max = Math.min(b.max, Math.max(r.max, b.min))
+  return { min: Math.min(min, max), max: Math.max(min, max) }
+}
+
+/**
+ * Fourchettes par défaut, ancrées sur la valeur détectée par l'analyse (comme la
+ * zone pré-cochée). Bande modérée autour du détecté → variété légère qu'Olivier
+ * peut élargir/resserrer ; large par défaut si rien n'a été détecté. Le nombre
+ * de pièces (souvent en filigrane) est verrouillé exactement par défaut.
+ */
+export function defaultPriceRange(v: number | null | undefined): NumRange {
+  if (v && v > 0) {
+    const round = (x: number) => Math.round(x / 10000) * 10000
+    return clampRange({ min: round(v * 0.9), max: round(v * 1.1) }, PRICE_BOUNDS)
+  }
+  return { min: 400000, max: 3000000 }
+}
+export function defaultSurfaceRange(v: number | null | undefined): NumRange {
+  if (v && v > 0) return clampRange({ min: v - 10, max: v + 10 }, SURFACE_BOUNDS)
+  return { min: 30, max: 150 }
+}
+export function defaultRoomsRange(v: number | null | undefined): NumRange {
+  if (v && v > 0) {
+    const n = Math.round(v)
+    return clampRange({ min: n, max: n }, ROOMS_BOUNDS)
+  }
+  return { min: 1, max: 6 }
+}
+
 export const VALID_DPE: ReadonlyArray<DpeRating> = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 export const VALID_ORIENT: ReadonlyArray<Orientation> = ['north', 'south', 'east', 'west']
 

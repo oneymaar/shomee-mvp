@@ -13,8 +13,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { checkAdminSecret } from '@/lib/auth/adminSecret'
 import { deriveProperties, suggestCount, clampCount } from '@/lib/services/propertyDerivation'
-import type { ExtractedInfo } from '@/lib/admin/tiktokStudioTypes'
-import { ALL_ZONES } from '@/lib/admin/tiktokStudioTypes'
+import type { ExtractedInfo, NumRange } from '@/lib/admin/tiktokStudioTypes'
+import { ALL_ZONES, PRICE_BOUNDS, SURFACE_BOUNDS, ROOMS_BOUNDS } from '@/lib/admin/tiktokStudioTypes'
+
+/** Valide une fourchette reçue et la borne aux limites globales. */
+function parseRange(x: unknown, bounds: NumRange): NumRange | undefined {
+  if (!x || typeof x !== 'object') return undefined
+  const o = x as { min?: unknown; max?: unknown }
+  if (typeof o.min !== 'number' || typeof o.max !== 'number') return undefined
+  if (!Number.isFinite(o.min) || !Number.isFinite(o.max)) return undefined
+  let min = Math.max(bounds.min, Math.min(o.min, bounds.max))
+  let max = Math.min(bounds.max, Math.max(o.max, bounds.min))
+  if (min > max) [min, max] = [max, min]
+  return { min, max }
+}
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,6 +54,9 @@ export async function POST(req: NextRequest) {
     extracted?: unknown
     count?: unknown
     zones?: unknown
+    priceRange?: unknown
+    surfaceRange?: unknown
+    roomsRange?: unknown
   }
   const caption = typeof b.caption === 'string' ? b.caption : ''
   if (!isExtractedInfo(b.extracted)) {
@@ -68,6 +83,9 @@ export async function POST(req: NextRequest) {
       extracted: b.extracted,
       count,
       zones,
+      priceRange: parseRange(b.priceRange, PRICE_BOUNDS),
+      surfaceRange: parseRange(b.surfaceRange, SURFACE_BOUNDS),
+      roomsRange: parseRange(b.roomsRange, ROOMS_BOUNDS),
     })
     if (properties.length === 0) {
       return NextResponse.json(

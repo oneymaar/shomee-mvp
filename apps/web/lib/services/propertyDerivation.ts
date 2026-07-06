@@ -17,9 +17,16 @@ import type {
   DpeRating,
   ExtractedInfo,
   GeneratedProperty,
+  NumRange,
   Orientation,
 } from '@/lib/admin/tiktokStudioTypes'
 import { VALID_DPE, VALID_ORIENT, COMMUNES } from '@/lib/admin/tiktokStudioTypes'
+
+type Ranges = { price?: NumRange; surface?: NumRange; rooms?: NumRange }
+
+function clampNum(x: number, lo: number, hi: number): number {
+  return Math.min(hi, Math.max(lo, x))
+}
 
 const MODEL = 'claude-haiku-4-5-20251001'
 const MIN_COUNT = 3
@@ -166,7 +173,20 @@ function buildDerivationPrompt(
   caption: string,
   extracted: ExtractedInfo,
   zones: string[],
+  ranges: Ranges,
 ): string {
+  const anyRange = ranges.price || ranges.surface || ranges.rooms
+  const budgetRule = anyRange
+    ? `- FOURCHETTES (IMPÉRATIF) : respecte STRICTEMENT ces bornes pour CHAQUE bien${
+        ranges.price ? `\n  · prix entre ${ranges.price.min} € et ${ranges.price.max} €` : ''
+      }${
+        ranges.surface
+          ? `\n  · surface entre ${ranges.surface.min} et ${ranges.surface.max} m²`
+          : ''
+      }${
+        ranges.rooms ? `\n  · nombre de pièces entre ${ranges.rooms.min} et ${ranges.rooms.max}` : ''
+      }\n  Fais varier les valeurs À L'INTÉRIEUR de ces bornes ; garde un prix/m² réaliste.`
+    : `- BUDGETS variés mais cohérents : fais varier prix et surface autour du profil source (±40 % environ), en gardant un prix/m² réaliste pour chaque zone choisie.`
   const zoneRule =
     zones.length > 0
       ? `- ZONES — CONTRAINTE STRICTE : utilise EXCLUSIVEMENT ces zones autorisées, AUCUNE autre : ${zones.join(', ')}.
@@ -194,7 +214,7 @@ RÈGLES DE COHÉRENCE (impératives) :
 
 RÈGLES DE VARIÉTÉ (impératives) :
 ${zoneRule}
-- BUDGETS variés mais cohérents : fais varier prix et surface autour du profil source (±40 % environ), en gardant un prix/m² réaliste pour chaque zone choisie.
+${budgetRule}
 - Varie les styles cohérents avec le standing (haussmannien, années 30, contemporain rénové, pierre de taille…), les étages, les orientations, les atouts extérieurs.
 
 Retourne UNIQUEMENT un JSON array valide, aucun texte autour, aucun markdown.
@@ -254,6 +274,10 @@ export interface DeriveInput {
   count: number
   /** Zones autorisées (arrondissements/communes cochés). Vide = variété libre. */
   zones: string[]
+  /** Fourchettes pré-réglées sur la vidéo (prix / surface / pièces). */
+  priceRange?: NumRange
+  surfaceRange?: NumRange
+  roomsRange?: NumRange
 }
 
 export async function deriveProperties(
@@ -262,6 +286,11 @@ export async function deriveProperties(
 ): Promise<GeneratedProperty[]> {
   const count = clampCount(input.count)
   const zones = input.zones ?? []
+  const ranges: Ranges = {
+    price: input.priceRange,
+    surface: input.surfaceRange,
+    rooms: input.roomsRange,
+  }
   const resp = await anthropic.messages.create({
     model: MODEL,
     // ~500 tokens/bien pour la forme riche, + marge.
@@ -269,7 +298,7 @@ export async function deriveProperties(
     messages: [
       {
         role: 'user',
-        content: buildDerivationPrompt(count, input.caption, input.extracted, zones),
+        content: buildDerivationPrompt(count, input.caption, input.extracted, zones, ranges),
       },
     ],
   })
@@ -300,6 +329,18 @@ export async function deriveProperties(
         p.arrondissement = z
         k++
       }
+    }
+  }
+
+  // Filet de sécurité fourchettes : on force chaque valeur dans ses bornes, quoi
+  // que le LLM ait produit — garantit le respect des filigranes de la vidéo.
+  for (const p of props) {
+    if (ranges.price) p.price = Math.round(clampNum(p.price, ranges.price.min, ranges.price.max))
+    if (ranges.surface) p.surface = clampNum(p.surface, ranges.surface.min, ranges.surface.max)
+    if (ranges.rooms) {
+      p.rooms = Math.round(clampNum(p.rooms, ranges.rooms.min, ranges.rooms.max))
+      // Cohérence : pas plus de chambres que (pièces − 1).
+      if (p.bedrooms > p.rooms - 1) p.bedrooms = Math.max(0, p.rooms - 1)
     }
   }
 
