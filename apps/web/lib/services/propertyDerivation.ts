@@ -280,26 +280,23 @@ export interface DeriveInput {
   roomsRange?: NumRange
 }
 
-export async function deriveProperties(
+const BIENS_PER_ZONE = 3
+
+/** Un appel LLM : `count` biens pour `zones`, avec garde-fous zones + fourchettes. */
+async function deriveOnce(
   anthropic: Anthropic,
-  input: DeriveInput,
+  caption: string,
+  extracted: ExtractedInfo,
+  zones: string[],
+  count: number,
+  ranges: Ranges,
 ): Promise<GeneratedProperty[]> {
-  const count = clampCount(input.count)
-  const zones = input.zones ?? []
-  const ranges: Ranges = {
-    price: input.priceRange,
-    surface: input.surfaceRange,
-    rooms: input.roomsRange,
-  }
   const resp = await anthropic.messages.create({
     model: MODEL,
     // ~500 tokens/bien pour la forme riche, + marge.
     max_tokens: Math.min(16000, 1500 + count * 700),
     messages: [
-      {
-        role: 'user',
-        content: buildDerivationPrompt(count, input.caption, input.extracted, zones, ranges),
-      },
+      { role: 'user', content: buildDerivationPrompt(count, caption, extracted, zones, ranges) },
     ],
   })
 
@@ -312,13 +309,9 @@ export async function deriveProperties(
   const arr = JSON.parse(match[0]) as unknown[]
   if (!Array.isArray(arr)) throw new Error("Sortie Claude n'est pas un tableau")
 
-  const props = arr
-    .map(coerceToProperty)
-    .filter((p): p is GeneratedProperty => p !== null)
+  const props = arr.map(coerceToProperty).filter((p): p is GeneratedProperty => p !== null)
 
-  // Filet de sécurité : si le LLM sort d'une zone autorisée malgré la consigne,
-  // on rabat l'arrondissement sur une zone cochée (round-robin). Garantit que
-  // le libellé affiché == une zone validée par Olivier (le point de la feature).
+  // Filet de sécurité zones : rabat un arrondissement hors-liste sur une zone cochée.
   if (zones.length > 0) {
     const allowed = new Set(zones)
     let k = 0
@@ -332,17 +325,62 @@ export async function deriveProperties(
     }
   }
 
-  // Filet de sécurité fourchettes : on force chaque valeur dans ses bornes, quoi
-  // que le LLM ait produit — garantit le respect des filigranes de la vidéo.
+  // Filet de sécurité fourchettes : force chaque valeur dans ses bornes.
   for (const p of props) {
     if (ranges.price) p.price = Math.round(clampNum(p.price, ranges.price.min, ranges.price.max))
     if (ranges.surface) p.surface = clampNum(p.surface, ranges.surface.min, ranges.surface.max)
     if (ranges.rooms) {
       p.rooms = Math.round(clampNum(p.rooms, ranges.rooms.min, ranges.rooms.max))
-      // Cohérence : pas plus de chambres que (pièces − 1).
       if (p.bedrooms > p.rooms - 1) p.bedrooms = Math.max(0, p.rooms - 1)
     }
   }
 
   return props
+}
+
+/** Pool de concurrence serveur (limite les appels LLM simultanés). */
+async function mapPool<T, R>(
+  items: T[],
+  fn: (x: T) => Promise<R>,
+  concurrency: number,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let idx = 0
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (idx < items.length) {
+      const cur = idx++
+      results[cur] = await fn(items[cur])
+    }
+  })
+  await Promise.all(workers)
+  return results
+}
+
+/**
+ * Génère les biens dérivés. Avec des zones cochées : EXACTEMENT 3 biens PAR zone
+ * (une zone par appel LLM → distribution garantie, districts cohérents, pas de
+ * troncature tokens sur les gros lots). Sans zone : un appel, variété libre.
+ */
+export async function deriveProperties(
+  anthropic: Anthropic,
+  input: DeriveInput,
+): Promise<GeneratedProperty[]> {
+  const zones = input.zones ?? []
+  const ranges: Ranges = {
+    price: input.priceRange,
+    surface: input.surfaceRange,
+    rooms: input.roomsRange,
+  }
+  if (zones.length === 0) {
+    return deriveOnce(anthropic, input.caption, input.extracted, [], BIENS_PER_ZONE, ranges)
+  }
+  const perZone = await mapPool(
+    zones,
+    (z) =>
+      deriveOnce(anthropic, input.caption, input.extracted, [z], BIENS_PER_ZONE, ranges).catch(
+        () => [] as GeneratedProperty[],
+      ),
+    5,
+  )
+  return perZone.flat()
 }

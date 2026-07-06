@@ -246,50 +246,7 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
     [headers],
   )
 
-  // ── Aperçu : générer un item (sans créer) — optionnel ──────────────────────
-  const generateItem = useCallback(
-    async (i: number) => {
-      const item = itemsRef.current[i]
-      if (!item?.ingest || item.generating) return
-      patchItem(i, { generating: true, deriveError: undefined })
-      try {
-        const props = await deriveRequest(item)
-        patchItem(i, {
-          properties: props,
-          count: props.length,
-          createdCount: null,
-          createError: undefined,
-        })
-      } catch (e) {
-        patchItem(i, { deriveError: exMsg(e) })
-      } finally {
-        patchItem(i, { generating: false })
-      }
-    },
-    [patchItem, deriveRequest],
-  )
-
-  // ── Créer un item déjà généré — optionnel ──────────────────────────────────
-  const createItem = useCallback(
-    async (i: number) => {
-      const item = itemsRef.current[i]
-      if (!item?.ingest || item.properties.length === 0 || item.creating || item.createdCount != null)
-        return
-      patchItem(i, { creating: true, createError: undefined })
-      try {
-        const count = await createRequest(item, item.properties)
-        patchItem(i, { createdCount: count })
-      } catch (e) {
-        patchItem(i, { createError: exMsg(e) })
-      } finally {
-        patchItem(i, { creating: false })
-      }
-    },
-    [patchItem, createRequest],
-  )
-
-  // ── Générer PUIS créer un item, sans validation manuelle. Réutilise les biens
-  //    déjà générés (aperçu édité) s'il y en a, sinon génère à la volée. ───────
+  // ── Générer PUIS créer un item, sans validation manuelle (un seul clic) ─────
   const generateAndCreateItem = useCallback(
     async (i: number) => {
       const item = itemsRef.current[i]
@@ -406,8 +363,7 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
               key={it.url}
               item={it}
               patch={(p) => patchItem(i, p)}
-              onGenerate={() => generateItem(i)}
-              onCreate={() => createItem(i)}
+              onRun={() => generateAndCreateItem(i)}
             />
           ))}
         </div>
@@ -423,13 +379,11 @@ export default function TikTokStudioClient({ secret }: { secret: string }) {
 function VideoPanel({
   item,
   patch,
-  onGenerate,
-  onCreate,
+  onRun,
 }: {
   item: VideoItem
   patch: (p: Partial<VideoItem>) => void
-  onGenerate: () => void
-  onCreate: () => void
+  onRun: () => void
 }) {
   if (item.status === 'failed') {
     return (
@@ -451,6 +405,8 @@ function VideoPanel({
   }
 
   const ingest = item.ingest
+  const total = item.zones.size > 0 ? item.zones.size * 3 : 3
+  const busy = item.generating || item.creating
 
   const toggleZone = (z: string) => {
     const next = new Set(item.zones)
@@ -573,82 +529,49 @@ function VideoPanel({
             </div>
           </div>
 
-          {/* Génération */}
-          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
-            <span className="text-sm text-neutral-300">Biens :</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => patch({ count: Math.max(1, item.count - 1) })}
-                className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
-              >
-                −
-              </button>
-              <span className="w-8 text-center text-sm tabular-nums">{item.count}</span>
-              <button
-                onClick={() => patch({ count: Math.min(14, item.count + 1) })}
-                className="h-8 w-8 rounded-lg border border-neutral-700 text-lg leading-none"
-              >
-                +
-              </button>
-            </div>
-            <button
-              onClick={onGenerate}
-              disabled={item.generating}
-              className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-900 disabled:opacity-40"
-            >
-              {item.generating ? 'Génération…' : item.properties.length ? 'Régénérer' : 'Générer'}
-            </button>
-          </div>
-          {item.deriveError && (
-            <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-              {item.deriveError}
-            </p>
-          )}
-
-          {/* Cards */}
-          <div className="mt-3 space-y-3">
-            {item.properties.map((p, i) => (
-              <PropertyCard
-                key={i}
-                index={i}
-                property={p}
-                onChange={(patchP) => updateProperty(i, patchP)}
-                onRemove={() => removeProperty(i)}
-              />
-            ))}
-          </div>
-
-          {/* Création */}
-          {item.properties.length > 0 && (
-            <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-              {item.createdCount != null ? (
-                <p className="text-sm text-emerald-300">
-                  ✓ {item.createdCount} bien{item.createdCount > 1 ? 's' : ''} créé
-                  {item.createdCount > 1 ? 's' : ''} en base (isDemoData).
+          {/* Générer + créer — un seul bouton, import direct en base */}
+          <div className="mt-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3">
+            {item.createdCount != null ? (
+              <p className="text-sm text-emerald-300">
+                ✓ {item.createdCount} bien{item.createdCount > 1 ? 's' : ''} créé
+                {item.createdCount > 1 ? 's' : ''} en base (isDemoData).
+              </p>
+            ) : (
+              <>
+                <button
+                  onClick={onRun}
+                  disabled={busy}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
+                >
+                  {busy ? 'Génération + création…' : `Générer et créer (${total})`}
+                </button>
+                <p className="mt-2 text-xs text-neutral-500">
+                  {item.zones.size > 0
+                    ? `3 biens × ${item.zones.size} zone${item.zones.size > 1 ? 's' : ''} = ${total} biens`
+                    : '3 biens (aucune zone cochée)'}{' '}
+                  · créés directement en base (isDemoData), sans autre validation.
                 </p>
-              ) : (
-                <>
-                  <button
-                    onClick={onCreate}
-                    disabled={item.creating}
-                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
-                  >
-                    {item.creating
-                      ? 'Création…'
-                      : `Valider et créer ${item.properties.length} bien${
-                          item.properties.length > 1 ? 's' : ''
-                        }`}
-                  </button>
-                  <p className="mt-2 text-xs text-neutral-500">
-                    isDemoData: true · statut PUBLISHED · adresse incluse. Purgeable via isDemoData.
+                {(item.deriveError || item.createError) && (
+                  <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                    {item.deriveError || item.createError}
                   </p>
-                  {item.createError && (
-                    <p className="mt-2 rounded-lg border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                      {item.createError}
-                    </p>
-                  )}
-                </>
-              )}
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Récapitulatif des biens générés/créés */}
+          {item.properties.length > 0 && (
+            <div className="mt-3 space-y-3">
+              {item.properties.map((p, i) => (
+                <PropertyCard
+                  key={i}
+                  index={i}
+                  property={p}
+                  onChange={(patchP) => updateProperty(i, patchP)}
+                  onRemove={() => removeProperty(i)}
+                />
+              ))}
             </div>
           )}
         </div>
