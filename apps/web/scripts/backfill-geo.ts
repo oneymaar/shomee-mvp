@@ -120,24 +120,41 @@ interface Station {
   lat: number
   lng: number
   lines: string[]
+  type: string
 }
 
 function loadStations(): Station[] {
   const url = new URL('../../../packages/core/src/data/transportStations.json', import.meta.url)
   const raw = JSON.parse(readFileSync(url, 'utf-8')) as Array<{
     label: string
+    type: string
     lines: string[]
     coordinates: { lat: number; lng: number }
   }>
   return raw
     .filter((s) => s.coordinates?.lat && Array.isArray(s.lines))
-    .map((s) => ({ name: s.label, lat: s.coordinates.lat, lng: s.coordinates.lng, lines: s.lines }))
+    .map((s) => ({
+      name: s.label,
+      lat: s.coordinates.lat,
+      lng: s.coordinates.lng,
+      lines: s.lines,
+      type: s.type,
+    }))
 }
 
-function fmtLine(l: string): string {
-  if (/^[A-E]$/.test(l)) return `RER ${l}`
-  if (/^\d{1,2}$/.test(l)) return `M${l}`
-  return l
+/**
+ * Classe une ligne → token d'affichage, ou null si à écarter (tram, bus).
+ * On garde métro (1-14, 7bis, 3bis), RER (A-E), Transilien (H/J/K/L/N/P/R/U/GL/V).
+ * Le label « 3BIS » = métro 3bis ici (les vrais trams sont écartés via le type
+ * de station = tram_station en amont), « 3A »/« 3B » = trams → écartés.
+ */
+function transportToken(raw: string): string | null {
+  if (/^([1-9]|1[0-4])$/.test(raw)) return `M${raw}`
+  if (raw === '7B') return 'M7bis'
+  if (raw === '3BIS') return 'M3bis'
+  if (/^[A-E]$/.test(raw)) return `RER ${raw}`
+  if (/^(H|J|K|L|N|P|R|U|GL|V)$/.test(raw)) return `TN ${raw}`
+  return null
 }
 
 function haversine(aLat: number, aLng: number, bLat: number, bLng: number): number {
@@ -150,13 +167,49 @@ function haversine(aLat: number, aLng: number, bLat: number, bLng: number): numb
   return 2 * R * Math.asin(Math.sqrt(s))
 }
 
-function nearbyStations(stations: Station[], lat: number, lng: number) {
+/**
+ * Données transport d'un point : stations métro/RER/Transilien proches (trams et
+ * bus écartés), regroupées par station. `transports` = UNE entrée par (ligne,
+ * station) → le regroupement par badges se fait à l'affichage. `mapTransports` =
+ * une entrée par station (ligne principale + temps de marche estimé).
+ */
+function metroData(stations: Station[], lat: number, lng: number) {
   const ranked = stations
     .map((s) => ({ s, d: haversine(lat, lng, s.lat, s.lng) }))
+    .filter((r) => r.s.type !== 'tram_station' && r.s.lines.some((l) => transportToken(l)))
     .sort((a, b) => a.d - b.d)
-  const within = ranked.filter((r) => r.d <= METRO_RADIUS_M).slice(0, MAX_STATIONS)
-  const chosen = within.length > 0 ? within : ranked.slice(0, 1) // toujours au moins 1
-  return chosen // [{ s, d }] — la distance sert au temps de marche
+  const pool = ranked.filter((r) => r.d <= METRO_RADIUS_M)
+  const chosen = pool.length > 0 ? pool : ranked.slice(0, 1) // au moins 1
+
+  const order: string[] = []
+  const byName: Record<
+    string,
+    { name: string; lat: number; lng: number; d: number; tokens: string[] }
+  > = {}
+  for (const { s, d } of chosen) {
+    let e = byName[s.name]
+    if (!e) {
+      e = { name: s.name, lat: s.lat, lng: s.lng, d, tokens: [] }
+      byName[s.name] = e
+      order.push(s.name)
+    }
+    e.d = Math.min(e.d, d)
+    for (const raw of s.lines) {
+      const t = transportToken(raw)
+      if (t && !e.tokens.includes(t)) e.tokens.push(t)
+    }
+  }
+  const list = order.map((n) => byName[n]).slice(0, MAX_STATIONS)
+  return {
+    transports: list.flatMap((st) => st.tokens.map((t) => `${t} ${st.name}`)),
+    mapTransports: list.map((st) => ({
+      name: st.name,
+      line: st.tokens[0],
+      lat: st.lat,
+      lng: st.lng,
+      walkMin: walkMinutes(st.d),
+    })),
+  }
 }
 
 // ─── Pool ─────────────────────────────────────────────────────────────────
@@ -212,19 +265,13 @@ async function main() {
       }
       geocoded++
       const feat = findIris(iris, geo.lng, geo.lat)
-      const stns = nearbyStations(stations, geo.lat, geo.lng)
+      const metro = metroData(stations, geo.lat, geo.lng)
 
       const data: Record<string, unknown> = {
         mapLat: geo.lat,
         mapLng: geo.lng,
-        mapTransports: stns.map(({ s, d }) => ({
-          name: s.name,
-          line: fmtLine(s.lines[0]),
-          lat: s.lat,
-          lng: s.lng,
-          walkMin: walkMinutes(d),
-        })),
-        transports: stns.map(({ s }) => `${s.lines.map(fmtLine).join('/')} ${s.name}`),
+        mapTransports: metro.mapTransports,
+        transports: metro.transports,
       }
       if (feat) {
         irisFound++

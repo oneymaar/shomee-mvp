@@ -76,18 +76,19 @@
     "mapLat": 48.874561,
     "mapLng": 2.40385,
     "transports": [
-      "3BIS Saint-Fargeau",
-      "M11/3B/3BIS Porte des Lilas",
+      "M3bis Saint-Fargeau",
+      "M11 Porte des Lilas",
+      "M3bis Porte des Lilas",
       "M11 Télégraphe",
-      "3B Adrienne Bolland",
-      "3B Hôpital Robert Debré"
+      "M3bis Pelleport",
+      "M7bis Pré Saint-Gervais"
     ],
     "neighborhoodVibe": "Pittoresque et verdoyant, parc Gambetta proche, petits commerces locaux",
     "mapTransports": [
       {
         "lat": 48.87210144213156,
         "lng": 2.4045149423791043,
-        "line": "3BIS",
+        "line": "M3bis",
         "name": "Saint-Fargeau",
         "walkMin": 5
       },
@@ -106,18 +107,18 @@
         "walkMin": 6
       },
       {
-        "lat": 48.872097029931695,
-        "lng": 2.40862005517699,
-        "line": "3B",
-        "name": "Adrienne Bolland",
-        "walkMin": 7
+        "lat": 48.86844016327547,
+        "lng": 2.401561712742542,
+        "line": "M3bis",
+        "name": "Pelleport",
+        "walkMin": 11
       },
       {
-        "lat": 48.87945550325808,
-        "lng": 2.4012336448556546,
-        "line": "3B",
-        "name": "Hôpital Robert Debré",
-        "walkMin": 9
+        "lat": 48.880271957029535,
+        "lng": 2.3984681722681724,
+        "line": "M7bis",
+        "name": "Pré Saint-Gervais",
+        "walkMin": 12
       }
     ],
     "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
@@ -266,10 +267,10 @@
     "mapLat": 48.849138,
     "mapLng": 2.406365,
     "transports": [
-      "M1/3A/3B Porte de Vincennes",
+      "M1 Porte de Vincennes",
       "M9 Maraîchers",
       "M9 Buzenval",
-      "3B/M9 Porte de Montreuil",
+      "M9 Porte de Montreuil",
       "M6 Picpus"
     ],
     "neighborhoodVibe": "Quartier résidentiel très prisé, ambiance bourgeoise, proche Nation",
@@ -298,7 +299,7 @@
       {
         "lat": 48.85298727790375,
         "lng": 2.4107411361264375,
-        "line": "3B",
+        "line": "M9",
         "name": "Porte de Montreuil",
         "walkMin": 9
       },
@@ -711,10 +712,12 @@
     "mapLng": 2.397745,
     "transports": [
       "M3 Gambetta",
-      "3BIS Gambetta",
-      "3BIS Pelleport",
+      "M3bis Gambetta",
+      "M3bis Pelleport",
       "M2 Père Lachaise",
-      "M3/3B Porte de Bagnolet"
+      "M3 Père Lachaise",
+      "M3 Porte de Bagnolet",
+      "M2 Philippe Auguste"
     ],
     "neighborhoodVibe": "Père-Lachaise serein et verdoyant",
     "mapTransports": [
@@ -726,16 +729,9 @@
         "walkMin": 2
       },
       {
-        "lat": 48.86516343488149,
-        "lng": 2.3987465934425916,
-        "line": "3BIS",
-        "name": "Gambetta",
-        "walkMin": 3
-      },
-      {
         "lat": 48.86844016327547,
         "lng": 2.401561712742542,
-        "line": "3BIS",
+        "line": "M3bis",
         "name": "Pelleport",
         "walkMin": 9
       },
@@ -752,6 +748,13 @@
         "line": "M3",
         "name": "Porte de Bagnolet",
         "walkMin": 12
+      },
+      {
+        "lat": 48.85806226176241,
+        "lng": 2.3908609523236084,
+        "line": "M2",
+        "name": "Philippe Auguste",
+        "walkMin": 13
       }
     ],
     "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351941/shomee/videos/3d220a2aac61.mp4",

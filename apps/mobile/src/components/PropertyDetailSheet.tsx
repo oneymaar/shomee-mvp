@@ -117,28 +117,34 @@ const RER_COLORS: Record<string, string> = {
   A: '#FF2442', B: '#4DA4DC', C: '#FFD200', D: '#00814F', E: '#C25BAA',
 }
 function parseLine(str: string): { number: string; name: string; color: string; darkText: boolean } {
-  const metro = str.match(/^M(\d{1,2}[ab]?)\s*(.*)$/)
+  // Tokens émis par le backfill : « M1 », « M7bis », « M3bis », « RER A », « TN H ».
+  const metro = str.match(/^M(\d{1,2})(bis)?\s+(.+)$/)
   if (metro) {
-    const n = metro[1]
-    return { number: n, name: metro[2], color: METRO_COLORS[n] || '#999', darkText: n === '1' || n === '9' || n === '13' }
+    const base = metro[1]
+    return {
+      number: metro[2] ? `${base}b` : base,
+      name: metro[3],
+      color: METRO_COLORS[base] || '#999',
+      darkText: base === '1' || base === '9' || base === '13',
+    }
   }
-  const rer = str.match(/^RER\s+([A-E])\s*(.*)$/)
+  const rer = str.match(/^RER\s+([A-E])\s+(.+)$/)
   if (rer) {
     const l = rer[1]
-    return { number: l, name: rer[2] || `RER ${l}`, color: RER_COLORS[l] || '#999', darkText: l === 'C' }
+    return { number: l, name: rer[2], color: RER_COLORS[l] || '#999', darkText: l === 'C' }
   }
-  const bus = str.match(/^Bus\s+(.+)$/)
-  if (bus) return { number: bus[1], name: `Bus ${bus[1]}`, color: '#5A9FC9', darkText: false }
+  const tn = str.match(/^TN\s+([A-Z]{1,2})\s+(.+)$/)
+  if (tn) return { number: tn[1], name: tn[2], color: '#8D5BA6', darkText: false }
   return { number: str, name: str, color: '#666', darkText: false }
 }
-function getTransportType(str: string): 'metro' | 'rer' | 'tramway' | 'bus' {
+function getTransportType(str: string): 'metro' | 'rer' | 'transilien' {
   if (str.match(/^M\d/)) return 'metro'
   if (str.match(/^RER/)) return 'rer'
-  if (str.match(/^T\d/)) return 'tramway'
-  return 'bus'
+  if (str.match(/^TN/)) return 'transilien'
+  return 'metro'
 }
-const TRANSPORT_ORDER = ['metro', 'rer', 'tramway', 'bus'] as const
-const TRANSPORT_LABELS: Record<string, string> = { metro: 'Métro', rer: 'RER', tramway: 'Tramway', bus: 'Bus' }
+const TRANSPORT_ORDER = ['metro', 'rer', 'transilien'] as const
+const TRANSPORT_LABELS: Record<string, string> = { metro: 'Métro', rer: 'RER', transilien: 'Transilien' }
 
 type Badge = { number: string; color: string; darkText: boolean }
 
