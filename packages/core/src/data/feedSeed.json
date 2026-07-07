@@ -1,177 +1,122 @@
 [
   {
-    "id": "cmpxvhi43001dqy31n9f7ik7o",
-    "arrondissement": "Paris 6ème",
-    "subtitle": "Petite maison avec jardin privé secret",
-    "agentName": "Sophie Marchand",
-    "title": "Maisonnette Sèvres Babylon",
-    "price": 1350000,
-    "pricePerSqm": 15341,
-    "surface": 88,
-    "rooms": 4,
-    "bedrooms": 2,
-    "location": "Sèvres-Babylon",
-    "district": "Sèvres-Babylon",
-    "description": "Rare maisonnette avec jardin privé caché derrière façade Saint-Germain. Deux niveaux intimes, très calme. Quartier chic et culturel avec boutiques et restaurants de prestige à proximité.",
-    "tags": [
-      "hidden-gem",
-      "garden-private",
-      "charm-exclusive",
-      "location-prestige"
-    ],
-    "features": [
-      "Jardin privé",
-      "2 niveaux",
-      "Très calme",
-      "Charme secret"
-    ],
-    "dpe": "D",
-    "ges": "D",
-    "floor": 0,
-    "totalFloors": 2,
-    "yearBuilt": 1850,
-    "monthlyCharges": 290,
-    "propertyTax": 780,
-    "neighborhoodVibe": "Chic et littéraire, Saint-Germain-des-Prés historique",
-    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431338/shomee/videos/af54859c1786.mp4",
-    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/af54859c1786.jpg",
-    "gallery": [],
-    "chapters": null,
-    "likeCount": 0,
-    "shareCount": 0,
-    "promising": false,
-    "mandatType": "SIMPLE",
-    "avantPremiere": false,
-    "statut": "PUBLISHED",
-    "completionRate": 0.75,
-    "agencyId": "cmpwwtrgm0000203127t7rtqv",
-    "createdByAgentId": "cmpwwtrhe00012031f76tfahn",
-    "collaborateurIds": [],
-    "hasElevator": false,
-    "hasTerrace": true,
-    "terraceSurfaceM2": 55,
-    "hasBalcony": false,
-    "hasGarden": true,
-    "hasCellar": false,
-    "hasParking": false,
-    "hasConcierge": false,
-    "isGroundFloor": true,
-    "isQuietStreet": true,
-    "orientationStructured": [
-      "south",
-      "west"
-    ],
-    "luminosity": 0.75,
-    "quietness": 0.85,
-    "charm": 0.95,
-    "spaciousness": 0.78,
-    "livingQuality": 0.88,
-    "outdoorUsability": 0.9,
-    "llmFilledFields": [],
-    "locationSource": null,
-    "titleSource": null,
-    "priceSource": null,
-    "surfaceSource": null,
-    "roomsSource": null,
-    "bedroomsSource": null,
-    "descriptionSource": null,
-    "floorSource": null,
-    "yearBuiltSource": null,
-    "dpeSource": null,
-    "gesSource": null,
-    "mandatTypeSource": null,
-    "refInterneAgenceSource": null,
-    "monthlyChargesSource": null,
-    "propertyTaxSource": null,
-    "compositionSource": null,
-    "agencyName": "Barnes Tour Eiffel",
-    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/barnes.jpg",
-    "composition": [
-      {
-        "label": "Séjour double",
-        "surface": 32
-      },
-      {
-        "label": "Cuisine",
-        "surface": 11
-      },
-      {
-        "label": "Chambre 1",
-        "surface": 16
-      },
-      {
-        "label": "Chambre 2",
-        "surface": 13
-      },
-      {
-        "label": "Salle de bains",
-        "surface": 6
-      },
-      {
-        "label": "Salle d'eau",
-        "surface": 4
-      },
-      {
-        "label": "Entrée / dégagement",
-        "surface": 6
-      }
-    ],
-    "marketAvgPricePerSqm": 15800,
-    "marketEvolution10y": "+31%",
-    "marketHighPrice": 19500,
-    "marketLowPrice": 12800,
-    "irisZone": "Saint-Germain-des-Prés",
-    "irisDescription": "Rive gauche historique : galeries d'art, maisons d'édition et cafés littéraires entre le Bon Marché et l'Odéon.",
-    "transports": [
-      "M10 Sèvres-Babylone",
-      "M12 Sèvres-Babylone",
-      "M4 Saint-Sulpice",
-      "Bus 63",
-      "Bus 87"
-    ],
-    "nearbyPlaces": [
-      "Le Bon Marché",
-      "Jardin du Luxembourg",
-      "Marché Raspail"
-    ]
-  },
-  {
-    "id": "cmpxvhi3k001cqy3164mggr2n",
-    "arrondissement": "Paris 14ème",
-    "subtitle": "4 pièces avec parking sous-sol",
+    "id": "cmr9p1ucz011a74313h9a84u4",
+    "arrondissement": "Paris 20ème",
+    "subtitle": "Appartement années 1930 avec balcon et dégagement",
     "agentName": "Olivier Kretz",
     "agentAvatar": "/agencies/Logo Kretz.png",
-    "title": "T4 Montparnasse haut standing",
-    "price": 1190000,
-    "pricePerSqm": 9520,
-    "surface": 125,
-    "rooms": 4,
+    "title": "Appartement 3 pièces avec balcon – Place Gambetta",
+    "price": 785000,
+    "pricePerSqm": 12077,
+    "surface": 65,
+    "rooms": 3,
     "bedrooms": 2,
-    "location": "Montparnasse",
-    "district": "Montparnasse",
-    "description": "Bel appartement moderne de résidence haut standing avec parking privatif. Ascenseur, portier, piscine et fitness collective. Quartier animé avec restaurants, galeries, vie culturelle riche.",
+    "location": "Gambetta",
+    "district": "Gambetta",
+    "description": "Bel appartement de caractère de 65 m² édifié dans les années 1930. Composé d'un living avec balcon orienté sud, cuisine semi-ouverte récemment rénovée, 2 chambres, salle de bain avec douche. Double vitrage neuf, calme de la rue, proximité immédiate de la place Gambetta et ses espaces verts.",
     "tags": [
-      "luxury-modern",
-      "parking-included",
-      "amenities-gym",
-      "location-vibrant"
+      "living",
+      "building",
+      "ambiance",
+      "location",
+      "structure"
     ],
     "features": [
-      "Parking privé",
-      "Piscine collective",
-      "Fitness",
-      "Concierge"
+      "Balcon 12 m²",
+      "Double vitrage récent",
+      "Charme années 30",
+      "Proximité Gambetta"
     ],
-    "dpe": "B",
-    "ges": "B",
-    "floor": 8,
-    "totalFloors": 15,
-    "yearBuilt": 2005,
-    "monthlyCharges": 520,
-    "propertyTax": 890,
-    "neighborhoodVibe": "Animé et culturel, restaurants et galeries",
-    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431184/shomee/videos/2f933eec7a52.mp4",
-    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/2f933eec7a52.jpg",
+    "dpe": "D",
+    "ges": "E",
+    "floor": 3,
+    "totalFloors": 5,
+    "yearBuilt": 1932,
+    "monthlyCharges": 1650,
+    "propertyTax": 620,
+    "irisZone": "Saint-Fargeau 11",
+    "irisPolygon": [
+      [
+        48.87389566,
+        2.40341538
+      ],
+      [
+        48.87449703,
+        2.40317944
+      ],
+      [
+        48.87470353,
+        2.40437277
+      ],
+      [
+        48.87548007,
+        2.4040953
+      ],
+      [
+        48.87553658,
+        2.40442733
+      ],
+      [
+        48.87477015,
+        2.40474967
+      ],
+      [
+        48.8749376,
+        2.40568987
+      ],
+      [
+        48.87174035,
+        2.40439848
+      ],
+      [
+        48.87389566,
+        2.40341538
+      ]
+    ],
+    "mapLat": 48.874561,
+    "mapLng": 2.40385,
+    "transports": [
+      "3BIS Saint-Fargeau",
+      "M11/3B/3BIS Porte des Lilas",
+      "M11 Télégraphe",
+      "3B Adrienne Bolland",
+      "3B Hôpital Robert Debré"
+    ],
+    "neighborhoodVibe": "Pittoresque et verdoyant, parc Gambetta proche, petits commerces locaux",
+    "mapTransports": [
+      {
+        "lat": 48.87210144213156,
+        "lng": 2.4045149423791043,
+        "line": "3BIS",
+        "name": "Saint-Fargeau"
+      },
+      {
+        "lat": 48.87711051176337,
+        "lng": 2.40672924554309,
+        "line": "M11",
+        "name": "Porte des Lilas"
+      },
+      {
+        "lat": 48.87547445667917,
+        "lng": 2.398867596625601,
+        "line": "M11",
+        "name": "Télégraphe"
+      },
+      {
+        "lat": 48.872097029931695,
+        "lng": 2.40862005517699,
+        "line": "3B",
+        "name": "Adrienne Bolland"
+      },
+      {
+        "lat": 48.87945550325808,
+        "lng": 2.4012336448556546,
+        "line": "3B",
+        "name": "Hôpital Robert Debré"
+      }
+    ],
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
+    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/9eb2d2f46dfd.jpg",
     "gallery": [],
     "chapters": null,
     "likeCount": 0,
@@ -181,29 +126,28 @@
     "avantPremiere": false,
     "statut": "PUBLISHED",
     "completionRate": 0.75,
-    "agencyId": "cmpwwtsly000u20319faey4v0",
-    "createdByAgentId": "cmpwwtsmd000v2031kl6d50n5",
+    "agencyId": "cmppap3mr0000co285c079bkt",
+    "createdByAgentId": "cmppap3o70001co283ouvwrh9",
     "collaborateurIds": [],
-    "hasElevator": true,
-    "hasTerrace": true,
-    "terraceSurfaceM2": 20,
-    "hasBalcony": false,
+    "hasElevator": false,
+    "hasTerrace": false,
+    "hasBalcony": true,
+    "balconySurfaceM2": 12,
     "hasGarden": false,
     "hasCellar": true,
-    "hasParking": true,
-    "hasConcierge": true,
+    "hasParking": false,
+    "hasConcierge": false,
     "isGroundFloor": false,
-    "isQuietStreet": false,
+    "isQuietStreet": true,
     "orientationStructured": [
-      "south",
-      "west"
+      "south"
     ],
-    "luminosity": 0.85,
-    "quietness": 0.65,
-    "charm": 0.7,
-    "spaciousness": 0.85,
-    "livingQuality": 0.8,
-    "outdoorUsability": 0.5,
+    "luminosity": 0.79,
+    "quietness": 0.81,
+    "charm": 0.84,
+    "spaciousness": 0.68,
+    "livingQuality": 0.77,
+    "outdoorUsability": 0.65,
     "llmFilledFields": [],
     "locationSource": null,
     "titleSource": null,
@@ -221,96 +165,143 @@
     "monthlyChargesSource": null,
     "propertyTaxSource": null,
     "compositionSource": null,
-    "agencyName": "Morriss Montparnasse",
-    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/morriss.jpg",
-    "composition": [
-      {
-        "label": "Séjour",
-        "surface": 42
-      },
-      {
-        "label": "Cuisine",
-        "surface": 14
-      },
-      {
-        "label": "Chambre 1",
-        "surface": 18
-      },
-      {
-        "label": "Chambre 2",
-        "surface": 15
-      },
-      {
-        "label": "Bureau",
-        "surface": 12
-      },
-      {
-        "label": "Salle de bains",
-        "surface": 7
-      },
-      {
-        "label": "Salle d'eau",
-        "surface": 5
-      },
-      {
-        "label": "Entrée / dégagement",
-        "surface": 12
-      }
-    ],
-    "marketAvgPricePerSqm": 9800,
-    "marketEvolution10y": "+24%",
-    "marketHighPrice": 12200,
-    "marketLowPrice": 7600,
-    "irisZone": "Pernety – Montparnasse",
-    "irisDescription": "Sud de Montparnasse à l'esprit village : rues commerçantes, ateliers d'artistes et brasseries.",
-    "transports": [
-      "M13 Pernety",
-      "M6 Montparnasse-Bienvenüe",
-      "M4 Montparnasse-Bienvenüe",
-      "Bus 58"
-    ],
-    "nearbyPlaces": [
-      "Gare Montparnasse",
-      "Parc Montsouris",
-      "Marché Edgar Quinet"
-    ]
+    "agencyName": "Kretz Real Estate",
+    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/kretz.jpg"
   },
   {
-    "id": "cmpxvhi2z001bqy31lm05lojx",
-    "arrondissement": "Paris 2ème",
-    "subtitle": "Duplex avec escalier bois sur 2 niveaux",
-    "agentName": "Anne-Laure Vasseur",
-    "title": "Duplex Sentier bohème",
-    "price": 795000,
-    "pricePerSqm": 8641,
-    "surface": 92,
+    "id": "cmr9p1ucb01197431fks84vsx",
+    "arrondissement": "Paris 20ème",
+    "subtitle": "Rez-de-jardin haussmannien avec jardin privatif",
+    "agentName": "Mehdi Hassan",
+    "title": "Appartement 3 pièces rez-de-jardin – Rue des Pyrenées",
+    "price": 1150000,
+    "pricePerSqm": 15972,
+    "surface": 72,
     "rooms": 3,
-    "bedrooms": 1,
-    "location": "Sentier",
-    "district": "Sentier",
-    "description": "Duplex dans le pittoresque quartier du Sentier avec escalier hélicoïdal en bois. Murs de pierre, poutres chêne. Très calme en retrait des rues commerçantes. Atelier possible au rez-de-chaussée.",
+    "bedrooms": 2,
+    "location": "Avron",
+    "district": "Avron",
+    "description": "Charmant rez-de-jardin hausmannien de 72 m² offrant un accès direct à un jardin privatif de 185 m² très arborisé. Séjour avec moulures d'époque, cuisine indépendante rénovée, 2 chambres confortables, salle de bain avec douche et baignoire. Immeuble de prestige, bien calme avec exposition est-ouest.",
     "tags": [
-      "duplex-space",
-      "charm-bohemian",
-      "creative-work",
-      "location-historic"
+      "outdoor",
+      "living",
+      "building",
+      "ambiance",
+      "location",
+      "structure"
     ],
     "features": [
-      "Escalier hélicoïdal",
-      "Murs pierre",
-      "Terrasse",
-      "Rez-de-chaussée"
+      "Jardin 185 m²",
+      "Moulures haussmanniennes",
+      "Concierge",
+      "Cave incluse"
     ],
-    "dpe": "D",
-    "ges": "D",
+    "dpe": "C",
+    "ges": "C",
     "floor": 0,
-    "totalFloors": 2,
-    "yearBuilt": 1875,
-    "monthlyCharges": 240,
-    "propertyTax": 520,
-    "neighborhoodVibe": "Bohème historique, quartier du textile transformé",
-    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431165/shomee/videos/d5bf15989ecb.mp4",
-    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/d5bf15989ecb.jpg",
+    "totalFloors": 6,
+    "yearBuilt": 1895,
+    "monthlyCharges": 2200,
+    "propertyTax": 745,
+    "irisZone": "Charonne 3",
+    "irisPolygon": [
+      [
+        48.8474549,
+        2.40629627
+      ],
+      [
+        48.84770789,
+        2.40345763
+      ],
+      [
+        48.8480981,
+        2.39912113
+      ],
+      [
+        48.84886588,
+        2.39924719
+      ],
+      [
+        48.84883765,
+        2.40079147
+      ],
+      [
+        48.84887913,
+        2.40099404
+      ],
+      [
+        48.84889058,
+        2.40274365
+      ],
+      [
+        48.84965078,
+        2.40243377
+      ],
+      [
+        48.84993594,
+        2.40226561
+      ],
+      [
+        48.85008073,
+        2.40388698
+      ],
+      [
+        48.85049344,
+        2.40640201
+      ],
+      [
+        48.84882332,
+        2.40657775
+      ],
+      [
+        48.8474549,
+        2.40629627
+      ]
+    ],
+    "mapLat": 48.849138,
+    "mapLng": 2.406365,
+    "transports": [
+      "M1/3A/3B Porte de Vincennes",
+      "M9 Maraîchers",
+      "M9 Buzenval",
+      "3B/M9 Porte de Montreuil",
+      "M6 Picpus"
+    ],
+    "neighborhoodVibe": "Quartier résidentiel très prisé, ambiance bourgeoise, proche Nation",
+    "mapTransports": [
+      {
+        "lat": 48.847335584614896,
+        "lng": 2.408089407236094,
+        "line": "M1",
+        "name": "Porte de Vincennes"
+      },
+      {
+        "lat": 48.85272512017012,
+        "lng": 2.406089161868773,
+        "line": "M9",
+        "name": "Maraîchers"
+      },
+      {
+        "lat": 48.85197520932561,
+        "lng": 2.401927284511547,
+        "line": "M9",
+        "name": "Buzenval"
+      },
+      {
+        "lat": 48.85298727790375,
+        "lng": 2.4107411361264375,
+        "line": "3B",
+        "name": "Porte de Montreuil"
+      },
+      {
+        "lat": 48.84506157994489,
+        "lng": 2.4012890198273484,
+        "line": "M6",
+        "name": "Picpus"
+      }
+    ],
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
+    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/9eb2d2f46dfd.jpg",
     "gallery": [],
     "chapters": null,
     "likeCount": 0,
@@ -323,26 +314,25 @@
     "agencyId": "cmpwwtshc000r2031anjbuh0b",
     "createdByAgentId": "cmpwwtshs000s2031jxzjpyd2",
     "collaborateurIds": [],
-    "hasElevator": false,
-    "hasTerrace": true,
-    "terraceSurfaceM2": 15,
+    "hasElevator": true,
+    "hasTerrace": false,
     "hasBalcony": false,
-    "hasGarden": false,
+    "hasGarden": true,
     "hasCellar": true,
-    "hasParking": false,
-    "hasConcierge": false,
+    "hasParking": true,
+    "hasConcierge": true,
     "isGroundFloor": true,
     "isQuietStreet": true,
     "orientationStructured": [
-      "south",
-      "east"
+      "east",
+      "west"
     ],
-    "luminosity": 0.7,
-    "quietness": 0.72,
-    "charm": 0.88,
-    "spaciousness": 0.75,
-    "livingQuality": 0.76,
-    "outdoorUsability": 0.4,
+    "luminosity": 0.85,
+    "quietness": 0.88,
+    "charm": 0.92,
+    "spaciousness": 0.76,
+    "livingQuality": 0.86,
+    "outdoorUsability": 0.89,
     "llmFilledFields": [],
     "locationSource": null,
     "titleSource": null,
@@ -361,92 +351,193 @@
     "propertyTaxSource": null,
     "compositionSource": null,
     "agencyName": "L'Agence des Enfants Rouges",
-    "agencyLogo": null,
-    "composition": [
-      {
-        "label": "Séjour",
-        "surface": 36
-      },
-      {
-        "label": "Cuisine",
-        "surface": 10
-      },
-      {
-        "label": "Mezzanine / bureau",
-        "surface": 12
-      },
-      {
-        "label": "Chambre",
-        "surface": 16
-      },
-      {
-        "label": "Salle de bains",
-        "surface": 7
-      },
-      {
-        "label": "Dressing",
-        "surface": 5
-      },
-      {
-        "label": "Escalier / dégagement",
-        "surface": 6
-      }
-    ],
-    "marketAvgPricePerSqm": 9000,
-    "marketEvolution10y": "+19%",
-    "marketHighPrice": 11500,
-    "marketLowPrice": 7200,
-    "irisZone": "Le Sentier",
-    "irisDescription": "Ancien quartier du textile devenu hub créatif et tech, à deux pas de Montorgueil et des Grands Boulevards.",
-    "transports": [
-      "M3 Sentier",
-      "M4 Réaumur-Sébastopol",
-      "M8 Grands Boulevards",
-      "M9 Grands Boulevards",
-      "Bus 20"
-    ],
-    "nearbyPlaces": [
-      "Rue Montorgueil",
-      "Passage du Grand-Cerf",
-      "Place des Victoires"
-    ]
+    "agencyLogo": null
   },
   {
-    "id": "cmpxvhi2f001aqy311l7k4361",
-    "arrondissement": "Rueil-Malmaison",
-    "subtitle": "Petite maison avec cour pavée",
-    "agentName": "Karim El Amrani",
-    "title": "Maison Rueil-Malmaison",
-    "price": 625000,
-    "pricePerSqm": 7622,
-    "surface": 82,
-    "rooms": 4,
+    "id": "cmr9p1ubp011874316nklqial",
+    "arrondissement": "Paris 20ème",
+    "subtitle": "Appartement contemporain avec terrasse exposée sud",
+    "agentName": "Pierre-Olivier Roux",
+    "title": "Appartement 3 pièces avec terrasse – Rue de Bagnolet",
+    "price": 895000,
+    "pricePerSqm": 13066,
+    "surface": 68.5,
+    "rooms": 3,
     "bedrooms": 2,
-    "location": "Rueil Centre",
-    "district": "Rueil Centre",
-    "description": "Maison de ville rénovée avec cour pavée privée. Deux niveaux, cuisine aménagée, petit jardin. Quartier résidentiel calme près transports. Idéal pour famille cherchant espace et tranquillité.",
+    "location": "Pelleport",
+    "district": "Pelleport",
+    "description": "Bel appartement 3 pièces situé rue de Bagnolet dans le quartier Pelleport. L'espace se compose d'un séjour lumineux avec accès à une terrasse de 28 m², une cuisine aménagée récente, 2 chambres spacieuses et une salle de bain moderne. Immeuble années 1970 bien entretenu, calme et à proximité des commerces.",
     "tags": [
-      "outdoor-garden",
-      "suburban",
-      "family-home",
-      "quiet-peaceful"
+      "outdoor",
+      "living",
+      "location",
+      "ambiance",
+      "structure"
     ],
     "features": [
-      "Cour pavée",
-      "Petit jardin",
-      "Parking",
-      "2 niveaux"
+      "Terrasse 28 m²",
+      "Double vitrage",
+      "Cuisine équipée",
+      "Box de parking"
     ],
-    "dpe": "B",
-    "ges": "B",
-    "floor": 0,
-    "totalFloors": 2,
-    "yearBuilt": 1975,
-    "monthlyCharges": 260,
+    "dpe": "D",
+    "ges": "D",
+    "floor": 2,
+    "totalFloors": 5,
+    "yearBuilt": 1972,
+    "monthlyCharges": 1850,
     "propertyTax": 680,
-    "neighborhoodVibe": "Résidentiel et calme, proximité transports",
-    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1780431320/shomee/videos/b02f65ede144.mp4",
-    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/b02f65ede144.jpg",
+    "irisZone": "Père Lachaise 5",
+    "irisPolygon": [
+      [
+        48.85651982,
+        2.39434509
+      ],
+      [
+        48.85766713,
+        2.39216738
+      ],
+      [
+        48.85835937,
+        2.38981909
+      ],
+      [
+        48.85848029,
+        2.38954644
+      ],
+      [
+        48.85981691,
+        2.38887926
+      ],
+      [
+        48.86289848,
+        2.38737779
+      ],
+      [
+        48.86305833,
+        2.38803565
+      ],
+      [
+        48.8637943,
+        2.39109264
+      ],
+      [
+        48.86495009,
+        2.39555434
+      ],
+      [
+        48.8642262,
+        2.39628383
+      ],
+      [
+        48.86349725,
+        2.39725872
+      ],
+      [
+        48.86241147,
+        2.39845579
+      ],
+      [
+        48.86143958,
+        2.39923032
+      ],
+      [
+        48.86171786,
+        2.40020307
+      ],
+      [
+        48.86084711,
+        2.40052523
+      ],
+      [
+        48.86042462,
+        2.40074544
+      ],
+      [
+        48.85981215,
+        2.40128134
+      ],
+      [
+        48.85914825,
+        2.40214356
+      ],
+      [
+        48.85767529,
+        2.39948226
+      ],
+      [
+        48.85756396,
+        2.3993418
+      ],
+      [
+        48.85730249,
+        2.39885143
+      ],
+      [
+        48.85697982,
+        2.39781796
+      ],
+      [
+        48.85683875,
+        2.39712858
+      ],
+      [
+        48.85675069,
+        2.39625051
+      ],
+      [
+        48.85671667,
+        2.3953909
+      ],
+      [
+        48.85651982,
+        2.39434509
+      ]
+    ],
+    "mapLat": 48.857043,
+    "mapLng": 2.397724,
+    "transports": [
+      "M2 Alexandre Dumas",
+      "M2 Philippe Auguste",
+      "M2 Avron",
+      "M9 Buzenval",
+      "M9 Maraîchers"
+    ],
+    "neighborhoodVibe": "Résidentiel, accès Nation facile, commerces de proximité",
+    "mapTransports": [
+      {
+        "lat": 48.85622809125615,
+        "lng": 2.3946756547920462,
+        "line": "M2",
+        "name": "Alexandre Dumas"
+      },
+      {
+        "lat": 48.85806226176241,
+        "lng": 2.3908609523236084,
+        "line": "M2",
+        "name": "Philippe Auguste"
+      },
+      {
+        "lat": 48.85190531895693,
+        "lng": 2.3979973148307456,
+        "line": "M2",
+        "name": "Avron"
+      },
+      {
+        "lat": 48.85197520932561,
+        "lng": 2.401927284511547,
+        "line": "M9",
+        "name": "Buzenval"
+      },
+      {
+        "lat": 48.85272512017012,
+        "lng": 2.406089161868773,
+        "line": "M9",
+        "name": "Maraîchers"
+      }
+    ],
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
+    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/9eb2d2f46dfd.jpg",
     "gallery": [],
     "chapters": null,
     "likeCount": 0,
@@ -456,28 +547,29 @@
     "avantPremiere": false,
     "statut": "PUBLISHED",
     "completionRate": 0.75,
-    "agencyId": "cmpwwtt0j00162031a944i191",
-    "createdByAgentId": "cmpwwtt1900172031a4ulqd1f",
+    "agencyId": "cmpwwtrox00062031zumtjquh",
+    "createdByAgentId": "cmpwwtrpd00072031afbb4lob",
     "collaborateurIds": [],
-    "hasElevator": false,
+    "hasElevator": true,
     "hasTerrace": true,
-    "terraceSurfaceM2": 35,
+    "terraceSurfaceM2": 28,
     "hasBalcony": false,
-    "hasGarden": true,
+    "hasGarden": false,
     "hasCellar": true,
     "hasParking": true,
     "hasConcierge": false,
-    "isGroundFloor": true,
+    "isGroundFloor": false,
     "isQuietStreet": true,
     "orientationStructured": [
-      "south"
+      "south",
+      "west"
     ],
-    "luminosity": 0.8,
-    "quietness": 0.88,
-    "charm": 0.7,
-    "spaciousness": 0.8,
-    "livingQuality": 0.85,
-    "outdoorUsability": 0.88,
+    "luminosity": 0.82,
+    "quietness": 0.78,
+    "charm": 0.68,
+    "spaciousness": 0.72,
+    "livingQuality": 0.75,
+    "outdoorUsability": 0.7,
     "llmFilledFields": [],
     "locationSource": null,
     "titleSource": null,
@@ -495,54 +587,204 @@
     "monthlyChargesSource": null,
     "propertyTaxSource": null,
     "compositionSource": null,
-    "agencyName": "Orpi Saint-Cloud Sèvres",
-    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/orpi.jpg",
-    "composition": [
+    "agencyName": "Varenne & Associés",
+    "agencyLogo": null
+  },
+  {
+    "id": "cmr9p1sdn01177431271m9lke",
+    "arrondissement": "Paris 20ème",
+    "subtitle": "Maison avec chambres spacieuses et cour ensoleillée",
+    "agentName": "Olivier Kretz",
+    "agentAvatar": "/agencies/Logo Kretz.png",
+    "title": "Maison 98 m² sur 4 niveaux - Paris 20ème",
+    "price": 1198000,
+    "pricePerSqm": 12224,
+    "surface": 98,
+    "rooms": 4,
+    "bedrooms": 3,
+    "location": "Père-Lachaise",
+    "district": "Père-Lachaise",
+    "description": "Maison de 98 m² répartie sur 4 niveaux dans le calme du quartier Père-Lachaise. Elle offre 3 chambres dont deux avec salle de bain attenante, un salon chaleureux, une cuisine fonctionnelle et un espace bureau. Une belle cour ensoleillée complète ce bien rare et tranquille.",
+    "tags": [
+      "living",
+      "structure",
+      "location",
+      "ambiance",
+      "building"
+    ],
+    "features": [
+      "Cour privée ensoleillée",
+      "Quatre niveaux",
+      "Trois chambres",
+      "Cave aménagée"
+    ],
+    "dpe": "D",
+    "ges": "E",
+    "floor": 0,
+    "totalFloors": 4,
+    "yearBuilt": 1910,
+    "monthlyCharges": 210,
+    "propertyTax": 920,
+    "irisZone": "Père Lachaise 4",
+    "irisPolygon": [
+      [
+        48.86478286,
+        2.3985988
+      ],
+      [
+        48.86407687,
+        2.39913584
+      ],
+      [
+        48.86316544,
+        2.39977202
+      ],
+      [
+        48.86257132,
+        2.40002013
+      ],
+      [
+        48.86171786,
+        2.40020307
+      ],
+      [
+        48.86143958,
+        2.39923032
+      ],
+      [
+        48.86241147,
+        2.39845579
+      ],
+      [
+        48.86349725,
+        2.39725872
+      ],
+      [
+        48.8642262,
+        2.39628383
+      ],
+      [
+        48.86495009,
+        2.39555434
+      ],
+      [
+        48.86499045,
+        2.39606777
+      ],
+      [
+        48.86491211,
+        2.3981911
+      ],
+      [
+        48.86481784,
+        2.39822217
+      ],
+      [
+        48.86476347,
+        2.39831958
+      ],
+      [
+        48.86473994,
+        2.3984698
+      ],
+      [
+        48.86478286,
+        2.3985988
+      ]
+    ],
+    "mapLat": 48.863862,
+    "mapLng": 2.397745,
+    "transports": [
+      "M3 Gambetta",
+      "3BIS Gambetta",
+      "3BIS Pelleport",
+      "M2 Père Lachaise",
+      "M3/3B Porte de Bagnolet"
+    ],
+    "neighborhoodVibe": "Père-Lachaise serein et verdoyant",
+    "mapTransports": [
       {
-        "label": "Séjour",
-        "surface": 30
+        "lat": 48.86497810787772,
+        "lng": 2.396912847086626,
+        "line": "M3",
+        "name": "Gambetta"
       },
       {
-        "label": "Cuisine",
-        "surface": 12
+        "lat": 48.86516343488149,
+        "lng": 2.3987465934425916,
+        "line": "3BIS",
+        "name": "Gambetta"
       },
       {
-        "label": "Chambre 1",
-        "surface": 14
+        "lat": 48.86844016327547,
+        "lng": 2.401561712742542,
+        "line": "3BIS",
+        "name": "Pelleport"
       },
       {
-        "label": "Chambre 2",
-        "surface": 11
+        "lat": 48.86218374787729,
+        "lng": 2.3878359564536575,
+        "line": "M2",
+        "name": "Père Lachaise"
       },
       {
-        "label": "Salle de bains",
-        "surface": 6
-      },
-      {
-        "label": "WC",
-        "surface": 2
-      },
-      {
-        "label": "Entrée / dégagement",
-        "surface": 7
+        "lat": 48.86460037337562,
+        "lng": 2.408031037075815,
+        "line": "M3",
+        "name": "Porte de Bagnolet"
       }
     ],
-    "marketAvgPricePerSqm": 7100,
-    "marketEvolution10y": "+22%",
-    "marketHighPrice": 8900,
-    "marketLowPrice": 5600,
-    "irisZone": "Plaine – Gare",
-    "irisDescription": "Secteur pavillonnaire résidentiel proche du centre-ville et des bords de Seine, à 15 min de La Défense.",
-    "transports": [
-      "RER A Rueil-Malmaison",
-      "Bus 144",
-      "Bus 244",
-      "Bus 567"
+    "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351941/shomee/videos/3d220a2aac61.mp4",
+    "imageUrlFallback": "https://res.cloudinary.com/dcysksoo3/video/upload/so_0,w_800,f_jpg/shomee/videos/3d220a2aac61.jpg",
+    "gallery": [],
+    "chapters": null,
+    "likeCount": 0,
+    "shareCount": 0,
+    "promising": false,
+    "mandatType": "SIMPLE",
+    "avantPremiere": false,
+    "statut": "PUBLISHED",
+    "completionRate": 0.75,
+    "agencyId": "cmppap3mr0000co285c079bkt",
+    "createdByAgentId": "cmppap3o70001co283ouvwrh9",
+    "collaborateurIds": [],
+    "hasElevator": false,
+    "hasTerrace": false,
+    "hasBalcony": false,
+    "hasGarden": true,
+    "hasCellar": true,
+    "hasParking": false,
+    "hasConcierge": false,
+    "isGroundFloor": true,
+    "isQuietStreet": true,
+    "orientationStructured": [
+      "south",
+      "west"
     ],
-    "nearbyPlaces": [
-      "Bords de Seine",
-      "Centre-ville de Rueil",
-      "Parc de Bois-Préau"
-    ]
+    "luminosity": 0.8,
+    "quietness": 0.8,
+    "charm": 0.88,
+    "spaciousness": 0.78,
+    "livingQuality": 0.82,
+    "outdoorUsability": 0.72,
+    "llmFilledFields": [],
+    "locationSource": null,
+    "titleSource": null,
+    "priceSource": null,
+    "surfaceSource": null,
+    "roomsSource": null,
+    "bedroomsSource": null,
+    "descriptionSource": null,
+    "floorSource": null,
+    "yearBuiltSource": null,
+    "dpeSource": null,
+    "gesSource": null,
+    "mandatTypeSource": null,
+    "refInterneAgenceSource": null,
+    "monthlyChargesSource": null,
+    "propertyTaxSource": null,
+    "compositionSource": null,
+    "agencyName": "Kretz Real Estate",
+    "agencyLogo": "https://res.cloudinary.com/dcysksoo3/image/upload/shomee/agencies/kretz.jpg"
   }
 ]
