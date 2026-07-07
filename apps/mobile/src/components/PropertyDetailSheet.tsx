@@ -16,6 +16,7 @@ import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
 import { PropertyMediaTabs } from '@/components/property/PropertyMediaTabs'
+import { MapZone, MOBILE_MAP_AVAILABLE } from '@/components/property/MapZone'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 const TEST_PHONE = '0670744935'
@@ -357,11 +358,22 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                     </View>
                   )}
 
-                  {/* Carte différée → placeholder (passe média ultérieure) */}
-                  <GreyBox style={styles.mapPlaceholder}>
-                    <Map size={26} color="#D6D3D1" />
-                    <Text style={styles.mapPlaceholderTxt}>Carte du quartier bientôt disponible</Text>
-                  </GreyBox>
+                  {/* Carte quartier — Leaflet (WebView) : polygone IRIS + métro + POI.
+                      Fallback placeholder si WebView indispo ou bien sans coords. */}
+                  {property.mapLat && property.mapLng && MOBILE_MAP_AVAILABLE ? (
+                    <MapZone
+                      lat={property.mapLat}
+                      lng={property.mapLng}
+                      polygon={property.irisPolygon}
+                      transports={property.mapTransports}
+                      pois={property.mapPois}
+                    />
+                  ) : (
+                    <GreyBox style={styles.mapPlaceholder}>
+                      <Map size={26} color="#D6D3D1" />
+                      <Text style={styles.mapPlaceholderTxt}>Carte du quartier bientôt disponible</Text>
+                    </GreyBox>
+                  )}
 
                   {/* Transports groupés par type (métro / RER / tram / bus) */}
                   {property.transports && property.transports.length > 0 && (
