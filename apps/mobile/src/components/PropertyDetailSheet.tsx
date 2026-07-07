@@ -140,14 +140,39 @@ function getTransportType(str: string): 'metro' | 'rer' | 'tramway' | 'bus' {
 const TRANSPORT_ORDER = ['metro', 'rer', 'tramway', 'bus'] as const
 const TRANSPORT_LABELS: Record<string, string> = { metro: 'Métro', rer: 'RER', tramway: 'Tramway', bus: 'Bus' }
 
-function TransportItem({ line }: { line: string }) {
-  const p = parseLine(line)
+type Badge = { number: string; color: string; darkText: boolean }
+
+/** Regroupe les lignes par station (ordre de proximité conservé, lignes dédupliquées). */
+function groupStations(strs: string[]): Array<{ name: string; badges: Badge[] }> {
+  // NB : `Map` global est shadowé par l'icône lucide `Map` → on utilise un objet.
+  const order: string[] = []
+  const byStation: Record<string, Badge[]> = {}
+  for (const s of strs) {
+    const p = parseLine(s)
+    let badges = byStation[p.name]
+    if (!badges) {
+      badges = []
+      byStation[p.name] = badges
+      order.push(p.name)
+    }
+    if (!badges.some((b) => b.number === p.number)) {
+      badges.push({ number: p.number, color: p.color, darkText: p.darkText })
+    }
+  }
+  return order.map((name) => ({ name, badges: byStation[name] ?? [] }))
+}
+
+function StationRow({ name, badges }: { name: string; badges: Badge[] }) {
   return (
     <View style={styles.transportItem}>
-      <View style={[styles.lineBadge, { backgroundColor: p.color }]}>
-        <Text style={[styles.lineNumber, { color: p.darkText ? '#000' : '#fff' }]}>{p.number}</Text>
+      <View style={styles.badgeRow}>
+        {badges.map((b) => (
+          <View key={b.number} style={[styles.lineBadge, { backgroundColor: b.color }]}>
+            <Text style={[styles.lineNumber, { color: b.darkText ? '#000' : '#fff' }]}>{b.number}</Text>
+          </View>
+        ))}
       </View>
-      <Text style={styles.transportName}>{p.name}</Text>
+      <Text style={styles.transportName}>{name}</Text>
     </View>
   )
 }
@@ -379,13 +404,13 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                   {property.transports && property.transports.length > 0 && (
                     <GreyBox style={[styles.boxRows, styles.qSpace]}>
                       {TRANSPORT_ORDER.map((type) => {
-                        const lines = (property.transports ?? []).filter((t) => getTransportType(t) === type)
-                        if (!lines.length) return null
+                        const strs = (property.transports ?? []).filter((t) => getTransportType(t) === type)
+                        if (!strs.length) return null
                         return (
                           <View key={type}>
                             <Text style={styles.transportGroup}>{TRANSPORT_LABELS[type]}</Text>
-                            {lines.map((t) => (
-                              <TransportItem key={t} line={t} />
+                            {groupStations(strs).map((g) => (
+                              <StationRow key={g.name} name={g.name} badges={g.badges} />
                             ))}
                           </View>
                         )
@@ -631,8 +656,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.08)',
   },
-  lineBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  lineNumber: { fontSize: 11, fontWeight: '900' },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  lineBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  lineNumber: { fontSize: 10, fontWeight: '900' },
   transportName: { color: '#57534E', fontSize: 14, flexShrink: 1 },
   nearbyCol: { alignItems: 'flex-end', gap: 2, flexShrink: 1 },
   nearbyItem: { color: '#57534E', fontSize: 14, textAlign: 'right' },
