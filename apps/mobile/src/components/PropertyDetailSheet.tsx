@@ -9,16 +9,33 @@ import {
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
-import { CalendarPlus, Check, Heart, Map, MessageCircle, Phone, Send } from 'lucide-react-native'
+import { CalendarPlus, Check, Heart, Map, MapPin, MessageCircle, Phone, Send } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path, Text as SvgText } from 'react-native-svg'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
+import { PropertyMediaTabs } from '@/components/property/PropertyMediaTabs'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 const TEST_PHONE = '0670744935'
 const ACCENT = '#A64B27'
+
+// TEMP démo média — appliqués à tous les biens tant que la base n'a ni galerie
+// ni plan ni visite (0% aujourd'hui). À REMPLACER par les vrais médias fournis
+// (photos réelles + plan + lien de visite virtuelle d'Olivier).
+const DEMO_PHOTOS = [
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1000&q=80',
+  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1000&q=80',
+  'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=1000&q=80',
+]
+// Plan = carrousel (plusieurs images). Plan démo réel bundlé ; ajouter d'autres
+// images (URL ou require) ici pour faire boucler le carrousel Plan.
+const DEMO_PLAN_URLS = [
+  require('../../assets/plans/plan-demo.png'),
+]
+// Visite virtuelle réelle fournie par Olivier (Giraffe360).
+const DEMO_TOUR_URL = 'https://tour.giraffe360.com/4da4e76c9e9a4af5b95cc2afe33a1a22'
 
 // Formatage FR sans Intl (Hermes) : espace fine tous les 3 chiffres — même
 // approche que l'ActionRail, pour rester cohérent et éviter tout souci Intl.
@@ -191,7 +208,6 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
     const renderFooter = useCallback(
       (props: BottomSheetFooterProps) => {
         if (!property) return null
-        const likeCount = (property.likeCount ?? 0) + (isFavorite ? 1 : 0)
         return (
           <BottomSheetFooter {...props} bottomInset={insets.bottom}>
             <View style={styles.footer}>
@@ -207,12 +223,11 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
               <View style={[styles.pill, styles.pillRight]}>
                 <CtaButton
                   icon={Heart}
-                  label={String(likeCount)}
                   active={isFavorite}
                   onPress={() => toggleFavorite(property)}
                 />
                 <Divider />
-                <CtaButton icon={Send} label={String(property.shareCount ?? 0)} onPress={handleShare} />
+                <CtaButton icon={Send} onPress={handleShare} />
               </View>
             </View>
           </BottomSheetFooter>
@@ -236,17 +251,10 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
-            {/* Image principale (galerie différée → un seul poster pour l'instant) */}
-            <Image
-              source={{ uri: property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE }}
-              style={styles.hero}
-              contentFit="cover"
-              transition={150}
-            />
-
-            {/* En-tête texte */}
+            {/* En-tête texte — AU-DESSUS du média, repris de la fiche web :
+                agence · prix + €/m² · localisation · chips stats · features. */}
             <View style={styles.header}>
-              {/* Badge agence — logo rond + nom, repris du feed (cohérence) */}
+              {/* Badge agence — logo rond + nom */}
               <View style={styles.agencyRow}>
                 <View style={styles.logo}>
                   {brandLogo ? (
@@ -260,14 +268,40 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 </Text>
               </View>
 
-              <Text style={styles.title}>{property.title}</Text>
-              <Text style={styles.subtitle}>
-                {property.arrondissement} · {property.surface} m² · {property.rooms} pièces
-              </Text>
-              <Text style={styles.price}>{euro(property.price)}</Text>
+              {/* Prix + prix/m² */}
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>{euro(property.price)}</Text>
+                <Text style={styles.perSqm}>
+                  soit{' '}
+                  {perSqm(
+                    property.pricePerSqm ?? Math.round(property.price / Math.max(property.surface, 1)),
+                  )}
+                </Text>
+              </View>
 
-              {/* Équipements — puces ✓ vertes (même rendu que le feed ; texte
-                  sombre car fond clair, retour à la ligne autorisé). */}
+              {/* Localisation — épingle + arrondissement · quartier */}
+              <View style={styles.locationRow}>
+                <MapPin size={12} color="#A8A29E" strokeWidth={2.5} />
+                <Text style={styles.location}>
+                  {property.arrondissement}
+                  {property.district ? ` · ${property.district}` : ''}
+                </Text>
+              </View>
+
+              {/* Chips stats */}
+              <View style={styles.chipsRow}>
+                {[
+                  `${property.surface} m²`,
+                  `${property.rooms} pièces`,
+                  ...(property.bedrooms != null ? [`${property.bedrooms} ch.`] : []),
+                ].map((v) => (
+                  <View key={v} style={styles.statChip}>
+                    <Text style={styles.statChipTxt}>{v}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Équipements — puces ✓ vertes (même rendu que le feed) */}
               {features.length > 0 && (
                 <View style={styles.featuresRow}>
                   {features.map((f) => (
@@ -278,6 +312,23 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                   ))}
                 </View>
               )}
+            </View>
+
+            <View style={styles.headerDivider} />
+
+            {/* Média : onglets Visite virtuelle | Plan | Photos + zone hero.
+                Fallback : gallery vide → le poster devient l'unique photo. */}
+            <View style={styles.mediaWrap}>
+              <PropertyMediaTabs
+                photos={
+                  property.gallery.length > 0
+                    ? property.gallery
+                    : [property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE, ...DEMO_PHOTOS]
+                }
+                planUrls={DEMO_PLAN_URLS}
+                virtualTourUrl={property.matterportUrl ?? DEMO_TOUR_URL}
+                coverUrl={property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE}
+              />
             </View>
 
             <View style={styles.sections}>
@@ -457,7 +508,7 @@ function CtaButton({
   grow,
 }: {
   icon: typeof Phone
-  label: string
+  label?: string
   onPress: () => void
   active?: boolean
   /** flex:1 → utilisé seulement dans la pill gauche (3 boutons à parts égales).
@@ -466,8 +517,8 @@ function CtaButton({
 }) {
   return (
     <Pressable onPress={onPress} style={[styles.cta, grow && styles.ctaGrow]} hitSlop={6}>
-      <Icon size={18} strokeWidth={1.8} color={active ? '#ef4444' : '#fff'} fill={active ? '#ef4444' : 'transparent'} />
-      <Text style={styles.ctaLabel}>{label}</Text>
+      <Icon size={18} strokeWidth={1.8} color="#fff" fill={active ? '#fff' : 'transparent'} />
+      {label ? <Text style={styles.ctaLabel}>{label}</Text> : null}
     </Pressable>
   )
 }
@@ -477,7 +528,7 @@ function Divider() {
 }
 
 const styles = StyleSheet.create({
-  sheetBg: { backgroundColor: '#FAFAF9' },
+  sheetBg: { backgroundColor: '#FDF5F2' },
   handle: { backgroundColor: '#D6D3D1', width: 40 },
   content: { paddingBottom: 120 },
 
@@ -492,9 +543,28 @@ const styles = StyleSheet.create({
   logoImg: { width: '100%', height: '100%' },
   logoInitial: { color: '#fff', fontSize: 12, fontWeight: '700' },
   agencyName: { color: '#1C1917', fontSize: 14, fontWeight: '600', flexShrink: 1 },
-  title: { color: '#1C1917', fontSize: 20, fontWeight: '800' },
-  subtitle: { color: '#78716C', fontSize: 13, marginTop: 4 },
-  price: { color: '#1C1917', fontSize: 22, fontWeight: '900', marginTop: 8 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 8, marginTop: 4 },
+  price: { color: '#1C1917', fontSize: 24, fontWeight: '900', lineHeight: 26 },
+  perSqm: { color: '#78716C', fontSize: 12 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  location: { color: '#1C1917', fontSize: 14, fontWeight: '500' },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  statChip: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  statChipTxt: { color: '#292524', fontSize: 12, fontWeight: '600' },
+  headerDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    marginTop: 14,
+    marginHorizontal: 16,
+  },
+  mediaWrap: { marginTop: 12 },
 
   featuresRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 8, marginTop: 12 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
