@@ -34,6 +34,9 @@ const prisma = new PrismaClient({ adapter })
 
 const limitArg = process.argv.indexOf('--limit')
 const LIMIT = limitArg >= 0 ? Number(process.argv[limitArg + 1]) : undefined
+// --force : re-traite TOUS les biens (ignore l'idempotence mapLat), pour
+// rafraîchir métro/IRIS/coords sur des biens déjà enrichis.
+const FORCE = process.argv.includes('--force')
 
 // ─── IRIS : chargement + index bbox + point-dans-polygone ──────────────────
 
@@ -175,13 +178,16 @@ async function main() {
   console.log(`  ${iris.length} IRIS, ${stations.length} stations`)
 
   // Idempotence via mapLat (Float) : fiable sur NULL SQL, mis à chaque update
-  // (filtrer un champ Json sur null est ambigu côté Prisma).
+  // (filtrer un champ Json sur null est ambigu côté Prisma). --force ignore ce
+  // filtre et re-traite tout.
   const biens = await prisma.property.findMany({
-    where: { mapLat: null, address: { not: null } },
+    where: FORCE ? { address: { not: null } } : { mapLat: null, address: { not: null } },
     select: { id: true, address: true, arrondissement: true },
     ...(LIMIT ? { take: LIMIT } : {}),
   })
-  console.log(`→ ${biens.length} biens à enrichir${LIMIT ? ` (limite ${LIMIT})` : ''}\n`)
+  console.log(
+    `→ ${biens.length} biens à enrichir${FORCE ? ' (--force : tout)' : ''}${LIMIT ? ` (limite ${LIMIT})` : ''}\n`,
+  )
 
   let geocoded = 0,
     irisFound = 0,
