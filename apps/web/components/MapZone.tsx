@@ -73,7 +73,8 @@ export default function MapZone({ lat, lng, polygon = [], transports = [], pois 
       center={[lat, lng]}
       zoom={15}
       style={{ width: '100%', height: '100%' }}
-      zoomControl={false}
+      zoomControl={true}
+      scrollWheelZoom={true}
       attributionControl={false}
     >
       <TileLayer

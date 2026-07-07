@@ -10,6 +10,8 @@
     "type-check": "tsc --noEmit",
     "db:seed": "node --experimental-strip-types prisma/seed.ts",
     "feed:seed": "node --experimental-strip-types scripts/gen-feed-seed.ts",
+    "geo:addresses": "node --experimental-strip-types scripts/backfill-addresses.ts",
+    "geo:backfill": "node --experimental-strip-types scripts/backfill-geo.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
