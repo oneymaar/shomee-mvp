@@ -9,7 +9,7 @@ import {
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet'
 import { Image } from 'expo-image'
-import { CalendarPlus, Check, Heart, Map, MapPin, MessageCircle, Phone, Send } from 'lucide-react-native'
+import { CalendarPlus, Check, Footprints, Heart, Map, MapPin, MessageCircle, Phone, Send } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path, Text as SvgText } from 'react-native-svg'
 import type { Property } from '@shomee/core/types/domain'
@@ -162,7 +162,7 @@ function groupStations(strs: string[]): Array<{ name: string; badges: Badge[] }>
   return order.map((name) => ({ name, badges: byStation[name] ?? [] }))
 }
 
-function StationRow({ name, badges }: { name: string; badges: Badge[] }) {
+function StationRow({ name, badges, walk }: { name: string; badges: Badge[]; walk?: number }) {
   return (
     <View style={styles.transportItem}>
       <View style={styles.badgeRow}>
@@ -172,7 +172,15 @@ function StationRow({ name, badges }: { name: string; badges: Badge[] }) {
           </View>
         ))}
       </View>
-      <Text style={styles.transportName}>{name}</Text>
+      <Text style={styles.transportName} numberOfLines={1}>
+        {name}
+      </Text>
+      {walk != null && (
+        <View style={styles.walkRow}>
+          <Footprints size={11} color="#A8A29E" />
+          <Text style={styles.walkTime}>{walk} min</Text>
+        </View>
+      )}
     </View>
   )
 }
@@ -204,6 +212,14 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
     // Features → puces ✓ sous l'en-tête. Même filtre que le feed (« Cave » est
     // déjà listé dans Caractéristiques) pour la cohérence visuelle.
     const features = property ? (property.features ?? []).filter((f) => f !== 'Cave') : []
+    // Temps de marche par station (pré-calculé au backfill ; min si plusieurs quais).
+    const walkByStation: Record<string, number> = {}
+    for (const mt of property?.mapTransports ?? []) {
+      if (mt.walkMin != null) {
+        walkByStation[mt.name] =
+          walkByStation[mt.name] == null ? mt.walkMin : Math.min(walkByStation[mt.name], mt.walkMin)
+      }
+    }
 
     // Badge agence — même logique que le feed (PropertyOverlay) : logo agence,
     // sinon avatar agent, sinon initiale. Repris pour la cohérence visuelle.
@@ -410,7 +426,12 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                           <View key={type}>
                             <Text style={styles.transportGroup}>{TRANSPORT_LABELS[type]}</Text>
                             {groupStations(strs).map((g) => (
-                              <StationRow key={g.name} name={g.name} badges={g.badges} />
+                              <StationRow
+                                key={g.name}
+                                name={g.name}
+                                badges={g.badges}
+                                walk={walkByStation[g.name]}
+                              />
                             ))}
                           </View>
                         )
@@ -660,6 +681,8 @@ const styles = StyleSheet.create({
   lineBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   lineNumber: { fontSize: 10, fontWeight: '900' },
   transportName: { color: '#57534E', fontSize: 14, flexShrink: 1 },
+  walkRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 'auto' },
+  walkTime: { color: '#A8A29E', fontSize: 12, fontWeight: '600' },
   nearbyCol: { alignItems: 'flex-end', gap: 2, flexShrink: 1 },
   nearbyItem: { color: '#57534E', fontSize: 14, textAlign: 'right' },
 

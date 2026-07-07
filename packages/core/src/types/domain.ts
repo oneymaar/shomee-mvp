@@ -82,7 +82,7 @@ export interface Property {
   transports?: string[]
   nearbyPlaces?: string[]
   neighborhoodVibe?: string
-  mapTransports?: Array<{ name: string; line: string; lat: number; lng: number }>
+  mapTransports?: Array<{ name: string; line: string; lat: number; lng: number; walkMin?: number }>
   mapPois?: Array<{ name: string; lat: number; lng: number }>
   // Detail — marché
   marketAvgPricePerSqm?: number

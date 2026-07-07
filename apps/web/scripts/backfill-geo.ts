@@ -28,6 +28,12 @@ import { geocodeBest } from '../lib/services/geocodingService.ts'
 const CONCURRENCY = 6
 const METRO_RADIUS_M = 1000
 const MAX_STATIONS = 5
+// Temps de marche estimé : distance à vol d'oiseau × détour ÷ vitesse (~4,8 km/h).
+const WALK_M_PER_MIN = 80
+const WALK_DETOUR = 1.3
+function walkMinutes(distM: number): number {
+  return Math.max(1, Math.round((distM * WALK_DETOUR) / WALK_M_PER_MIN))
+}
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
@@ -150,7 +156,7 @@ function nearbyStations(stations: Station[], lat: number, lng: number) {
     .sort((a, b) => a.d - b.d)
   const within = ranked.filter((r) => r.d <= METRO_RADIUS_M).slice(0, MAX_STATIONS)
   const chosen = within.length > 0 ? within : ranked.slice(0, 1) // toujours au moins 1
-  return chosen.map(({ s }) => s)
+  return chosen // [{ s, d }] — la distance sert au temps de marche
 }
 
 // ─── Pool ─────────────────────────────────────────────────────────────────
@@ -211,13 +217,14 @@ async function main() {
       const data: Record<string, unknown> = {
         mapLat: geo.lat,
         mapLng: geo.lng,
-        mapTransports: stns.map((s) => ({
+        mapTransports: stns.map(({ s, d }) => ({
           name: s.name,
           line: fmtLine(s.lines[0]),
           lat: s.lat,
           lng: s.lng,
+          walkMin: walkMinutes(d),
         })),
-        transports: stns.map((s) => `${s.lines.map(fmtLine).join('/')} ${s.name}`),
+        transports: stns.map(({ s }) => `${s.lines.map(fmtLine).join('/')} ${s.name}`),
       }
       if (feat) {
         irisFound++

@@ -88,31 +88,36 @@
         "lat": 48.87210144213156,
         "lng": 2.4045149423791043,
         "line": "3BIS",
-        "name": "Saint-Fargeau"
+        "name": "Saint-Fargeau",
+        "walkMin": 5
       },
       {
         "lat": 48.87711051176337,
         "lng": 2.40672924554309,
         "line": "M11",
-        "name": "Porte des Lilas"
+        "name": "Porte des Lilas",
+        "walkMin": 6
       },
       {
         "lat": 48.87547445667917,
         "lng": 2.398867596625601,
         "line": "M11",
-        "name": "Télégraphe"
+        "name": "Télégraphe",
+        "walkMin": 6
       },
       {
         "lat": 48.872097029931695,
         "lng": 2.40862005517699,
         "line": "3B",
-        "name": "Adrienne Bolland"
+        "name": "Adrienne Bolland",
+        "walkMin": 7
       },
       {
         "lat": 48.87945550325808,
         "lng": 2.4012336448556546,
         "line": "3B",
-        "name": "Hôpital Robert Debré"
+        "name": "Hôpital Robert Debré",
+        "walkMin": 9
       }
     ],
     "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
@@ -273,31 +278,36 @@
         "lat": 48.847335584614896,
         "lng": 2.408089407236094,
         "line": "M1",
-        "name": "Porte de Vincennes"
+        "name": "Porte de Vincennes",
+        "walkMin": 4
       },
       {
         "lat": 48.85272512017012,
         "lng": 2.406089161868773,
         "line": "M9",
-        "name": "Maraîchers"
+        "name": "Maraîchers",
+        "walkMin": 6
       },
       {
         "lat": 48.85197520932561,
         "lng": 2.401927284511547,
         "line": "M9",
-        "name": "Buzenval"
+        "name": "Buzenval",
+        "walkMin": 7
       },
       {
         "lat": 48.85298727790375,
         "lng": 2.4107411361264375,
         "line": "3B",
-        "name": "Porte de Montreuil"
+        "name": "Porte de Montreuil",
+        "walkMin": 9
       },
       {
         "lat": 48.84506157994489,
         "lng": 2.4012890198273484,
         "line": "M6",
-        "name": "Picpus"
+        "name": "Picpus",
+        "walkMin": 10
       }
     ],
     "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
@@ -509,31 +519,36 @@
         "lat": 48.85622809125615,
         "lng": 2.3946756547920462,
         "line": "M2",
-        "name": "Alexandre Dumas"
+        "name": "Alexandre Dumas",
+        "walkMin": 4
       },
       {
         "lat": 48.85806226176241,
         "lng": 2.3908609523236084,
         "line": "M2",
-        "name": "Philippe Auguste"
+        "name": "Philippe Auguste",
+        "walkMin": 8
       },
       {
         "lat": 48.85190531895693,
         "lng": 2.3979973148307456,
         "line": "M2",
-        "name": "Avron"
+        "name": "Avron",
+        "walkMin": 9
       },
       {
         "lat": 48.85197520932561,
         "lng": 2.401927284511547,
         "line": "M9",
-        "name": "Buzenval"
+        "name": "Buzenval",
+        "walkMin": 10
       },
       {
         "lat": 48.85272512017012,
         "lng": 2.406089161868773,
         "line": "M9",
-        "name": "Maraîchers"
+        "name": "Maraîchers",
+        "walkMin": 13
       }
     ],
     "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351952/shomee/videos/9eb2d2f46dfd.mp4",
@@ -707,31 +722,36 @@
         "lat": 48.86497810787772,
         "lng": 2.396912847086626,
         "line": "M3",
-        "name": "Gambetta"
+        "name": "Gambetta",
+        "walkMin": 2
       },
       {
         "lat": 48.86516343488149,
         "lng": 2.3987465934425916,
         "line": "3BIS",
-        "name": "Gambetta"
+        "name": "Gambetta",
+        "walkMin": 3
       },
       {
         "lat": 48.86844016327547,
         "lng": 2.401561712742542,
         "line": "3BIS",
-        "name": "Pelleport"
+        "name": "Pelleport",
+        "walkMin": 9
       },
       {
         "lat": 48.86218374787729,
         "lng": 2.3878359564536575,
         "line": "M2",
-        "name": "Père Lachaise"
+        "name": "Père Lachaise",
+        "walkMin": 12
       },
       {
         "lat": 48.86460037337562,
         "lng": 2.408031037075815,
         "line": "M3",
-        "name": "Porte de Bagnolet"
+        "name": "Porte de Bagnolet",
+        "walkMin": 12
       }
     ],
     "videoUrl": "https://res.cloudinary.com/dcysksoo3/video/upload/v1783351941/shomee/videos/3d220a2aac61.mp4",

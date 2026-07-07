@@ -68,8 +68,13 @@ export function toViewProperty(p: PrismaProperty): Property {
     nearbyPlaces: p.nearbyPlaces.length > 0 ? p.nearbyPlaces : undefined,
     neighborhoodVibe: nullToUndef(p.neighborhoodVibe),
     mapTransports:
-      (p.mapTransports as Array<{ name: string; line: string; lat: number; lng: number }> | null) ??
-      undefined,
+      (p.mapTransports as Array<{
+        name: string
+        line: string
+        lat: number
+        lng: number
+        walkMin?: number
+      }> | null) ?? undefined,
     mapPois:
       (p.mapPois as Array<{ name: string; lat: number; lng: number }> | null) ?? undefined,
 
