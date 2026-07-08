@@ -1,7 +1,9 @@
 import { useRef } from 'react'
 import { Alert, Animated, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native'
 import { Heart, MessageCircle, Phone, Send } from 'lucide-react-native'
+import { useRouter } from 'expo-router'
 import type { Property } from '@shomee/core/types/domain'
+import { useFlyHeartStore } from '@/lib/flyHeartStore'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 // Property n'a pas encore de champ agencyPhone ; quand il existera, il sera
@@ -23,18 +25,34 @@ interface Props {
  * Chaque bouton est une zone tactile isolée (Pressable) → ne déclenche ni le
  * scroll du FlatList ni les gestes vidéo.
  *  - Cœur : favori fonctionnel (store) + pulse au tap. Pas de fly-heart (v2+).
- *  - Message : placeholder (messagerie = S5).
+ *  - Message : ouvre le fil de discussion du bien (/messages/[id]).
  *  - Partage : feuille système iOS via Share.share (API react-native, pas de natif).
  */
 export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
+  const router = useRouter()
   const scale = useRef(new Animated.Value(1)).current
+  // Origine du vol : le centre du glyphe cœur (mesuré à l'instant du tap).
+  const heartWrapRef = useRef<View>(null)
+
+  // Ouvre le fil de discussion du bien (parité avec le bouton « Message » de la
+  // fiche). La conversation est créée à l'envoi du 1er message côté thread.
+  const handleMessage = () => {
+    router.push({ pathname: '/messages/[id]', params: { id: property.id } })
+  }
 
   const handleFavorite = () => {
+    // Transition non-favori → favori UNIQUEMENT : un-favorite ne lance aucun cœur.
+    const willFavorite = !isFavorite
     Animated.sequence([
       Animated.spring(scale, { toValue: 1.35, useNativeDriver: true, bounciness: 14, speed: 50 }),
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, bounciness: 14, speed: 50 }),
     ]).start()
     onToggleFavorite()
+    if (willFavorite) {
+      heartWrapRef.current?.measureInWindow((x, y, w, h) => {
+        if (w && h) useFlyHeartStore.getState().launch({ x: x + w / 2, y: y + h / 2 })
+      })
+    }
   }
 
   const handleShare = () => {
@@ -58,8 +76,8 @@ export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
 
   return (
     <View style={styles.rail} pointerEvents="box-none">
-      {/* Message — placeholder (S5) */}
-      <Pressable onPress={() => {}} style={styles.btn} hitSlop={8}>
+      {/* Message — ouvre le fil de discussion du bien */}
+      <Pressable onPress={handleMessage} style={styles.btn} hitSlop={8}>
         <MessageCircle size={28} color="#fff" strokeWidth={1.5} />
       </Pressable>
 
@@ -70,14 +88,16 @@ export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
 
       {/* Cœur — favori fonctionnel */}
       <Pressable onPress={handleFavorite} style={styles.btn} hitSlop={8}>
-        <Animated.View style={{ transform: [{ scale }] }}>
-          <Heart
-            size={28}
-            strokeWidth={1.5}
-            color={isFavorite ? '#ef4444' : '#fff'}
-            fill={isFavorite ? '#ef4444' : 'transparent'}
-          />
-        </Animated.View>
+        <View ref={heartWrapRef} collapsable={false}>
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Heart
+              size={28}
+              strokeWidth={1.5}
+              color={isFavorite ? '#ef4444' : '#fff'}
+              fill={isFavorite ? '#ef4444' : 'transparent'}
+            />
+          </Animated.View>
+        </View>
         <Text style={styles.count}>{likeCount}</Text>
       </Pressable>
 

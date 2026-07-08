@@ -5,9 +5,11 @@ import {
   BottomSheetFooter,
   BottomSheetModal,
   BottomSheetScrollView,
+  useBottomSheetModal,
   type BottomSheetBackdropProps,
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet'
+import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { CalendarPlus, Check, Footprints, Heart, Map, MapPin, MessageCircle, Phone, Send } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -207,6 +209,8 @@ interface Props {
 export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
   function PropertyDetailSheet({ property }, ref) {
     const insets = useSafeAreaInsets()
+    const router = useRouter()
+    const { dismiss } = useBottomSheetModal()
     const snapPoints = useMemo(() => ['92%'], [])
 
     // Favori abonné à CE bien (toggle + compteur des pills bas).
@@ -245,6 +249,14 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
       Linking.openURL(`tel:${phone}`).catch(() => Alert.alert("Appeler l'agence", phone))
     }, [property])
 
+    // Ouvre le fil de discussion du bien (crée la conversation à l'envoi du 1er
+    // message côté thread) — parité web `onMessage`. On ferme d'abord la sheet.
+    const handleMessage = useCallback(() => {
+      if (!property) return
+      dismiss()
+      router.push({ pathname: '/messages/[id]', params: { id: property.id } })
+    }, [property, dismiss, router])
+
     const handleShare = useCallback(() => {
       if (!property) return
       Share.share({
@@ -261,7 +273,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
             <View style={styles.footer}>
               {/* Pill gauche — 3 CTA à parts égales (flex:1 chacun) */}
               <View style={[styles.pill, styles.pillLeft]}>
-                <CtaButton icon={MessageCircle} label="Message" onPress={() => {}} grow />
+                <CtaButton icon={MessageCircle} label="Message" onPress={handleMessage} grow />
                 <Divider />
                 <CtaButton icon={Phone} label="Appeler" onPress={handleCall} grow />
                 <Divider />
@@ -281,7 +293,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
           </BottomSheetFooter>
         )
       },
-      [property, isFavorite, insets.bottom, handleCall, handleShare, toggleFavorite],
+      [property, isFavorite, insets.bottom, handleCall, handleMessage, handleShare, toggleFavorite],
     )
 
     return (
