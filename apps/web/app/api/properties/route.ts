@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
 
     if (!buyerProfileId) {
       return NextResponse.json(
-        dedupeByVideoUrl(properties, (p) => p.videoUrl).map((p) =>
+        dedupeByVideoUrl(shuffle(properties), (p) => p.videoUrl).map((p) =>
           projectPropertyExtras(p, toViewProperty(p)),
         ),
       )
@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
       // l'UI ; le badge restera absent côté client.
       console.warn(`[GET /api/properties] buyerProfile ${buyerProfileId} introuvable`)
       return NextResponse.json(
-        dedupeByVideoUrl(properties, (p) => p.videoUrl).map((p) =>
+        dedupeByVideoUrl(shuffle(properties), (p) => p.videoUrl).map((p) =>
           projectPropertyExtras(p, toViewProperty(p)),
         ),
       )
@@ -199,11 +199,28 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * Mélange Fisher-Yates (copie, non muté). Utilisé pour le flux « découverte »
+ * sans critères : à chaque appel (la route est `force-dynamic`, sans cache),
+ * l'ordre est ré-aléatoire → chaque relance de l'app propose un ordre différent.
+ * Appliqué AVANT la déduplication : le bien représentant d'une vidéo partagée
+ * varie aussi d'une fois sur l'autre. Le flux scoré (brief) n'est PAS mélangé —
+ * il reste trié par pertinence décroissante.
+ */
+function shuffle<T>(items: T[]): T[] {
+  const out = items.slice()
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+/**
  * Déduplication par vidéo : au plus un bien par `videoUrl` dans un même jeu de
  * résultats. Plusieurs biens (démo ou seed synthétique) partagent la même vidéo
  * source — on ne veut jamais tomber deux fois sur la même vidéo dans une même
- * recherche. L'ordre d'entrée décide du gagnant (déjà trié par score, ou par
- * date). Les biens sans vidéo (`videoUrl` null) sont toujours conservés.
+ * recherche. L'ordre d'entrée décide du gagnant (déjà trié par score, ou
+ * mélangé). Les biens sans vidéo (`videoUrl` null) sont toujours conservés.
  */
 function dedupeByVideoUrl<T>(items: T[], getUrl: (x: T) => string | null): T[] {
   const seen = new Set<string>()
