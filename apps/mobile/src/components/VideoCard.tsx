@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import { Image } from 'expo-image'
@@ -65,26 +65,95 @@ export function VideoCard({ property, isActive, muted }: Props) {
     [player],
   )
 
-  // Composition des gestes de la carte. `Gesture.Race` = le premier geste qui
-  // s'active gagne et annule les autres ; tap rapide et hold se distinguent
-  // naturellement (le tap se résout au lever avant le seuil 200 ms du hold, le
-  // hold s'active doigt immobile). Aujourd'hui seul le hold-pause est branché ;
-  // cette structure existe pour accueillir le tap-chapitres sans re-câbler le
-  // GestureDetector — il suffira de l'ajouter en 1er argument de Race().
-  const cardGesture = useMemo(
+  // ─── Nav chapitres au tap (S6b) ────────────────────────────────────────────
+  // Parité web (VideoCard.handleTap) : tap droite → chapitre suivant, tap gauche
+  // → précédent (ou redémarrage du chapitre courant si on est à +1,5 s dedans).
+  // Le seed / feed générique n'a pas de `chapters` → no-op (aucun seek).
+  const { width } = useWindowDimensions()
+
+  // Label transitoire — un nouvel objet à chaque nav (même libellé rejoué → une
+  // nouvelle ref déclenche le re-render et relance le minuteur). Auto-effacé
+  // après 1,7 s par un effet clavé dessus (pas de ref).
+  const [chapterLabel, setChapterLabel] = useState<{ text: string } | null>(null)
+  const showChapterLabel = useCallback((label: string) => {
+    setChapterLabel({ text: label })
+  }, [])
+  useEffect(() => {
+    if (!chapterLabel) return
+    const id = setTimeout(() => setChapterLabel(null), 1700)
+    return () => clearTimeout(id)
+  }, [chapterLabel])
+
+  // Chapitres → secondes de début, triés. Gère les DEUX formes tolérées :
+  // `startSec` (feed live) OU `fraction` 0..1 × durée (legacy).
+  const getChapters = useCallback((): { label: string; startSec: number }[] => {
+    const raw = property.chapters as
+      | { label: string; startSec?: number; fraction?: number }[]
+      | undefined
+    if (!raw || raw.length === 0) return []
+    const dur = player.duration || 0
+    return raw
+      .map((c) => ({
+        label: c.label,
+        startSec:
+          typeof c.startSec === 'number'
+            ? c.startSec
+            : typeof c.fraction === 'number'
+              ? c.fraction * (dur || 1)
+              : 0,
+      }))
+      .sort((a, b) => a.startSec - b.startSec)
+  }, [property.chapters, player])
+
+  const goNextChapter = useCallback(() => {
+    const chs = getChapters()
+    if (chs.length === 0) return // pas de chapitres → no-op
+    const t = player.currentTime
+    const next = chs.find((c) => c.startSec > t + 0.5)
+    if (next) {
+      player.currentTime = next.startSec // clamp au dernier : find undefined → rien
+      showChapterLabel(next.label)
+    }
+  }, [getChapters, player, showChapterLabel])
+
+  const goPrevChapter = useCallback(() => {
+    const chs = getChapters()
+    if (chs.length === 0) return // pas de chapitres → no-op
+    const t = player.currentTime
+    let curIdx = 0
+    for (let i = 0; i < chs.length; i++) {
+      if (chs[i].startSec <= t) curIdx = i
+    }
+    const inChapterFor = t - chs[curIdx].startSec
+    let target: { label: string; startSec: number } | null = null
+    if (inChapterFor > 1.5) target = chs[curIdx] // +1,5 s dans le chapitre → restart
+    else if (curIdx > 0) target = chs[curIdx - 1] // sinon précédent (clamp au 1er)
+    if (target) {
+      player.currentTime = target.startSec
+      showChapterLabel(target.label)
+    }
+  }, [getChapters, player, showChapterLabel])
+
+  const tapChapter = useMemo(
     () =>
-      Gesture.Race(
-        // TODO feed live : Gesture.Tap() zones gauche/droite → chapitre préc/suiv.
-        //   const tapChapter = Gesture.Tap()
-        //     .maxDuration(250)
-        //     .runOnJS(true)
-        //     .onEnd((e) => (e.x < width / 2 ? goPrevChapter() : goNextChapter()))
-        //   → l'insérer ICI (1er argument, priorité) ; le hold-pause reste inchangé.
-        //   Le seed n'a pas de chapitres → rien à brancher tant que le feed live
-        //   ne fournit pas property.chapters.
-        holdPause,
-      ),
-    [holdPause],
+      Gesture.Tap()
+        .maxDuration(250)
+        .runOnJS(true)
+        .onEnd((e) => {
+          if (e.x < width / 2) goPrevChapter()
+          else goNextChapter()
+        }),
+    [width, goPrevChapter, goNextChapter],
+  )
+
+  // Composition des gestes de la carte. `Gesture.Race` = le premier geste qui
+  // s'active gagne. Le tap rapide (≤250 ms) résout la nav chapitres AVANT le
+  // seuil 200 ms du hold-pause ; un appui maintenu active le hold (pause,
+  // inchangé). Le swipe vertical dépasse le slop du tap → il échoue et le scroll
+  // du FlatList passe. `tapChapter` en 1er argument (priorité), hold-pause après.
+  const cardGesture = useMemo(
+    () => Gesture.Race(tapChapter, holdPause),
+    [tapChapter, holdPause],
   )
 
   return (
@@ -106,6 +175,15 @@ export function VideoCard({ property, isActive, muted }: Props) {
             nativeControls={false}
           />
         )}
+        {/* Label de chapitre transitoire (~1,7 s) après une nav au tap. Autonome,
+            pointerEvents="none" pour ne pas intercepter les gestes. */}
+        {chapterLabel != null && (
+          <View style={styles.chapterLabelWrap} pointerEvents="none">
+            <Text style={styles.chapterLabel} numberOfLines={2}>
+              {chapterLabel.text}
+            </Text>
+          </View>
+        )}
       </View>
     </GestureDetector>
   )
@@ -113,4 +191,23 @@ export function VideoCard({ property, isActive, muted }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
+  chapterLabelWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chapterLabel: {
+    color: '#fff',
+    fontSize: 34,
+    fontWeight: '800',
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    textShadowColor: 'rgba(0,0,0,0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
+  },
 })
