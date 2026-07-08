@@ -6,6 +6,7 @@ import { Image } from 'expo-image'
 import { Check, ChevronDown, Home, MapPin } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
 import { formatLocation } from '@shomee/core/utils/format'
+import { MatchBadge } from './MatchBadge'
 
 /** Prix formaté avec séparateurs de milliers (espace, style fr) sans dépendre
  *  d'Intl (support Hermes inégal). Ex. 1350000 → "1 350 000 €". */
@@ -115,13 +116,8 @@ export function PropertyOverlay({ property, onMore }: Props) {
           </View>
 
           {/* MatchBadge — UNIQUEMENT si matchScore réel (jamais sur le seed).
-              La vraie jauge animée (svg) arrivera avec le feed live. */}
-          {property.matchScore != null && (
-            <View style={styles.match}>
-              <Text style={styles.matchPct}>{Math.round(property.matchScore * 100)}%</Text>
-              <Text style={styles.matchLbl}>MATCH</Text>
-            </View>
-          )}
+              Jauge SVG animée alimentée par le feed personnalisé (handoff brief). */}
+          {property.matchScore != null && <MatchBadge score={property.matchScore} />}
         </View>
       </View>
     </View>
@@ -159,10 +155,4 @@ const styles = StyleSheet.create({
   featureTxt: { color: '#fff', fontSize: 13 },
   more: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 4 },
   moreTxt: { color: '#fff', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
-  match: {
-    width: 58, height: 58, borderRadius: 29, backgroundColor: '#FDF5F2',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  matchPct: { color: '#A64B27', fontWeight: '900', fontSize: 15, lineHeight: 16 },
-  matchLbl: { color: '#A64B27', fontWeight: '700', fontSize: 7, letterSpacing: 0.5 },
 })

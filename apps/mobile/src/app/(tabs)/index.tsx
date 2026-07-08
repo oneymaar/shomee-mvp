@@ -2,11 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, View, type ViewToken } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BottomSheetModal } from '@gorhom/bottom-sheet'
+import { useIsFocused } from 'expo-router'
 import { Volume2, VolumeX } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@shomee/core/types/domain'
 import { useFeedStore } from '@/lib/stores'
 import { apiFetch } from '@/lib/api'
+import { BRIEF_FEED_PREFIX } from '@/lib/handoff'
 import { FeedItem } from '@/components/FeedItem'
 import { PropertyDetailSheet } from '@/components/PropertyDetailSheet'
 
@@ -32,6 +34,12 @@ export default function BiensScreen() {
   const muted = useFeedStore((s) => s.muted)
   const toggleMuted = useFeedStore((s) => s.toggleMuted)
 
+  // Écran focalisé ? Les onglets restent MONTÉS quand on navigue (autre onglet
+  // ou écran empilé par-dessus les tabs) : sans ce garde, la carte active
+  // continuerait de jouer (et le son de tourner) hors écran. Le focus est
+  // hiérarchique → false aussi quand un écran est empilé au-dessus des tabs.
+  const isFocused = useIsFocused()
+
   // PropertyDetailSheet : un seul modal au niveau du feed, présenté avec le bien
   // sélectionné depuis la carte (« Voir l'annonce » de l'overlay).
   const sheetRef = useRef<BottomSheetModal>(null)
@@ -51,6 +59,15 @@ export default function BiensScreen() {
   //     ne l'arrache pas. Échec / réponse vide → la seed reste (best-effort).
   useEffect(() => {
     let cancelled = false
+
+    // Feed personnalisé issu d'un handoff deep-link (session préfixée `brief:`) :
+    // on n'y touche pas — ni seed, ni refresh générique /api/properties (qui
+    // écraserait le feed noté). Il reste jusqu'au prochain cold start.
+    if (useFeedStore.getState().feedSessionId?.startsWith(BRIEF_FEED_PREFIX)) {
+      return () => {
+        cancelled = true
+      }
+    }
 
     if (!useFeedStore.getState().hasFeed()) {
       useFeedStore.getState().setFeed(SEED, String(Date.now()))
@@ -92,13 +109,13 @@ export default function BiensScreen() {
     ({ item, index }: { item: Property; index: number }) => (
       <FeedItem
         property={item}
-        isActive={index === currentIndex}
+        isActive={index === currentIndex && isFocused}
         muted={muted}
         height={viewportH}
         onOpenDetail={openDetail}
       />
     ),
-    [viewportH, currentIndex, muted, openDetail],
+    [viewportH, currentIndex, muted, isFocused, openDetail],
   )
 
   return (
@@ -108,7 +125,7 @@ export default function BiensScreen() {
           data={properties}
           keyExtractor={(p) => p.id}
           renderItem={renderItem}
-          extraData={`${currentIndex}|${muted}`}
+          extraData={`${currentIndex}|${muted}|${isFocused}`}
           pagingEnabled
           showsVerticalScrollIndicator={false}
           onViewableItemsChanged={onViewableItemsChanged}
