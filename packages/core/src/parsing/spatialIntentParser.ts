@@ -162,6 +162,43 @@ const COTE_EXPANSIONS: Record<string, { label: string; targetType: string; radiu
   ladefense:         { label: 'La Défense',            targetType: 'poi', radiusM: 500 },
 }
 
+// ─── Arrondissements en toutes lettres ───────────────────────────────────────
+
+const ARR_WORDS: Record<string, number> = {
+  premier: 1, '1er': 1, deuxieme: 2, second: 2, troisieme: 3, quatrieme: 4,
+  cinquieme: 5, sixieme: 6, septieme: 7, huitieme: 8, neuvieme: 9, dixieme: 10,
+  onzieme: 11, douzieme: 12, treizieme: 13, quatorzieme: 14, quinzieme: 15,
+  seizieme: 16, dixseptieme: 17, dixhuitieme: 18, dixneuvieme: 19, vingtieme: 20,
+  deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9,
+  dix: 10, onze: 11, douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16,
+  dixsept: 17, dixhuit: 18, dixneuf: 19, vingt: 20,
+}
+
+// ─── Lignes de transport (déterministe — le résolveur gère transport_line) ───
+
+/** Abaque temps de marche → rayon (alignée sur le prompt V1 de /api/location/analyze). */
+function walkRadiusM(minutes: number): number {
+  if (minutes <= 5) return 200
+  if (minutes <= 8) return 350
+  if (minutes <= 10) return 400
+  return 700
+}
+
+function lineEntity(rawId: string, rawText: string, radiusM?: number): SpatialEntity {
+  const id = rawId.replace(/\s+/g, '').toUpperCase() // "6", "7BIS", "A"
+  const generic = id === 'METRO' || id === 'RER'
+  return {
+    rawText,
+    normalizedText: normalizeForParsing(rawText),
+    type: 'transport_line',
+    resolvedId: generic ? id.toLowerCase() : id,
+    label: generic ? (id === 'RER' ? 'RER' : 'métro') : `ligne ${id}`,
+    confidence: 0.95,
+    operatorHint: 'near',
+    ...(radiusM ? { radiusM } : {}),
+  }
+}
+
 // ─── Street/way prefix ────────────────────────────────────────────────────────
 
 const STREET_PREFIX_RE = /^(avenue|av\.|rue|boulevard|bd\.|place|pl\.|square|allee|chemin|impasse|passage|cour|quai|voie|route|promenade|villa|cite|residence|esplanade|parvis|terrasse|galerie|venelle|sentier|ruelle|port|pont)\s+/i
@@ -190,7 +227,7 @@ for (const n of rawNeighborhoods as RawNeighborhood[]) {
 
 // ─── Entity resolution ────────────────────────────────────────────────────────
 
-function resolveEntity(rawText: string): SpatialEntity {
+function resolveEntity(rawText: string, _retried = false): SpatialEntity {
   const norm = normalizeForParsing(rawText.trim())
   const key = normKey(rawText.trim())
 
@@ -200,7 +237,7 @@ function resolveEntity(rawText: string): SpatialEntity {
   }
 
   // 2. Arrondissement patterns: "11e", "11ème", "Paris 11", "1er", "premier"
-  const arrMatch = norm.match(/^(?:paris\s+)?(\d{1,2})(?:e(?:m(?:e)?)?|er)?$/)
+  const arrMatch = norm.match(/^(?:paris\s+)?(?:le\s+)?(\d{1,2})(?:e(?:m(?:e)?)?|er|eme)?$/)
   if (arrMatch) {
     const num = parseInt(arrMatch[1], 10)
     if (num >= 1 && num <= 20) {
@@ -214,6 +251,26 @@ function resolveEntity(rawText: string): SpatialEntity {
     }
   }
 
+
+  // 2b. Arrondissement en toutes lettres : "paris douze", "le quatorzieme", "dix-huitieme".
+  // Cardinaux UNIQUEMENT derriere "paris " (sinon trop ambigu) ; ordinaux acceptes seuls.
+  {
+    const parisPrefixed = /^paris\s+(.+)$/.exec(norm)
+    const candidate = (parisPrefixed ? parisPrefixed[1] : norm).replace(/^le\s+/, '')
+    const kk = candidate.replace(/[-\s]+/g, '')
+    const wordNum = ARR_WORDS[kk]
+    const isOrdinal = /ieme$/.test(kk) || kk === 'premier' || kk === 'second' || kk === '1er'
+    if (wordNum !== undefined && wordNum >= 1 && wordNum <= 20 && (parisPrefixed || isOrdinal)) {
+      return {
+        rawText, normalizedText: norm,
+        type: 'district',
+        resolvedId: `arr-${wordNum}`,
+        label: wordNum === 1 ? 'Paris 1er' : `Paris ${wordNum}e`,
+        confidence: 0.95,
+      }
+    }
+  }
+
   // 3. Commune lookup (hardcoded coverage list from analyze/route.ts)
   const commune = COMMUNE_ID_MAP[key]
   if (commune) {
@@ -223,6 +280,8 @@ function resolveEntity(rawText: string): SpatialEntity {
   // 4. Explicit transport prefix: "métro X", "RER X", "tram X"
   const tpMatch = norm.match(/^(?:metro|rer|tram(?:way)?|station)\s+(.+)$/)
   if (tpMatch) {
+    const lm = tpMatch[1].match(/^(?:ligne\s+)?(\d{1,2}(?:\s*bis)?|[a-e])$/)
+    if (lm) return lineEntity(lm[1], rawText)
     const stKey = normKey(tpMatch[1])
     const s = stationByNorm.get(stKey)
     if (s) {
@@ -271,6 +330,15 @@ function resolveEntity(rawText: string): SpatialEntity {
       resolvedId: qtMatch.quartier.id,
       label: qtMatch.quartier.name,
       confidence: qtMatch.confidence * 0.85,
+    }
+  }
+
+  // 9. Article initial ("la Goutte d'Or", "les Batignolles") : retente sans lui.
+  if (!_retried) {
+    const stripped = norm.replace(/^(?:le|la|les|l'|du|de\s+la|des|au|aux)\s+/, '')
+    if (stripped !== norm && stripped.length >= 2) {
+      const retried = resolveEntity(stripped, true)
+      if (retried.type !== 'unknown') return { ...retried, rawText }
     }
   }
 
@@ -334,21 +402,329 @@ function resolveExclusionTarget(rawText: string): SpatialEntity {
   return resolveEntity(rawText.trim())
 }
 
+// ─── Fillers conversationnels (retirés clause par clause, jamais globalement) ──
+
+const FILLER_RES: RegExp[] = [
+  /^(?:je|on|nous)\s+(?:veux|voudrais|souhaite(?:rais)?|cherche(?:s)?|cherchons|recherche|aimerais|aimerait|reve\s+de)\s*/,
+  /^(?:j'aimerais(?:\s+bien)?|je\s+reve\s+de|j'adorerais)\s*/,
+  /^(?:bien\s+)?(?:vivre|habiter|etre|m'installer|nous\s+installer|demenager|louer|acheter)\s*/,
+  /^(?:un\s+(?:appart(?:ement)?|logement|bien|studio|deux\s+pieces|trois\s+pieces)|quelque\s+chose|quelque\s+part)\s*/,
+  /^(?:idealement|si\s+possible|plutot|de\s+preference|surtout|pourquoi\s+pas)\s*/,
+  /^(?:dans|a|au|aux|en|vers)\s+/,
+  /^(?:autour|du\s+cote|le\s+long|aupres)\s+(?:du|de\s+la|de\s+l'|des|de)\s+/,
+  /^(?:le|la|les|l')\s+/,
+  /^(?:quartier|secteur|coin)\s+/,
+]
+
+function stripFillers(clause: string): string {
+  let out = clause.trim()
+  for (let i = 0; i < 8; i++) {
+    let changed = false
+    for (const re of FILLER_RES) {
+      const next = out.replace(re, '')
+      if (next !== out) { out = next.trim(); changed = true }
+    }
+    if (!changed) break
+  }
+  return out
+}
+
+/** resolveEntity, puis retente après retrait des fillers conversationnels. */
+function resolveEntityDeep(text: string): SpatialEntity {
+  const direct = resolveEntity(text)
+  if (direct.type !== 'unknown') return direct
+  const stripped = stripFillers(text)
+  if (stripped !== text.trim() && stripped.length >= 2) {
+    const retried = resolveEntity(stripped)
+    if (retried.type !== 'unknown') return { ...retried, rawText: text }
+  }
+  return direct
+}
+
+// ─── Séparateurs ─────────────────────────────────────────────────────────────
+// Forts (frontières de clauses) : virgule, point-virgule, slash, retour ligne,
+// tiret espacé, "+". Faibles (énumération d'entités DANS une clause) : et/ou.
+
+const STRONG_SEP = /\s*[,;\n\/+]+\s*|\s+-\s+/
+const WEAK_SEP = /\s+(?:et(?:\s+(?:aussi|pourquoi\s+pas|egalement|meme|surtout))?|ou(?:\s+(?:eventuellement|bien|encore|meme|plutot))?)\s+/gi
+
+function weakSplit(text: string): string[] {
+  const parts = text.split(WEAK_SEP).map((p) => p.trim()).filter((p) => p.length >= 2)
+  return parts.length >= 1 ? parts : [text.trim()]
+}
+
+// ─── Clauses transport (lignes, métro générique, « à N min ») ────────────────
+
+const LINE_ID_RE = String.raw`(\d{1,2}(?:\s*bis)?|[a-e])`
+
+interface TransportMatch { primaryText: string; entity: SpatialEntity }
+
+function tryTransportClause(clause: string): TransportMatch | null {
+  // « [X] à (moins de) N min/mn (à pied) du métro|RER|d'une station|gare »
+  const minRe = /^(.*?)\s*a\s+(?:moins\s+d[e']\s*)?(\d{1,2})\s*m(?:i?n(?:utes)?)?\s*(?:a\s+pied\s+)?(?:du|d'une?|de\s+la|de|des)?\s*(metro|rer|station|gare|tram)\s*$/
+  const mm = clause.match(minRe)
+  if (mm) {
+    const network = mm[3] === 'rer' ? 'rer' : 'metro'
+    return { primaryText: mm[1].trim(), entity: lineEntity(network, clause, walkRadiusM(parseInt(mm[2], 10))) }
+  }
+  // « [X] proche/près/sur (de la) ligne N » ou « [X] ligne N » ou « ligne N » seule
+  const lineRe = new RegExp(String.raw`^(.*?)(?:^|\s)(?:(?:proche|pres|sur|le\s+long)\s+)?(?:de\s+la\s+|de\s+|du\s+|la\s+)?ligne\s+${LINE_ID_RE}\s*$`)
+  const lm = clause.match(lineRe)
+  if (lm) {
+    return { primaryText: lm[1].trim(), entity: lineEntity(lm[2], clause) }
+  }
+  // « [X] proche/près du métro|RER » (générique, fin de clause)
+  const genRe = /^(.*?)\s*(?:proche|pres)\s+(?:du|d'un|de\s+la|de|des)?\s*(metro|rer)\s*$/
+  const gm = clause.match(genRe)
+  if (gm) {
+    const network = gm[2] === 'rer' ? 'rer' : 'metro'
+    return { primaryText: gm[1].trim(), entity: lineEntity(network, clause, network === 'rer' ? 800 : 400) }
+  }
+  return null
+}
+
+// ─── Traitement d'une clause ─────────────────────────────────────────────────
+
+interface ClauseResult {
+  primaries: SpatialEntity[]
+  relations: SpatialRelation[]
+  exclusions: SpatialEntity[]
+  llm: boolean
+}
+
+const EXCL_PREFIX_RE = /^(?:sauf|hors|sans|mais\s+pas|pas)\s+(.+)$/
+const EXCL_INFIX_RE = /\s+(?:sauf|mais\s+pas|hors|sans)\s+(.+)$/
+const EXCENTRE_CL_RE = /^(.+?)\s+pas\s+(?:trop\s+)?excentr/
+const NEG_PROX_CL_RE = /^(.+?)\s+(?:pas\s+(?:trop\s+)?(?:proche|pres|cote)|loin\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?)\s*(.+)$/
+const COTE_CL_RE = /^(.+?)\s+cote\s+(.+)$/
+const INLINE_PROX_CL_RE = /^(.+?)\s+(?:proche|pres)\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?(.+)$/
+const PROX_PREFIX_PATTERNS: Array<{ re: RegExp; radiusM: number }> = [
+  { re: /^a\s+deux\s+pas\s+(?:de\s+|du\s+)?(.+)$/, radiusM: 100 },
+  { re: /^proche\s+(?:de\s+|du\s+)?(.+)$/, radiusM: 100 },
+  { re: /^pres\s+(?:de\s+|du\s+)?(.+)$/, radiusM: 150 },
+  { re: /^a\s+cote\s+(?:de\s+|du\s+)?(.+)$/, radiusM: 150 },
+  { re: /^autour\s+(?:de\s+la\s+|de\s+l'\s*|de\s+|du\s+|des\s+)?(.+)$/, radiusM: 250 },
+]
+
+const EXCENTRE_EXCLUSION: SpatialEntity = {
+  rawText: 'excentré',
+  normalizedText: 'excentre',
+  type: 'quartier',
+  label: 'Zone périphérique élargie',
+  resolvedId: 'zone-periph-elargie',
+  confidence: 0.88,
+}
+
+/** Résout la cible d'une exclusion, avec découpe faible (« sauf X et Y »). */
+function resolveExclusionList(targetText: string): SpatialEntity[] {
+  // « pas proche du périph » / « sauf côté bois » : retire le marqueur de proximité
+  const cleaned = targetText.replace(/^(?:trop\s+)?(?:proche|pres|cote)\s+(?:du|de\s+la|de\s+l'|des|de)?\s*/, '')
+  if (/^excentr/.test(targetText) || /^trop\s+excentr/.test(targetText)) return [EXCENTRE_EXCLUSION]
+  return weakSplit(cleaned).map((part) => resolveExclusionTarget(part))
+}
+
+function processClause(clauseRaw: string): ClauseResult {
+  const out: ClauseResult = { primaries: [], relations: [], exclusions: [], llm: false }
+  let clause = clauseRaw.trim()
+  if (clause.length < 2) return out
+
+  // 0a. Clause-exclusion pure : « sauf X », « sans Y », « pas proche du périph »
+  const exclPrefix = clause.match(EXCL_PREFIX_RE)
+  if (exclPrefix) {
+    if (/^(?:trop\s+)?excentr/.test(exclPrefix[1])) { out.exclusions.push(EXCENTRE_EXCLUSION); return out }
+    out.exclusions.push(...resolveExclusionList(exclPrefix[1].trim()))
+    return out
+  }
+
+  // 0b. Exclusion en suffixe de clause : « paris 18 sauf goutte d'or »
+  const exclInfix = clause.match(EXCL_INFIX_RE)
+  if (exclInfix) {
+    const target = exclInfix[1].trim()
+    if (/^(?:trop\s+)?excentr/.test(target)) out.exclusions.push(EXCENTRE_EXCLUSION)
+    else out.exclusions.push(...resolveExclusionList(target))
+    clause = clause.slice(0, exclInfix.index!).trim()
+    if (clause.length < 2) return out
+  }
+
+  // 1. « X pas (trop) excentré »
+  const excentre = clause.match(EXCENTRE_CL_RE)
+  if (excentre) {
+    out.primaries.push(resolveEntityDeep(excentre[1].trim()))
+    out.exclusions.push(EXCENTRE_EXCLUSION)
+    return out
+  }
+
+  // 2. « X pas proche/loin de REF » (REF ∈ ancres géo)
+  const negProx = clause.match(NEG_PROX_CL_RE)
+  if (negProx) {
+    const refRaw = negProx[2].trim()
+    const refStripped = refRaw.replace(/^(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)/, '')
+    const expansion = COTE_EXPANSIONS[normKey(refStripped || refRaw)]
+    if (expansion) {
+      out.primaries.push(resolveEntityDeep(negProx[1].trim()))
+      out.exclusions.push({
+        rawText: refRaw, normalizedText: normalizeForParsing(refRaw),
+        type: expansion.neighborhoodId ? 'quartier' : 'poi',
+        label: expansion.label, resolvedId: expansion.neighborhoodId, confidence: 0.88,
+      })
+      return out
+    }
+  }
+
+  // 3. « X côté REF » (jamais converti en direction cardinale) — et « X pas côté REF »
+  const cote = clause.match(COTE_CL_RE)
+  if (cote) {
+    let primaryText = cote[1].trim()
+    const expansion = COTE_EXPANSIONS[normKey(cote[2].trim())]
+    if (primaryText.endsWith(' pas') && expansion) {
+      out.primaries.push(resolveEntityDeep(primaryText.slice(0, -4).trim()))
+      out.exclusions.push({
+        rawText: cote[2].trim(), normalizedText: normalizeForParsing(cote[2].trim()),
+        type: expansion.neighborhoodId ? 'quartier' : 'poi',
+        label: expansion.label, resolvedId: expansion.neighborhoodId, confidence: 0.82,
+      })
+      return out
+    }
+    if (expansion) {
+      out.primaries.push(resolveEntityDeep(primaryText))
+      out.relations.push({
+        type: 'edge_of', targetText: expansion.label, targetType: expansion.targetType,
+        radiusM: expansion.radiusM, confidence: 0.9,
+        ...(expansion.neighborhoodId ? { neighborhoodId: expansion.neighborhoodId } : {}),
+      })
+      return out
+    }
+    const inner = resolveEntityDeep(cote[2].trim())
+    if (inner.type !== 'unknown') {
+      out.primaries.push(resolveEntityDeep(primaryText))
+      out.relations.push({ type: 'edge_of', targetText: inner.label ?? cote[2].trim(), targetType: 'poi', radiusM: 300, confidence: 0.7 })
+      return out
+    }
+  }
+
+  // 4. Transport : « ligne 6 », « [X] proche ligne 6 », « proche du métro », « à N min du métro »
+  const transport = tryTransportClause(clause)
+  if (transport) {
+    const TRANSPORT_KEYWORD_RE = /^(?:le\s+|la\s+|du\s+)?(?:metro|rer|tram(?:way)?|station|train)$/
+    if (TRANSPORT_KEYWORD_RE.test(transport.primaryText)) transport.primaryText = ''
+    if (transport.primaryText.length >= 2) {
+      const primary = resolveEntityDeep(transport.primaryText)
+      out.primaries.push(primary)
+      if (primary.type === 'unknown') out.llm = true
+    }
+    out.primaries.push(transport.entity)
+    return out
+  }
+
+  // 5. « X proche REF » : ancre géo connue → edge_of ; sinon station/quartier → filtre
+  const inlineProx = clause.match(INLINE_PROX_CL_RE)
+  if (inlineProx) {
+    const refText = inlineProx[2].trim()
+    const expansion = COTE_EXPANSIONS[normKey(refText)]
+    if (expansion) {
+      out.primaries.push(resolveEntityDeep(inlineProx[1].trim()))
+      out.relations.push({
+        type: 'edge_of', targetText: expansion.label, targetType: expansion.targetType,
+        radiusM: expansion.radiusM, confidence: 0.88,
+        ...(expansion.neighborhoodId ? { neighborhoodId: expansion.neighborhoodId } : {}),
+      })
+      return out
+    }
+    const ref = resolveEntityDeep(refText)
+    if (ref.type === 'transport_station' || ref.type === 'quartier') {
+      const primary = resolveEntityDeep(inlineProx[1].trim())
+      out.primaries.push(primary)
+      out.primaries.push({ ...ref, operatorHint: 'near' })
+      if (primary.type === 'unknown') out.llm = true
+      return out
+    }
+  }
+
+  // 6. Proximité en tête de clause : « proche de X », « à deux pas de X », « autour de X »
+  for (const { re, radiusM } of PROX_PREFIX_PATTERNS) {
+    const m = clause.match(re)
+    if (m) {
+      const target = m[1].trim()
+      const targetParts = weakSplit(target)
+      const entities = targetParts.map((t) => resolveEntityDeep(t))
+      if (entities.every((e) => e.type !== 'unknown')) {
+        out.primaries.push(...entities)
+        out.relations.push({ type: 'near', targetText: target, radiusM, confidence: 0.92 })
+        return out
+      }
+      // cible(s) inconnue(s) → on retombe sur le chemin générique (LLM probable)
+      break
+    }
+  }
+
+  // 7. « entre X et Y » en clause (le cas requête-entière est géré en amont)
+  const between = clause.match(/^entre\s+(.+?)\s+et\s+(.+)$/)
+  if (between) {
+    const e1 = resolveEntityDeep(between[1].trim())
+    const e2 = resolveEntityDeep(between[2].trim())
+    out.primaries.push(e1, e2)
+    out.relations.push({ type: 'between', confidence: 0.95 })
+    out.llm = e1.type === 'unknown' || e2.type === 'unknown'
+    return out
+  }
+
+  // 8. Chemin générique : énumération faible (« X et Y ») puis entité directe
+  const parts = weakSplit(clause)
+  if (parts.length >= 2) {
+    const entities = parts.map((p) => resolveEntityDeep(p))
+    if (entities.some((e) => e.type !== 'unknown')) {
+      out.primaries.push(...entities)
+      out.llm = entities.some((e) => e.type === 'unknown')
+      return out
+    }
+  }
+
+  const entity = resolveEntityDeep(clause)
+
+  // Lifestyle sans entité résolue → clause subjective, déléguée au LLM
+  if (entity.type === 'unknown' && LIFESTYLE_RE.test(clause)) {
+    out.llm = true
+    return out
+  }
+
+  // Garde anti-« partial match » : requête longue, entité courte → LLM.
+  // Comptée sur le texte APRÈS retrait des fillers (« je veux vivre dans le
+  // 18eme » → « 18eme » = 1 mot → pas de garde).
+  const queryWordCount = stripFillers(clause).split(/\s+/).length
+  const entityWordCount = (entity.label ?? entity.rawText).split(/\s+/).length
+  if (entity.type !== 'unknown' && queryWordCount >= 4 && entityWordCount < queryWordCount - 1) {
+    out.primaries.push(entity)
+    out.llm = true
+    return out
+  }
+
+  out.primaries.push(entity)
+  if (entity.type === 'unknown') out.llm = true
+  return out
+}
+
+// ─── API publique ────────────────────────────────────────────────────────────
+
 /**
- * Parse a raw user query into a structured SpatialIntent without any LLM call.
+ * Parse une requête libre en SpatialIntent structuré, sans LLM.
  *
- * Sets requiresLLM=true if:
- *   - Lifestyle/subjective vocabulary is detected
- *   - Any entity could not be resolved (type === 'unknown')
+ * Architecture par clauses (v2) : la requête est découpée sur les séparateurs
+ * forts (, ; / retour-ligne + tiret espacé), chaque clause est classifiée
+ * (zone | transport | proximité | exclusion | lifestyle) puis les résultats
+ * sont composés — union d'entités, relations et exclusions MULTIPLES.
+ *
+ * requiresLLM=true si : vocabulaire lifestyle, une entité primaire inconnue,
+ * ou une EXCLUSION inconnue (une exclusion perdue silencieusement produirait
+ * une carte trop large — c'est le pire échec possible).
  */
 export function parseSpatialIntent(rawQuery: string): SpatialIntent {
-  const normalizedQuery = normalizeForParsing(rawQuery.trim())
+  const normalizedQuery = normalizeForParsing(rawQuery.trim()).replace(/[.!?…]+$/, '').trim()
 
-  // ── 1. BETWEEN: "entre X et Y" ─────────────────────────────────────────────
+  // Requête entièrement « entre X et Y » : comportement historique exact.
   const betweenMatch = normalizedQuery.match(/^entre\s+(.+?)\s+et\s+(.+)$/)
-  if (betweenMatch) {
-    const e1 = resolveEntity(betweenMatch[1].trim())
-    const e2 = resolveEntity(betweenMatch[2].trim())
+  if (betweenMatch && !STRONG_SEP.test(normalizedQuery)) {
+    const e1 = resolveEntityDeep(betweenMatch[1].trim())
+    const e2 = resolveEntityDeep(betweenMatch[2].trim())
     const requiresLLM = e1.type === 'unknown' || e2.type === 'unknown'
     return {
       rawQuery, normalizedQuery,
@@ -360,242 +736,47 @@ export function parseSpatialIntent(rawQuery: string): SpatialIntent {
     }
   }
 
-  // ── 2. Extract EXCLUSIONS (greedy suffix) ───────────────────────────────────
-  // Matches: "sauf X", "mais pas X", "hors X" at the end of the query.
-  let workingQuery = normalizedQuery
+  const clauses = normalizedQuery.split(STRONG_SEP).map((c) => c.trim()).filter((c) => c.length >= 2)
+
+  const primaries: SpatialEntity[] = []
+  const relations: SpatialRelation[] = []
   const exclusions: SpatialEntity[] = []
+  let llm = false
 
-  const EXCL_RE = /\s+(?:sauf|mais\s+pas|hors)\s+(.+)$/
-  const exclMatch = workingQuery.match(EXCL_RE)
-  if (exclMatch) {
-    exclusions.push(resolveExclusionTarget(exclMatch[1].trim()))
-    workingQuery = workingQuery.slice(0, exclMatch.index!).trim()
+  for (const clause of clauses.length > 0 ? clauses : [normalizedQuery]) {
+    const res = processClause(clause)
+    primaries.push(...res.primaries)
+    relations.push(...res.relations)
+    exclusions.push(...res.exclusions)
+    llm = llm || res.llm
   }
 
-  // ── 2b. UNION: multiple zones separated by punctuation or conjunctions ────────
-  // Handles: "X, Y, Z" / "X ; Y" / "X / Y" / "X - Y" (spaced dash)
-  //          "X et Y" / "X ou Y" / "X et aussi Y" / "X ou éventuellement Y"
-  //          "X et pourquoi pas Y"
-  // Must come BEFORE CÔTÉ/NEG_PROX/INLINE_PROX so those don't intercept.
-  // workingQuery is already stripped of trailing exclusions (step 2).
-  {
-    // Split on separators (comma, semicolon, slash, spaced-dash) or coordinating
-    // conjunctions with optional adverbial modifiers.
-    // Spaced dash ` - ` is a separator; inline hyphen (no spaces) is not.
-    const UNION_SEP = /\s*[,;\/]\s*|\s+-\s+|\s+(?:et(?:\s+(?:aussi|pourquoi\s+pas|egalement|meme|surtout))?\s+|ou(?:\s+(?:eventuellement|bien|encore|meme|plutot))?\s+)/gi
-    const rawParts = workingQuery.split(UNION_SEP).map(p => p.trim()).filter(p => p.length >= 2)
-    if (rawParts.length >= 2) {
-      const entities = rawParts.map(p => resolveEntity(p))
-      const someKnown = entities.some(e => e.type !== 'unknown')
-      if (someKnown) {
-        return {
-          rawQuery, normalizedQuery,
-          primaryEntities: entities,
-          spatialRelations: [],
-          exclusions,
-          requiresLLM: entities.some(e => e.type === 'unknown'),
-          confidence: Math.min(...entities.map(e => e.confidence)) * 0.9,
-        }
-      }
-    }
-  }
+  // Déduplication des primaires (même entité citée deux fois)
+  const seen = new Set<string>()
+  const dedupedPrimaries = primaries.filter((e) => {
+    const key = `${e.type}|${e.resolvedId ?? normKey(e.label ?? e.rawText)}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 
-  // ── 3. CÔTÉ: "[entity] côté [reference]" ───────────────────────────────────
-  // IMPORTANT: "côté" is NEVER converted to a cardinal direction.
-  // After normalizeForParsing, "côté" → "cote".
-  //
-  // Also handles the negated form "[entity] pas côté [reference]" → exclusion.
-  // The "pas" ends up in the entity capture group; we strip it and produce a
-  // poi(exclude) instead of an edge_of relation.
-  const coteMatch = workingQuery.match(/^(.+?)\s+cote\s+(.+)$/)
-  if (coteMatch) {
-    let primaryText = coteMatch[1].trim()
-    const coteKey = normKey(coteMatch[2].trim())
-    const expansion = COTE_EXPANSIONS[coteKey]
+  const knownPrimaries = dedupedPrimaries.filter((e) => e.type !== 'unknown')
+  const requiresLLM =
+    llm ||
+    dedupedPrimaries.some((e) => e.type === 'unknown') ||
+    exclusions.some((e) => e.type === 'unknown')
 
-    // "X pas côté Y" → negated: exclude IRIS bordering Y from X
-    if (primaryText.endsWith(' pas') && expansion) {
-      const primaryEntity = resolveEntity(primaryText.slice(0, -4).trim())
-      return {
-        rawQuery, normalizedQuery,
-        primaryEntities: [primaryEntity],
-        spatialRelations: [],
-        exclusions: [{
-          rawText: coteMatch[2].trim(),
-          normalizedText: normalizeForParsing(coteMatch[2].trim()),
-          type: expansion.neighborhoodId ? 'quartier' : 'poi',
-          label: expansion.label,
-          resolvedId: expansion.neighborhoodId,
-          confidence: 0.82,
-        }],
-        requiresLLM: primaryEntity.type === 'unknown',
-        confidence: primaryEntity.confidence * 0.82,
-      }
-    }
-
-    // "X côté Y" → positive: select IRIS of X bordering Y
-    const primaryEntity = resolveEntity(primaryText)
-    const relation: SpatialRelation = expansion
-      ? { type: 'edge_of', targetText: expansion.label, targetType: expansion.targetType, radiusM: expansion.radiusM, confidence: 0.90, ...(expansion.neighborhoodId ? { neighborhoodId: expansion.neighborhoodId } : {}) }
-      : { type: 'edge_of', targetText: coteMatch[2].trim(), targetType: 'poi', radiusM: 300, confidence: 0.70 }
-
-    return {
-      rawQuery, normalizedQuery,
-      primaryEntities: [primaryEntity],
-      spatialRelations: [relation],
-      exclusions,
-      requiresLLM: primaryEntity.type === 'unknown',
-      confidence: primaryEntity.confidence * relation.confidence,
-    }
-  }
-
-  // ── 3b-bis. EXCENTRÉ: "[entity] pas (trop) excentré" ──────────────────────────
-  // "Paris 15 pas trop excentré", "Neuilly pas excentré"
-  // → inside(entity) + exclude(zone-periph-elargie)
-  // "excentré" means "too far from the center of Paris" — we exclude the outer ring
-  // of periph-adjacent IRIS (zone-periph-elargie = périph + 1 ring of neighbors).
-  const EXCENTRE_RE = /^(.+?)\s+pas\s+(?:trop\s+)?excentr/
-  const excentreMatch = workingQuery.match(EXCENTRE_RE)
-  if (excentreMatch) {
-    const primaryEntity = resolveEntity(excentreMatch[1].trim())
-    return {
-      rawQuery, normalizedQuery,
-      primaryEntities: [primaryEntity],
-      spatialRelations: [],
-      exclusions: [{
-        rawText: 'excentré',
-        normalizedText: 'excentre',
-        type: 'quartier' as const,
-        label: 'Zone périphérique élargie',
-        resolvedId: 'zone-periph-elargie',
-        confidence: 0.88,
-      }],
-      requiresLLM: primaryEntity.type === 'unknown',
-      confidence: primaryEntity.confidence * 0.88,
-    }
-  }
-
-  // ── 3b. NEGATED PROXIMITY: "[entity] pas proche/côté/loin de [reference]" ──────
-  // "Saint-Ouen pas proche périph", "Neuilly loin du bois", "Boulogne pas côté bois"
-  // → inside(entity) + poi(exclude, reference)
-  //
-  // This is the structural mirror of the positive inline proximity (3c below).
-  // "pas proche X" / "loin de X" / "pas côté X" all mean:
-  //   "select entity, then remove IRIS that border X"
-  //
-  // Only resolves when reference is in COTE_EXPANSIONS (known geographic anchors).
-  // Unknown references (e.g. "pas proche métro") fall through to LLM.
-  const NEG_PROX_RE = /^(.+?)\s+(?:pas\s+(?:trop\s+)?(?:proche|pres|cote)|loin\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?)\s*(.+)$/
-  const negProxMatch = workingQuery.match(NEG_PROX_RE)
-  if (negProxMatch) {
-    // Strip leading French articles from reference before COTE_EXPANSIONS lookup
-    const refRaw = negProxMatch[2].trim()
-    const refStripped = refRaw.replace(/^(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)/, '')
-    const refKey = normKey(refStripped || refRaw)
-    const expansion = COTE_EXPANSIONS[refKey]
-    if (expansion) {
-      const primaryEntity = resolveEntity(negProxMatch[1].trim())
-      return {
-        rawQuery, normalizedQuery,
-        primaryEntities: [primaryEntity],
-        spatialRelations: [],
-        exclusions: [{
-          rawText: refRaw,
-          normalizedText: normalizeForParsing(refRaw),
-          type: expansion.neighborhoodId ? 'quartier' : 'poi',
-          label: expansion.label,
-          resolvedId: expansion.neighborhoodId,
-          confidence: 0.88,
-        }],
-        requiresLLM: primaryEntity.type === 'unknown',
-        confidence: primaryEntity.confidence * 0.88,
-      }
-    }
-  }
-
-  // ── 3c. INLINE PROXIMITY: "[entity] proche/près [reference]" ─────────────────
-  // Handles "neuilly proche bois", "16e proche bois", "boulogne proche canal"…
-  // Only auto-resolves when the reference is in COTE_EXPANSIONS (known geographic
-  // anchors). All other targets (metro, station, centre…) fall through to the LLM.
-  // Uses edge_of semantics so the adapter emits the correct primary(inside) + poi(near).
-  const INLINE_PROX_RE = /^(.+?)\s+(?:proche|pres)\s+(?:du\s+|de\s+la?\s+|des\s+|de\s+l[']\s*)?(.+)$/
-  const inlineProxMatch = workingQuery.match(INLINE_PROX_RE)
-  if (inlineProxMatch) {
-    const refKey = normKey(inlineProxMatch[2].trim())
-    const expansion = COTE_EXPANSIONS[refKey]
-    if (expansion) {
-      const primaryEntity = resolveEntity(inlineProxMatch[1].trim())
-      const relation: SpatialRelation = {
-        type: 'edge_of',
-        targetText: expansion.label,
-        targetType: expansion.targetType,
-        radiusM: expansion.radiusM,
-        confidence: 0.88,
-        ...(expansion.neighborhoodId ? { neighborhoodId: expansion.neighborhoodId } : {}),
-      }
-      return {
-        rawQuery, normalizedQuery,
-        primaryEntities: [primaryEntity],
-        spatialRelations: [relation],
-        exclusions,
-        requiresLLM: primaryEntity.type === 'unknown',
-        confidence: primaryEntity.confidence * relation.confidence,
-      }
-    }
-  }
-
-  // ── 4. PROXIMITY patterns ───────────────────────────────────────────────────
-  const PROXIMITY_PATTERNS: Array<{ re: RegExp; radiusM: number }> = [
-    { re: /^a\s+deux\s+pas\s+(?:de\s+)?(.+)$/,    radiusM: 100 },
-    { re: /^proche\s+(?:de\s+)?(.+)$/,             radiusM: 100 },
-    { re: /^pres\s+(?:de\s+)?(.+)$/,               radiusM: 150 },
-    { re: /^a\s+cote\s+(?:de\s+)?(.+)$/,           radiusM: 150 },
-  ]
-
-  for (const { re, radiusM } of PROXIMITY_PATTERNS) {
-    const m = workingQuery.match(re)
-    if (m) {
-      const target = m[1].trim()
-      const entity = resolveEntity(target)
-      return {
-        rawQuery, normalizedQuery,
-        primaryEntities: [entity],
-        spatialRelations: [{ type: 'near', targetText: target, radiusM, confidence: 0.92 }],
-        exclusions,
-        requiresLLM: entity.type === 'unknown',
-        confidence: entity.confidence * 0.92,
-      }
-    }
-  }
-
-  // ── 5. Lifestyle / subjective vocabulary ───────────────────────────────────
-  if (LIFESTYLE_RE.test(normalizedQuery)) {
-    return {
-      rawQuery, normalizedQuery,
-      primaryEntities: [],
-      spatialRelations: [],
-      exclusions: [],
-      requiresLLM: true,
-      confidence: 0.1,
-    }
-  }
-
-  // ── 6. Direct entity resolution ────────────────────────────────────────────
-  const entity = resolveEntity(workingQuery)
-
-  // If the query has 4+ words and the entity label is much shorter than the query,
-  // it's likely a partial "contains" match on a multi-entity no-separator query.
-  // Send to LLM which handles "Ledru-Rollin rue de Charonne Reuilly Diderot" correctly.
-  const queryWordCount = workingQuery.split(/\s+/).length
-  const entityWordCount = (entity.label ?? entity.rawText).split(/\s+/).length
-  const isPartialMatch = entity.type !== 'unknown' && queryWordCount >= 4 && entityWordCount < queryWordCount - 1
+  const baseConfidence =
+    knownPrimaries.length > 0
+      ? Math.min(...knownPrimaries.map((e) => e.confidence)) * (dedupedPrimaries.length > 1 ? 0.9 : 1)
+      : 0
 
   return {
     rawQuery, normalizedQuery,
-    primaryEntities: [entity],
-    spatialRelations: [],
+    primaryEntities: dedupedPrimaries,
+    spatialRelations: relations,
     exclusions,
-    requiresLLM: entity.type === 'unknown' || isPartialMatch,
-    confidence: entity.confidence,
+    requiresLLM,
+    confidence: requiresLLM && knownPrimaries.length === 0 ? Math.min(baseConfidence, 0.1) : baseConfidence,
   }
 }

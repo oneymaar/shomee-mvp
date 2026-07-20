@@ -1,10 +1,19 @@
 export interface SpatialEntity {
   rawText: string
   normalizedText: string
-  type: 'city' | 'district' | 'quartier' | 'transport_station' | 'poi' | 'street' | 'unknown'
+  type: 'city' | 'district' | 'quartier' | 'transport_station' | 'transport_line' | 'poi' | 'street' | 'unknown'
   resolvedId?: string
   label?: string
   confidence: number
+  /** Rayon spécifique (ex. « à 5 min du métro » → abaque marche) — porté jusqu'au GeoConstraint. */
+  radiusM?: number
+  /**
+   * Indice d'opérateur posé par le parser quand l'entité est un FILTRE de
+   * proximité et non une zone à inclure (« Paris 10 proche gare du Nord » →
+   * la gare est operatorHint:'near'). Sans indice, le converter garde sa
+   * logique historique (union → inside, station seule → near).
+   */
+  operatorHint?: 'inside' | 'near'
 }
 
 export interface SpatialRelation {
