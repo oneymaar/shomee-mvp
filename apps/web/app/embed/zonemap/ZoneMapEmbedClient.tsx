@@ -139,12 +139,17 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
     const byId = (list: GeoZone[], ids: string[]) => list.filter((z) => ids.includes(z.id))
     const selIris = byId(iris, initial.irisIds)
     if (selIris.length > 0) return boundsOfFeatures(selIris)
-    const fallback = [
+    // Fallback tant que les IRIS chargent (~2 Mo) : quartiers/communes sélectionnés
+    // (petits → ≈ l'emprise réelle). PAS les arrondissements : leurs polygones
+    // entiers (ex. arr-11) élargiraient la bbox et donneraient un cadrage large,
+    // visible pendant les quelques secondes de chargement IRIS.
+    const fine = [
       ...byId(quartiers, initial.quartierIds),
       ...byId(communes, initial.communeIds),
-      ...byId(arrondissements, initial.arrIds),
     ]
-    return fallback.length > 0 ? boundsOfFeatures(fallback) : null
+    if (fine.length > 0) return boundsOfFeatures(fine)
+    const arrs = byId(arrondissements, initial.arrIds)
+    return arrs.length > 0 ? boundsOfFeatures(arrs) : null
   }, [iris, quartiers, communes, arrondissements, initial])
 
   const center = useMemo<[number, number]>(() => {
