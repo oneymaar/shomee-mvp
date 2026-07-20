@@ -71,12 +71,31 @@ export function poiRadius(poiType?: string | null): number {
   return (poiType && POI_TYPE_RADII[poiType]) || 500
 }
 
+/**
+ * Per-named-inclusion-entity IRIS grouping.
+ * `label` is the entity's display term ("Daumesnil", "Nation", "métro Pigalle"),
+ * `type` its ConstraintType (string), `irisIds` the IRIS this entity contributed
+ * that survived filters/excludes and are present in the final result.
+ */
+export interface EntityGroup {
+  label: string
+  type: string
+  irisIds: string[]
+}
+
 export interface ConstraintResolutionResult {
   irisIds: string[]
   fallbackZoneIds: string[]
   matchSummary: string[]
   wasNarrowed: boolean
   suggestedCenter?: [number, number]
+  /**
+   * ADDITIVE — one entry per resolved "inside"/standalone/between inclusion constraint
+   * that landed ≥1 IRIS. Does NOT affect `irisIds` (flat) or `matchSummary`; existing
+   * readers are untouched. Exclusions ("sauf …") are NOT represented here.
+   * Consumers (two-level pastilles) use it for per-entity full/partial state + removal.
+   */
+  entityGroups?: EntityGroup[]
 }
 
 // ─── Haversine distance (metres) ───────────────────────────────────────────
@@ -857,12 +876,15 @@ function selectIntermediateArea(
   const label1 = betweenCs[0].stationName ?? betweenCs[0].label
   const label2 = betweenCs[1].stationName ?? betweenCs[1].label
 
+  const betweenIrisIds = nearIris.map(z => z.id)
   return {
-    irisIds: nearIris.map(z => z.id),
+    irisIds: betweenIrisIds,
     fallbackZoneIds: [],
     matchSummary: [`entre ${label1} et ${label2}`],
     wasNarrowed: true,
     suggestedCenter: [midLat, midLng],
+    // "entre X et Y" is a single logical entity → one group covering the whole zone.
+    entityGroups: [{ label: `entre ${label1} et ${label2}`, type: 'relative_position', irisIds: betweenIrisIds }],
   }
 }
 
@@ -1023,6 +1045,62 @@ export function resolveConstraints(
     return { irisIds: [], fallbackZoneIds, matchSummary: [], wasNarrowed: false }
   }
 
+  // ── ADDITIF DISJOINT (validé en proto /proto/quartiers, porté avec OK) ─────
+  // « Batignolles et Montreuil » : Montreuil (admin) est DISJOINTE du scope
+  // précis (Batignolles) → l'utilisateur veut les DEUX zones. La precision rule
+  // + l'invariant guard (pensés pour « Paris 12 quartier Aligre », admin
+  // CONTENANT le précis) écrasaient la zone admin. Ici : on détecte les admin
+  // disjointes, on résout le cœur (précis + admin contenantes + filtres +
+  // exclusions) et chaque admin disjointe SÉPARÉMENT (avec les mêmes filtres/
+  // exclusions), puis on unionne. Récursion sûre : les sous-appels ne
+  // re-déclenchent pas ce chemin (admin seule → pas de précis ; cœur → pas de
+  // disjointe). Le narrowing « admin ⊃ précis » est INCHANGÉ.
+  {
+    const _isPlainAdmin = (c: GeoConstraint): boolean =>
+      c.type === 'administrative_area' && !!c.zoneId && !quartiers.some((q) => q.id === c.zoneId)
+    const _adminIncl = includeConstraints.filter(_isPlainAdmin)
+    const _preciseIncl = includeConstraints.filter((c) => !_isPlainAdmin(c))
+    if (_adminIncl.length > 0 && _preciseIncl.length > 0) {
+      const _preciseIds = new Set<string>()
+      for (const c of _preciseIncl) {
+        for (const z of resolveInsideToIris(c, iris, quartiers)) _preciseIds.add(z.id)
+      }
+      if (_preciseIds.size > 0) {
+        const _disjoint = _adminIncl.filter(
+          (a) => !getIrisInZone(a.zoneId as string, iris, quartiers).some((z) => _preciseIds.has(z.id))
+        )
+        if (_disjoint.length > 0) {
+          const _disjointSet = new Set(_disjoint)
+          const _core = normalized.filter((c) => !_disjointSet.has(c))
+          const _parts: ConstraintResolutionResult[] = [
+            resolveConstraints(_core, iris, quartiers, _communes),
+          ]
+          for (const a of _disjoint) {
+            _parts.push(resolveConstraints([a, ...filterConstraints, ...excludeConstraints], iris, quartiers, _communes))
+          }
+          const _seen = new Set<string>()
+          const _irisIds: string[] = []
+          const _summary: string[] = []
+          const _fallback: string[] = []
+          const _groups: EntityGroup[] = []
+          for (const part of _parts) {
+            for (const id of part.irisIds) if (!_seen.has(id)) { _seen.add(id); _irisIds.push(id) }
+            for (const l of part.matchSummary) if (!_summary.includes(l)) _summary.push(l)
+            for (const f of part.fallbackZoneIds) if (!_fallback.includes(f)) _fallback.push(f)
+            for (const g of part.entityGroups ?? []) _groups.push(g)
+          }
+          return {
+            irisIds: _irisIds,
+            fallbackZoneIds: _fallback,
+            matchSummary: _summary,
+            wasNarrowed: _irisIds.length > 0,
+            entityGroups: _groups,
+          }
+        }
+      }
+    }
+  }
+
   // ── Step 1: Build union pool from all "inside" constraints ─────────────────
   //
   // Precision rule: when the query mixes an arrondissement (administrative_area
@@ -1056,9 +1134,16 @@ export function resolveConstraints(
 
   const hasDirectional = includeConstraints.some(c => c.direction)
 
+  // Keep each entity's resolved IRIS grouped (label→IRIS) for entityGroups.
+  // Intersected with the final `narrowed` pool at the end (post filter/exclude/guard).
+  const rawGroups: { label: string; type: string; iris: GeoZone[] }[] = []
+
   for (const c of includeConstraints) {
     const zoneIris = resolveInsideToIris(c, iris, quartiers)
-    if (zoneIris.length > 0) summary.push(c.label)
+    if (zoneIris.length > 0) {
+      summary.push(c.label)
+      rawGroups.push({ label: c.label, type: c.type, iris: zoneIris })
+    }
     if (isPreciseInside(c))            preciseSets.push(zoneIris)
     else if (isArrondissementInside(c)) arrSets.push(zoneIris)
     else                                otherSets.push(zoneIris)
@@ -1099,6 +1184,7 @@ export function resolveConstraints(
     const standaloneIds = new Set<string>()
     const standaloneIris: GeoZone[] = []
     const standaloneLabels: string[] = []
+    const standaloneGroups: EntityGroup[] = []
 
     for (const c of filterConstraints) {
       if (c.type === 'semantic_neighborhood' || c.type === ('neighborhood' as ConstraintType)) {
@@ -1128,17 +1214,35 @@ export function resolveConstraints(
           }
         }
         for (const z of nearIris) if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
-        if (nearIris.length > 0) standaloneLabels.push(c.label)
+        if (nearIris.length > 0) {
+          standaloneLabels.push(c.label)
+          standaloneGroups.push({ label: c.label, type: c.type, irisIds: nearIris.map(z => z.id) })
+        }
       }
       if (c.type === 'transport_station') {
         const name = c.stationName ?? c.label
         const station = name ? findStation(name) : null
         if (station) {
           const radius = c.radiusM ?? GPS_POINT_RADIUS_M
-          for (const z of filterIrisByPoint(iris, station.lat, station.lng, radius)) {
+          const stIris = filterIrisByPoint(iris, station.lat, station.lng, radius)
+          for (const z of stIris) {
             if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
           }
           standaloneLabels.push(name)
+          if (stIris.length > 0) standaloneGroups.push({ label: name, type: c.type, irisIds: stIris.map(z => z.id) })
+        }
+      }
+      if (c.type === 'transport_line' && c.line) {
+        // Ligne seule (« proche de la ligne 6 ») : toutes les IRIS proches
+        // d'une station de la ligne. Miroir du chemin filtre (l. ~1208), en
+        // sélection standalone. ADDITIF — ne touche aucun chemin existant.
+        const lineIris = filterIrisByTransportLine(iris, c.line, c.radiusM)
+        for (const z of lineIris) {
+          if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
+        }
+        if (lineIris.length > 0) {
+          standaloneLabels.push(c.label)
+          standaloneGroups.push({ label: c.label, type: c.type, irisIds: lineIris.map(z => z.id) })
         }
       }
       if (c.type === 'poi') {
@@ -1150,12 +1254,15 @@ export function resolveConstraints(
         for (const z of poiZones) {
           if (!standaloneIds.has(z.id)) { standaloneIds.add(z.id); standaloneIris.push(z) }
         }
-        if (poiZones.length > 0) standaloneLabels.push(c.label)
+        if (poiZones.length > 0) {
+          standaloneLabels.push(c.label)
+          standaloneGroups.push({ label: c.label, type: c.type, irisIds: poiZones.map(z => z.id) })
+        }
       }
     }
 
     if (standaloneIris.length > 0) {
-      return { irisIds: standaloneIris.map(z => z.id), fallbackZoneIds: [], matchSummary: standaloneLabels, wasNarrowed: true }
+      return { irisIds: standaloneIris.map(z => z.id), fallbackZoneIds: [], matchSummary: standaloneLabels, wasNarrowed: true, entityGroups: standaloneGroups }
     }
     return { irisIds: [], fallbackZoneIds, matchSummary: [], wasNarrowed: false }
   }
@@ -1316,10 +1423,21 @@ export function resolveConstraints(
       excludeConstraints.length > 0 ||
       narrowed.length < unionIris.length)
 
+  const finalIrisIds = narrowed.length > 0 ? narrowed.map(z => z.id) : []
+
+  // entityGroups: intersect each entity's raw resolved IRIS with the final pool
+  // so groups reflect only what actually survived filters/excludes/guard. Initially
+  // finalIrisIds === selectedIrisIds → every surviving entity reads as "full".
+  const finalIdSet = new Set(finalIrisIds)
+  const entityGroups: EntityGroup[] = rawGroups
+    .map(g => ({ label: g.label, type: g.type, irisIds: g.iris.filter(z => finalIdSet.has(z.id)).map(z => z.id) }))
+    .filter(g => g.irisIds.length > 0)
+
   return {
-    irisIds: narrowed.length > 0 ? narrowed.map(z => z.id) : [],
+    irisIds: finalIrisIds,
     fallbackZoneIds,
     matchSummary: summary,
     wasNarrowed,
+    entityGroups,
   }
 }
