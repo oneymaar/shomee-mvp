@@ -129,17 +129,22 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
   }, [])
 
   // fitBounds calculé sur la sélection INITIALE (stable), PAS sur la sélection
-  // live → la carte ne se re-cadre pas à chaque tap. Se resserre quand les IRIS
-  // arrivent (arr grossier → IRIS précis), puis reste stable.
+  // live → la carte ne se re-cadre pas à chaque tap.
+  // PRIORITÉ aux polygones des IRIS RÉELLEMENT sélectionnés → cadrage serré sur
+  // les poches (padding [28,28] + maxZoom 15 appliqués par ZoneMap). Poches
+  // disjointes (Daumesnil + Nation) → l'union englobe les deux avec de l'air.
+  // Fallback (aucun IRIS, ou géométrie IRIS pas encore chargée) : zones parentes
+  // disponibles — remplacé par le cadrage serré dès que les IRIS arrivent.
   const fitBounds = useMemo<Bounds | null>(() => {
     const byId = (list: GeoZone[], ids: string[]) => list.filter((z) => ids.includes(z.id))
-    const sel = [
-      ...byId(iris, initial.irisIds),
+    const selIris = byId(iris, initial.irisIds)
+    if (selIris.length > 0) return boundsOfFeatures(selIris)
+    const fallback = [
       ...byId(quartiers, initial.quartierIds),
       ...byId(communes, initial.communeIds),
       ...byId(arrondissements, initial.arrIds),
     ]
-    return sel.length > 0 ? boundsOfFeatures(sel) : null
+    return fallback.length > 0 ? boundsOfFeatures(fallback) : null
   }, [iris, quartiers, communes, arrondissements, initial])
 
   const center = useMemo<[number, number]>(() => {
