@@ -84,7 +84,6 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
   const [communes, setCommunes] = useState<GeoZone[]>([])
   const [irisLoading, setIrisLoading] = useState(true)
   const [zoom, setZoom] = useState(12)
-  const [ready, setReady] = useState(false)
 
   const {
     selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds,
@@ -116,13 +115,12 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
         setArrondissements(arrs)
         setQuartiers(qus)
         setCommunes(coms)
-        setReady(true)
         const ir = await fetchParisIris(qus, coms)
         if (cancelled) return
         setIris(ir)
         setIrisLoading(false)
       } catch {
-        if (!cancelled) { setReady(true); setIrisLoading(false) }
+        if (!cancelled) setIrisLoading(false)
       }
     })()
     return () => { cancelled = true }
@@ -298,9 +296,12 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
 
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: '#FDF5F2' }}>
-      {/* Carte */}
+      {/* Carte — on ATTEND le chargement des IRIS avant de monter ZoneMap : ainsi
+          le premier (et unique) fitBounds au montage se fait sur l'union des IRIS
+          réellement sélectionnés → cadrage serré fiable, sans dépendre d'un re-fit
+          ultérieur ni du fallback arr/quartier. */}
       <div className="flex-1 relative">
-        {ready && arrondissements.length > 0 ? (
+        {!irisLoading && arrondissements.length > 0 ? (
           <ZoneMap
             center={center}
             zoom={zoom}
