@@ -187,17 +187,61 @@ export default function ProtoQuartiersClient() {
         setInitialIris([]); setEntityGroups([]); setMatchSummary([]); setSel(EMPTY_SEL)
         return
       }
-      const res = resolveConstraints(gc, iris, quartiers, communes)
-      const irisIds = res.irisIds ?? []
+      // ── Mode ADDITIF pour zones admin disjointes (EXPÉRIMENTATION PROTO) ──
+      // Le moteur réel absorbe arrondissements/communes dès qu'un scope précis
+      // (quartier vécu) résout : « precision rule » (retire les IRIS admin de
+      // l'union) + « invariant guard » (force le résultat à rester DANS l'admin).
+      // Correct pour « Paris 12 quartier Aligre » (Aligre ⊂ P12 → on veut Aligre) ;
+      // FAUX pour des zones disjointes (« Batignolles + Montreuil », « Montparnasse
+      // + Paris 11 »). Ici, en PROTO SEULEMENT, on résout le scope précis et chaque
+      // zone admin séparément, puis on unionne les admin DISJOINTES du précis.
+      // → Si validé, à PORTER dans geoConstraintService (fichier protégé, avec OK).
+      const hasExclude = gc.some((c) => c.operator === 'exclude')
+      const hasBetween = gc.some((c) => c.operator === 'between')
+      const hasDirectional = intent.spatialRelations.some((r) => r.direction)
+      const adminCs = gc.filter((c) => c.type === 'administrative_area' && c.operator !== 'exclude')
+      const preciseCs = gc.filter((c) => c.type !== 'administrative_area' && c.operator !== 'exclude')
+      const additiveCase = adminCs.length > 0 && preciseCs.length > 0 && !hasExclude && !hasBetween && !hasDirectional
+
+      let irisIds: string[]
+      let groupsRaw: EntityGroup[]
+      let summary: string[]
+
+      if (additiveCase) {
+        // 1) scope précis SEUL (sans admin → le guard ne le supprime pas)
+        const pr = resolveConstraints(preciseCs, iris, quartiers, communes)
+        irisIds = [...(pr.irisIds ?? [])]
+        groupsRaw = pr.entityGroups ?? []
+        summary = [...(pr.matchSummary ?? [])]
+        const set = new Set(irisIds)
+        // 2) chaque zone admin : additive si DISJOINTE du précis, sinon contexte (narrowing)
+        for (const a of adminCs) {
+          const aIris = resolveConstraints([{ ...a, operator: 'inside' }], iris, quartiers, communes).irisIds ?? []
+          if (aIris.length === 0) continue
+          const aSet = new Set(aIris)
+          const preciseInsideThisAdmin = irisIds.some((id) => aSet.has(id))
+          if (!preciseInsideThisAdmin) {
+            for (const id of aIris) if (!set.has(id)) { irisIds.push(id); set.add(id) }
+            if (a.label) summary.push(a.label)
+          }
+          // sinon : le précis est déjà dans cet arr/commune → on garde le narrowing
+        }
+      } else {
+        const res = resolveConstraints(gc, iris, quartiers, communes)
+        irisIds = res.irisIds ?? []
+        groupsRaw = res.entityGroups ?? []
+        summary = res.matchSummary ?? []
+      }
+
       const initSet = new Set(irisIds)
-      const groups = (res.entityGroups ?? [])
+      const groups = groupsRaw
         .filter((g) => g.type !== 'administrative_area')
         .map((g) => ({ ...g, irisIds: g.irisIds.filter((id) => initSet.has(id)) }))
         .filter((g) => g.irisIds.length > 0)
       const parents = deriveParents(irisIds)
       setInitialIris(irisIds)
       setEntityGroups(groups)
-      setMatchSummary(res.matchSummary ?? [])
+      setMatchSummary(summary)
       setSel({ iris: irisIds, arr: parents.arr, q: parents.q, com: parents.com })
     } catch {
       setInitialIris([]); setEntityGroups([]); setMatchSummary([]); setSel(EMPTY_SEL)
