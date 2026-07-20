@@ -189,20 +189,63 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
   const quartierById = useMemo(() => new Map(quartiers.map((q) => [q.id, q])), [quartiers])
   const irisById = useMemo(() => new Map(iris.map((i) => [i.id, i])), [iris])
 
-  // Arrondissements « partiels » : des IRIS/quartiers sélectionnés sans l'arr entier.
-  const partialArrIds = useMemo(() => {
-    const set = new Set<string>()
-    for (const qid of selectedQuartierIds) {
-      const arrId = quartierById.get(qid)?.parentId
-      if (arrId && !selectedArrIds.includes(arrId)) set.add(arrId)
+  // ── Couverture réelle (sélection D'AFFICHAGE) ───────────────────────────────
+  // `deriveParents` (résolution native) place l'ARR entier dans selectedArrIds dès
+  // qu'UN SEUL de ses IRIS est pris → `computeArrState` (qui teste
+  // `selectedArrIds.includes` en premier) renverrait 'selected' (plein) pour une
+  // simple poche. On recalcule donc une sélection d'affichage : un arr / quartier /
+  // commune n'est « plein » que si TOUS ses IRIS sont pris ; sinon il tombe en
+  // 'partial' (pointillé sans remplissage). Le STORE garde la sélection brute (arr
+  // inclus) pour le postMessage + le filtre feed arr-granulaire — on ne touche NI
+  // `computeArrState`, NI la résolution, NI le feed.
+  const coverage = useMemo(() => {
+    const selIris = new Set(selectedIrisIds)
+    const irisByQuartier = new Map<string, string[]>()
+    const irisByCommune = new Map<string, string[]>()
+    for (const i of iris) {
+      const p = i.parentId
+      if (!p) continue
+      const bucket = p.startsWith('com-') ? irisByCommune : p.startsWith('qu-') ? irisByQuartier : null
+      if (!bucket) continue
+      const arr = bucket.get(p)
+      if (arr) arr.push(i.id)
+      else bucket.set(p, [i.id])
     }
+    const fullQuartierIds = new Set<string>()
+    for (const [qid, ids] of irisByQuartier) {
+      if (ids.length > 0 && ids.every((x) => selIris.has(x))) fullQuartierIds.add(qid)
+    }
+    const quartiersByArr = new Map<string, string[]>()
+    for (const q of quartiers) {
+      const a = q.parentId
+      if (!a) continue
+      const arr = quartiersByArr.get(a)
+      if (arr) arr.push(q.id)
+      else quartiersByArr.set(a, [q.id])
+    }
+    const fullArrIds = new Set<string>()
+    for (const [aid, qids] of quartiersByArr) {
+      if (qids.length > 0 && qids.every((q) => fullQuartierIds.has(q))) fullArrIds.add(aid)
+    }
+    const fullCommuneIds = new Set<string>()
+    for (const [cid, ids] of irisByCommune) {
+      if (ids.length > 0 && ids.every((x) => selIris.has(x))) fullCommuneIds.add(cid)
+    }
+    // Arrs « touchés » (≥1 IRIS pris) mais pas pleins → partiels (pastille secteur).
+    const touchedArr = new Set<string>()
     for (const iid of selectedIrisIds) {
       const qId = irisById.get(iid)?.parentId
-      const arrId = qId ? quartierById.get(qId)?.parentId : undefined
-      if (arrId && !selectedArrIds.includes(arrId)) set.add(arrId)
+      const aId = qId ? quartierById.get(qId)?.parentId : undefined
+      if (aId) touchedArr.add(aId)
     }
-    return [...set]
-  }, [selectedQuartierIds, selectedIrisIds, quartierById, irisById, selectedArrIds])
+    const partialArrIds = [...touchedArr].filter((a) => !fullArrIds.has(a))
+    return { fullArrIds, fullQuartierIds, fullCommuneIds, partialArrIds }
+  }, [iris, quartiers, selectedIrisIds, irisById, quartierById])
+
+  const displayArrIds = useMemo(() => [...coverage.fullArrIds], [coverage])
+  const displayQuartierIds = useMemo(() => [...coverage.fullQuartierIds], [coverage])
+  const displayCommuneIds = useMemo(() => [...coverage.fullCommuneIds], [coverage])
+  const partialArrIds = coverage.partialArrIds
 
   const removePartialArr = useCallback((arrId: string) => {
     const childQ = getChildQuartiers(arrId, quartiers).map((q) => q.id)
@@ -217,14 +260,16 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
     selectedArrIds.length > 0 || selectedCommuneIds.length > 0 ||
     selectedQuartierIds.length > 0 || selectedIrisIds.length > 0
 
-  // Libellé dérivé de la sélection courante (fallback : libellé initial).
+  // Libellé : on garde le libellé sémantique initial (« Daumesnil ») quand il
+  // existe — cohérence du titre (verif #5). Sinon on dérive des zones affichées.
   const deriveLabel = useCallback(() => {
+    if (initial.label) return initial.label
     const parts: string[] = []
-    for (const id of selectedArrIds) { const z = arrById.get(id); if (z) parts.push(z.shortName || z.name) }
-    for (const id of selectedCommuneIds) { const z = communeById.get(id); if (z) parts.push(z.shortName || z.name) }
+    for (const id of displayArrIds) { const z = arrById.get(id); if (z) parts.push(z.shortName || z.name) }
+    for (const id of displayCommuneIds) { const z = communeById.get(id); if (z) parts.push(z.shortName || z.name) }
     for (const id of partialArrIds) { const z = arrById.get(id); if (z) parts.push(`${z.shortName || z.name} (secteur)`) }
-    return parts.length > 0 ? parts.join(' · ') : (initial.label || '')
-  }, [selectedArrIds, selectedCommuneIds, partialArrIds, arrById, communeById, initial.label])
+    return parts.join(' · ')
+  }, [initial.label, displayArrIds, displayCommuneIds, partialArrIds, arrById, communeById])
 
   const handleValidate = useCallback(() => {
     const s = useSearchStore.getState()
@@ -254,10 +299,10 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
             quartiers={quartiers}
             iris={iris}
             communes={communes}
-            selectedArrIds={selectedArrIds}
-            selectedQuartierIds={selectedQuartierIds}
+            selectedArrIds={displayArrIds}
+            selectedQuartierIds={displayQuartierIds}
             selectedIrisIds={selectedIrisIds}
-            selectedCommuneIds={selectedCommuneIds}
+            selectedCommuneIds={displayCommuneIds}
             irisLoading={irisLoading}
             onClickArr={handleClickArr}
             onClickQuartier={handleClickQuartier}
@@ -280,7 +325,7 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
       >
         {hasSelection && (
           <div className="flex flex-wrap gap-1.5 mb-3 max-h-[92px] overflow-y-auto">
-            {selectedArrIds.map((id) => {
+            {displayArrIds.map((id) => {
               const z = arrById.get(id)
               return (
                 <button
@@ -294,7 +339,7 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
                 </button>
               )
             })}
-            {selectedCommuneIds.map((id) => {
+            {displayCommuneIds.map((id) => {
               const z = communeById.get(id)
               return (
                 <button
