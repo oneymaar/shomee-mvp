@@ -439,8 +439,8 @@ export default function ProtoQuartiersClient() {
       {/* ═══════════════ MOMENT 2 — chrome par-dessus la carte ═══════════════ */}
       {phase === 'map' && (
         <>
-          <div className="absolute top-0 left-0 right-0 z-20 px-4"
-               style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)', background: 'linear-gradient(#FDF5F2 60%, rgba(253,245,242,0))' }}>
+          <div className="absolute top-0 left-0 right-0 z-20 px-4 pb-3"
+               style={{ paddingTop: 'max(env(safe-area-inset-top), 30px)', background: 'linear-gradient(#FDF5F2 62%, rgba(253,245,242,0))' }}>
             <button onClick={handleModifier}
                     className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
               <span className="flex-1 min-w-0 text-left text-[13.5px] font-semibold text-neutral-900 truncate">
@@ -454,7 +454,7 @@ export default function ProtoQuartiersClient() {
           </div>
 
           <div className="absolute left-0 right-0 bottom-0 z-20 px-4 pt-3"
-               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)', background: 'linear-gradient(rgba(253,245,242,0), #FDF5F2 24%)' }}>
+               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)', background: 'linear-gradient(rgba(253,245,242,0), #FDF5F2 24%)' }}>
             {hasSelection && (
               <div className="mb-3 max-h-[124px] overflow-y-auto">
                 {/* Ligne 1 — arrondissements / communes (aucun picto) */}
@@ -529,7 +529,7 @@ export default function ProtoQuartiersClient() {
         }}
       >
         {/* Barre de progression (agencement onboarding) */}
-        <div className="flex-none flex items-center gap-3 px-4 pb-2" style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}>
+        <div className="flex-none flex items-center gap-3 px-4 pb-2" style={{ paddingTop: 'max(env(safe-area-inset-top), 30px)' }}>
           <div className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center text-neutral-500 flex-none">‹</div>
           <div className="flex-1 flex gap-1.5">
             {['Quartiers', 'Bien', 'Budget', 'Critères'].map((label, i) => (
@@ -547,7 +547,7 @@ export default function ProtoQuartiersClient() {
         </div>
 
         {/* Bas : pastilles live + champ + CTA unique */}
-        <div className="flex-none flex flex-col gap-3 px-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
+        <div className="flex-none flex flex-col gap-3 px-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
           {liveChips.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {liveChips.map((c, i) => (
