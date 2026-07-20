@@ -138,9 +138,12 @@ function irisStyle(selected: boolean): L.PathOptions {
 // At zoom < 15 (not the natural IRIS zoom), show selected IRIS as a solid merged area:
 // weight:0 removes borders between adjacent selected zones so they fuse into one shape.
 // Unselected IRIS are fully transparent — invisible at low zoom (no visual noise).
+// fillOpacity assez FRANC (0.42) pour lire « zone sélectionnée » d'emblée au cadrage
+// initial, et non une surbrillance translucide intermédiaire — au moins aussi opaque
+// qu'au niveau IRIS (0.28, mais là avec bordures qui la définissent).
 function irisStyleLowZoom(selected: boolean): L.PathOptions {
   return selected
-    ? { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.22, weight: 0, opacity: 0 }
+    ? { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.42, weight: 0, opacity: 0 }
     : { fillColor: 'transparent', fillOpacity: 0, weight: 0, opacity: 0 }
 }
 
