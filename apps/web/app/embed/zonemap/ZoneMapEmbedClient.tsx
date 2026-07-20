@@ -315,7 +315,7 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
                   key={`parr-${id}`}
                   onClick={() => removePartialArr(id)}
                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
-                  style={{ backgroundColor: 'rgba(166,75,39,0.07)', color: '#A64B27', borderColor: 'rgba(166,75,39,0.45)', borderStyle: 'dashed' }}
+                  style={{ backgroundColor: '#fff', color: '#A64B27', borderColor: '#A64B27', borderStyle: 'dashed' }}
                 >
                   {(z?.shortName || z?.name || id)}
                   <span className="opacity-55 text-[9px]">secteur</span>

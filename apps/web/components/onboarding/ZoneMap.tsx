@@ -104,7 +104,10 @@ type ZoneState = 'unselected' | 'selected' | 'partial'
 function topLevelStyle(state: ZoneState): L.PathOptions {
   switch (state) {
     case 'selected':  return { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.16, weight: 2.5, opacity: 0.9 }
-    case 'partial':   return { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.05, weight: 2, opacity: 0.55, dashArray: '7 4' }
+    // Partiel : contour pointillé terracotta SANS remplissage (fillOpacity:0, pas
+    // fill:false → la zone reste cliquable). Trait plus fin/plus léger que le
+    // plein : le rempli prime, le pointillé = simple contexte « effleuré ».
+    case 'partial':   return { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0, weight: 2, opacity: 0.7, dashArray: '6 4' }
     case 'unselected':return { color: '#444', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.18 }
   }
 }
@@ -112,7 +115,8 @@ function topLevelStyle(state: ZoneState): L.PathOptions {
 function quartierStyle(state: ZoneState): L.PathOptions {
   switch (state) {
     case 'selected':  return { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.22, weight: 1.8, opacity: 0.85 }
-    case 'partial':   return { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.06, weight: 1.5, opacity: 0.5, dashArray: '5 3' }
+    // Partiel : contour pointillé sans remplissage (reste cliquable, cf. topLevelStyle).
+    case 'partial':   return { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0, weight: 1.5, opacity: 0.65, dashArray: '5 3' }
     case 'unselected':return { color: '#555', fillColor: 'transparent', fillOpacity: 0, weight: 0.8, opacity: 0.22 }
   }
 }
