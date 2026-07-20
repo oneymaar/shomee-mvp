@@ -80,7 +80,11 @@ function boundsOfFeatures(features: GeoZone[]): Bounds | null {
 interface Sel { arr: string[]; q: string[]; iris: string[]; com: string[] }
 const EMPTY_SEL: Sel = { arr: [], q: [], iris: [], com: [] }
 
-type LiveChip = { label: string; kind: 'pin' | 'station' | null }
+type LiveChip = {
+  label: string
+  icon: 'pin' | 'station' | null
+  variant: 'zone' | 'place' | 'excl' | 'rel' | 'unknown'
+}
 
 export default function ProtoQuartiersClient() {
   // ── Phase : moment 1 (saisie) / moment 2 (carte) ──────────────────────────
@@ -147,6 +151,10 @@ export default function ProtoQuartiersClient() {
   }, [irisById, quartierById])
 
   // ══ MOMENT 1 — pastilles reconnues EN DIRECT (déterministe, sans libellé) ══
+  // Tout ce que le parser comprend s'affiche : zones (sans picto), quartiers/POI
+  // (pin gris), stations & lignes (picto station gris), EXCLUSIONS (« sans X »,
+  // neutre), relations géo (« ~ Seine »), et entités NON COMPRISES (« ? », gris
+  // pointillé — feedback honnête = ce qui partirait au LLM).
   const [liveChips, setLiveChips] = useState<LiveChip[]>([])
   useEffect(() => {
     const t = setTimeout(() => {
@@ -156,16 +164,33 @@ export default function ProtoQuartiersClient() {
         const intent = parseSpatialIntent(q)
         const seen = new Set<string>()
         const chips: LiveChip[] = []
+        const push = (c: LiveChip) => {
+          const key = `${c.variant}|${c.label}`
+          if (seen.has(key)) return
+          seen.add(key)
+          chips.push(c)
+        }
         for (const e of intent.primaryEntities) {
-          if (e.type === 'unknown') continue
           const label = e.label ?? e.rawText
-          if (seen.has(label)) continue
-          seen.add(label)
-          const kind: LiveChip['kind'] =
-            e.type === 'transport_station' ? 'station'
+          if (e.type === 'unknown') {
+            // Fragment non compris : pastille « ? » (pas de fantôme silencieux).
+            if (label.trim().length >= 3) push({ label: label.trim(), icon: null, variant: 'unknown' })
+            continue
+          }
+          const icon: LiveChip['icon'] =
+            e.type === 'transport_station' || e.type === 'transport_line' ? 'station'
             : e.type === 'city' || e.type === 'district' ? null // arr/communes → aucun picto
             : 'pin' // quartier / poi / street → pin
-          chips.push({ label, kind })
+          push({ label, icon, variant: e.type === 'city' || e.type === 'district' ? 'zone' : 'place' })
+        }
+        for (const r of intent.spatialRelations) {
+          // edge_of porte une cible géo (Seine, bois…) absente des entités.
+          if (r.type === 'edge_of' && r.targetText) push({ label: r.targetText, icon: 'pin', variant: 'rel' })
+        }
+        for (const e of intent.exclusions) {
+          const label = e.label ?? e.rawText
+          if (e.type === 'unknown') push({ label: label.trim(), icon: null, variant: 'unknown' })
+          else push({ label, icon: null, variant: 'excl' })
         }
         setLiveChips(chips)
       } catch { setLiveChips([]) }
@@ -187,51 +212,14 @@ export default function ProtoQuartiersClient() {
         setInitialIris([]); setEntityGroups([]); setMatchSummary([]); setSel(EMPTY_SEL)
         return
       }
-      // ── Mode ADDITIF pour zones admin disjointes (EXPÉRIMENTATION PROTO) ──
-      // Le moteur réel absorbe arrondissements/communes dès qu'un scope précis
-      // (quartier vécu) résout : « precision rule » (retire les IRIS admin de
-      // l'union) + « invariant guard » (force le résultat à rester DANS l'admin).
-      // Correct pour « Paris 12 quartier Aligre » (Aligre ⊂ P12 → on veut Aligre) ;
-      // FAUX pour des zones disjointes (« Batignolles + Montreuil », « Montparnasse
-      // + Paris 11 »). Ici, en PROTO SEULEMENT, on résout le scope précis et chaque
-      // zone admin séparément, puis on unionne les admin DISJOINTES du précis.
-      // → Si validé, à PORTER dans geoConstraintService (fichier protégé, avec OK).
-      const hasExclude = gc.some((c) => c.operator === 'exclude')
-      const hasBetween = gc.some((c) => c.operator === 'between')
-      const hasDirectional = intent.spatialRelations.some((r) => r.direction)
-      const adminCs = gc.filter((c) => c.type === 'administrative_area' && c.operator !== 'exclude')
-      const preciseCs = gc.filter((c) => c.type !== 'administrative_area' && c.operator !== 'exclude')
-      const additiveCase = adminCs.length > 0 && preciseCs.length > 0 && !hasExclude && !hasBetween && !hasDirectional
-
-      let irisIds: string[]
-      let groupsRaw: EntityGroup[]
-      let summary: string[]
-
-      if (additiveCase) {
-        // 1) scope précis SEUL (sans admin → le guard ne le supprime pas)
-        const pr = resolveConstraints(preciseCs, iris, quartiers, communes)
-        irisIds = [...(pr.irisIds ?? [])]
-        groupsRaw = pr.entityGroups ?? []
-        summary = [...(pr.matchSummary ?? [])]
-        const set = new Set(irisIds)
-        // 2) chaque zone admin : additive si DISJOINTE du précis, sinon contexte (narrowing)
-        for (const a of adminCs) {
-          const aIris = resolveConstraints([{ ...a, operator: 'inside' }], iris, quartiers, communes).irisIds ?? []
-          if (aIris.length === 0) continue
-          const aSet = new Set(aIris)
-          const preciseInsideThisAdmin = irisIds.some((id) => aSet.has(id))
-          if (!preciseInsideThisAdmin) {
-            for (const id of aIris) if (!set.has(id)) { irisIds.push(id); set.add(id) }
-            if (a.label) summary.push(a.label)
-          }
-          // sinon : le précis est déjà dans cet arr/commune → on garde le narrowing
-        }
-      } else {
-        const res = resolveConstraints(gc, iris, quartiers, communes)
-        irisIds = res.irisIds ?? []
-        groupsRaw = res.entityGroups ?? []
-        summary = res.matchSummary ?? []
-      }
+      // Le moteur gère désormais nativement l'union des zones admin DISJOINTES
+      // (portage Phase 6 dans resolveConstraints, avec OK explicite) — le
+      // contournement proto a été retiré : appel direct, le proto teste le vrai
+      // comportement moteur.
+      const res = resolveConstraints(gc, iris, quartiers, communes)
+      const irisIds: string[] = res.irisIds ?? []
+      const groupsRaw: EntityGroup[] = res.entityGroups ?? []
+      const summary: string[] = res.matchSummary ?? []
 
       const initSet = new Set(irisIds)
       const groups = groupsRaw
@@ -534,7 +522,7 @@ export default function ProtoQuartiersClient() {
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {livedTags.map(({ group, state }, idx) => {
                       const isFull = state === 'full'
-                      const isStation = group.type === 'transport_station'
+                      const isStation = group.type === 'transport_station' || group.type === 'transport_line'
                       return (
                         <button key={`lived-${group.type}-${group.label}-${idx}`} onClick={() => removeLivedEntity(group)}
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border"
@@ -594,13 +582,28 @@ export default function ProtoQuartiersClient() {
         <div className="flex-none flex flex-col gap-3 px-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
           {liveChips.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {liveChips.map((c, i) => (
-                <span key={`${c.label}-${i}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
-                  style={{ backgroundColor: 'rgba(166,75,39,0.05)', color: TERRA, borderColor: 'rgba(166,75,39,0.28)' }}>
-                  {c.kind === 'station' ? <StationIcon /> : c.kind === 'pin' ? <PinIcon /> : null}
-                  {c.label}
-                </span>
-              ))}
+              {liveChips.map((c, i) => {
+                // Reconnu : terracotta très pâle. Exclusion : neutre, préfixe « sans ».
+                // Relation géo : préfixe « ~ ». Non compris : gris pointillé + « ? ».
+                const isExcl = c.variant === 'excl'
+                const isUnknown = c.variant === 'unknown'
+                return (
+                  <span key={`${c.variant}-${c.label}-${i}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
+                    style={{
+                      backgroundColor: isUnknown ? 'rgba(0,0,0,0.03)' : isExcl ? 'rgba(0,0,0,0.04)' : 'rgba(166,75,39,0.05)',
+                      color: isUnknown ? '#9ca3af' : isExcl ? '#6b7280' : TERRA,
+                      borderColor: isUnknown ? 'rgba(0,0,0,0.18)' : isExcl ? 'rgba(0,0,0,0.16)' : 'rgba(166,75,39,0.28)',
+                      borderStyle: isUnknown ? 'dashed' : 'solid',
+                    }}>
+                    {c.icon === 'station' ? <StationIcon /> : c.icon === 'pin' ? <PinIcon /> : null}
+                    {isExcl && <span className="opacity-70">sans</span>}
+                    {c.variant === 'rel' && <span className="opacity-60">~</span>}
+                    {c.label}
+                    {isUnknown && <span className="opacity-60">?</span>}
+                  </span>
+                )
+              })}
             </div>
           )}
 
