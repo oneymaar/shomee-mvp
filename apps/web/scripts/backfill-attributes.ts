@@ -22,7 +22,11 @@
  */
 
 import 'dotenv/config' // charge apps/web/.env (DATABASE_URL) quand lancé via tsx
-import { PrismaClient } from '@prisma/client'
+// Réutilise le MÊME client que l'app (adaptateur @prisma/adapter-pg + URL) :
+// en Prisma 7 la datasource n'a pas d'URL dans le schéma (elle vit dans
+// prisma.config.ts), donc un `new PrismaClient()` nu échoue. `../lib/prisma`
+// construit le client comme il faut ; dotenv (au-dessus) a déjà chargé l'URL.
+import { prisma } from '../lib/prisma'
 import { normalizePropertyText } from '@shomee/core/matching/attributes'
 import {
   fetchParisGeoData,
@@ -30,8 +34,6 @@ import {
   fetchSuburbanCommunes,
   type GeoZone,
 } from '@shomee/core/geo/geoDataService'
-
-const prisma = new PrismaClient()
 
 const WRITE = process.argv.includes('--write')
 const SKIP_IRIS = process.argv.includes('--skip-iris')
