@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { parseCriterionText } from '@shomee/core/criteria/parser'
 
 // Parse free-text French property preferences into structured positive
 // (criteria the user wants) and negative (criteria the user excludes) items.
@@ -140,7 +141,23 @@ export async function POST(req: NextRequest) {
           }))
       : []
 
-    return NextResponse.json({ criteria })
+    // ── Post-traitement DÉTERMINISTE (zéro 2e appel LLM) : le LLM découpe
+    // et nettoie, le parser core structure. Les labels structurables
+    // deviennent des ParsedCriterion complets (règles structurées ET
+    // conditionnelles — « Ascenseur obligatoire à partir du 3e » devient
+    // enfin la conditional_rule que le moteur sait évaluer). Réponse
+    // ADDITIVE : `criteria` (héritage) + `parsed` (nouveau).
+    const parsedCriteria = criteria
+      .map((c) => {
+        const pc = parseCriterionText(c.label)
+        if (!pc) return null
+        return c.type === 'negative' && pc.polarity !== 'negative'
+          ? { ...pc, polarity: 'negative' as const }
+          : pc
+      })
+      .filter((pc): pc is NonNullable<typeof pc> => pc !== null)
+
+    return NextResponse.json({ criteria, parsed: parsedCriteria })
   } catch (e) {
     console.error('[criteria/analyze] error:', e)
     return NextResponse.json({ error: 'internal error' }, { status: 500 })

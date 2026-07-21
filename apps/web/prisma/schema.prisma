@@ -209,20 +209,32 @@ model Property {
   badges                PropertyBadge[] @default([])
 
   // ── Structured attributes (matching engine) ──
-  hasElevator           Boolean         @default(false)
-  hasTerrace            Boolean         @default(false)
+  // TRI-ÉTAT (D1) : null = NON RENSEIGNÉ (doute), false = affirmé absent.
+  // Migration depuis @default(false) : le backfill (scripts/backfill-attributes)
+  // remet à NULL ce qui n'est pas affirmé par features/tags/description, puis
+  // ré-affirme ce que le texte prouve. Widening non destructif.
+  hasElevator           Boolean?
+  hasTerrace            Boolean?
   terraceSurfaceM2      Float?
-  hasBalcony            Boolean         @default(false)
+  hasBalcony            Boolean?
   balconySurfaceM2      Float?
-  hasGarden             Boolean         @default(false)
+  hasGarden             Boolean?
   gardenSurfaceM2       Float?
-  hasCellar             Boolean         @default(false)
-  hasParking            Boolean         @default(false)
-  hasConcierge          Boolean         @default(false)
-  isGroundFloor         Boolean         @default(false)
+  hasCellar             Boolean?
+  hasParking            Boolean?
+  hasConcierge          Boolean?
+  isGroundFloor         Boolean?
   bedroomStreetSide     Boolean?
   isQuietStreet         Boolean?
   orientationStructured String[]        @default([]) // 'north'|'south'|'east'|'west'
+  // ── Attributs pivot (harmonisation sémantique) ──
+  hasVisAVis            Boolean?
+  isRenovated           Boolean?
+  hasFireplace          Boolean?
+  isTraversant          Boolean?
+  // IRIS d'appartenance calculé hors-ligne (backfill : mapLat/mapLng →
+  // point-in-polygon). Fondation du filtre géo exact du feed réel.
+  irisId                String?
 
   // ── Semantic scores 0..1 ──
   luminosity            Float?
@@ -282,6 +294,7 @@ model Property {
   @@index([createdByAgentId])
   @@index([statut])
   @@index([avantPremiere])
+  @@index([irisId])
 }
 
 model PropertyTag {
@@ -341,4 +354,75 @@ model BuyerBriefToken {
 
   @@index([token])
   @@index([expiresAt])
+}
+
+
+// ─── Profil acquéreur — données comportementales (P5) ───────────────────────
+// Pré-comptes (S8) : tout est rattaché à un deviceId anonyme (uuid généré
+// côté app, persisté AsyncStorage). Le rattachement au User viendra avec
+// Sign in Apple/Google.
+
+model InteractionEvent {
+  id          String   @id @default(cuid())
+  deviceId    String
+  propertyId  String?
+  /// video_start | dwell | skip | skip_fast | detail_open | detail_dwell |
+  /// fav | unfav | share | contact | map_open | probe_answer | session_start
+  type        String
+  /// Durée associée (ms) pour dwell / detail_dwell.
+  valueMs     Int?
+  /// main | discovery — voie de service du bien au moment de l'événement.
+  lane        String?
+  /// Score affiché au moment du service (calibré, 0..100).
+  servedScore Int?
+  /// Empreinte de la révision de critères active (traçabilité).
+  criteriaHash String?
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  @@index([deviceId, createdAt])
+  @@index([propertyId])
+  @@index([type])
+}
+
+model CriteriaRevision {
+  id        String   @id @default(cuid())
+  deviceId  String
+  /// Snapshot complet des critères déclarés au moment T.
+  snapshot  Json
+  /// onboarding | edit | interstitial | system
+  source    String
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, createdAt])
+}
+
+model BuyerAffinity {
+  id         String   @id @default(cuid())
+  deviceId   String
+  /// Attribut pivot (has_terrace, quartier:xxx, floor_high…).
+  attribute  String
+  /// Poids appris −1..+1.
+  weight     Float
+  /// Confiance 0..1 (croît avec le volume d'événements, décroît avec le temps).
+  confidence Float
+  updatedAt  DateTime @updatedAt
+
+  @@unique([deviceId, attribute])
+  @@index([deviceId])
+}
+
+model CriteriaSuggestion {
+  id        String    @id @default(cuid())
+  deviceId  String
+  /// probe_skip | widen_budget | widen_zone | relax_criterion | confirm_dislike
+  type      String
+  payload   Json
+  evidence  Json?
+  /// pending | shown | accepted | rejected | dismissed
+  status    String    @default("pending")
+  createdAt DateTime  @default(now())
+  decidedAt DateTime?
+
+  @@index([deviceId, status])
 }

@@ -29,6 +29,7 @@ import type {
   UserCriteriaBrief,
 } from '@shomee/core/criteria/types'
 import { tagsToCriteria } from '../criteria/tags'
+import { parseCriterionText } from '@shomee/core/criteria/parser'
 
 /**
  * Shape of the buyer-side snapshot accepted by {@link buildBriefFromSnapshot}.
@@ -262,22 +263,36 @@ export function buildBriefFromSnapshot(snapshot: BriefSnapshot | null | undefine
   // 2. Catalogue chips → criteria with per-state importance.
   const fromChips: ParsedCriterion[] = chipStatesToCriteria(safe.chipStates ?? {})
 
-  // 3. Custom user-added criteria.
+  // 3. Custom user-added criteria — le parser DÉTERMINISTE d'abord
+  // (règles structurées/conditionnelles : « ascenseur obligatoire à partir
+  // du 4e », « pas de vis-à-vis », « terrasse d'au moins 15 m² »…), repli
+  // sémantique inchangé pour tout ce qui n'est pas structurable.
   const fromCustom: ParsedCriterion[] = (safe.customCriteria ?? [])
     .filter((c) => c && typeof c.label === 'string' && c.state > 0)
-    .map((c) => ({
-      id: randomUUID(),
-      display_label: c.label,
-      category: 'ambiance' as const,
-      polarity: (c.polarity === 'negative' ? 'negative' : 'positive') as 'positive' | 'negative',
-      importance: stateToImportance(c.state),
-      match_type: 'semantic' as const,
-      rule: null,
-      semantic_hint: c.label,
-      raw_input: c.label,
-      confidence: 1,
-      importance_override: false,
-    }))
+    .map((c) => {
+      const importance = stateToImportance(c.state)
+      const parsed = parseCriterionText(c.label, importance)
+      if (parsed) {
+        return {
+          ...parsed,
+          // Le négatif « barré » de l'UI prime sur la détection texte.
+          polarity: (c.polarity === 'negative' ? 'negative' : parsed.polarity) as 'positive' | 'negative',
+        }
+      }
+      return {
+        id: randomUUID(),
+        display_label: c.label,
+        category: 'ambiance' as const,
+        polarity: (c.polarity === 'negative' ? 'negative' : 'positive') as 'positive' | 'negative',
+        importance,
+        match_type: 'semantic' as const,
+        rule: null,
+        semantic_hint: c.label,
+        raw_input: c.label,
+        confidence: 1,
+        importance_override: false,
+      }
+    })
 
   // Merge with dedup on lowercased display_label.
   const seen = new Set<string>()

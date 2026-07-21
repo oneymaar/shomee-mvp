@@ -51,11 +51,20 @@ function inferPropertyType(p: PrismaProperty): PropertyTypeStructured {
 }
 
 export function toPropertyProfile(p: PrismaProperty): PropertyProfile {
+  // Accès tolérant aux colonnes pivot ajoutées par la migration tri-état —
+  // le code reste valide AVANT et APRÈS `prisma generate`.
+  const px = p as unknown as {
+    hasVisAVis?: boolean | null
+    isRenovated?: boolean | null
+    hasFireplace?: boolean | null
+    isTraversant?: boolean | null
+  }
   const structured: PropertyStructuredAttributes = {
     price: p.price,
     property_type: inferPropertyType(p),
-    floor: p.floor ?? 0,
-    total_floors: p.totalFloors ?? 0,
+    // TRI-ÉTAT : null = non renseigné (doute) — on ne fabrique plus de faux 0.
+    floor: p.floor ?? null,
+    total_floors: p.totalFloors ?? null,
     has_elevator: p.hasElevator,
     has_terrace: p.hasTerrace,
     terrace_surface_m2: p.terraceSurfaceM2,
@@ -77,6 +86,10 @@ export function toPropertyProfile(p: PrismaProperty): PropertyProfile {
     is_quiet_street: p.isQuietStreet,
     building_year: p.yearBuilt,
     dpe_rating: p.dpe as DpeRating,
+    has_vis_a_vis: px.hasVisAVis ?? null,
+    is_renovated: px.isRenovated ?? null,
+    has_fireplace: px.hasFireplace ?? null,
+    is_traversant: px.isTraversant ?? null,
   }
 
   const semantic: PropertySemanticScores = {

@@ -4,6 +4,8 @@ import { PropertyStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { toViewProperty } from '@/lib/serializers/property'
 import { matchProperty } from '@shomee/core/matching/engine'
+import { calibrateScore } from '@shomee/core/matching/calibration'
+import type { MatchResult } from '@shomee/core/matching/types'
 import {
   toBuyerBrief,
   buildBriefFromSnapshot,
@@ -138,7 +140,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.json(scoreAndProject(properties, toBuyerBrief(profile)))
+    return NextResponse.json(scoreAndProject(properties, toBuyerBrief(profile), null).main)
   } catch (error) {
     console.error('[GET /api/properties]', error)
     return NextResponse.json({ error: 'Failed to fetch properties' }, { status: 500 })
@@ -182,16 +184,32 @@ export async function POST(req: NextRequest) {
     const properties = await prisma.property.findMany({
       where: {
         statut: PropertyStatus.PUBLISHED,
-        // Hard geo gate — IRIS / quartier precision isn't carried on
-        // Property yet, so the filter operates at arr/commune granularity.
-        // Empty zoneNames means "no location filter" (rare — only when the
-        // user didn't pick any zone).
+        // Hard geo gate arr/commune (héritage). Le raffinement IRIS exact se
+        // fait juste en dessous, en mémoire, sur la colonne irisId peuplée
+        // par le backfill — un bien SANS irisId (pas encore backfillé) reste
+        // servi au grain arrondissement (dégradation douce, jamais un trou).
         ...(zoneNames.length > 0 ? { arrondissement: { in: zoneNames } } : {}),
       },
       orderBy: { createdAt: 'desc' },
       include: PROPERTY_INCLUDE,
     })
-    return NextResponse.json(scoreAndProject(properties, brief))
+
+    // ── Gate IRIS exact (quand la sélection est infra-arrondissement) ──
+    const irisIds = Array.isArray(snapshot.irisIds)
+      ? snapshot.irisIds.filter((x): x is string => typeof x === 'string')
+      : []
+    const irisSet = new Set(irisIds)
+    const gated =
+      irisSet.size > 0
+        ? properties.filter((p) => {
+            const pid = (p as unknown as { irisId?: string | null }).irisId
+            return !pid || irisSet.has(pid)
+          })
+        : properties
+
+    const lanes = scoreAndProject(gated, brief, snapshot)
+    const withLanes = (body as { withLanes?: unknown }).withLanes === true
+    return NextResponse.json(withLanes ? lanes : lanes.main)
   } catch (error) {
     console.error('[POST /api/properties]', error)
     return NextResponse.json({ error: 'Failed to score properties' }, { status: 500 })
@@ -241,27 +259,124 @@ function dedupeByVideoUrl<T>(items: T[], getUrl: (x: T) => string | null): T[] {
  * survivors are sorted by descending global score, deduped by video, and
  * decorated with the agency/chapters/matchScore overlay needed by the feed.
  */
+/** Détail de match transporté au client (modale du badge + fiche ✓/✗). */
+function buildMatchDetail(result: MatchResult, display: number) {
+  const pick = (status: 'matched' | 'unmatched' | 'unknown') =>
+    result.criteria_scores
+      .filter((c) => c.status === status)
+      .slice(0, 12)
+      .map((c) => ({ label: c.display_label, importance: c.importance }))
+  return {
+    score100: display,
+    raw: result.global_score,
+    matched: pick('matched'),
+    unmatched: pick('unmatched'),
+    doubts: pick('unknown'),
+  }
+}
+
+interface ScoredLanes {
+  main: ViewProperty[]
+  discovery: Array<ViewProperty & { discoveryDelta: string }>
+}
+
+/**
+ * Pipeline scoring + projection, VERSION ÉTAGE 1 + LANES (architecture
+ * validée) :
+ *  - exclus (rédhibitoire contredit) : jamais servis ;
+ *  - ÉTAGE 1 : un échec sur critère OBLIGATOIRE sort le bien du feed
+ *    principal (fini la simple pénalité de score) ;
+ *  - VOIE DÉCOUVERTE (D4) : biens à UNE relaxation près — budget ≤ +7 %,
+ *    surface ≥ −5 %, pièces −1, ou UN seul autre obligatoire manqué —
+ *    servis à part avec leur delta affiché, TOUJOURS annoncés (invariant :
+ *    jamais d'infiltration muette du feed principal) ;
+ *  - score AFFICHÉ calibré (D5 : plancher 60, 90+ réservé) ;
+ *  - matchDetail transporté pour la modale (matchés / non-matchés / doutes).
+ */
 function scoreAndProject(
   properties: PrismaPropertyWithRels[],
   brief: UserCriteriaBrief,
-): ViewProperty[] {
-  const ranked = properties
+  snapshot: BriefSnapshot | null,
+): ScoredLanes {
+  const scored = properties
     .map((p) => ({
       property: p,
       result: matchProperty(toPropertyProfile(p), brief),
     }))
     .filter(({ result }) => !result.is_excluded)
-    .sort((a, b) => b.result.global_score - a.result.global_score)
 
-  return dedupeByVideoUrl(ranked, ({ property }) => property.videoUrl).map(
-    ({ property, result }) => {
-      const view = toViewProperty(property)
-      const enriched = projectPropertyExtras(property, view)
-      return {
-        ...enriched,
-        matchScore: result.global_score / 100,
-        isExcluded: result.is_excluded,
-      }
-    },
-  )
+  const main: Array<{ property: PrismaPropertyWithRels; result: MatchResult }> = []
+  const discovery: Array<{ property: PrismaPropertyWithRels; result: MatchResult; delta: string }> = []
+
+  for (const entry of scored) {
+    if (entry.result.mandatory_failures.length === 0) {
+      main.push(entry)
+      continue
+    }
+    const delta = discoveryDelta(entry.property, entry.result, snapshot)
+    if (delta) discovery.push({ ...entry, delta })
+    // Sinon : trop loin des critères — ni feed principal, ni découverte.
+  }
+
+  const bySc = (a: { result: MatchResult }, b: { result: MatchResult }) =>
+    b.result.global_score - a.result.global_score
+
+  const project = (property: PrismaPropertyWithRels, result: MatchResult): ViewProperty => {
+    const cal = calibrateScore(result)
+    const view = toViewProperty(property)
+    const enriched = projectPropertyExtras(property, view)
+    return {
+      ...enriched,
+      matchScore: cal.display / 100,
+      isExcluded: result.is_excluded,
+      matchDetail: buildMatchDetail(result, cal.display),
+    } as ViewProperty
+  }
+
+  return {
+    main: dedupeByVideoUrl(main.sort(bySc), ({ property }) => property.videoUrl)
+      .map(({ property, result }) => project(property, result)),
+    discovery: dedupeByVideoUrl(discovery.sort(bySc), ({ property }) => property.videoUrl)
+      .map(({ property, result, delta }) => ({ ...project(property, result), discoveryDelta: delta })),
+  }
+}
+
+/**
+ * Un bien avec obligatoires manqués entre en VOIE DÉCOUVERTE si l'écart
+ * tient dans UNE relaxation D4. Retourne le libellé du delta, ou null.
+ */
+function discoveryDelta(
+  p: PrismaPropertyWithRels,
+  result: MatchResult,
+  snapshot: BriefSnapshot | null,
+): string | null {
+  if (!snapshot) return null
+  if (result.mandatory_failures.length > 1) return null
+
+  const budgetMax = typeof snapshot.budgetMax === 'number' ? snapshot.budgetMax : null
+  const minSurface = typeof snapshot.minSurface === 'number' ? snapshot.minSurface : null
+  const minRooms = typeof snapshot.minRooms === 'number' ? snapshot.minRooms : null
+
+  // Budget : jusqu'à +7 % au-dessus du max.
+  if (budgetMax && budgetMax > 0 && budgetMax < 5_000_001 && p.price > budgetMax) {
+    if (p.price <= budgetMax * 1.07) {
+      const pct = Math.round(((p.price - budgetMax) / budgetMax) * 100)
+      return `Budget +${Math.max(1, pct)} %`
+    }
+    return null
+  }
+  // Surface : jusqu'à −5 % sous le minimum.
+  if (minSurface && minSurface > 0 && p.surface < minSurface) {
+    if (p.surface >= minSurface * 0.95) {
+      return `Surface −${Math.max(1, Math.round(minSurface - p.surface))} m²`
+    }
+    return null
+  }
+  // Pièces : une de moins, pas plus.
+  if (minRooms && minRooms > 0 && p.rooms < minRooms) {
+    if (p.rooms === minRooms - 1) return '1 pièce en moins'
+    return null
+  }
+  // Autre obligatoire (chip) manqué — un seul, on affiche son libellé.
+  return `Hors critère : ${result.mandatory_failures[0]}`
 }
