@@ -114,12 +114,15 @@ async function main() {
     console.log(`  ${iris.length} IRIS chargés.`)
   }
 
+  // TOUS les biens : l'irisId est calculé pour tout le monde (démo inclus —
+  // additif, ne détruit rien). Le RESET tri-état, lui, reste réservé aux vrais
+  // biens (isDemoData=false) pour préserver les données plausibles de démo.
   const properties = await prisma.property.findMany({
-    where: { isDemoData: false },
     include: { propertyTags: { select: { label: true, source: true, validated: true } } },
     ...(LIMIT ? { take: LIMIT } : {}),
   })
-  console.log(`${properties.length} biens réels à traiter.`)
+  const realCount = properties.filter((p) => !p.isDemoData).length
+  console.log(`${properties.length} biens à traiter (dont ${realCount} vrais biens ; les autres = démo, IRIS uniquement).`)
 
   const stats = {
     updated: 0,
@@ -140,6 +143,9 @@ async function main() {
 
     const data: Record<string, unknown> = {}
 
+    // Reset tri-état + ré-affirmation + étage + sémantique : VRAIS biens seuls
+    // (les biens démo conservent leurs données plausibles).
+    if (!p.isDemoData) {
     // 1+2. Tri-état : reset à NULL puis ré-affirmation par le texte.
     for (const col of TRISTATE_COLUMNS) {
       const assertionKey = Object.entries(ASSERTION_TO_COLUMN).find(([, c]) => c === col)?.[0]
@@ -178,8 +184,9 @@ async function main() {
         stats.semanticSet++
       }
     }
+    } // fin du bloc « vrais biens seulement »
 
-    // 5. IRIS d'appartenance.
+    // 5. IRIS d'appartenance — TOUS les biens (additif).
     if (!SKIP_IRIS && p.mapLat !== null && p.mapLng !== null) {
       const zone = iris.find((z) => pointInZone(p.mapLng as number, p.mapLat as number, z))
       if (zone) {
