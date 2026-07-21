@@ -57,18 +57,6 @@ function entityToConstraint(
         neighborhoodId: e.resolvedId,
       }
 
-    case 'transport_line':
-      // Les lignes sont TOUJOURS des filtres de proximité (jamais inside) —
-      // aligné sur geoConstraintService (« transport_line: always a filter »).
-      return {
-        type: 'transport_line',
-        label: entityLabel(e),
-        operator: 'near',
-        confidence: e.confidence,
-        line: e.resolvedId ?? entityLabel(e),
-        ...(e.radiusM ? { radiusM: e.radiusM } : {}),
-      }
-
     case 'transport_station':
       return {
         type: 'transport_station',
@@ -129,6 +117,7 @@ const ENTITY_TYPE_TO_EXPLICIT: Record<SpatialEntity['type'], string> = {
   district: 'arrondissement',
   quartier: 'neighborhood',
   transport_station: 'transport_station',
+  transport_line: 'transport_line',
   poi: 'poi',
   street: 'poi',
   unknown: 'unknown',
@@ -224,15 +213,12 @@ export function intentToGeoConstraints(intent: SpatialIntent): GeoConstraint[] {
   // TODO: once geoConstraintService exposes a native edge_of primitive
   //       (geometry-based bord-à-bord proximity via filterIrisByGeometryProximity),
   //       replace the poi+near fallback here with a proper edge_of constraint.
-  const edgeRelations = intent.spatialRelations.filter(r => r.type === 'edge_of')
-  if (edgeRelations.length > 0) {
+  if (relation?.type === 'edge_of') {
     for (const e of intent.primaryEntities) {
-      const hinted = e.operatorHint === 'near' && (e.type === 'transport_station' || e.type === 'quartier' || e.type === 'poi')
-      const c = entityToConstraint(e, hinted ? 'near' : 'inside')
+      const c = entityToConstraint(e, 'inside')
       if (c) constraints.push(c)
     }
-    for (const relation of edgeRelations) {
-      if (!relation.targetText) continue
+    if (relation.targetText) {
       if (relation.targetType === 'neighborhood' && relation.neighborhoodId) {
         constraints.push({
           type: 'semantic_neighborhood',
@@ -265,7 +251,6 @@ export function intentToGeoConstraints(intent: SpatialIntent): GeoConstraint[] {
       let operator: GeoConstraint['operator'] = 'near'
       // Administrative areas must always use 'inside' (never 'near' per geoConstraintService rule)
       if (e.type === 'city' || e.type === 'district') operator = 'inside'
-      if (e.operatorHint === 'inside') operator = 'inside'
       const c = entityToConstraint(e, operator)
       if (c) {
         if (relation.radiusM) c.radiusM = relation.radiusM
@@ -286,11 +271,8 @@ export function intentToGeoConstraints(intent: SpatialIntent): GeoConstraint[] {
   // Only a single standalone transport_station uses 'near' (proximity-centered selection).
   const isUnionQuery = intent.primaryEntities.length > 1 && intent.spatialRelations.length === 0
   for (const e of intent.primaryEntities) {
-    let op: GeoConstraint['operator'] =
+    const op: GeoConstraint['operator'] =
       (e.type === 'transport_station' && !isUnionQuery) ? 'near' : 'inside'
-    // operatorHint 'near' : entité matérialisée comme FILTRE par le parser
-    // (« Paris 10 proche gare du Nord » → la gare filtre, elle n'étend pas l'union).
-    if (e.operatorHint === 'near' && (e.type === 'transport_station' || e.type === 'quartier' || e.type === 'poi')) op = 'near'
     const c = entityToConstraint(e, op)
     if (c) constraints.push(c)
   }
