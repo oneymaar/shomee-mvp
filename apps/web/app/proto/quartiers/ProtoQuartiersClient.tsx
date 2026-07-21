@@ -36,18 +36,21 @@ const ZoneMap = dynamic(() => import('@/components/onboarding/ZoneMap'), { ssr: 
 const TERRA = '#A64B27'
 const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
-// ─── Pictos discrets (gris, non colorés) ──────────────────────────────────────
+// ─── Pictos pastilles — `currentColor` : ils prennent la couleur du texte de
+//     la pastille (terracotta sur les reconnues, gris sur les neutres). ───────
 function PinIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
     </svg>
   )
 }
+/** Transport = « M » en cercle, comme les marqueurs métro de la carte. */
 function StationIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="4" y="3" width="16" height="14" rx="4" /><path d="M4 12h16M8.5 21l1.5-3M15.5 21l-1.5-3" />
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" strokeWidth="2" />
+      <path d="M7.5 16.5V8.2l4.5 5.4 4.5-5.4v8.3" strokeWidth="2.1" />
     </svg>
   )
 }
@@ -248,6 +251,13 @@ export default function ProtoQuartiersClient() {
     setPhase('typing')
     setTimeout(() => inputRef.current?.focus(), 120)
   }, [])
+
+  // Reset : revient à la sélection d'ORIGINE (celle issue de la résolution),
+  // en recomposant les parents — sans relancer le moteur.
+  const resetSelection = useCallback(() => {
+    const parents = deriveParents(initialIris)
+    setSel({ iris: initialIris, arr: parents.arr, q: parents.q, com: parents.com })
+  }, [initialIris, deriveParents])
 
   // ══ MOMENT 2 — toggles carte (répliques fidèles du searchStore, état local) ══
   const toggleArr = useCallback((id: string, childQ: string[], childI: string[]) => {
@@ -471,8 +481,10 @@ export default function ProtoQuartiersClient() {
       {/* ═══════════════ MOMENT 2 — chrome par-dessus la carte ═══════════════ */}
       {phase === 'map' && (
         <>
-          <div className="absolute top-0 left-0 right-0 z-20 px-4 pb-3"
-               style={{ paddingTop: 'max(env(safe-area-inset-top), 30px)', background: 'linear-gradient(#FDF5F2 62%, rgba(253,245,242,0))' }}>
+          {/* En-tête FLOTTANT au-dessus de la carte — aucun fade, la carte
+              file jusqu'en haut de l'écran. */}
+          <div className="absolute top-0 left-0 right-0 z-20 px-4"
+               style={{ paddingTop: 'max(env(safe-area-inset-top), 14px)' }}>
             <button onClick={handleModifier}
                     className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
               <span className="flex-1 min-w-0 text-left text-[13.5px] font-semibold text-neutral-900 truncate">
@@ -485,10 +497,15 @@ export default function ProtoQuartiersClient() {
             </button>
           </div>
 
-          <div className="absolute left-0 right-0 bottom-0 z-20 px-4 pt-3"
-               style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)', background: 'linear-gradient(rgba(253,245,242,0), #FDF5F2 24%)' }}>
+          <div className="absolute left-0 right-0 bottom-0 z-20">
+            {/* Bande de fondu SÉPARÉE : elle précède le bloc pastilles, donc
+                elle commence TOUJOURS juste au-dessus d'elles, quel que soit
+                le nombre de lignes. */}
+            <div style={{ height: 30, background: 'linear-gradient(rgba(253,245,242,0), #FDF5F2)' }} />
+            <div className="px-4" style={{ background: '#FDF5F2', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
             {hasSelection && (
-              <div className="mb-3 max-h-[124px] overflow-y-auto">
+              <div className="mb-3 flex items-start gap-2">
+              <div className="flex-1 min-w-0 max-h-[124px] overflow-y-auto">
                 {/* Ligne 1 — arrondissements / communes (aucun picto) */}
                 <div className="flex flex-wrap gap-1.5">
                   {displayArrIds.map((id) => { const z = arrById.get(id); return (
@@ -537,6 +554,19 @@ export default function ProtoQuartiersClient() {
                   </div>
                 )}
               </div>
+
+              {/* Reset — revient à la sélection issue de la résolution. */}
+              <button
+                onClick={resetSelection}
+                aria-label="Réinitialiser la sélection"
+                className="flex-none w-8 h-8 rounded-full bg-white border flex items-center justify-center active:opacity-80 mt-0.5"
+                style={{ borderColor: 'rgba(166,75,39,0.35)', color: TERRA }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" />
+                </svg>
+              </button>
+              </div>
             )}
 
             <button onClick={() => { /* proto : pas de nav vers l'étape Bien */ console.log('[proto] sélection', sel) }}
@@ -545,6 +575,7 @@ export default function ProtoQuartiersClient() {
               style={{ backgroundColor: hasSelection ? TERRA : '#DB947E' }}>
               Valider ma zone
             </button>
+            </div>
           </div>
         </>
       )}
@@ -561,13 +592,17 @@ export default function ProtoQuartiersClient() {
         }}
       >
         {/* Barre de progression (agencement onboarding) */}
-        <div className="flex-none flex items-center gap-3 px-4 pb-2" style={{ paddingTop: 'max(env(safe-area-inset-top), 30px)' }}>
-          <div className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center text-neutral-500 flex-none">‹</div>
+        <div className="flex-none flex items-center gap-3 px-4 pb-1" style={{ paddingTop: 'max(env(safe-area-inset-top), 14px)' }}>
+          <button className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center flex-none active:bg-black/5" style={{ color: '#404040' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
           <div className="flex-1 flex gap-1.5">
             {['Quartiers', 'Bien', 'Budget', 'Critères'].map((label, i) => (
-              <div key={label} className="flex-1 flex flex-col gap-1">
+              <div key={label} className="flex-1 flex flex-col gap-[5px]">
                 <div className="h-1 rounded-full" style={{ backgroundColor: i === 0 ? TERRA : 'rgba(0,0,0,0.1)' }} />
-                <span className="text-[10px] text-center" style={{ color: i === 0 ? TERRA : '#525252', fontWeight: i === 0 ? 700 : 500 }}>{label}</span>
+                <span className="text-[12px] leading-none text-center" style={{ color: i === 0 ? TERRA : '#525252', fontWeight: i === 0 ? 700 : 500 }}>{label}</span>
               </div>
             ))}
           </div>
