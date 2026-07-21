@@ -33,19 +33,23 @@ export interface PropertyStructuredAttributes {
   /** Coarse type derived from the listing title — pattern-matched in
    *  {@link PropertyStructuredAttributes}'s builder, never persisted. */
   property_type: PropertyTypeStructured
-  floor: number
-  total_floors: number
-  has_elevator: boolean
-  has_terrace: boolean
+  // TRI-ÉTAT (D1) : `null` = NON RENSEIGNÉ (doute), distinct de `false` =
+  // affirmé absent. Les champs toujours connus (prix, surface, pièces)
+  // restent non-nullables. Les booléens historiques acceptent null — les
+  // builders existants (qui passent des booléens) restent valides.
+  floor: number | null
+  total_floors: number | null
+  has_elevator: boolean | null
+  has_terrace: boolean | null
   terrace_surface_m2: number | null
-  has_balcony: boolean
+  has_balcony: boolean | null
   balcony_surface_m2: number | null
-  has_garden: boolean
+  has_garden: boolean | null
   garden_surface_m2: number | null
-  has_cellar: boolean
-  has_parking: boolean
-  has_concierge: boolean
-  is_ground_floor: boolean
+  has_cellar: boolean | null
+  has_parking: boolean | null
+  has_concierge: boolean | null
+  is_ground_floor: boolean | null
   surface_m2: number
   room_count: number
   bedroom_count: number
@@ -54,6 +58,12 @@ export interface PropertyStructuredAttributes {
   is_quiet_street: boolean | null
   building_year: number | null
   dpe_rating: DpeRating | null
+  // ── Attributs pivot ajoutés (harmonisation sémantique) — optionnels pour
+  //    ne casser aucun builder existant ; absents ⇒ inconnus. ──
+  has_vis_a_vis?: boolean | null
+  is_renovated?: boolean | null
+  has_fireplace?: boolean | null
+  is_traversant?: boolean | null
 }
 
 export interface PropertySemanticScores {
@@ -75,6 +85,8 @@ export interface PropertyProfile {
 
 // ─── Match result ───────────────────────────────────────────────────────────
 
+export type CriterionStatus = 'matched' | 'unmatched' | 'unknown'
+
 export interface CriterionScore {
   criterion_id: string
   display_label: string
@@ -83,8 +95,12 @@ export interface CriterionScore {
   /** 0 to 1. Structured rules are strict 0/1; semantic returns the score
    *  directly; conditional returns 1 when the if-clause does not apply. */
   score: number
-  /** Derived from `score` per match_type — see engine.ts for the rule. */
+  /** Derived from `score` per match_type — see engine.ts for the rule.
+   *  Conservé pour compat ; `status` fait foi (unknown ⇒ matched=false). */
   matched: boolean
+  /** TRI-ÉTAT : 'unknown' = donnée du bien non renseignée → section
+   *  « doutes » de la modale, petite pénalité (D1), jamais un échec. */
+  status: CriterionStatus
   /** Human-readable explanation, suitable for UI tooltips. */
   explanation: string
 }
@@ -98,7 +114,11 @@ export interface MatchResult {
   /** Display labels of dealbreaker criteria that failed. */
   exclusion_reasons: string[]
   /** Display labels of mandatory criteria that failed (non-excluding,
-   *  but heavily penalised in the global score). */
+   *  but heavily penalised in the global score). Statut 'unmatched'
+   *  uniquement — les inconnus vont dans `doubts`. */
   mandatory_failures: string[]
+  /** Labels des critères en statut 'unknown' (donnée non renseignée) —
+   *  la section « doutes » de la modale d'explication. */
+  doubts: string[]
   criteria_scores: CriterionScore[]
 }

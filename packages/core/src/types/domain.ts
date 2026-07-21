@@ -24,12 +24,33 @@ export interface Conversation {
   lastSeenAt: number  // timestamp of last user view; agent msgs after this are "unread"
 }
 
+export interface MatchCriterionRef {
+  label: string
+  importance: 'desired' | 'mandatory' | 'dealbreaker'
+}
+
+/** Détail de match transporté par /api/properties — alimente la modale du
+ *  badge (matchés / non-matchés / doutes) et la fiche ✓/✗. */
+export interface MatchDetail {
+  /** Score AFFICHÉ calibré 0..100 (plancher 60, 90+ réservé — D5). */
+  score100: number
+  /** Score brut du moteur (traçabilité). */
+  raw: number
+  matched: MatchCriterionRef[]
+  unmatched: MatchCriterionRef[]
+  doubts: MatchCriterionRef[]
+}
+
 export interface Property {
   id: string
   // Matching engine — attached by /api/properties when buyerProfileId is set.
   // Score is in 0..1 (engine produces 0..100 → normalised in the route).
   matchScore?: number
   isExcluded?: boolean
+  matchDetail?: MatchDetail
+  /** Voie découverte : libellé du dépassement (« Budget +5 % ») — présent
+   *  UNIQUEMENT sur les biens servis hors critères, toujours annoncés. */
+  discoveryDelta?: string
   // For LLM-generated biens (feed dynamique) — chips activés dans le brief
   // dont l'attribut correspondant est effectivement vrai sur le bien.
   // Source de vérité pour le bandeau "critères validés" du PropertyOverlay.

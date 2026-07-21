@@ -40,6 +40,7 @@ import { isConditionalRule, isStructuredRule } from '../criteria/types'
 import { resolveSemanticKey } from './semantic-map'
 import type {
   CriterionScore,
+  CriterionStatus,
   MatchResult,
   PropertyProfile,
   PropertyStructuredAttributes,
@@ -60,10 +61,11 @@ export function matchProperty(
   const criteria_scores: CriterionScore[] = []
   const exclusion_reasons: string[] = []
   const mandatory_failures: string[] = []
+  const doubts: string[] = []
   let is_excluded = false
 
   for (const criterion of brief.parsed_criteria) {
-    const { score, matched, explanation } = scoreCriterion(criterion, profile)
+    const { score, matched, status, explanation } = scoreCriterion(criterion, profile)
 
     criteria_scores.push({
       criterion_id: criterion.id,
@@ -72,10 +74,17 @@ export function matchProperty(
       match_type: criterion.match_type,
       score,
       matched,
+      status,
       explanation,
     })
 
-    if (!matched) {
+    // TRI-ÉTAT (D1) : un critère 'unknown' (donnée non renseignée) n'est
+    // JAMAIS traité en échec — il rejoint les doutes avec une petite
+    // pénalité de score (0.5 à demi-coefficient, cf. plus bas). Un
+    // rédhibitoire inconnu n'exclut PAS (données manquantes ≠ désaccord).
+    if (status === 'unknown') {
+      doubts.push(criterion.display_label)
+    } else if (status === 'unmatched') {
       if (criterion.importance === 'dealbreaker') {
         is_excluded = true
         exclusion_reasons.push(criterion.display_label)
@@ -91,8 +100,12 @@ export function matchProperty(
     let numerator = 0
     let denominator = 0
     for (const cs of criteria_scores) {
-      const coef = coefficientFor(cs.match_type, cs.importance)
+      let coef = coefficientFor(cs.match_type, cs.importance)
       if (coef === 0) continue
+      // 'unknown' : score neutre-optimiste 0.75 à DEMI-coefficient — petite
+      // pénalité (D1) : un bien non renseigné glisse sous un bien vérifié,
+      // sans jamais être traité comme un échec.
+      if (cs.status === 'unknown') coef = coef / 2
       numerator += cs.score * coef
       denominator += coef
     }
@@ -105,6 +118,7 @@ export function matchProperty(
     is_excluded,
     exclusion_reasons,
     mandatory_failures,
+    doubts,
     criteria_scores,
   }
 }
@@ -116,6 +130,7 @@ export function matchProperty(
 interface ScoreOutcome {
   score: number
   matched: boolean
+  status: CriterionStatus
   explanation: string
 }
 
@@ -140,10 +155,22 @@ function scoreStructured(
     return {
       score: 0,
       matched: false,
+      status: 'unmatched',
       explanation: `${criterion.display_label} — règle structurée manquante`,
     }
   }
   const evalRes = evaluateStructured(criterion.rule, profile)
+  // TRI-ÉTAT : attribut non renseigné (null/undefined) ⇒ 'unknown', pas un
+  // échec — le bien peu documenté rejoint les « doutes », il n'est pas puni
+  // comme s'il contredisait le critère.
+  if (!evalRes.known) {
+    return {
+      score: 0.75,
+      matched: false,
+      status: 'unknown',
+      explanation: `${criterion.display_label} — ${criterion.rule.attribute} non renseigné (doute)`,
+    }
+  }
   // Structured rules already bake negation into the rule shape (e.g.
   // `floor.is_ground = false`), so polarity is metadata here — the
   // engine reads satisfaction as-is.
@@ -151,6 +178,7 @@ function scoreStructured(
   return {
     score: matched ? 1 : 0,
     matched,
+    status: matched ? 'matched' : 'unmatched',
     explanation: formatStructuredExplanation(
       criterion.display_label,
       criterion.rule,
@@ -169,25 +197,48 @@ function scoreConditional(
     return {
       score: 0,
       matched: false,
+      status: 'unmatched',
       explanation: `${criterion.display_label} — règle conditionnelle manquante`,
     }
   }
   const { if: ifRule, then: thenRule } = criterion.rule as ConditionalRule
   const ifEval = evaluateStructured(ifRule, profile)
 
+  // Condition indécidable (donnée manquante, ex. étage inconnu) → doute.
+  if (!ifEval.known) {
+    return {
+      score: 0.75,
+      matched: false,
+      status: 'unknown',
+      explanation: `${criterion.display_label} — condition indécidable (${ifRule.attribute} non renseigné)`,
+    }
+  }
+
   // If-clause not applicable → criterion is non-relevant, score 1.
+  // (Vacuité : « ascenseur obligatoire à partir du 4e » sur un 3e SANS
+  // ascenseur ⇒ critère satisfait — le cas canonique du brief.)
   if (!ifEval.satisfied) {
     return {
       score: 1,
       matched: true,
+      status: 'matched',
       explanation: `${criterion.display_label} — condition non applicable (✓ ignoré)`,
     }
   }
   const thenEval = evaluateStructured(thenRule, profile)
+  if (!thenEval.known) {
+    return {
+      score: 0.75,
+      matched: false,
+      status: 'unknown',
+      explanation: `${criterion.display_label} — ${thenRule.attribute} non renseigné (doute)`,
+    }
+  }
   const matched = thenEval.satisfied
   return {
     score: matched ? 1 : 0,
     matched,
+    status: matched ? 'matched' : 'unmatched',
     explanation: formatStructuredExplanation(
       criterion.display_label,
       thenRule,
@@ -205,25 +256,28 @@ function scoreSemantic(
   const hint = criterion.semantic_hint
   if (!hint) {
     return {
-      score: 0.5,
-      matched: true,
-      explanation: `${criterion.display_label} — hint sémantique absent (neutre 0.5)`,
+      score: 0.75,
+      matched: false,
+      status: 'unknown',
+      explanation: `${criterion.display_label} — hint sémantique absent (doute)`,
     }
   }
   const key = resolveSemanticKey(hint)
   if (!key) {
     return {
-      score: 0.5,
-      matched: true,
-      explanation: `${criterion.display_label} — pas de mapping sémantique (neutre 0.5)`,
+      score: 0.75,
+      matched: false,
+      status: 'unknown',
+      explanation: `${criterion.display_label} — pas de mapping sémantique (doute)`,
     }
   }
   const value = profile.semantic[key]
   if (value === null || value === undefined) {
     return {
-      score: 0.5,
-      matched: true,
-      explanation: `${criterion.display_label} — donnée sémantique "${key}" manquante (neutre 0.5)`,
+      score: 0.75,
+      matched: false,
+      status: 'unknown',
+      explanation: `${criterion.display_label} — donnée sémantique "${key}" manquante (doute)`,
     }
   }
   const raw = clamp01(value)
@@ -236,6 +290,7 @@ function scoreSemantic(
   return {
     score: effectiveScore,
     matched,
+    status: matched ? 'matched' : 'unmatched',
     explanation: `${criterion.display_label} — score sémantique "${key}" = ${raw.toFixed(2)} (polarité ${criterion.polarity})`,
   }
 }
@@ -244,7 +299,8 @@ function scoreFuzzy(criterion: ParsedCriterion): ScoreOutcome {
   console.warn(`[matching] fuzzy criterion not yet scorable: "${criterion.display_label}"`)
   return {
     score: 0.5,
-    matched: true,
+    matched: false,
+    status: 'unknown',
     explanation: `${criterion.display_label} — critère flou non scorable (coef 0)`,
   }
 }
@@ -256,6 +312,8 @@ function scoreFuzzy(criterion: ParsedCriterion): ScoreOutcome {
 interface StructuredEval {
   satisfied: boolean
   resolvedValue: unknown
+  /** false = attribut non renseigné (null/undefined) → tri-état 'unknown'. */
+  known: boolean
 }
 
 /**
@@ -267,9 +325,9 @@ interface StructuredEval {
 function evaluateStructured(rule: StructuredRule, profile: PropertyProfile): StructuredEval {
   const resolvedValue = resolveAttribute(rule.attribute, profile.structured)
   if (resolvedValue === undefined || resolvedValue === null) {
-    return { satisfied: false, resolvedValue }
+    return { satisfied: false, resolvedValue, known: false }
   }
-  return { satisfied: compare(resolvedValue, rule.operator, rule.value), resolvedValue }
+  return { satisfied: compare(resolvedValue, rule.operator, rule.value), resolvedValue, known: true }
 }
 
 /**
@@ -293,12 +351,19 @@ function resolveAttribute(
     case 'balcony.surface_m2':       return s.balcony_surface_m2 ?? 0
     case 'garden.exists':            return s.has_garden
     case 'garden.surface_m2':        return s.garden_surface_m2 ?? 0
-    case 'has_outdoor_space':        return s.has_terrace || s.has_balcony || s.has_garden
+    case 'has_outdoor_space': {
+      // Tri-état : true si UN espace est affirmé ; false si TOUS affirmés
+      // absents ; null (inconnu) sinon.
+      if (s.has_terrace === true || s.has_balcony === true || s.has_garden === true) return true
+      if (s.has_terrace === false && s.has_balcony === false && s.has_garden === false) return false
+      return null
+    }
 
     // Floor
     case 'floor':                    return s.floor
     case 'floor.is_ground':          return s.is_ground_floor
-    case 'floor.is_top':             return s.floor === s.total_floors
+    case 'floor.is_top':
+      return s.floor === null || s.total_floors === null ? null : s.floor === s.total_floors
 
     // Building amenities
     case 'elevator':                 return s.has_elevator
@@ -326,9 +391,15 @@ function resolveAttribute(
     // Building meta
     case 'building.year':            return s.building_year
     case 'building.recent':
-      return s.building_year !== null && s.building_year >= 2000
+      return s.building_year === null ? null : s.building_year >= 2000
     case 'noise.low':                return s.is_quiet_street
     case 'dpe.rating':               return s.dpe_rating
+
+    // Attributs pivot (harmonisation sémantique) — absents ⇒ inconnus.
+    case 'vis_a_vis':                return s.has_vis_a_vis ?? null
+    case 'renovated':                return s.is_renovated ?? null
+    case 'fireplace':                return s.has_fireplace ?? null
+    case 'traversant':               return s.is_traversant ?? null
 
     default:
       return undefined
