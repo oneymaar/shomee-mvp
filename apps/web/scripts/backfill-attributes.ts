@@ -21,6 +21,7 @@
  *     → filtre géo EXACT du feed réel. (--skip-iris pour sauter cette étape.)
  */
 
+import 'dotenv/config' // charge apps/web/.env (DATABASE_URL) quand lancé via tsx
 import { PrismaClient } from '@prisma/client'
 import { normalizePropertyText } from '@shomee/core/matching/attributes'
 import {
