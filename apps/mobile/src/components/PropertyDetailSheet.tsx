@@ -11,7 +11,7 @@ import {
 } from '@gorhom/bottom-sheet'
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
-import { CalendarPlus, Check, Footprints, Heart, Map, MapPin, MessageCircle, Phone, Send } from 'lucide-react-native'
+import { CalendarPlus, Check, Footprints, Heart, HelpCircle, Map, MapPin, MessageCircle, Phone, Send, X } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path, Text as SvgText } from 'react-native-svg'
 import type { Property } from '@shomee/core/types/domain'
@@ -372,6 +372,25 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                   ))}
                 </View>
               )}
+
+              {/* Critères NON matchés (grisés, ✗) puis doutes (?) — spec
+                  scoring : la fiche montre aussi ce qui ne colle pas. */}
+              {(property?.matchDetail?.unmatched?.length ?? 0) > 0 && (
+                <View style={styles.featuresRow}>
+                  {property!.matchDetail!.unmatched.map((c) => (
+                    <View key={`um-${c.label}`} style={styles.chip}>
+                      <X size={11} color="#a8a29e" strokeWidth={3} />
+                      <Text style={styles.chipTxtMuted}>{c.label}</Text>
+                    </View>
+                  ))}
+                  {property!.matchDetail!.doubts.map((c) => (
+                    <View key={`db-${c.label}`} style={styles.chip}>
+                      <HelpCircle size={11} color="#d97706" strokeWidth={2.5} />
+                      <Text style={styles.chipTxtDoubt}>{c.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
 
             <View style={styles.headerDivider} />
@@ -645,6 +664,8 @@ const styles = StyleSheet.create({
   featuresRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 8, marginTop: 12 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   chipTxt: { color: '#44403C', fontSize: 13 },
+  chipTxtMuted: { color: '#a8a29e', fontSize: 13, textDecorationLine: 'line-through' },
+  chipTxtDoubt: { color: '#b45309', fontSize: 13 },
 
   sections: { paddingHorizontal: 16, paddingTop: 24, gap: 28 },
 

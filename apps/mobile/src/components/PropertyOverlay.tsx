@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -7,6 +8,7 @@ import { Check, ChevronDown, Home, MapPin } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
 import { formatLocation } from '@shomee/core/utils/format'
 import { MatchBadge } from './MatchBadge'
+import { ScoreExplainModal } from './ScoreExplainModal'
 
 /** Prix formaté avec séparateurs de milliers (espace, style fr) sans dépendre
  *  d'Intl (support Hermes inégal). Ex. 1350000 → "1 350 000 €". */
@@ -27,6 +29,7 @@ interface Props {
  */
 export function PropertyOverlay({ property, onMore }: Props) {
   const insets = useSafeAreaInsets()
+  const [scoreOpen, setScoreOpen] = useState(false)
   const brandName = property.agencyName ?? property.agentName
   const brandLogo = property.agencyLogo ?? property.agentAvatar
   const initial = (brandName?.trim().charAt(0) ?? '?').toUpperCase()
@@ -116,10 +119,26 @@ export function PropertyOverlay({ property, onMore }: Props) {
           </View>
 
           {/* MatchBadge — UNIQUEMENT si matchScore réel (jamais sur le seed).
-              Jauge SVG animée alimentée par le feed personnalisé (handoff brief). */}
-          {property.matchScore != null && <MatchBadge score={property.matchScore} />}
+              Tapable quand le détail est transporté → modale d'explication
+              (matchés / non-matchés / doutes). */}
+          {property.matchScore != null && (
+            <Pressable
+              onPress={property.matchDetail ? () => setScoreOpen(true) : undefined}
+              hitSlop={6}
+            >
+              <MatchBadge score={property.matchScore} />
+            </Pressable>
+          )}
         </View>
       </View>
+
+      {property.matchDetail && (
+        <ScoreExplainModal
+          property={property}
+          visible={scoreOpen}
+          onClose={() => setScoreOpen(false)}
+        />
+      )}
     </View>
   )
 }

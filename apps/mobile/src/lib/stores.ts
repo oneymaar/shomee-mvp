@@ -34,3 +34,12 @@ export const useSearchStore = createSearchStore(() => AsyncStorage)
 
 // Feed transient (pas de persistance) — storage ignoré, parité de signature.
 export const useFeedStore = createFeedStore(() => AsyncStorage)
+
+// Active le tracker comportemental (P5) : session_start + fav/unfav par
+// abonnement au store — aucun écran modifié. Import différé pour éviter
+// tout cycle (tracker importe ./stores).
+setTimeout(() => {
+  import('./tracker')
+    .then((m) => m.initTracker())
+    .catch(() => {})
+}, 0)
