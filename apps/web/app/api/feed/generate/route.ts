@@ -27,6 +27,8 @@ import {
   type BriefSnapshot,
 } from '@/lib/matching/buyerBriefBuilder'
 import { matchProperty } from '@shomee/core/matching/engine'
+import { calibrateScore } from '@shomee/core/matching/calibration'
+import type { MatchResult } from '@shomee/core/matching/types'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import type {
   PropertyProfile,
@@ -1131,27 +1133,49 @@ export async function POST(req: NextRequest) {
   }
 
   const brief = buildBriefFromSnapshot(snapshot)
+  // Détail de match transporté au client — même forme que /api/properties
+  // (modale du badge : matchés / non-matchés / doutes).
+  const buildMatchDetail = (result: MatchResult, display: number) => {
+    const pick = (status: 'matched' | 'unmatched' | 'unknown') =>
+      result.criteria_scores
+        .filter((c) => c.status === status)
+        .slice(0, 12)
+        .map((c) => ({ label: c.display_label, importance: c.importance }))
+    return {
+      score100: display,
+      raw: result.global_score,
+      matched: pick('matched'),
+      unmatched: pick('unmatched'),
+      doubts: pick('unknown'),
+    }
+  }
   const scored: ViewProperty[] = fiches.map((rawFiche, i) => {
     const fiche = rectifyFichePrice(rawFiche)
     const profile = ficheToProfile(fiche, i)
     const result = matchProperty(profile, brief)
+    // Score AFFICHÉ calibré (D5 : plancher 60, 90+ réservé) — le badge du
+    // feed fictif parle désormais le même langage que le feed réel.
+    const cal = calibrateScore(result)
     const video = matchedVideos[i % matchedVideos.length]
     const context = contexts[i % contexts.length]
     const chapters = chaptersByVideoId.get(video.videoId) ?? null
     const dbAgency = agencyByVideoId.get(video.videoId) ?? null
     const aiTags = aiTagsByVideoId.get(video.videoId) ?? []
-    return ficheToView(
-      fiche,
-      video,
-      context,
-      snapshot,
-      chapters,
-      aiTags,
-      result.global_score / 100,
-      result.is_excluded,
-      profile.property_id,
-      dbAgency,
-    )
+    return {
+      ...ficheToView(
+        fiche,
+        video,
+        context,
+        snapshot,
+        chapters,
+        aiTags,
+        cal.display / 100,
+        result.is_excluded,
+        profile.property_id,
+        dbAgency,
+      ),
+      matchDetail: buildMatchDetail(result, cal.display),
+    }
   })
 
   const feed = scored
