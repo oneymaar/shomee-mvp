@@ -257,9 +257,10 @@ export default function ProtoQuartiersClient() {
   }, [])
 
   // ── Indication de zoom : si on ARRIVE sur la carte à un zoom où les IRIS
-  // ne sont pas cliquables (< 15, seuil ZoneMap), un message temporaire au
-  // centre invite à zoomer. Disparaît seul (4,5 s) ou dès que le zoom
-  // atteint le niveau IRIS. Ré-armé à chaque retour en saisie.
+  // ne sont pas cliquables (< 15, seuil ZoneMap), une animation de pincement
+  // (deux doigts qui s'écartent) PERSISTE au centre — et disparaît à la
+  // PREMIÈRE interaction avec la carte, quelle qu'elle soit (zoom, dézoom,
+  // déplacement, simple contact). Ré-armée à chaque retour en saisie.
   const [hintMounted, setHintMounted] = useState(false)
   const [hintVisible, setHintVisible] = useState(false)
   const zoomLiveRef = useRef(zoom)
@@ -273,18 +274,20 @@ export default function ProtoQuartiersClient() {
       if (zoomLiveRef.current >= 15) return // déjà au niveau IRIS (poche serrée)
       setHintMounted(true)
       requestAnimationFrame(() => setHintVisible(true))
-      setTimeout(() => setHintVisible(false), 4500)
-      setTimeout(() => setHintMounted(false), 4900)
     }, 1000) // laisse le fitBounds initial se poser avant d'évaluer le zoom
     return () => clearTimeout(t)
   }, [phase])
+
+  // Toute interaction tactile/souris/molette sur la carte → l'indication part.
+  const dismissHint = useCallback(() => {
+    setHintVisible((v) => {
+      if (v) setTimeout(() => setHintMounted(false), 350)
+      return false
+    })
+  }, [])
   useEffect(() => {
-    if (zoom >= 15 && hintMounted) {
-      setHintVisible(false)
-      const t = setTimeout(() => setHintMounted(false), 350)
-      return () => clearTimeout(t)
-    }
-  }, [zoom, hintMounted])
+    if (zoom >= 15 && hintMounted) dismissHint()
+  }, [zoom, hintMounted, dismissHint])
 
   // Reset : revient à la sélection d'ORIGINE (celle issue de la résolution),
   // en recomposant les parents — sans relancer le moteur — et RECENTRE la
@@ -497,7 +500,12 @@ export default function ProtoQuartiersClient() {
     >
       {/* ── Carte : montée dès que les géométries sont prêtes, sous l'overlay du
            moment 1 (opaque) → révélée sans reload au passage moment 2. ─────── */}
-      <div className="absolute inset-0 z-0">
+      <div
+        className="absolute inset-0 z-0"
+        onPointerDownCapture={dismissHint}
+        onTouchStartCapture={dismissHint}
+        onWheelCapture={dismissHint}
+      >
         {!irisLoading && arrondissements.length > 0 ? (
           <ZoneMap
             center={center}
@@ -526,19 +534,62 @@ export default function ProtoQuartiersClient() {
         )}
       </div>
 
-      {/* Indication de zoom temporaire — centrée sur la carte, non interactive. */}
+      {/* Indication de zoom — animation de pincement (deux doigts), persiste
+          jusqu'à la première interaction avec la carte. Non interactive. */}
       {phase === 'map' && hintMounted && (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none"
           style={{ opacity: hintVisible ? 1 : 0, transition: 'opacity 320ms ease' }}
         >
+          <style>{`
+            @keyframes shomeePinchA {
+              0%, 12%   { transform: translate(-8px, 8px) scale(1); }
+              55%, 70%  { transform: translate(-21px, 21px) scale(1.06); }
+              100%      { transform: translate(-8px, 8px) scale(1); }
+            }
+            @keyframes shomeePinchB {
+              0%, 12%   { transform: translate(8px, -8px) scale(1); }
+              55%, 70%  { transform: translate(21px, -21px) scale(1.06); }
+              100%      { transform: translate(8px, -8px) scale(1); }
+            }
+            @keyframes shomeePinchRing {
+              0%, 12%   { transform: scale(0.55); opacity: 0; }
+              45%       { opacity: 0.45; }
+              70%       { transform: scale(1); opacity: 0.25; }
+              100%      { transform: scale(0.55); opacity: 0; }
+            }
+          `}</style>
           <div
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[13px] font-semibold text-white"
-            style={{ background: 'rgba(28,25,23,0.78)', backdropFilter: 'blur(4px)' }}
+            style={{
+              width: 96, height: 96, borderRadius: 48, position: 'relative',
+              background: 'rgba(28,25,23,0.72)', backdropFilter: 'blur(4px)',
+            }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
-            </svg>
+            {/* cercle d'expansion (suggère l'agrandissement) */}
+            <div style={{
+              position: 'absolute', left: '50%', top: '50%', width: 64, height: 64,
+              marginLeft: -32, marginTop: -32, borderRadius: 32,
+              border: '2px solid rgba(255,255,255,0.9)',
+              animation: 'shomeePinchRing 1.7s ease-in-out infinite',
+            }} />
+            {/* les deux doigts */}
+            <div style={{
+              position: 'absolute', left: '50%', top: '50%', width: 15, height: 15,
+              marginLeft: -7.5, marginTop: -7.5, borderRadius: 8, background: '#fff',
+              boxShadow: '0 0 0 3px rgba(255,255,255,0.28)',
+              animation: 'shomeePinchA 1.7s ease-in-out infinite',
+            }} />
+            <div style={{
+              position: 'absolute', left: '50%', top: '50%', width: 15, height: 15,
+              marginLeft: -7.5, marginTop: -7.5, borderRadius: 8, background: '#fff',
+              boxShadow: '0 0 0 3px rgba(255,255,255,0.28)',
+              animation: 'shomeePinchB 1.7s ease-in-out infinite',
+            }} />
+          </div>
+          <div
+            className="mt-3 px-4 py-2 rounded-full text-[13px] font-semibold text-white text-center"
+            style={{ background: 'rgba(28,25,23,0.78)', backdropFilter: 'blur(4px)', maxWidth: 280 }}
+          >
             Zoomez pour sélectionner des quartiers précis
           </div>
         </div>
