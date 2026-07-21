@@ -106,6 +106,10 @@ export default function ProtoQuartiersClient() {
   // ── Sélection (ÉTAT LOCAL — jamais le store partagé) ──────────────────────
   const [sel, setSel] = useState<Sel>(EMPTY_SEL)
   const [initialIris, setInitialIris] = useState<string[]>([])
+  // Époque de recadrage : incrémentée au Reset → la clé du fitBounds change
+  // (offset d'1 m, imperceptible) → MapViewController rejoue son fitBounds
+  // ANIMÉ. Zéro modification de ZoneMap.
+  const [fitNonce, setFitNonce] = useState(0)
   const [entityGroups, setEntityGroups] = useState<EntityGroup[]>([])
   const [matchSummary, setMatchSummary] = useState<string[]>([])
 
@@ -252,12 +256,51 @@ export default function ProtoQuartiersClient() {
     setTimeout(() => inputRef.current?.focus(), 120)
   }, [])
 
+  // ── Indication de zoom : si on ARRIVE sur la carte à un zoom où les IRIS
+  // ne sont pas cliquables (< 15, seuil ZoneMap), un message temporaire au
+  // centre invite à zoomer. Disparaît seul (4,5 s) ou dès que le zoom
+  // atteint le niveau IRIS. Ré-armé à chaque retour en saisie.
+  const [hintMounted, setHintMounted] = useState(false)
+  const [hintVisible, setHintVisible] = useState(false)
+  const zoomLiveRef = useRef(zoom)
+  useEffect(() => { zoomLiveRef.current = zoom }, [zoom])
+  const hintDoneRef = useRef(false)
+  useEffect(() => {
+    if (phase === 'typing') { hintDoneRef.current = false; return }
+    if (hintDoneRef.current) return
+    const t = setTimeout(() => {
+      hintDoneRef.current = true
+      if (zoomLiveRef.current >= 15) return // déjà au niveau IRIS (poche serrée)
+      setHintMounted(true)
+      requestAnimationFrame(() => setHintVisible(true))
+      setTimeout(() => setHintVisible(false), 4500)
+      setTimeout(() => setHintMounted(false), 4900)
+    }, 1000) // laisse le fitBounds initial se poser avant d'évaluer le zoom
+    return () => clearTimeout(t)
+  }, [phase])
+  useEffect(() => {
+    if (zoom >= 15 && hintMounted) {
+      setHintVisible(false)
+      const t = setTimeout(() => setHintMounted(false), 350)
+      return () => clearTimeout(t)
+    }
+  }, [zoom, hintMounted])
+
   // Reset : revient à la sélection d'ORIGINE (celle issue de la résolution),
-  // en recomposant les parents — sans relancer le moteur.
+  // en recomposant les parents — sans relancer le moteur — et RECENTRE la
+  // carte comme à la livraison initiale (fitBounds animé via fitNonce).
   const resetSelection = useCallback(() => {
     const parents = deriveParents(initialIris)
     setSel({ iris: initialIris, arr: parents.arr, q: parents.q, com: parents.com })
+    setFitNonce((n) => n + 1)
   }, [initialIris, deriveParents])
+
+  // Le Reset n'apparaît que si la sélection a DÉVIÉ de la livraison initiale.
+  const selectionDirty = useMemo(() => {
+    if (sel.iris.length !== initialIris.length) return true
+    const cur = new Set(sel.iris)
+    return initialIris.some((id) => !cur.has(id))
+  }, [sel.iris, initialIris])
 
   // ══ MOMENT 2 — toggles carte (répliques fidèles du searchStore, état local) ══
   const toggleArr = useCallback((id: string, childQ: string[], childI: string[]) => {
@@ -424,13 +467,18 @@ export default function ProtoQuartiersClient() {
   // ── fitBounds : priorité aux polygones des IRIS sélectionnés (copie embed) ─
   const fitBounds = useMemo<Bounds | null>(() => {
     const byId = (list: GeoZone[], ids: string[]) => list.filter((z) => ids.includes(z.id))
-    const selIris = byId(iris, initialIris)
-    if (selIris.length > 0) return boundsOfFeatures(selIris)
-    const fine = [...byId(quartiers, sel.q), ...byId(communes, sel.com)]
-    if (fine.length > 0) return boundsOfFeatures(fine)
-    const arrs = byId(arrondissements, sel.arr)
-    return arrs.length > 0 ? boundsOfFeatures(arrs) : null
-  }, [iris, quartiers, communes, arrondissements, initialIris, sel.q, sel.com, sel.arr])
+    const base = (() => {
+      const selIris = byId(iris, initialIris)
+      if (selIris.length > 0) return boundsOfFeatures(selIris)
+      const fine = [...byId(quartiers, sel.q), ...byId(communes, sel.com)]
+      if (fine.length > 0) return boundsOfFeatures(fine)
+      const arrs = byId(arrondissements, sel.arr)
+      return arrs.length > 0 ? boundsOfFeatures(arrs) : null
+    })()
+    if (!base) return base
+    const eps = (fitNonce % 2) * 0.00003 // ~3 m : invisible, mais change la clé
+    return [[base[0][0], base[0][1]], [base[1][0] + eps, base[1][1]]] as Bounds
+  }, [iris, quartiers, communes, arrondissements, initialIris, sel.q, sel.com, sel.arr, fitNonce])
 
   const center = useMemo<[number, number]>(() => {
     if (fitBounds) return [(fitBounds[0][0] + fitBounds[1][0]) / 2, (fitBounds[0][1] + fitBounds[1][1]) / 2]
@@ -478,13 +526,31 @@ export default function ProtoQuartiersClient() {
         )}
       </div>
 
+      {/* Indication de zoom temporaire — centrée sur la carte, non interactive. */}
+      {phase === 'map' && hintMounted && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+          style={{ opacity: hintVisible ? 1 : 0, transition: 'opacity 320ms ease' }}
+        >
+          <div
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[13px] font-semibold text-white"
+            style={{ background: 'rgba(28,25,23,0.78)', backdropFilter: 'blur(4px)' }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3M11 8v6M8 11h6" />
+            </svg>
+            Zoomez pour sélectionner des quartiers précis
+          </div>
+        </div>
+      )}
+
       {/* ═══════════════ MOMENT 2 — chrome par-dessus la carte ═══════════════ */}
       {phase === 'map' && (
         <>
           {/* En-tête FLOTTANT au-dessus de la carte — aucun fade, la carte
               file jusqu'en haut de l'écran. */}
           <div className="absolute top-0 left-0 right-0 z-20 px-4"
-               style={{ paddingTop: 'max(env(safe-area-inset-top), 14px)' }}>
+               style={{ paddingTop: 'max(calc(env(safe-area-inset-top) + 6px), 58px)' }}>
             <button onClick={handleModifier}
                     className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
               <span className="flex-1 min-w-0 text-left text-[13.5px] font-semibold text-neutral-900 truncate">
@@ -498,11 +564,8 @@ export default function ProtoQuartiersClient() {
           </div>
 
           <div className="absolute left-0 right-0 bottom-0 z-20">
-            {/* Bande de fondu SÉPARÉE : elle précède le bloc pastilles, donc
-                elle commence TOUJOURS juste au-dessus d'elles, quel que soit
-                le nombre de lignes. */}
-            <div style={{ height: 30, background: 'linear-gradient(rgba(253,245,242,0), #FDF5F2)' }} />
-            <div className="px-4" style={{ background: '#FDF5F2', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
+            {/* Séparation NETTE carte / zone basse (le fade est abandonné). */}
+            <div className="px-4 pt-3" style={{ background: '#FDF5F2', borderTop: '1px solid rgba(0,0,0,0.07)', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
             {hasSelection && (
               <div className="mb-3 flex items-start gap-2">
               <div className="flex-1 min-w-0 max-h-[124px] overflow-y-auto">
@@ -555,17 +618,20 @@ export default function ProtoQuartiersClient() {
                 )}
               </div>
 
-              {/* Reset — revient à la sélection issue de la résolution. */}
-              <button
-                onClick={resetSelection}
-                aria-label="Réinitialiser la sélection"
-                className="flex-none w-8 h-8 rounded-full bg-white border flex items-center justify-center active:opacity-80 mt-0.5"
-                style={{ borderColor: 'rgba(166,75,39,0.35)', color: TERRA }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" />
-                </svg>
-              </button>
+              {/* Reset — visible UNIQUEMENT quand la sélection a été modifiée.
+                  Restaure la livraison initiale + recentre la carte (animé). */}
+              {selectionDirty && (
+                <button
+                  onClick={resetSelection}
+                  aria-label="Réinitialiser la sélection"
+                  className="flex-none w-8 h-8 rounded-full bg-white border flex items-center justify-center active:opacity-80 mt-0.5"
+                  style={{ borderColor: 'rgba(166,75,39,0.35)', color: TERRA }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" />
+                  </svg>
+                </button>
+              )}
               </div>
             )}
 
@@ -592,7 +658,7 @@ export default function ProtoQuartiersClient() {
         }}
       >
         {/* Barre de progression (agencement onboarding) */}
-        <div className="flex-none flex items-center gap-3 px-4 pb-1" style={{ paddingTop: 'max(env(safe-area-inset-top), 14px)' }}>
+        <div className="flex-none flex items-center gap-3 px-4 pb-1" style={{ paddingTop: 'max(calc(env(safe-area-inset-top) + 6px), 58px)' }}>
           <button className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center flex-none active:bg-black/5" style={{ color: '#404040' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
