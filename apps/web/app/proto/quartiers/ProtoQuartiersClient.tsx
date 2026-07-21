@@ -534,61 +534,54 @@ export default function ProtoQuartiersClient() {
         )}
       </div>
 
-      {/* Indication de zoom — animation de pincement (deux doigts), persiste
-          jusqu'à la première interaction avec la carte. Non interactive. */}
+      {/* Indication de zoom — geste pouce+index (🤏) animé + flèches
+          d'écartement. Léger (pas de fond sombre), persiste jusqu'à la
+          première interaction avec la carte. Non interactif. */}
       {phase === 'map' && hintMounted && (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none"
           style={{ opacity: hintVisible ? 1 : 0, transition: 'opacity 320ms ease' }}
         >
           <style>{`
-            @keyframes shomeePinchA {
-              0%, 12%   { transform: translate(-8px, 8px) scale(1); }
-              55%, 70%  { transform: translate(-21px, 21px) scale(1.06); }
-              100%      { transform: translate(-8px, 8px) scale(1); }
+            @keyframes shomeePinchHand {
+              0%, 15%  { transform: rotate(-15deg) scale(1); }
+              55%, 70% { transform: rotate(-15deg) scale(1.15); }
+              100%     { transform: rotate(-15deg) scale(1); }
             }
-            @keyframes shomeePinchB {
-              0%, 12%   { transform: translate(8px, -8px) scale(1); }
-              55%, 70%  { transform: translate(21px, -21px) scale(1.06); }
-              100%      { transform: translate(8px, -8px) scale(1); }
+            @keyframes shomeeArrA {
+              0%, 15%  { transform: translate(0, 0); opacity: 0.25; }
+              55%, 70% { transform: translate(-7px, -7px); opacity: 1; }
+              100%     { transform: translate(0, 0); opacity: 0.25; }
             }
-            @keyframes shomeePinchRing {
-              0%, 12%   { transform: scale(0.55); opacity: 0; }
-              45%       { opacity: 0.45; }
-              70%       { transform: scale(1); opacity: 0.25; }
-              100%      { transform: scale(0.55); opacity: 0; }
+            @keyframes shomeeArrB {
+              0%, 15%  { transform: translate(0, 0); opacity: 0.25; }
+              55%, 70% { transform: translate(7px, 7px); opacity: 1; }
+              100%     { transform: translate(0, 0); opacity: 0.25; }
             }
           `}</style>
-          <div
-            style={{
-              width: 96, height: 96, borderRadius: 48, position: 'relative',
-              background: 'rgba(28,25,23,0.72)', backdropFilter: 'blur(4px)',
-            }}
-          >
-            {/* cercle d'expansion (suggère l'agrandissement) */}
-            <div style={{
-              position: 'absolute', left: '50%', top: '50%', width: 64, height: 64,
-              marginLeft: -32, marginTop: -32, borderRadius: 32,
-              border: '2px solid rgba(255,255,255,0.9)',
-              animation: 'shomeePinchRing 1.7s ease-in-out infinite',
-            }} />
-            {/* les deux doigts */}
-            <div style={{
-              position: 'absolute', left: '50%', top: '50%', width: 15, height: 15,
-              marginLeft: -7.5, marginTop: -7.5, borderRadius: 8, background: '#fff',
-              boxShadow: '0 0 0 3px rgba(255,255,255,0.28)',
-              animation: 'shomeePinchA 1.7s ease-in-out infinite',
-            }} />
-            <div style={{
-              position: 'absolute', left: '50%', top: '50%', width: 15, height: 15,
-              marginLeft: -7.5, marginTop: -7.5, borderRadius: 8, background: '#fff',
-              boxShadow: '0 0 0 3px rgba(255,255,255,0.28)',
-              animation: 'shomeePinchB 1.7s ease-in-out infinite',
-            }} />
+          <div style={{ position: 'relative', width: 130, height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div
+              aria-hidden
+              style={{
+                fontSize: 62, lineHeight: 1,
+                animation: 'shomeePinchHand 1.7s ease-in-out infinite',
+                filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.22))',
+              }}
+            >
+              🤏
+            </div>
+            <svg viewBox="0 0 130 130" style={{ position: 'absolute', inset: 0 }}>
+              <g style={{ animation: 'shomeeArrA 1.7s ease-in-out infinite' }}>
+                <path d="M36 36 L22 22 M22 33 L22 22 L33 22" stroke="#44403c" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.95))' }} />
+              </g>
+              <g style={{ animation: 'shomeeArrB 1.7s ease-in-out infinite' }}>
+                <path d="M94 94 L108 108 M108 97 L108 108 L97 108" stroke="#44403c" strokeWidth="2.6" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.95))' }} />
+              </g>
+            </svg>
           </div>
           <div
-            className="mt-3 px-4 py-2 rounded-full text-[13px] font-semibold text-white text-center"
-            style={{ background: 'rgba(28,25,23,0.78)', backdropFilter: 'blur(4px)', maxWidth: 280 }}
+            className="mt-1 px-3.5 py-1.5 rounded-full text-[12.5px] font-semibold text-center"
+            style={{ background: 'rgba(255,255,255,0.94)', color: '#44403c', boxShadow: '0 2px 10px rgba(0,0,0,0.12)', maxWidth: 280 }}
           >
             Zoomez pour sélectionner des quartiers précis
           </div>
