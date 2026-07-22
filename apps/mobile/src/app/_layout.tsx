@@ -4,9 +4,12 @@ import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useShomeeStore, useSearchStore } from '@/lib/stores'
 import { useStoreHydrated } from '@/lib/useStoreHydrated'
+import { FlyHeartOverlay } from '@/components/flyHeart/FlyHeartOverlay'
+import { useAuth, hydrateAuth } from '@/lib/authStore'
+import { AuthScreen } from '@/components/auth/AuthScreen'
 
 const BG = '#FDF5F2'
 
@@ -16,20 +19,23 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
 /**
  * Layout racine.
  *
- *  - `GestureHandlerRootView` + `SafeAreaProvider` + `BottomSheetModalProvider`
- *    à la racine (gestes + insets + sheets modaux type PropertyDetailSheet).
+ *  - Providers à la racine (gestes + insets + sheets modaux).
  *  - Gating d'hydratation SANS loader JS : tant que les stores persistés
- *    (favoris + brief) n'ont pas réhydraté, on ne rend RIEN — le splash natif
- *    (tenu via `preventAutoHideAsync`) reste seul à l'écran. Pas de spinner,
- *    pas de fond noir. AsyncStorage hydrate en quelques ms ; sur web c'est
- *    synchrone (splash invisible).
- *  - Hydraté : on masque le splash natif et on rend le `<Stack>` racine
- *    (headerless, fond crème) contenant le groupe `(tabs)`.
+ *    (favoris + brief) ET l'auth n'ont pas réhydraté, on ne rend RIEN — le
+ *    splash natif reste seul à l'écran. Pas de spinner, pas de fond noir.
+ *  - Hydraté : si aucune session → écran de connexion (Apple / Google /
+ *    invité) ; sinon le `<Stack>` racine (onglets + funnels).
  */
 export default function RootLayout() {
   const favHydrated = useStoreHydrated(useShomeeStore)
   const searchHydrated = useStoreHydrated(useSearchStore)
-  const hydrated = favHydrated && searchHydrated
+  const auth = useAuth()
+  const hydrated = favHydrated && searchHydrated && auth.status !== 'loading'
+
+  // Restaure la session (SecureStore) au démarrage.
+  useEffect(() => {
+    void hydrateAuth()
+  }, [])
 
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => {})
@@ -42,9 +48,22 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <BottomSheetModalProvider>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG } }}>
-            <Stack.Screen name="(tabs)" />
-          </Stack>
+          <View style={styles.root}>
+            {auth.status === 'anon' ? (
+              <AuthScreen />
+            ) : (
+              <>
+                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG } }}>
+                  <Stack.Screen name="(tabs)" />
+                  {/* Handoff deep-link (shomee://onboarding?brief=…). */}
+                  <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+                  {/* Funnel d'onboarding manuel natif (S7). */}
+                  <Stack.Screen name="onboarding-manual" options={{ animation: 'slide_from_right' }} />
+                </Stack>
+                <FlyHeartOverlay />
+              </>
+            )}
+          </View>
         </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

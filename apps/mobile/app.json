@@ -10,7 +10,11 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.shomee.app",
-      "supportsTablet": false
+      "usesAppleSignIn": true,
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,6 +31,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-apple-authentication",
+      "expo-secure-store",
       "expo-router",
       [
         "expo-splash-screen",
@@ -41,10 +47,26 @@
         }
       ],
       "expo-video",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SHOMEE accède à vos photos pour définir votre photo de profil."
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "shomeeApiBaseUrl": "https://shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app",
+      "shomeeAppToken": "",
+      "vercelBypassToken": "",
+      "router": {},
+      "eas": {
+        "projectId": "a79aae8c-587b-43c4-9131-8d3bad3645f4"
+      }
+    },
+    "owner": "neymaarjr"
   }
 }

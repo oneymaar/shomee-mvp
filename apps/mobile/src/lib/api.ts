@@ -16,6 +16,7 @@
  * plateforme (config générique `extraHeaders`).
  */
 import { createApiFetch } from '@shomee/core/utils/apiFetch'
+import { getSessionToken } from './sessionToken'
 
 // Fallback commité : l'alias de branche du monorepo (preview protégé Vercel).
 const BRANCH_ALIAS = 'https://shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app'
@@ -28,4 +29,6 @@ export const apiFetch = createApiFetch({
   baseUrl,
   appToken,
   extraHeaders: bypassToken ? { 'x-vercel-protection-bypass': bypassToken } : undefined,
+  // Bearer de session utilisateur, lu dynamiquement (change au login/logout).
+  getAuthToken: getSessionToken,
 })

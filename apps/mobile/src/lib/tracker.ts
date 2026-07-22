@@ -102,6 +102,12 @@ async function flush(): Promise<void> {
 }
 
 /** Enregistre un événement (non bloquant). Démarre le flush périodique. */
+/** deviceId anonyme courant (cree/persiste au besoin). Expose pour l'auth :
+ *  chaque login envoie ce deviceId → rattachement serveur via UserDevice. */
+export async function getDeviceId(): Promise<string> {
+  return ensureDeviceId()
+}
+
 export function track(event: TrackedEvent): void {
   queue.push(event)
   if (queue.length > MAX_QUEUE) queue = queue.slice(-MAX_QUEUE)
