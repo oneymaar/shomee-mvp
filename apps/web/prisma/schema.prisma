@@ -75,13 +75,35 @@ enum DocumentType {
 
 model User {
   id           String        @id @default(cuid())
-  email        String        @unique
+  // Optionnel : les comptes invités (Continuer sans compte) n'ont pas d'email.
+  email        String?       @unique
   name         String?
   avatar       String?
   role         UserRole      @default(BUYER)
+  // true tant que le compte n'a pas ete rattache a Apple/Google.
+  isGuest      Boolean       @default(false)
+  // 'sub' stable des fournisseurs d'identite (verifie cote serveur).
+  appleSub     String?       @unique
+  googleSub    String?       @unique
   createdAt    DateTime      @default(now())
+  lastSeenAt   DateTime      @default(now())
 
   buyerProfile BuyerProfile?
+  devices      UserDevice[]
+}
+
+// Pont deviceId anonyme (tracker.ts) -> User. Les grosses tables
+// comportementales restent clees par deviceId ; ce mapping permet de
+// resoudre le user et de migrer/rattacher a la connexion (invite ou compte).
+model UserDevice {
+  id        String   @id @default(cuid())
+  deviceId  String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model BuyerProfile {
