@@ -38,3 +38,6 @@ apps/mobile/dist/
 npm-debug.log*
 yarn-debug.log*
 .pnpm-debug.log*
+
+# Agent worktrees (Cowork/Claude Code) — never track
+.claude/worktrees/
