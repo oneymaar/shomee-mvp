@@ -1,11 +1,15 @@
 /**
  * Étape Quartiers — le proto « deux moments » (saisie + carte) affiché en WebView
- * plein écran. Le proto gère lui-même le préchargement de la carte et le morph
- * fluide ; il renvoie au natif la sélection finale ({action:'validate'}) ou un
- * retour ({action:'back'}). Plein écran (le proto gère ses propres marges d'écran).
+ * plein écran. Le proto gère lui-même le préchargement de la carte + le morph ;
+ * il renvoie au natif la sélection ({action:'validate'}) ou un retour ({action:'back'}).
+ *
+ * Clavier : la WebView est enveloppée dans un KeyboardAvoidingView → quand le
+ * clavier s'ouvre (champ web focus), la WebView rétrécit AU-DESSUS du clavier, donc
+ * le contenu web se recadre proprement (plus de « tout remonte »). La barre
+ * d'accessoires du clavier (‹ › ✓) est masquée.
  */
 import { useMemo, useState, type ComponentType } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSearchStore } from '@/lib/stores'
 
 type WebViewMessage = { nativeEvent: { data: string } }
@@ -16,6 +20,8 @@ type WebViewProps = {
   style?: object
   originWhitelist?: string[]
   cacheEnabled?: boolean
+  hideKeyboardAccessoryView?: boolean
+  keyboardDisplayRequiresUserAction?: boolean
 }
 
 let RNWebView: ComponentType<WebViewProps> | null
@@ -95,22 +101,27 @@ export function QuartierProtoWebView({ onValidate, onBack }: Props) {
   }
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <RNWebView
         source={{ uri, headers }}
         onMessage={handleMessage}
         onLoadEnd={() => setLoaded(true)}
         originWhitelist={['*']}
         cacheEnabled={false}
-        style={StyleSheet.absoluteFill}
+        hideKeyboardAccessoryView
+        style={styles.web}
       />
       {!loaded && <View style={styles.placeholder} />}
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
+  web: { flex: 1, backgroundColor: BG },
   placeholder: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: BG },
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 20, backgroundColor: BG },
   fallbackTxt: { fontSize: 15, color: '#57534e', textAlign: 'center', lineHeight: 21 },
