@@ -37,6 +37,7 @@ interface InitialSel {
   label: string
   /** Contraintes nommées (compactes) — pour dériver entityGroups localement. */
   geoConstraints: GeoConstraint[]
+  safeTop: number
 }
 
 function parseSel(selParam: string): InitialSel {
@@ -50,9 +51,10 @@ function parseSel(selParam: string): InitialSel {
       communeIds: arr('communeIds'),
       label: typeof o.label === 'string' ? o.label : '',
       geoConstraints: Array.isArray(o.geoConstraints) ? (o.geoConstraints as GeoConstraint[]) : [],
+      safeTop: typeof o.safeTop === 'number' ? o.safeTop : 0,
     }
   } catch {
-    return { arrIds: [], quartierIds: [], irisIds: [], communeIds: [], label: '', geoConstraints: [] }
+    return { arrIds: [], quartierIds: [], irisIds: [], communeIds: [], label: '', geoConstraints: [], safeTop: 0 }
   }
 }
 
@@ -522,7 +524,7 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
         )}
 
         {/* Encart flottant : zone recherchée + Modifier (retour au moment 1). */}
-        <div className="absolute top-0 left-0 right-0 z-[1100] px-4" style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}>
+        <div className="absolute top-0 left-0 right-0 z-[1100] px-4" style={{ paddingTop: Math.max(initial.safeTop, 12) }}>
           <button onClick={handleModifier}
                   className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
             <span className="flex-1 min-w-0 text-left text-[13.5px] font-semibold text-neutral-900 truncate">

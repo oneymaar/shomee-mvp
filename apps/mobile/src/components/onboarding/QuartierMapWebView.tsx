@@ -14,7 +14,7 @@
  */
 import { useMemo, type ComponentType } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSearchStore } from '@/lib/stores'
 
 type WebViewMessage = { nativeEvent: { data: string } }
@@ -59,6 +59,7 @@ interface Props {
 }
 
 export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
+  const insets = useSafeAreaInsets()
   const selectedArrIds = useSearchStore((s) => s.selectedArrIds)
   const selectedQuartierIds = useSearchStore((s) => s.selectedQuartierIds)
   const selectedIrisIds = useSearchStore((s) => s.selectedIrisIds)
@@ -79,6 +80,7 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
       irisIds: selectedIrisIds,
       communeIds: selectedCommuneIds,
       label: locationLabel,
+      safeTop: insets.top,
       geoConstraints: geoConstraints ?? [],
     })
     // Query string construit à la main (URLSearchParams est incomplet sous Hermes).
@@ -90,7 +92,7 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
     }
     return `${BASE_URL}/embed/zonemap?${params.join('&')}`
     // Recalcule seulement si la sélection initiale change (montage / retour).
-  }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, locationLabel, geoConstraints, nonce])
+  }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, locationLabel, geoConstraints, nonce, insets.top])
 
   const headers = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : undefined
 
@@ -120,7 +122,7 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.root} edges={['bottom']}>
       {RNWebView ? (
         <RNWebView
           source={{ uri, headers }}
