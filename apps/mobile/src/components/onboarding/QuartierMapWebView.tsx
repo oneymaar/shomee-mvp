@@ -1,20 +1,24 @@
 /**
- * Sous-écran B de l'étape Quartiers (S7+) — carte de sélection interactive,
- * réutilisant le `ZoneMap` WEB via une WebView pointant la route embarquable
- * `/embed/zonemap`. Pattern `MapZone` étendu du mode « affichage » au mode
- * « sélection » avec un pont bidirectionnel :
- *   - RN → carte : sélection initiale (déjà résolue par `resolveGeoFromText`)
- *     passée en query-param `sel`.
- *   - carte → RN : sélection finale via `onMessage` → seed `useSearchStore`.
- *
- * `react-native-webview` est chargé via un require GARDÉ (comme `MapZone`) : si
- * indispo, on retombe sur un placeholder qui laisse continuer sans carte.
- * L'URL traverse la Deployment Protection Vercel comme `apiFetch` (header
- * `x-vercel-protection-bypass` + query-param qui pose le cookie pour les chunks).
+ * Sous-écran B de l'étape Quartiers — carte de sélection interactive en WebView
+ * (`/embed/zonemap`). Transition d'ouverture (fondu + léger glissé) + skeleton
+ * animé (grisé + reflet qui balaie) tant que la carte n'a pas signalé « prête ».
+ *   - RN → carte : sélection initiale via query-param `sel`.
+ *   - carte → RN : `{action:'ready'}` (masque le skeleton), `{action:'edit'}`
+ *     (retour moment 1), sinon la sélection finale (seed store + valide).
  */
-import { useMemo, type ComponentType } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useMemo, useState, type ComponentType } from 'react'
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import Animated, {
+  Easing,
+  FadeOut,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated'
+import { LinearGradient } from 'expo-linear-gradient'
+import { MapPin } from 'lucide-react-native'
 import { useSearchStore } from '@/lib/stores'
 
 type WebViewMessage = { nativeEvent: { data: string } }
@@ -23,7 +27,6 @@ type WebViewProps = {
   onMessage?: (e: WebViewMessage) => void
   style?: object
   originWhitelist?: string[]
-  startInLoadingState?: boolean
   cacheEnabled?: boolean
 }
 
@@ -37,19 +40,39 @@ try {
 
 export const MAP_WEBVIEW_AVAILABLE = RNWebView != null
 
-// Miroir de `lib/api.ts` : base + secret bypass lus EN DIRECT via process.env.
 const BRANCH_ALIAS = 'https://shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app'
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? BRANCH_ALIAS
 const BYPASS = process.env.EXPO_PUBLIC_VERCEL_BYPASS_TOKEN || undefined
-
-// Cache-buster fixé UNE fois au lancement de l'app (portée module, hors rendu →
-// pas d'appel impur pendant le render). Chaque session/reload = valeur neuve →
-// l'URL de l'embed diffère de toute page mise en cache par une session
-// précédente, donc WKWebView ne peut pas resservir un ancien build.
 const CACHE_BUST = String(Date.now())
 
 const BG = '#FDF5F2'
 const ACCENT = '#A64B27'
+const SCREEN_W = Dimensions.get('window').width
+
+// ── Skeleton : carte grisée + reflet qui balaie (rassure pendant le chargement) ─
+function MapSkeleton() {
+  const x = useSharedValue(0)
+  useEffect(() => {
+    x.value = withRepeat(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.ease) }), -1, false)
+  }, [x])
+  const shimmer = useAnimatedStyle(() => ({
+    transform: [{ translateX: -SCREEN_W + x.value * (SCREEN_W * 2) }],
+  }))
+  return (
+    <Animated.View exiting={FadeOut.duration(300)} style={styles.skeleton} pointerEvents="none">
+      <MapPin size={30} color="rgba(166,75,39,0.30)" />
+      <Text style={styles.skeletonTxt}>Préparation de la carte…</Text>
+      <Animated.View style={[StyleSheet.absoluteFill, shimmer]}>
+        <LinearGradient
+          colors={['transparent', 'rgba(255,255,255,0.65)', 'transparent']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+    </Animated.View>
+  )
+}
 
 interface Props {
   onValidate: () => void
@@ -65,14 +88,25 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
   const selectedIrisIds = useSearchStore((s) => s.selectedIrisIds)
   const selectedCommuneIds = useSearchStore((s) => s.selectedCommuneIds)
   const locationLabel = useSearchStore((s) => s.locationLabel)
-  // Contraintes nommées (Daumesnil, Nation, métro…) déjà résolues côté natif.
-  // Transmises COMPACTES (descripteurs d'entités, pas de listes d'IRIS) → l'embed
-  // ré-exécute `resolveConstraints` pour dériver `entityGroups` (pastilles niveau 2)
-  // localement, sans gonfler l'URL avec des IRIS. La sélection reste seedée par les
-  // IDs résolus ci-dessus (inchangé).
   const geoConstraints = useSearchStore((s) => s.locationIntent?.geoConstraints)
 
-  // URL de l'embed : sélection initiale + bypass Deployment Protection + cache-bust.
+  // Transition d'entrée : fondu + léger glissé vers le haut.
+  const enter = useSharedValue(0)
+  useEffect(() => {
+    enter.value = withTiming(1, { duration: 320, easing: Easing.out(Easing.cubic) })
+  }, [enter])
+  const enterStyle = useAnimatedStyle(() => ({
+    opacity: enter.value,
+    transform: [{ translateY: (1 - enter.value) * 22 }],
+  }))
+
+  // Skeleton visible jusqu'au signal « ready » de l'embed (avec filet de sécurité).
+  const [mapReady, setMapReady] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setMapReady(true), 5000)
+    return () => clearTimeout(t)
+  }, [])
+
   const uri = useMemo(() => {
     const sel = JSON.stringify({
       arrIds: selectedArrIds,
@@ -83,15 +117,12 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
       safeTop: insets.top,
       geoConstraints: geoConstraints ?? [],
     })
-    // Query string construit à la main (URLSearchParams est incomplet sous Hermes).
-    // _cb : nonce par ouverture (prop) sinon fallback module (par lancement).
     const params = [`sel=${encodeURIComponent(sel)}`, `_cb=${nonce || CACHE_BUST}`]
     if (BYPASS) {
       params.push(`x-vercel-protection-bypass=${encodeURIComponent(BYPASS)}`)
       params.push('x-vercel-set-bypass-cookie=true')
     }
     return `${BASE_URL}/embed/zonemap?${params.join('&')}`
-    // Recalcule seulement si la sélection initiale change (montage / retour).
   }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, locationLabel, geoConstraints, nonce, insets.top])
 
   const headers = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : undefined
@@ -104,10 +135,11 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
         selectedIrisIds?: string[]
         selectedCommuneIds?: string[]
         locationLabel?: string
+        action?: string
       }
-      if ((data as { action?: string }).action === 'edit') { onBack(); return }
+      if (data.action === 'ready') { setMapReady(true); return }
+      if (data.action === 'edit') { onBack(); return }
       const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
-      // Seed du store natif — préserve locationQuery/intent (setState partiel).
       useSearchStore.setState({
         selectedArrIds: arr(data.selectedArrIds),
         selectedQuartierIds: arr(data.selectedQuartierIds),
@@ -117,58 +149,58 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
       })
       onValidate()
     } catch {
-      // Message illisible → on ignore (l'utilisateur peut réessayer / revenir).
+      // Message illisible → ignoré.
     }
   }
 
   return (
-    <SafeAreaView style={styles.root} edges={['bottom']}>
-      {RNWebView ? (
-        <RNWebView
-          source={{ uri, headers }}
-          onMessage={handleMessage}
-          originWhitelist={['*']}
-          startInLoadingState
-          cacheEnabled={false}
-          style={styles.web}
-        />
-      ) : (
-        // Fallback (module WebView absent) — on laisse continuer sans carte.
-        <View style={styles.fallback}>
-          <Text style={styles.fallbackTxt}>
-            La carte n&apos;est pas disponible sur cet appareil. Votre zone reste celle
-            comprise à partir de votre description.
-          </Text>
-          <Pressable style={styles.cta} onPress={onValidate} hitSlop={8}>
-            <Text style={styles.ctaTxt}>Continuer</Text>
-          </Pressable>
-        </View>
-      )}
-    </SafeAreaView>
+    <Animated.View style={[styles.animRoot, enterStyle]}>
+      <SafeAreaView style={styles.root} edges={['bottom']}>
+        {RNWebView ? (
+          <View style={styles.web}>
+            <RNWebView
+              source={{ uri, headers }}
+              onMessage={handleMessage}
+              originWhitelist={['*']}
+              cacheEnabled={false}
+              style={StyleSheet.absoluteFill}
+            />
+            {!mapReady && <MapSkeleton />}
+          </View>
+        ) : (
+          <View style={styles.fallback}>
+            <Text style={styles.fallbackTxt}>
+              La carte n&apos;est pas disponible sur cet appareil. Votre zone reste celle
+              comprise à partir de votre description.
+            </Text>
+            <Pressable style={styles.cta} onPress={onValidate} hitSlop={8}>
+              <Text style={styles.ctaTxt}>Continuer</Text>
+            </Pressable>
+          </View>
+        )}
+      </SafeAreaView>
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
+  animRoot: { flex: 1, backgroundColor: BG },
   root: { flex: 1, backgroundColor: BG },
-  topbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+  web: { flex: 1, backgroundColor: BG },
+
+  skeleton: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#e8e3df',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 10,
+    overflow: 'hidden',
   },
-  title: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1c1917', textAlign: 'center' },
-  web: { flex: 1, backgroundColor: BG },
+  skeletonTxt: { fontSize: 13, color: '#a8a29e', fontWeight: '600' },
 
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 20 },
   fallbackTxt: { fontSize: 15, color: '#57534e', textAlign: 'center', lineHeight: 21 },

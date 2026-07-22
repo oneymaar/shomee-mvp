@@ -463,6 +463,14 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
     if (zoom >= 15 && hintMounted) dismissHint()
   }, [zoom, hintMounted, dismissHint])
 
+  // Signale au natif que la carte est prête (géométries chargées + rendu) → il
+  // masque le skeleton et révèle la carte.
+  useEffect(() => {
+    if (irisLoading || arrondissements.length === 0) return
+    const w = window as unknown as { ReactNativeWebView?: { postMessage: (m: string) => void } }
+    if (w.ReactNativeWebView) w.ReactNativeWebView.postMessage(JSON.stringify({ action: 'ready' }))
+  }, [irisLoading, arrondissements.length])
+
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: '#FDF5F2' }}>
       {/* Carte — on ATTEND le chargement des IRIS avant de monter ZoneMap : ainsi
