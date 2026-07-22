@@ -113,6 +113,12 @@ export default function ProtoQuartiersClient() {
   const [entityGroups, setEntityGroups] = useState<EntityGroup[]>([])
   const [matchSummary, setMatchSummary] = useState<string[]>([])
 
+  // Pont vers le natif (WebView de l'onboarding) : renvoie la sélection / le retour.
+  const postToNative = useCallback((payload: object) => {
+    const w = window as unknown as { ReactNativeWebView?: { postMessage: (m: string) => void } }
+    if (w.ReactNativeWebView) w.ReactNativeWebView.postMessage(JSON.stringify(payload))
+  }, [])
+
   // ── Chargement géo (mêmes sources que LocationMapStep / embed) ────────────
   useEffect(() => {
     let cancelled = false
@@ -686,7 +692,7 @@ export default function ProtoQuartiersClient() {
               </div>
             )}
 
-            <button onClick={() => { /* proto : pas de nav vers l'étape Bien */ console.log('[proto] sélection', sel) }}
+            <button onClick={() => postToNative({ action: 'validate', selectedArrIds: sel.arr, selectedQuartierIds: sel.q, selectedIrisIds: sel.iris, selectedCommuneIds: sel.com, locationLabel: headerSummary, locationQuery: query })}
               disabled={!hasSelection}
               className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white transition-opacity active:opacity-90"
               style={{ backgroundColor: hasSelection ? TERRA : '#DB947E' }}>
@@ -710,7 +716,7 @@ export default function ProtoQuartiersClient() {
       >
         {/* Barre de progression (agencement onboarding) */}
         <div className="flex-none flex items-center gap-3 px-4 pb-1" style={{ paddingTop: 'max(calc(env(safe-area-inset-top) + 6px), 58px)' }}>
-          <button className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center flex-none active:bg-black/5" style={{ color: '#404040' }}>
+          <button onClick={() => postToNative({ action: 'back' })} className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center flex-none active:bg-black/5" style={{ color: '#404040' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
