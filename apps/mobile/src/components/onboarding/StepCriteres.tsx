@@ -8,9 +8,10 @@
  * re-tap cycle obligatoire → souhaité → rédhibitoire. Un coach ANCRÉ au-dessus
  * de la pastille concernée s'affiche les premières fois pour expliquer le re-tap.
  */
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   ActivityIndicator,
+  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -44,6 +45,10 @@ const LEGEND: Array<{ state: 1 | 2 | 3; label: string; icon: 'plus' | 'check' | 
   { state: 3, label: 'Rédhibitoire', icon: 'x' },
 ]
 
+const EDGE = 12 // marge mini entre la bulle et le bord de l'écran
+const SCREEN_W = Dimensions.get('window').width
+const BUBBLE_W = Math.min(300, SCREEN_W - EDGE * 2)
+
 const COACH_MAX = 1 // affichée UNE fois, puis reste jusqu'à fermeture manuelle (×)
 
 // Bulle « re-tap » ancrée juste au-dessus de la pastille concernée.
@@ -56,11 +61,36 @@ function CoachAnchor({
   onClose: () => void
   children: ReactNode
 }) {
+  const hostRef = useRef<View>(null)
+  // { left } = position horizontale de la bulle relative au chip ; { arrow } =
+  // position de la flèche dans la bulle (toujours pointée sur la pastille).
+  const [pos, setPos] = useState<{ left: number; arrow: number } | null>(null)
+
+  useEffect(() => {
+    if (!show) {
+      setPos(null)
+      return
+    }
+    // Mesure APRÈS layout : on recale la bulle pour qu'elle reste dans l'écran.
+    const id = requestAnimationFrame(() => {
+      hostRef.current?.measureInWindow((x, _y, w) => {
+        const chipCenter = x + w / 2
+        const clampedLeft = Math.max(
+          EDGE,
+          Math.min(chipCenter - BUBBLE_W / 2, SCREEN_W - EDGE - BUBBLE_W),
+        )
+        const arrow = Math.max(16, Math.min(chipCenter - clampedLeft, BUBBLE_W - 16))
+        setPos({ left: clampedLeft - x, arrow })
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [show])
+
   return (
-    <View style={styles.coachHost}>
+    <View ref={hostRef} style={styles.coachHost} collapsable={false}>
       {children}
-      {show && (
-        <View pointerEvents="box-none" style={styles.coachWrap}>
+      {show && pos && (
+        <View pointerEvents="box-none" style={[styles.coachWrap, { left: pos.left }]}>
           <View style={styles.coachPill}>
             <View style={styles.coachTextCol}>
               <Text style={styles.coachTxt}>Recliquez ici pour changer son statut</Text>
@@ -70,7 +100,7 @@ function CoachAnchor({
               <X size={13} strokeWidth={2.6} color="rgba(255,255,255,0.85)" />
             </Pressable>
           </View>
-          <View style={styles.coachArrow} />
+          <View style={[styles.coachArrow, { marginLeft: pos.arrow - 6 }]} />
         </View>
       )}
     </View>
@@ -338,14 +368,11 @@ const styles = StyleSheet.create({
   // Coach ancré au-dessus de la pastille
   coachHost: { position: 'relative' },
   coachWrap: {
-    // Largeur FIXE, centrée au-dessus de la pastille (indépendante du chip)
-    // pour rester bien lisible.
+    // Largeur fixe ; `left` est calculé dynamiquement (mesure) pour rester
+    // toujours dans l'écran. La pastille peut être n'importe où.
     position: 'absolute',
     bottom: '100%',
-    left: '50%',
-    marginLeft: -140,
-    width: 280,
-    alignItems: 'center',
+    width: BUBBLE_W,
     zIndex: 20,
   },
   coachPill: {
@@ -364,6 +391,7 @@ const styles = StyleSheet.create({
   coachSub: { color: 'rgba(255,255,255,0.78)', fontSize: 11, lineHeight: 15, marginTop: 2 },
   coachClose: { padding: 2 },
   coachArrow: {
+    alignSelf: 'flex-start',
     width: 0,
     height: 0,
     borderLeftWidth: 6,
