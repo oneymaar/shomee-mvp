@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
-import { Bell, Camera, ChevronRight, LogOut, Search, Settings, Shield, User } from 'lucide-react-native'
+import { Bell, Camera, ChevronRight, LogOut, Pencil, Settings, Shield, User } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import { useSearchStore, useShomeeStore, useFeedStore } from '@/lib/stores'
 import { useProfileStore } from '@/lib/profileStore'
@@ -179,11 +179,11 @@ export default function ProfileScreen() {
         {/* Point d'entrée du funnel manuel natif (S7) — remplace le bouton web
             « Modifier ma recherche » (jusqu'ici omis faute de cible native). */}
         <Pressable
-          onPress={() => router.push('/onboarding-manual')}
+          onPress={() => router.push('/onboarding-manual?recap=1')}
           style={({ pressed }) => [styles.searchBtn, { opacity: pressed ? 0.9 : 1 }]}
         >
-          <Search size={16} color="#fff" />
-          <Text style={styles.searchBtnTxt}>Rechercher à la main</Text>
+          <Pencil size={16} color="#fff" />
+          <Text style={styles.searchBtnTxt}>Modifier la recherche</Text>
         </Pressable>
 
         {/* Compte */}

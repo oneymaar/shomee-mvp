@@ -19,7 +19,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ChevronLeft } from 'lucide-react-native'
 import { generateFeedFromStore } from '@/lib/handoff'
 import { WizardProgress } from '@/components/onboarding/WizardProgress'
@@ -36,8 +36,11 @@ type Phase = 'idle' | 'generating' | 'error'
 
 export default function ManualOnboarding() {
   const router = useRouter()
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
-  const [recapOpen, setRecapOpen] = useState(false)
+  // Ouverture directe sur le récap depuis « Modifier la recherche » (profil).
+  const params = useLocalSearchParams<{ recap?: string }>()
+  const openedAtRecap = params.recap === '1'
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(openedAtRecap ? 4 : 1)
+  const [recapOpen, setRecapOpen] = useState(openedAtRecap)
   const [editing, setEditing] = useState(false)
   const [phase, setPhase] = useState<Phase>('idle')
 
@@ -48,11 +51,12 @@ export default function ManualOnboarding() {
   }, [editing, step])
 
   const handleBack = useCallback(() => {
-    if (recapOpen) { setRecapOpen(false); return }
+    // Récap ouvert directement (bouton « Modifier la recherche ») → retour = sortie.
+    if (recapOpen) { if (openedAtRecap) { router.back(); return } setRecapOpen(false); return }
     if (editing) { setEditing(false); setRecapOpen(true); return }
     if (step === 1) { router.back(); return }
     setStep((s) => (s - 1) as 1 | 2 | 3 | 4)
-  }, [recapOpen, editing, step, router])
+  }, [recapOpen, editing, step, router, openedAtRecap])
 
   const editBlock = useCallback((target: 1 | 2 | 3 | 4) => {
     setRecapOpen(false); setEditing(true); setStep(target)

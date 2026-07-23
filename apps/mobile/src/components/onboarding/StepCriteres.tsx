@@ -5,13 +5,12 @@
  *   3) champ texte custom SOUS le catalogue, au-dessus de la sélection ;
  *   4) « Vos critères ».
  * Nouveauté produit : une pastille ajoutée part en OBLIGATOIRE (état 2) ; le
- * re-tap cycle obligatoire → souhaité → rédhibitoire. Un coach s'affiche les
- * premières fois pour expliquer le re-tap (nouveau concept de pastille à états).
+ * re-tap cycle obligatoire → souhaité → rédhibitoire. Un coach ANCRÉ au-dessus
+ * de la pastille concernée s'affiche les premières fois pour expliquer le re-tap.
  */
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   ActivityIndicator,
-  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -45,8 +44,25 @@ const LEGEND: Array<{ state: 1 | 2 | 3; label: string; icon: 'plus' | 'check' | 
   { state: 3, label: 'Rédhibitoire', icon: 'x' },
 ]
 
-const HINT_MAX = 3
-const HINT_TEXT = 'Astuce : reclique sur une pastille pour changer son statut — obligatoire → souhaité → rédhibitoire.'
+const COACH_MAX = 3 // nombre de fois où la bulle coach s'affiche
+
+// Bulle « re-tap » ancrée juste au-dessus de la pastille concernée.
+function CoachAnchor({ show, children }: { show: boolean; children: ReactNode }) {
+  return (
+    <View style={styles.coachHost}>
+      {children}
+      {show && (
+        <View pointerEvents="none" style={styles.coachWrap}>
+          <View style={styles.coachPill}>
+            <Text style={styles.coachTxt}>Reclique ici pour changer son statut</Text>
+            <Text style={styles.coachSub}>obligatoire → souhaité → rédhibitoire</Text>
+          </View>
+          <View style={styles.coachArrow} />
+        </View>
+      )}
+    </View>
+  )
+}
 
 export function StepCriteres({ onNext }: { onNext: () => void }) {
   const propertyTypes = useSearchStore((s) => s.propertyTypes)
@@ -61,24 +77,17 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // ── Coach « re-tap pour changer l'état » (les HINT_MAX premières fois) ─────
-  const hintShownRef = useRef(0)
-  const hintOpacity = useRef(new Animated.Value(0)).current
-  const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [hintText, setHintText] = useState('')
-  const showHint = useCallback(
-    (msg: string) => {
-      if (hintShownRef.current >= HINT_MAX) return
-      hintShownRef.current += 1
-      setHintText(msg)
-      if (hintTimer.current) clearTimeout(hintTimer.current)
-      Animated.timing(hintOpacity, { toValue: 1, duration: 180, useNativeDriver: true }).start()
-      hintTimer.current = setTimeout(() => {
-        Animated.timing(hintOpacity, { toValue: 0, duration: 260, useNativeDriver: true }).start()
-      }, 2600)
-    },
-    [hintOpacity],
-  )
+  // ── Coach ancré : clé de la pastille coachée + compteur (COACH_MAX fois) ───
+  const [coachKey, setCoachKey] = useState<string | null>(null)
+  const coachShownRef = useRef(0)
+  const coachTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const coach = (key: string) => {
+    if (coachShownRef.current >= COACH_MAX) return
+    coachShownRef.current += 1
+    setCoachKey(key)
+    if (coachTimer.current) clearTimeout(coachTimer.current)
+    coachTimer.current = setTimeout(() => setCoachKey(null), 2800)
+  }
 
   // « L'immeuble » masqué uniquement si maison SEULE (parité web).
   const showBuilding = useMemo(
@@ -95,18 +104,18 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
 
   const canAdd = text.trim().length >= 3 && !analyzing
 
-  // Ajout catalogue → OBLIGATOIRE + coach.
+  // Ajout catalogue → OBLIGATOIRE + coach ancré sur la pastille (désormais en bas).
   const addCatalogue = (tag: string) => {
     setChipState(tag, DEFAULT_STATE)
-    showHint(HINT_TEXT)
+    coach(`sel-${tag}`)
   }
   const cycleCatalogue = (label: string, state: ChipState) => {
     setChipState(label, nextState(state))
-    showHint(HINT_TEXT)
+    coach(`sel-${label}`)
   }
   const cycleCustom = (id: string, state: ChipState) => {
     setCustomCriteriaState(id, nextState(state))
-    showHint(HINT_TEXT)
+    coach(`custom-${id}`)
   }
 
   const handleAdd = async () => {
@@ -141,7 +150,6 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
       } else {
         addCustomCriteria(items)
         setText('')
-        showHint(HINT_TEXT)
       }
     } catch {
       setError('Erreur réseau. Réessayez.')
@@ -240,38 +248,41 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
 
-        {/* Sélection */}
+        {/* Sélection — bulle coach ancrée sur la pastille concernée */}
         {hasSelection && (
           <View style={styles.section}>
             <SectionLabel>Vos critères</SectionLabel>
             <View style={styles.chipWrap}>
-              {selectedCatalogue.map((c) => (
-                <CriteriaChip
-                  key={`sel-${c.label}`}
-                  label={c.label}
-                  state={c.state}
-                  onPress={() => cycleCatalogue(c.label, c.state)}
-                  onRemove={() => setChipState(c.label, 0)}
-                />
-              ))}
-              {customCriteria.map((c) => (
-                <CriteriaChip
-                  key={`custom-${c.id}`}
-                  label={c.label}
-                  state={(c.state > 0 ? c.state : DEFAULT_STATE) as ChipState}
-                  onPress={() => cycleCustom(c.id, c.state)}
-                  onRemove={() => removeCustomCriteria(c.id)}
-                />
-              ))}
+              {selectedCatalogue.map((c) => {
+                const key = `sel-${c.label}`
+                return (
+                  <CoachAnchor key={key} show={coachKey === key}>
+                    <CriteriaChip
+                      label={c.label}
+                      state={c.state}
+                      onPress={() => cycleCatalogue(c.label, c.state)}
+                      onRemove={() => setChipState(c.label, 0)}
+                    />
+                  </CoachAnchor>
+                )
+              })}
+              {customCriteria.map((c) => {
+                const key = `custom-${c.id}`
+                return (
+                  <CoachAnchor key={key} show={coachKey === key}>
+                    <CriteriaChip
+                      label={c.label}
+                      state={(c.state > 0 ? c.state : DEFAULT_STATE) as ChipState}
+                      onPress={() => cycleCustom(c.id, c.state)}
+                      onRemove={() => removeCustomCriteria(c.id)}
+                    />
+                  </CoachAnchor>
+                )
+              })}
             </View>
           </View>
         )}
       </ScrollView>
-
-      {/* Coach flottant « re-tap pour changer l'état » */}
-      <Animated.View pointerEvents="none" style={[styles.hint, { opacity: hintOpacity }]}>
-        <Text style={styles.hintTxt}>{hintText}</Text>
-      </Animated.View>
 
       <View style={styles.footer}>
         <PrimaryButton label="Valider mes critères" onPress={onNext} />
@@ -314,17 +325,37 @@ const styles = StyleSheet.create({
   section: { marginTop: 22 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 
-  hint: {
+  // Coach ancré au-dessus de la pastille
+  coachHost: { position: 'relative' },
+  coachWrap: {
     position: 'absolute',
-    left: 20,
-    right: 20,
-    bottom: 88,
-    backgroundColor: 'rgba(26,26,26,0.94)',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    left: 0,
+    right: 0,
+    bottom: '100%',
+    alignItems: 'center',
+    zIndex: 20,
   },
-  hintTxt: { color: '#fff', fontSize: 12.5, lineHeight: 17, fontWeight: '500', textAlign: 'center' },
+  coachPill: {
+    maxWidth: 230,
+    backgroundColor: 'rgba(26,26,26,0.94)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 0,
+  },
+  coachTxt: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '600', textAlign: 'center' },
+  coachSub: { color: 'rgba(255,255,255,0.75)', fontSize: 11, lineHeight: 15, textAlign: 'center', marginTop: 2 },
+  coachArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 7,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: 'rgba(26,26,26,0.94)',
+    marginTop: -1,
+  },
 
   footer: { paddingHorizontal: 24, paddingTop: 12 },
 })
