@@ -35,7 +35,7 @@ export function AuthScreen() {
   const onGuest = async () => {
     setError(null)
     const ok = await loginGuest()
-    if (!ok) setError('Impossible de continuer pour le moment. Réessaie.')
+    if (!ok) setError('Impossible de continuer pour le moment. Réessayez.')
   }
 
   return (
@@ -54,7 +54,7 @@ export function AuthScreen() {
             hitSlop={6}
           >
             <Text style={styles.appleGlyph}>{''}</Text>
-            <Text style={styles.appleLabel}>Continuer avec Apple</Text>
+            <Text style={styles.appleLabel}>Se connecter avec Apple</Text>
           </Pressable>
         )}
 

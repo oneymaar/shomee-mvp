@@ -120,7 +120,7 @@ export function Recap({
       <View style={styles.footer}>
         <PrimaryButton label="Voir ma sélection" onPress={onLaunch} />
         <Pressable onPress={onEditManual} style={styles.editManual} hitSlop={6}>
-          <Text style={styles.editManualTxt}>Modifier manuellement</Text>
+          <Text style={styles.editManualTxt}>Recommencer à zéro</Text>
         </Pressable>
       </View>
     </View>

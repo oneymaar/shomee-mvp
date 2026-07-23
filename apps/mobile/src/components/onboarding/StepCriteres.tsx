@@ -338,10 +338,13 @@ const styles = StyleSheet.create({
   // Coach ancré au-dessus de la pastille
   coachHost: { position: 'relative' },
   coachWrap: {
+    // Largeur FIXE, centrée au-dessus de la pastille (indépendante du chip)
+    // pour rester bien lisible.
     position: 'absolute',
-    left: 0,
-    right: 0,
     bottom: '100%',
+    left: '50%',
+    marginLeft: -140,
+    width: 280,
     alignItems: 'center',
     zIndex: 20,
   },
@@ -349,14 +352,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    maxWidth: 288,
+    alignSelf: 'stretch',
     backgroundColor: 'rgba(26,26,26,0.94)',
     borderRadius: 12,
     paddingLeft: 13,
     paddingRight: 8,
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
-  coachTextCol: { flexShrink: 1 },
+  coachTextCol: { flex: 1 },
   coachTxt: { color: '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '600' },
   coachSub: { color: 'rgba(255,255,255,0.78)', fontSize: 11, lineHeight: 15, marginTop: 2 },
   coachClose: { padding: 2 },
