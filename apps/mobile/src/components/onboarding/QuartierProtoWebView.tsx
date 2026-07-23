@@ -112,6 +112,7 @@ export function QuartierProtoWebView({ onValidate, onBack }: Props) {
         originWhitelist={['*']}
         cacheEnabled={false}
         hideKeyboardAccessoryView
+        keyboardDisplayRequiresUserAction={false}
         style={styles.web}
       />
       {!loaded && <View style={styles.placeholder} />}
