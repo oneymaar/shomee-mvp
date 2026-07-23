@@ -144,60 +144,35 @@ export default function ProtoQuartiersClient() {
     return () => clearTimeout(t)
   }, [])
 
-  // ── Clavier & anti-scroll (moment 1) ──────────────────────────────────────
-  // Le contenu doit tenir AU-DESSUS du clavier, sans jamais faire défiler la
-  // page. On dimensionne l'app sur visualViewport (hauteur visible réelle) et
-  // on verrouille tout défilement du document — c'est le comportement iOS le
-  // plus fiable pour empêcher la « remontée » du contenu quand le clavier
-  // s'ouvre dans une WebView.
+  // ── Hauteur dynamique selon le clavier (moment 1) ─────────────────────────
+  // On cale la hauteur de l'app sur visualViewport (= zone RÉELLEMENT visible,
+  // au-dessus du clavier). Le contenu se comprime donc pour tenir dans cet
+  // espace : il n'y a jamais rien à faire défiler. Le scroll natif de la
+  // WebView est coupé côté natif (scrollEnabled=false) → pas de « remontée »
+  // ni de barre élastique. Ici on se contente de suivre la hauteur.
   const [viewportH, setViewportH] = useState<number | null>(null)
   useEffect(() => {
     if (typeof window === 'undefined') return
     const vv = window.visualViewport
-
-    const pin = () => {
-      // Neutralise le scroll qu'iOS déclenche pour révéler le champ focus.
-      window.scrollTo(0, 0)
-      document.documentElement.scrollTop = 0
-      document.body.scrollTop = 0
-    }
-    const onResize = () => {
+    const apply = () => {
       if (vv) setViewportH(vv.height)
-      pin()
+      window.scrollTo(0, 0) // garde la page collée en haut
     }
-    onResize()
-    vv?.addEventListener('resize', onResize)
-    vv?.addEventListener('scroll', onResize)
-    window.addEventListener('scroll', pin, { passive: true })
-
-    // Verrou de défilement : body en position fixe = anti-scroll iOS fiable.
+    apply()
+    vv?.addEventListener('resize', apply)
+    vv?.addEventListener('scroll', apply)
+    // Coupe tout défilement du document (desktop + filet de sécurité).
     const html = document.documentElement
     const body = document.body
-    const saved = {
-      htmlOverflow: html.style.overflow,
-      bodyOverflow: body.style.overflow,
-      bodyPosition: body.style.position,
-      bodyWidth: body.style.width,
-      bodyTop: body.style.top,
-      overscroll: body.style.overscrollBehavior,
-    }
+    const savedHtml = html.style.overflow
+    const savedBody = body.style.overflow
     html.style.overflow = 'hidden'
     body.style.overflow = 'hidden'
-    body.style.position = 'fixed'
-    body.style.top = '0'
-    body.style.width = '100%'
-    body.style.overscrollBehavior = 'none'
-
     return () => {
-      vv?.removeEventListener('resize', onResize)
-      vv?.removeEventListener('scroll', onResize)
-      window.removeEventListener('scroll', pin)
-      html.style.overflow = saved.htmlOverflow
-      body.style.overflow = saved.bodyOverflow
-      body.style.position = saved.bodyPosition
-      body.style.top = saved.bodyTop
-      body.style.width = saved.bodyWidth
-      body.style.overscrollBehavior = saved.overscroll
+      vv?.removeEventListener('resize', apply)
+      vv?.removeEventListener('scroll', apply)
+      html.style.overflow = savedHtml
+      body.style.overflow = savedBody
     }
   }, [])
 

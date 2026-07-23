@@ -3,13 +3,14 @@
  * plein écran. Le proto gère lui-même le préchargement de la carte + le morph ;
  * il renvoie au natif la sélection ({action:'validate'}) ou un retour ({action:'back'}).
  *
- * Clavier : la WebView est enveloppée dans un KeyboardAvoidingView → quand le
- * clavier s'ouvre (champ web focus), la WebView rétrécit AU-DESSUS du clavier, donc
- * le contenu web se recadre proprement (plus de « tout remonte »). La barre
- * d'accessoires du clavier (‹ › ✓) est masquée.
+ * Clavier : le scroll natif de la WebView est coupé (scrollEnabled=false) et la
+ * page web cale sa hauteur sur visualViewport → le contenu se comprime au-dessus
+ * du clavier, sans « remontée » ni barre de scroll élastique. Le clavier s'ouvre
+ * dès l'arrivée sur l'écran (keyboardDisplayRequiresUserAction=false) et la barre
+ * d'accessoires (‹ › ✓) est masquée.
  */
 import { useMemo, useState, type ComponentType } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSearchStore } from '@/lib/stores'
 
 type WebViewMessage = { nativeEvent: { data: string } }
@@ -22,6 +23,7 @@ type WebViewProps = {
   cacheEnabled?: boolean
   hideKeyboardAccessoryView?: boolean
   keyboardDisplayRequiresUserAction?: boolean
+  scrollEnabled?: boolean
 }
 
 let RNWebView: ComponentType<WebViewProps> | null
@@ -101,10 +103,7 @@ export function QuartierProtoWebView({ onValidate, onBack }: Props) {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.root}>
       <RNWebView
         source={{ uri, headers }}
         onMessage={handleMessage}
@@ -113,10 +112,11 @@ export function QuartierProtoWebView({ onValidate, onBack }: Props) {
         cacheEnabled={false}
         hideKeyboardAccessoryView
         keyboardDisplayRequiresUserAction={false}
+        scrollEnabled={false}
         style={styles.web}
       />
       {!loaded && <View style={styles.placeholder} />}
-    </KeyboardAvoidingView>
+    </View>
   )
 }
 
