@@ -13,7 +13,19 @@
       "usesAppleSignIn": true,
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "shomee"
+            ]
+          },
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.81880522210-9upst1cjpj91m8bvkoi40qesnfsa5l8k"
+            ]
+          }
+        ]
       }
     },
     "android": {
