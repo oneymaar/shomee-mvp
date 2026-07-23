@@ -44,18 +44,31 @@ const LEGEND: Array<{ state: 1 | 2 | 3; label: string; icon: 'plus' | 'check' | 
   { state: 3, label: 'Rédhibitoire', icon: 'x' },
 ]
 
-const COACH_MAX = 3 // nombre de fois où la bulle coach s'affiche
+const COACH_MAX = 1 // affichée UNE fois, puis reste jusqu'à fermeture manuelle (×)
 
 // Bulle « re-tap » ancrée juste au-dessus de la pastille concernée.
-function CoachAnchor({ show, children }: { show: boolean; children: ReactNode }) {
+function CoachAnchor({
+  show,
+  onClose,
+  children,
+}: {
+  show: boolean
+  onClose: () => void
+  children: ReactNode
+}) {
   return (
     <View style={styles.coachHost}>
       {children}
       {show && (
-        <View pointerEvents="none" style={styles.coachWrap}>
+        <View pointerEvents="box-none" style={styles.coachWrap}>
           <View style={styles.coachPill}>
-            <Text style={styles.coachTxt}>Reclique ici pour changer son statut</Text>
-            <Text style={styles.coachSub}>obligatoire → souhaité → rédhibitoire</Text>
+            <View style={styles.coachTextCol}>
+              <Text style={styles.coachTxt}>Recliquez ici pour changer son statut</Text>
+              <Text style={styles.coachSub}>obligatoire → souhaité → rédhibitoire</Text>
+            </View>
+            <Pressable onPress={onClose} hitSlop={10} style={styles.coachClose}>
+              <X size={13} strokeWidth={2.6} color="rgba(255,255,255,0.85)" />
+            </Pressable>
           </View>
           <View style={styles.coachArrow} />
         </View>
@@ -80,13 +93,10 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
   // ── Coach ancré : clé de la pastille coachée + compteur (COACH_MAX fois) ───
   const [coachKey, setCoachKey] = useState<string | null>(null)
   const coachShownRef = useRef(0)
-  const coachTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const coach = (key: string) => {
     if (coachShownRef.current >= COACH_MAX) return
     coachShownRef.current += 1
-    setCoachKey(key)
-    if (coachTimer.current) clearTimeout(coachTimer.current)
-    coachTimer.current = setTimeout(() => setCoachKey(null), 2800)
+    setCoachKey(key) // reste affichée jusqu'à la fermeture manuelle (×)
   }
 
   // « L'immeuble » masqué uniquement si maison SEULE (parité web).
@@ -176,9 +186,9 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
                 key={l.label}
                 style={[styles.legendChip, { backgroundColor: st.bg, borderColor: st.border }]}
               >
-                {l.icon === 'plus' && <Plus size={12} strokeWidth={2.8} color={st.fg} />}
-                {l.icon === 'check' && <Check size={12} strokeWidth={2.8} color={st.fg} />}
-                {l.icon === 'x' && <X size={12} strokeWidth={2.8} color={st.fg} />}
+                {l.icon === 'plus' && <Plus size={10} strokeWidth={2.8} color={st.fg} />}
+                {l.icon === 'check' && <Check size={10} strokeWidth={2.8} color={st.fg} />}
+                {l.icon === 'x' && <X size={10} strokeWidth={2.8} color={st.fg} />}
                 <Text
                   style={[
                     styles.legendTxt,
@@ -256,7 +266,7 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
               {selectedCatalogue.map((c) => {
                 const key = `sel-${c.label}`
                 return (
-                  <CoachAnchor key={key} show={coachKey === key}>
+                  <CoachAnchor key={key} show={coachKey === key} onClose={() => setCoachKey(null)}>
                     <CriteriaChip
                       label={c.label}
                       state={c.state}
@@ -269,7 +279,7 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
               {customCriteria.map((c) => {
                 const key = `custom-${c.id}`
                 return (
-                  <CoachAnchor key={key} show={coachKey === key}>
+                  <CoachAnchor key={key} show={coachKey === key} onClose={() => setCoachKey(null)}>
                     <CriteriaChip
                       label={c.label}
                       state={(c.state > 0 ? c.state : DEFAULT_STATE) as ChipState}
@@ -295,17 +305,17 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   body: { paddingHorizontal: 24, paddingBottom: 24 },
 
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4, marginBottom: 4 },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 2, marginBottom: 2 },
   legendChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: 999,
     borderWidth: 1,
   },
-  legendTxt: { fontSize: 11.5, fontWeight: '600' },
+  legendTxt: { fontSize: 10, fontWeight: '600' },
 
   inputWrap: {
     flexDirection: 'row',
@@ -336,15 +346,20 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   coachPill: {
-    maxWidth: 230,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    maxWidth: 288,
     backgroundColor: 'rgba(26,26,26,0.94)',
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingLeft: 13,
+    paddingRight: 8,
     paddingVertical: 8,
-    marginBottom: 0,
   },
-  coachTxt: { color: '#fff', fontSize: 12, lineHeight: 16, fontWeight: '600', textAlign: 'center' },
-  coachSub: { color: 'rgba(255,255,255,0.75)', fontSize: 11, lineHeight: 15, textAlign: 'center', marginTop: 2 },
+  coachTextCol: { flexShrink: 1 },
+  coachTxt: { color: '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '600' },
+  coachSub: { color: 'rgba(255,255,255,0.78)', fontSize: 11, lineHeight: 15, marginTop: 2 },
+  coachClose: { padding: 2 },
   coachArrow: {
     width: 0,
     height: 0,

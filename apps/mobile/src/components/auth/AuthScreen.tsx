@@ -71,7 +71,7 @@ export function AuthScreen() {
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.legal}>
-          En continuant, tu acceptes nos conditions d&apos;utilisation et notre politique de
+          En continuant, vous acceptez nos conditions d&apos;utilisation et notre politique de
           confidentialité.
         </Text>
       </View>

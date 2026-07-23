@@ -52,7 +52,7 @@ export default function ProfileScreen() {
     if (!perm.granted) {
       Alert.alert(
         'Accès aux photos',
-        "Autorise l'accès à tes photos dans Réglages pour définir une photo de profil.",
+        "Autorisez l'accès à vos photos dans les Réglages pour définir une photo de profil.",
       )
       return
     }
