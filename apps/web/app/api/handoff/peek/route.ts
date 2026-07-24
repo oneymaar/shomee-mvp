@@ -19,7 +19,10 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest) {
-  const guard = requireAppTokenOrTrustedOrigin(req)
+  // allowReferer : un fetch GET same-origin n'envoie PAS d'en-tête Origin
+  // (spec fetch) — la landing /onboarding?h= s'authentifie donc par Referer,
+  // comme /api/feed/estimate.
+  const guard = requireAppTokenOrTrustedOrigin(req, { allowReferer: true })
   if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
 
   const token = req.nextUrl.searchParams.get('token')

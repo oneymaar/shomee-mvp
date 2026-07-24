@@ -22,6 +22,7 @@ import {
 } from '@/lib/searchStore'
 import { SURFACE_UNLIMITED } from './BienStep'
 import { BUDGET_UNLIMITED } from './BudgetStep'
+import RarityGaugeWeb from './RarityGaugeWeb'
 
 interface AIBriefRecapProps {
   /** Hint shown when the geo resolver couldn't narrow to any IRIS. */
@@ -33,6 +34,12 @@ interface AIBriefRecapProps {
   onEditManual: () => void
   /** "Lancer ma recherche" — completes onboarding + redirects to /feed. */
   onLaunch: () => void
+  /** S9 — CTA principal alternatif (handoff : « Valider ma recherche »). */
+  ctaLabel?: string
+  /** S9 — CTA désactivé + libellé d'attente pendant la persistance. */
+  busy?: boolean
+  /** S9 — erreur de persistance affichée au-dessus du CTA. */
+  errorText?: string | null
 }
 
 // ─── Formatters ────────────────────────────────────────────────────────────
@@ -183,6 +190,9 @@ export default function AIBriefRecap({
   onEditBlock,
   onEditManual,
   onLaunch,
+  ctaLabel,
+  busy = false,
+  errorText = null,
 }: AIBriefRecapProps) {
   const {
     locationLabel,
@@ -230,7 +240,7 @@ export default function AIBriefRecap({
           className="text-[11px] font-bold uppercase tracking-widest mb-2"
           style={{ color: '#A64B27' }}
         >
-          Brief importé
+          Récapitulatif
         </p>
         <h2 className="text-[22px] font-bold text-neutral-900 leading-tight tracking-tight">
           Voici votre recherche.
@@ -266,6 +276,8 @@ export default function AIBriefRecap({
       {/* Blocks */}
       <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
         <div className="flex flex-col gap-2.5">
+          {/* Jauge de disponibilité — parité avec le récap natif (S7). */}
+          <RarityGaugeWeb />
           <BlockCard
             icon={<MapPin size={16} />}
             title="Quartiers"
@@ -322,14 +334,20 @@ export default function AIBriefRecap({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
       >
+        {errorText ? (
+          <p className="text-[12.5px] leading-snug text-center" style={{ color: '#b91c1c' }}>
+            {errorText}
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={onLaunch}
-          className="w-full py-3.5 rounded-2xl font-semibold text-[15.5px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-          style={{ backgroundColor: '#A64B27' }}
+          disabled={busy}
+          className="w-full py-3.5 rounded-2xl font-semibold text-[15.5px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90 disabled:opacity-100"
+          style={{ backgroundColor: busy ? '#DB947E' : '#A64B27' }}
         >
-          Lancer ma recherche
-          <ChevronRight size={18} />
+          {busy ? 'Enregistrement…' : ctaLabel ?? 'Lancer ma recherche'}
+          {!busy && <ChevronRight size={18} />}
         </button>
         <button
           type="button"

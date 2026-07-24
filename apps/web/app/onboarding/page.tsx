@@ -14,6 +14,8 @@ import BudgetStep from '@/components/onboarding/BudgetStep'
 import CriteriaStep from '@/components/onboarding/CriteriaStep'
 import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import AIBriefRecap from '@/components/onboarding/AIBriefRecap'
+import HandoffInstallPanel from '@/components/onboarding/HandoffInstallPanel'
+import { SURFACE_UNLIMITED } from '@/components/onboarding/BienStep'
 import { parseLocationIntent } from '@shomee/core/geo/locationIntentParser'
 import { injectBrief, type AIOnboardingBrief } from '@/lib/services/aiBriefInjector'
 import type { ClarificationOption, LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
@@ -149,6 +151,33 @@ function BriefErrorScreen({ message, onStart }: { message: string; onStart: () =
   )
 }
 
+// S9 (handoff) — snapshot AIOnboardingBrief depuis le store, pour persister
+// les ajustements du récap sur le Handoff avant le panneau d'installation.
+// Sentinelles UI → contrat serveur : maxSurface ≥ SURFACE_UNLIMITED → null ;
+// chips remises à 0 (dé-sélectionnées) filtrées ; customCriteria sans id.
+function buildBriefFromStore(): AIOnboardingBrief {
+  const s = useSearchStore.getState()
+  const chipStates = Object.fromEntries(
+    Object.entries(s.chipStates).filter(([, st]) => st === 1 || st === 2 || st === 3),
+  ) as Record<string, 1 | 2 | 3>
+  return {
+    locationQuery: s.locationQuery,
+    propertyTypes: s.propertyTypes,
+    minRooms: s.minRooms,
+    maxRooms: s.maxRooms,
+    minBedrooms: s.minBedrooms,
+    maxBedrooms: s.maxBedrooms,
+    minSurface: s.minSurface ?? 20,
+    maxSurface: s.maxSurface != null && s.maxSurface >= SURFACE_UNLIMITED ? null : s.maxSurface,
+    budgetMin: s.budgetMin,
+    budgetMax: s.budgetMax ?? 1,
+    chipStates,
+    customCriteria: s.customCriteria
+      .filter((c) => c.state > 0)
+      .map((c) => ({ label: c.label, state: c.state as 1 | 2 | 3 })),
+  }
+}
+
 // Steps: 1=Location (text + map), 2=Bien, 3=Budget, 4=Priorities, 5=AI
 // (Intro removed — the splash screen is the entry point.)
 // locationMapOpen / clarificationData are sub-states of step 1 — still the
@@ -178,6 +207,11 @@ function OnboardingPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const briefToken = searchParams.get('brief')
+  // S9 — mode handoff : /h/<token> redirige vers /onboarding?h=<token>.
+  // Même expérience que le brief legacy (récap + édition), mais la validation
+  // persiste les ajustements sur le Handoff puis affiche le panneau
+  // d'installation (au lieu de lancer le feed PWA).
+  const handoffToken = searchParams.get('h')
   const { onboardingCompleted, setLocation, completeOnboarding } = useSearchStore()
   // Step 0 (IntroStep) was removed — the splash screen now serves as the
   // intro, so onboarding opens directly on step 1 (Localisation).
@@ -195,11 +229,20 @@ function OnboardingPageInner() {
   //   recap instead of advancing through the linear flow.
   // aiGeoResolved: false when the geo resolver couldn't narrow to any
   //   IRIS; surfaced as a warning in the recap.
-  const [briefLoading, setBriefLoading] = useState<boolean>(!!briefToken)
+  const [briefLoading, setBriefLoading] = useState<boolean>(!!briefToken || !!handoffToken)
   const [briefError, setBriefError] = useState<string | null>(null)
   const [aiRecapOpen, setAiRecapOpen] = useState(false)
   const [editingFromRecap, setEditingFromRecap] = useState(false)
   const [aiGeoResolved, setAiGeoResolved] = useState(true)
+  // ── Handoff S9 — sous-états du mode ?h= ─────────────────────────────────
+  // handoffMeta: code court + expiration (affichés au panneau d'installation).
+  // handoffDone: brief validé (et persisté) → panneau d'installation.
+  // handoffClaimed: le brief est déjà dans l'app → panneau variante « déjà là ».
+  const [handoffMeta, setHandoffMeta] = useState<{ shortCode: string; expiresAt: string } | null>(null)
+  const [handoffDone, setHandoffDone] = useState(false)
+  const [handoffClaimed, setHandoffClaimed] = useState(false)
+  const [handoffSaving, setHandoffSaving] = useState(false)
+  const [handoffSaveError, setHandoffSaveError] = useState<string | null>(null)
   // Sub-state of step 1 — when set, the dedicated ClarificationStep screen
   // renders instead of LocationStep (textarea). The originalQuery is kept so
   // the clarification screen can echo "votre recherche : …" and the
@@ -229,8 +272,11 @@ function OnboardingPageInner() {
   })
 
   useEffect(() => {
-    if (onboardingCompleted) router.replace('/feed')
-  }, [onboardingCompleted, router])
+    // En mode handoff, un onboarding PWA déjà complété sur cet appareil ne
+    // doit PAS téléporter l'utilisateur vers le feed web : il vient pour SON
+    // récap et le panneau d'installation de l'app.
+    if (onboardingCompleted && !handoffToken) router.replace('/feed')
+  }, [onboardingCompleted, handoffToken, router])
 
   // Prevent iOS rubber-band / elastic scroll on the whole onboarding flow.
   // Multiple layers because no single approach works reliably on iOS Safari:
@@ -315,8 +361,14 @@ function OnboardingPageInner() {
       setAiRecapOpen(true)
       return
     }
+    // S9 : en mode handoff, la fin du flow linéaire (« Recommencer à zéro »)
+    // revient au récap — jamais vers l'AIPreparationStep/feed PWA.
+    if (handoffToken && step === 4) {
+      setAiRecapOpen(true)
+      return
+    }
     goTo(step + 1, 1)
-  }, [step, goTo, editingFromRecap])
+  }, [step, goTo, editingFromRecap, handoffToken])
   const handleBack = useCallback(() => {
     if (locationMapOpen) {
       setLocationMapOpen(false)
@@ -399,6 +451,64 @@ function OnboardingPageInner() {
     }
   }, [briefToken])
 
+  // ── Handoff S9 : chargement via /api/handoff/peek ───────────────────────
+  // Même chorégraphie que le brief legacy : loader plein écran → injectBrief
+  // → récap. Un handoff déjà réclamé saute directement au panneau « déjà
+  // dans l'app » (l'édition web serait désynchronisée du profil serveur).
+  useEffect(() => {
+    if (!handoffToken) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/handoff/peek?token=${encodeURIComponent(handoffToken)}`)
+        if (cancelled) return
+        if (!res.ok) {
+          const message =
+            res.status === 410
+              ? 'Ce lien a expiré. Relancez une conversation avec votre assistant pour en générer un nouveau.'
+              : res.status === 404
+                ? 'Ce lien est introuvable. Demandez un nouveau lien à votre assistant.'
+                : 'Impossible de charger votre recherche. Réessayez plus tard.'
+          setBriefError(message)
+          setBriefLoading(false)
+          return
+        }
+        const json = (await res.json()) as {
+          success: boolean
+          status?: 'pending' | 'claimed'
+          shortCode?: string
+          expiresAt?: string
+          brief?: AIOnboardingBrief
+        }
+        if (!json.success || !json.brief) {
+          setBriefError('Impossible de charger votre recherche. Réessayez plus tard.')
+          setBriefLoading(false)
+          return
+        }
+        setHandoffMeta({ shortCode: json.shortCode ?? '', expiresAt: json.expiresAt ?? '' })
+        if (json.status === 'claimed') {
+          setHandoffClaimed(true)
+          setBriefLoading(false)
+          return
+        }
+        await injectBrief(json.brief)
+        if (cancelled) return
+        const { selectedIrisIds } = useSearchStore.getState()
+        setAiGeoResolved(selectedIrisIds.length > 0)
+        setAiRecapOpen(true)
+        setBriefLoading(false)
+      } catch (e) {
+        console.error('[onboarding] handoff import failed:', e)
+        if (cancelled) return
+        setBriefError('Impossible de charger votre recherche. Réessayez plus tard.')
+        setBriefLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [handoffToken])
+
   // Fallback CTA on the brief-error screen — drop the user into the normal
   // onboarding without the ?brief= param so a refresh doesn't refetch.
   const handleBriefErrorStart = useCallback(() => {
@@ -433,10 +543,33 @@ function OnboardingPageInner() {
     setEditingFromRecap(false)
     goTo(1, 1)
   }, [goTo])
-  const handleRecapLaunch = useCallback(() => {
+  const handleRecapLaunch = useCallback(async () => {
+    // S9 : valider = persister les ajustements sur le Handoff (le claim de
+    // l'app récupérera la version éditée), puis panneau d'installation.
+    if (handoffToken) {
+      setHandoffSaving(true)
+      setHandoffSaveError(null)
+      try {
+        const res = await fetch('/api/handoff/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: handoffToken, brief: buildBriefFromStore() }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        setAiRecapOpen(false)
+        setHandoffDone(true)
+      } catch {
+        setHandoffSaveError(
+          'Vos ajustements n’ont pas pu être enregistrés — vérifiez votre connexion et réessayez.',
+        )
+      } finally {
+        setHandoffSaving(false)
+      }
+      return
+    }
     completeOnboarding()
     router.replace('/feed')
-  }, [completeOnboarding, router])
+  }, [handoffToken, completeOnboarding, router])
 
   // Called by LocationStep synchronously on button click — BEFORE the async
   // analysis starts. The overlay appears in the same paint so the user never
@@ -483,7 +616,16 @@ function OnboardingPageInner() {
       })
     }, remaining)
   }, [])
-  const handleMapValidate = useCallback(() => goTo(2, 1), [goTo])
+  // Rebond récap (parité natif) : une zone validée depuis l'édition du bloc
+  // Quartiers revient au récap au lieu de dérouler le funnel vers Bien.
+  const handleMapValidate = useCallback(() => {
+    if (editingFromRecap) {
+      setEditingFromRecap(false)
+      setAiRecapOpen(true)
+      return
+    }
+    goTo(2, 1)
+  }, [editingFromRecap, goTo])
 
   // ── Clarification handlers ──────────────────────────────────────────────
   // LocationStep signals it needs clarification; we slide to ClarificationStep.
@@ -711,6 +853,38 @@ function OnboardingPageInner() {
               onEditBlock={handleRecapEditBlock}
               onEditManual={handleRecapEditManual}
               onLaunch={handleRecapLaunch}
+              ctaLabel={handoffToken ? 'Valider ma recherche' : undefined}
+              busy={handoffSaving}
+              errorText={handoffSaveError}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* S9 — panneau d'installation du handoff (au-dessus du récap). */}
+      <AnimatePresence>
+        {(handoffDone || handoffClaimed) && handoffToken && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute inset-0 z-[150]"
+            style={{ background: '#FDF5F2' }}
+          >
+            <HandoffInstallPanel
+              token={handoffToken}
+              shortCode={handoffMeta?.shortCode ?? ''}
+              expiresAt={handoffMeta?.expiresAt ?? ''}
+              claimed={handoffClaimed}
+              onBackToRecap={
+                handoffClaimed
+                  ? undefined
+                  : () => {
+                      setHandoffDone(false)
+                      setAiRecapOpen(true)
+                    }
+              }
             />
           </motion.div>
         )}
