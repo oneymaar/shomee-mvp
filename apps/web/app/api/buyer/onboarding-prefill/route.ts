@@ -9,68 +9,19 @@
  *   it is NOT single-use. This lets the acquéreur reopen the link from
  *   email/messaging history if they refresh, share devices, etc.
  *   Returns 404 if unknown, 410 if expired.
+ *
+ * S9 : le schéma de validation vit désormais dans lib/handoff/briefSchema.ts,
+ * partagé avec le nouveau contrat natif /api/handoff/* (comportement inchangé).
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { authenticateBearer } from '@/lib/auth/bearer'
+import { AIOnboardingBriefSchema, zodErrorMessage } from '@/lib/handoff/briefSchema'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-// ─── Validation ────────────────────────────────────────────────────────────
-
-const ChipStateSchema = z.union([z.literal(1), z.literal(2), z.literal(3)])
-
-export const AIOnboardingBriefSchema = z.object({
-  locationQuery: z.string().min(2, 'locationQuery doit contenir au moins 2 caractères'),
-  propertyTypes: z
-    .array(z.enum(['appartement', 'maison', 'loft', 'atelier']))
-    .optional()
-    .default([]),
-  minRooms: z.number().nullable().optional().default(null),
-  maxRooms: z.number().nullable().optional().default(null),
-  minBedrooms: z.number().nullable().optional().default(null),
-  maxBedrooms: z.number().nullable().optional().default(null),
-  minSurface: z.number().positive('minSurface doit être un nombre positif'),
-  maxSurface: z.number().nullable().optional().default(null),
-  budgetMin: z.number().nullable().optional().default(null),
-  budgetMax: z.number().positive('budgetMax doit être un nombre positif'),
-  chipStates: z.record(z.string(), ChipStateSchema).optional().default({}),
-  customCriteria: z
-    .array(
-      z.object({
-        label: z.string().min(1),
-        state: ChipStateSchema,
-      }),
-    )
-    .optional()
-    .default([]),
-})
-
-export type AIOnboardingBrief = z.infer<typeof AIOnboardingBriefSchema>
-
-// ─── Error message helpers (French, field-specific) ───────────────────────
-
-const REQUIRED_FIELD_MESSAGES: Record<string, string> = {
-  locationQuery: 'Le champ "locationQuery" est obligatoire (zone de recherche).',
-  minSurface: 'Le champ "minSurface" est obligatoire (surface minimum en m²).',
-  budgetMax: 'Le champ "budgetMax" est obligatoire (budget maximum en €).',
-}
-
-function zodErrorMessage(err: z.ZodError): string {
-  const issue = err.issues[0]
-  if (!issue) return 'Brief invalide.'
-  const path = issue.path.join('.')
-  const required = REQUIRED_FIELD_MESSAGES[path]
-  if (required) return required
-  if (issue.code === 'invalid_type' && (issue as { received?: unknown }).received === 'undefined') {
-    return `Champ requis manquant : "${path}".`
-  }
-  return `Champ "${path}" invalide : ${issue.message}`
-}
 
 // ─── POST ──────────────────────────────────────────────────────────────────
 

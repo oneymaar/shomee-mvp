@@ -378,6 +378,38 @@ model BuyerBriefToken {
   @@index([expiresAt])
 }
 
+// ─── Handoff LLM → app native (S9) ──────────────────────────────────────────
+// Successeur natif du BuyerBriefToken (conservé pour l'ancien flux PWA).
+// Créé par un LLM via POST /api/handoff/create (bearer d'intégration),
+// affiché par la landing /h/<token>, réclamé par l'app native via
+// POST /api/handoff/claim (Bearer JWT invité ou compte). Référence :
+// claude/ARCHITECTURE_ONBOARDING_HANDOFF.md (projet Cowork).
+
+model Handoff {
+  id              String    @id @default(cuid())
+  token           String    @unique @default(uuid())
+  /// Canonique SANS tiret (affiché « 4F2A-9K2 »), alphabet non ambigu.
+  shortCode       String    @unique
+  /// first_brief | edit (parcours B, post-H5)
+  kind            String    @default("first_brief")
+  /// chatgpt | claude | web
+  source          String
+  /// AIOnboardingBrief + optionnels : parsed[] (passthrough), transcriptSummary.
+  brief           Json
+  /// kind=edit : delta proposé (patch) — réservé parcours B.
+  diff            Json?
+  /// kind=edit : utilisateur au nom duquel le LLM agit — réservé parcours B.
+  userId          String?
+  /// pending | claimed | expired
+  status          String    @default("pending")
+  claimedByUserId String?
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  claimedAt       DateTime?
+
+  @@index([expiresAt])
+}
+
 
 // ─── Profil acquéreur — données comportementales (P5) ───────────────────────
 // Pré-comptes (S8) : tout est rattaché à un deviceId anonyme (uuid généré
