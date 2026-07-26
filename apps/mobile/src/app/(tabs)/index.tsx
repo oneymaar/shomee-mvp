@@ -6,11 +6,14 @@ import { useIsFocused } from 'expo-router'
 import { Volume2, VolumeX } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@shomee/core/types/domain'
-import { useFeedStore } from '@/lib/stores'
+import { useFeedStore, useSearchStore } from '@/lib/stores'
 import { apiFetch } from '@/lib/api'
-import { BRIEF_FEED_PREFIX } from '@/lib/handoff'
+import { BRIEF_FEED_PREFIX, generateFeedFromStore } from '@/lib/handoff'
 import { FeedItem } from '@/components/FeedItem'
 import { PropertyDetailSheet } from '@/components/PropertyDetailSheet'
+import { SearchStagingLoader } from '@/components/onboarding/SearchStagingLoader'
+import { FeedProbe } from '@/components/feed/FeedProbe'
+import { track } from '@/lib/tracker'
 
 // Seed bundlé (4 biens, URLs Cloudinary absolues) — source unique partagée avec
 // le web (@shomee/core/data). v1 : seed uniquement, pas de feed live (brief/token).
@@ -23,6 +26,26 @@ const SEED = feedSeed as unknown as Property[]
  * déterminée par `onViewableItemsChanged`. Surcouches (overlay + action rail) dans
  * FeedItem. Mute global (feedStore) via un bouton unique au niveau du feed.
  */
+const FAST_SKIP_MS = 3000 // < 3 s sur une carte = skip rapide
+const STREAK_N = 3 // nombre de skips rapides consécutifs déclenchant la sonde
+const PROBE_COOLDOWN_VIEWS = 12 // biens à revoir avant que la sonde puisse revenir
+
+// Attributs les plus fréquents parmi les biens ignorés → chips de la sonde.
+function deriveProbeChips(skipped: Property[]): string[] {
+  const counts = new Map<string, number>()
+  for (const prop of skipped) {
+    const seen = new Set<string>()
+    for (const a of [...(prop.features ?? []), ...(prop.tags ?? [])]) {
+      const label = a.trim()
+      const key = label.toLowerCase()
+      if (!label || seen.has(key)) continue
+      seen.add(key)
+      counts.set(label, (counts.get(label) ?? 0) + 1)
+    }
+  }
+  return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([label]) => label)
+}
+
 export default function BiensScreen() {
   const insets = useSafeAreaInsets()
   // Hauteur réelle du conteneur (au-dessus de la barre d'onglets) mesurée via
@@ -44,7 +67,40 @@ export default function BiensScreen() {
   // sélectionné depuis la carte (« Voir l'annonce » de l'overlay).
   const sheetRef = useRef<BottomSheetModal>(null)
   const [detail, setDetail] = useState<Property | null>(null)
+
+  // ── P6 — intercalaire « streak de rejets » ──────────────────────────────
+  const shownAtRef = useRef(Date.now())
+  const prevIndexRef = useRef(0)
+  const streakRef = useRef(0)
+  const skippedRef = useRef<Property[]>([])
+  const viewCountRef = useRef(0)
+  const probeCooldownRef = useRef(0)
+  const probeActiveRef = useRef(false)
+  const [probe, setProbe] = useState<string[] | null>(null)
+  const [rerunning, setRerunning] = useState(false)
+
+  const onProbePick = useCallback((label: string) => {
+    track({ type: 'probe_answer', meta: { label } })
+    track({ type: 'interstitial_accepted', meta: { kind: 'probe_skip', label } })
+    // Tap EXPLICITE = évolution du déclaratif → rédhibitoire, puis re-run.
+    useSearchStore.getState().addCustomCriteria([{ label, state: 3, polarity: 'negative' }])
+    setProbe(null)
+    probeActiveRef.current = false
+    probeCooldownRef.current = viewCountRef.current + PROBE_COOLDOWN_VIEWS
+    setRerunning(true)
+  }, [])
+
+  const onProbeDismiss = useCallback(() => {
+    track({ type: 'interstitial_dismissed', meta: { kind: 'probe_skip' } })
+    setProbe(null)
+    probeActiveRef.current = false
+    probeCooldownRef.current = viewCountRef.current + PROBE_COOLDOWN_VIEWS
+  }, [])
+
   const openDetail = useCallback((p: Property) => {
+    // Ouvrir le détail = engagement → on casse la streak de rejets.
+    streakRef.current = 0
+    skippedRef.current = []
     setDetail(p)
     sheetRef.current?.present()
   }, [])
@@ -98,8 +154,46 @@ export default function BiensScreen() {
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       const first = viewableItems[0]
-      if (first?.index != null) {
-        useFeedStore.getState().setCurrentIndex(first.index)
+      if (first?.index == null) return
+      const newIndex = first.index
+      const prev = prevIndexRef.current
+      if (newIndex === prev) return
+
+      const now = Date.now()
+      const dwell = now - shownAtRef.current
+      const props = useFeedStore.getState().properties
+      const leftCard = props[prev]
+
+      if (newIndex > prev && leftCard && dwell < FAST_SKIP_MS) {
+        track({ type: 'skip_fast', propertyId: leftCard.id, valueMs: dwell })
+        streakRef.current += 1
+        skippedRef.current = [...skippedRef.current, leftCard].slice(-3)
+      } else {
+        if (newIndex > prev && leftCard) {
+          track({ type: 'skip', propertyId: leftCard.id, valueMs: dwell })
+        }
+        streakRef.current = 0
+        skippedRef.current = []
+      }
+
+      prevIndexRef.current = newIndex
+      shownAtRef.current = now
+      viewCountRef.current += 1
+      useFeedStore.getState().setCurrentIndex(newIndex)
+
+      if (
+        streakRef.current >= STREAK_N &&
+        !probeActiveRef.current &&
+        viewCountRef.current >= probeCooldownRef.current &&
+        skippedRef.current.length >= 2
+      ) {
+        const chips = deriveProbeChips(skippedRef.current)
+        if (chips.length > 0) {
+          probeActiveRef.current = true
+          streakRef.current = 0
+          track({ type: 'interstitial_shown', meta: { kind: 'probe_skip' } })
+          setProbe(chips)
+        }
       }
     },
   ).current
@@ -153,6 +247,20 @@ export default function BiensScreen() {
 
       {/* Detail sheet — partagé par toutes les cartes, présenté à la demande */}
       <PropertyDetailSheet ref={sheetRef} property={detail} />
+
+      {/* Intercalaire P6 « pourquoi ces biens ne vous parlent pas ? » */}
+      {probe && <FeedProbe chips={probe} onPick={onProbePick} onDismiss={onProbeDismiss} />}
+
+      {/* Re-run du feed après évolution de la recherche (mise en scène ~7 s) */}
+      {rerunning && (
+        <View style={StyleSheet.absoluteFill}>
+          <SearchStagingLoader
+            run={generateFeedFromStore}
+            getCount={() => useFeedStore.getState().properties.length}
+            onFinish={() => setRerunning(false)}
+          />
+        </View>
+      )}
     </View>
   )
 }
