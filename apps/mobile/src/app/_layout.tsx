@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Stack } from 'expo-router'
+import { useEffect, useRef } from 'react'
+import { Stack, useRouter } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
@@ -30,12 +30,39 @@ export default function RootLayout() {
   const favHydrated = useStoreHydrated(useShomeeStore)
   const searchHydrated = useStoreHydrated(useSearchStore)
   const auth = useAuth()
+  const router = useRouter()
   const hydrated = favHydrated && searchHydrated && auth.status !== 'loading'
 
   // Restaure la session (SecureStore) au démarrage.
   useEffect(() => {
     void hydrateAuth()
   }, [])
+
+  // Connexion qui VIENT d'aboutir (anon → authed, donc pas un cold start) : si
+  // la recherche est vierge — nouvelle session invité de démo, ou compte neuf —
+  // on envoie à l'onboarding plutôt que sur le feed. Un cold start d'un
+  // utilisateur revenant (loading → authed) n'est jamais concerné, et le
+  // handoff (déjà authed) non plus.
+  const prevStatus = useRef(auth.status)
+  useEffect(() => {
+    const prev = prevStatus.current
+    prevStatus.current = auth.status
+    if (prev === 'anon' && auth.status === 'authed') {
+      const s = useSearchStore.getState()
+      const hasBrief =
+        !!s.locationLabel ||
+        !!s.locationQuery ||
+        s.selectedArrIds.length > 0 ||
+        s.selectedQuartierIds.length > 0 ||
+        s.selectedIrisIds.length > 0 ||
+        s.selectedCommuneIds.length > 0 ||
+        s.propertyTypes.length > 0 ||
+        Object.keys(s.chipStates).length > 0 ||
+        s.customCriteria.length > 0 ||
+        s.budgetMax != null
+      if (!hasBrief) router.replace('/onboarding-manual')
+    }
+  }, [auth.status, router])
 
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => {})

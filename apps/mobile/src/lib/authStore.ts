@@ -146,5 +146,21 @@ export async function logout(): Promise<void> {
     /* ignore */
   }
   setSessionToken(null)
+  // Nouvelle session = repartir de zéro : on purge les données locales
+  // (recherche, feed, photo de profil) pour ne rien laisser persister d'une
+  // session à l'autre. Imports dynamiques → aucun cycle de modules.
+  try {
+    const stores = await import('@/lib/stores')
+    stores.useSearchStore.getState().resetOnboarding()
+    stores.useFeedStore.getState().clearFeed()
+  } catch {
+    /* ignore */
+  }
+  try {
+    const profile = await import('@/lib/profileStore')
+    profile.useProfileStore.getState().setPhoto(null)
+  } catch {
+    /* ignore */
+  }
   setState({ status: 'anon', user: null, busy: false })
 }

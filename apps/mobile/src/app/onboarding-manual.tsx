@@ -9,7 +9,6 @@
  */
 import { useCallback, useState } from 'react'
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -28,6 +27,8 @@ import { StepBien } from '@/components/onboarding/StepBien'
 import { StepBudget } from '@/components/onboarding/StepBudget'
 import { StepCriteres } from '@/components/onboarding/StepCriteres'
 import { Recap } from '@/components/onboarding/Recap'
+import { SearchStagingLoader } from '@/components/onboarding/SearchStagingLoader'
+import { useFeedStore } from '@/lib/stores'
 import { BG, ACCENT, INK, MUTED } from '@/components/onboarding/ui'
 
 const LOGO = require('../../assets/images/logo-shomee-terracotta.png')
@@ -66,21 +67,23 @@ export default function ManualOnboarding() {
     setRecapOpen(false); setEditing(false); setStep(1)
   }, [])
 
-  const launch = useCallback(async () => {
+  // Le calcul + la navigation sont pilotés par SearchStagingLoader (mise en
+  // scène ~7 s). Ici on ne fait que basculer sur l'écran de chargement.
+  const launch = useCallback(() => {
     setPhase('generating')
-    const ok = await generateFeedFromStore()
-    if (ok) router.replace('/(tabs)')
-    else setPhase('error')
-  }, [router])
+  }, [])
 
   // ── Écrans de génération (loading / erreur) ──────────────────────────────
   if (phase === 'generating') {
     return (
-      <View style={styles.overlay}>
-        <Image source={LOGO} style={styles.logo} contentFit="contain" />
-        <ActivityIndicator color={ACCENT} style={{ marginTop: 20 }} />
-        <Text style={styles.overlayText}>Nous préparons votre sélection…</Text>
-      </View>
+      <SearchStagingLoader
+        run={generateFeedFromStore}
+        getCount={() => useFeedStore.getState().properties.length}
+        onFinish={(ok) => {
+          if (ok) router.replace('/(tabs)')
+          else setPhase('error')
+        }}
+      />
     )
   }
   if (phase === 'error') {
