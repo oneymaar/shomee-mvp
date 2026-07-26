@@ -1,13 +1,23 @@
 /**
  * Écran de « mise en scène » du calcul de recherche — fond crème, une phrase à
  * la fois centrée (loader SHOMEE inline devant), chaque phrase apparaît, tient
- * ~1,3 s puis remonte en fondu pour laisser place à la suivante. Durée fixe
- * (~7 s) quelle que soit la vitesse réelle du moteur : c'est une mise en scène.
- * Termine par un check vert + « N biens trouvés », puis `onFinish(true)`.
+ * ~1 s, puis remonte en fondu pour laisser place à la suivante. Se termine par
+ * un check + « N biens trouvés », puis `onFinish(true)`.
  *
- * Réutilisable : onboarding (fin de funnel) ET recalcul après modification de
- * recherche. Le calcul réel est passé via `run` (retourne true si feed généré),
- * le nombre de biens via `getCount` (lu après résolution de `run`).
+ * TIMING — la validation tombe JUSTE APRÈS l'effacement de la dernière phrase.
+ * C'est la DERNIÈRE étape (« Sélection de vos biens ») qui absorbe l'attente
+ * moteur : elle reste affichée au moins `HOLD`, et plus longtemps si le moteur
+ * n'a pas encore répondu. Avant, on attendait le moteur APRÈS l'effacement de
+ * la dernière phrase — d'où un écran vide, puis un compteur qui arrivait trop
+ * tard. Nominal : 4 × 1,46 s + 0,24 + 0,95 ≈ 7 s (fenêtre 6–8 s demandée).
+ *
+ * Le moteur n'est lancé QU'UNE FOIS : `run`/`getCount`/`onFinish` sont lus dans
+ * une ref, jamais dans les deps de l'effet. Les appelants passent des lambdas
+ * inline (nouvelle identité à chaque rendu) : sans cette précaution, un simple
+ * re-render du parent relançait une seconde génération concurrente, et le
+ * compteur annoncé pouvait décrire un feed déjà remplacé par l'autre run.
+ *
+ * Réutilisable : fin d'onboarding ET recalcul après évolution de la recherche.
  */
 import { useEffect, useRef, useState } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
@@ -24,10 +34,11 @@ const STEPS = [
   'Profil de recherche',
   'Sélection de vos biens',
 ]
-const ENTER = 300
-const HOLD = 1250
-const EXIT = 260
-const FINAL_HOLD = 1300
+const ENTER = 240
+const HOLD = 1000
+const EXIT = 220
+const FINAL_IN = 240
+const FINAL_HOLD = 950
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
@@ -43,53 +54,80 @@ export function SearchStagingLoader({
   const [index, setIndex] = useState(0)
   const [done, setDone] = useState<{ count: number } | null>(null)
   const slot = useRef(new Animated.Value(0)).current
-  const finalOpacity = useRef(new Animated.Value(0)).current
+  const finalSlot = useRef(new Animated.Value(0)).current
+
+  // Callbacks toujours frais, mais HORS deps de l'effet de séquence.
+  const cbs = useRef({ run, getCount, onFinish })
+  useEffect(() => {
+    cbs.current = { run, getCount, onFinish }
+  })
 
   useEffect(() => {
     let cancelled = false
-    const runP = run().then((ok) => ({ ok, count: ok ? getCount() : 0 }))
+    // Lancé au montage : le moteur travaille pendant toute la mise en scène.
+    const runP = cbs.current
+      .run()
+      .then((ok) => ok)
+      .catch(() => false)
 
-    const animate = (to: number, duration: number) =>
+    const animate = (value: Animated.Value, to: number, duration: number) =>
       new Promise<void>((resolve) => {
-        Animated.timing(slot, { toValue: to, duration, useNativeDriver: true }).start(() => resolve())
+        Animated.timing(value, { toValue: to, duration, useNativeDriver: true }).start(() =>
+          resolve(),
+        )
       })
 
-    ;(async () => {
+    void (async () => {
+      let ok = false
       for (let i = 0; i < STEPS.length; i++) {
         if (cancelled) return
         setIndex(i)
         slot.setValue(0)
-        await animate(1, ENTER) // entre par le bas + fondu
+        await animate(slot, 1, ENTER) // entre par le bas + fondu
         if (cancelled) return
-        await wait(HOLD)
+        if (i === STEPS.length - 1) {
+          // La dernière phrase tient AU MOINS HOLD, et davantage si le moteur
+          // traîne — c'est elle qui porte l'attente, pas l'écran vide d'après.
+          ok = (await Promise.all([runP, wait(HOLD)]))[0]
+        } else {
+          await wait(HOLD)
+        }
         if (cancelled) return
-        await animate(2, EXIT) // remonte + fondu sortant
+        await animate(slot, 2, EXIT) // remonte + fondu sortant
       }
-      const result = await runP // on tient l'écran si le moteur est plus lent
       if (cancelled) return
-      if (!result.ok) {
-        onFinish(false)
+      if (!ok) {
+        cbs.current.onFinish(false)
         return
       }
-      setDone({ count: result.count })
-      Animated.timing(finalOpacity, { toValue: 1, duration: 320, useNativeDriver: true }).start()
+      // Compteur lu au dernier moment : c'est bien l'état du feed AU MOMENT où
+      // on l'annonce, pas celui d'il y a quelques secondes.
+      setDone({ count: cbs.current.getCount() })
+      finalSlot.setValue(0)
+      await animate(finalSlot, 1, FINAL_IN)
+      if (cancelled) return
       await wait(FINAL_HOLD)
       if (cancelled) return
-      onFinish(true)
+      cbs.current.onFinish(true)
     })()
 
     return () => {
       cancelled = true
     }
-  }, [run, getCount, onFinish, slot, finalOpacity])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run/getCount/onFinish
+    // sont lus via `cbs` : les inclure relancerait le moteur à chaque re-render.
+  }, [slot, finalSlot])
 
   const translateY = slot.interpolate({ inputRange: [0, 1, 2], outputRange: [14, 0, -14] })
   const opacity = slot.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] })
+  const finalY = finalSlot.interpolate({ inputRange: [0, 1], outputRange: [14, 0] })
 
   return (
     <View style={styles.root}>
       {done ? (
-        <Animated.View style={[styles.row, { opacity: finalOpacity }]}>
+        <Animated.View
+          style={[styles.row, { opacity: finalSlot, transform: [{ translateY: finalY }] }]}
+        >
           <View style={styles.check}>
             <Check size={16} strokeWidth={3} color="#fff" />
           </View>
@@ -109,10 +147,23 @@ export function SearchStagingLoader({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: BG, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
+  root: {
+    flex: 1,
+    backgroundColor: BG,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   step: { fontSize: 16, color: INK, fontWeight: '500', flexShrink: 1 },
-  check: { width: 26, height: 26, borderRadius: 13, backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center' },
+  check: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: ACCENT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   result: { fontSize: 17, color: INK, fontWeight: '600' },
   count: { color: ACCENT, fontWeight: '800' },
 })

@@ -51,6 +51,25 @@ interface FeedState {
  * (aucune persistance). Sur mobile, ce même store donnera la persistance feed
  * inter-onglets gratuitement, sans réécriture.
  */
+
+/**
+ * Écarte les biens de même id en conservant le premier (l'ordre de scoring est
+ * significatif : le meilleur match arrive en tête). Le feed généré côté LLM peut
+ * produire des ids identiques (`gen-${Date.now()}-${idx}` collisionne si deux
+ * lots sont générés dans la même milliseconde) et le catalogue peut renvoyer un
+ * bien deux fois si une jointure dérape.
+ */
+function dedupeById(list: Property[]): Property[] {
+  const seen = new Set<string>()
+  const out: Property[] = []
+  for (const p of list) {
+    if (!p || seen.has(p.id)) continue
+    seen.add(p.id)
+    out.push(p)
+  }
+  return out
+}
+
 export function createFeedStore(_getStorage: () => StateStorage) {
   void _getStorage // parité de signature uniquement — store volontairement transient
   return create<FeedState>()((set, get) => ({
@@ -63,8 +82,14 @@ export function createFeedStore(_getStorage: () => StateStorage) {
     // Un feed fraîchement posé arrive NON-révélé : la séquence blocked→…→revealed
     // doit jouer pour lui. On ne touche donc pas `hasRevealed` ici — il passe à
     // true seulement quand la révélation s'achève (feed/page → setHasRevealed).
+    //
+    // Dédoublonnage par id OBLIGATOIRE : la FlatList du feed utilise
+    // keyExtractor={(p) => p.id} et laisse tomber silencieusement les doublons.
+    // Sans ça, `properties.length` (annoncé à l'utilisateur : « 4 biens trouvés »)
+    // peut dépasser le nombre de cartes réellement affichées (3) — incohérence
+    // visible et injustifiable côté produit.
     setFeed: (properties, sessionId) =>
-      set({ properties, feedSessionId: sessionId, currentIndex: 0 }),
+      set({ properties: dedupeById(properties), feedSessionId: sessionId, currentIndex: 0 }),
 
     // Un feed effacé n'est plus révélé : on remet le flag à false pour que le
     // prochain feed (reset onboarding / changement de brief) rejoue sa révélation.

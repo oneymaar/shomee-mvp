@@ -12,7 +12,8 @@ import { BRIEF_FEED_PREFIX, generateFeedFromStore } from '@/lib/handoff'
 import { FeedItem } from '@/components/FeedItem'
 import { PropertyDetailSheet } from '@/components/PropertyDetailSheet'
 import { SearchStagingLoader } from '@/components/onboarding/SearchStagingLoader'
-import { FeedProbe } from '@/components/feed/FeedProbe'
+import { FeedSuggestion, type AppliedChange } from '@/components/feed/FeedSuggestion'
+import { diagnoseSearch, type Diagnosis, type DiagnosisTrigger } from '@/lib/searchDiagnosis'
 import { track } from '@/lib/tracker'
 
 // Seed bundlé (4 biens, URLs Cloudinary absolues) — source unique partagée avec
@@ -27,24 +28,12 @@ const SEED = feedSeed as unknown as Property[]
  * FeedItem. Mute global (feedStore) via un bouton unique au niveau du feed.
  */
 const FAST_SKIP_MS = 3000 // < 3 s sur une carte = skip rapide
-const STREAK_N = 3 // nombre de skips rapides consécutifs déclenchant la sonde
-const PROBE_COOLDOWN_VIEWS = 12 // biens à revoir avant que la sonde puisse revenir
-
-// Attributs les plus fréquents parmi les biens ignorés → chips de la sonde.
-function deriveProbeChips(skipped: Property[]): string[] {
-  const counts = new Map<string, number>()
-  for (const prop of skipped) {
-    const seen = new Set<string>()
-    for (const a of [...(prop.features ?? []), ...(prop.tags ?? [])]) {
-      const label = a.trim()
-      const key = label.toLowerCase()
-      if (!label || seen.has(key)) continue
-      seen.add(key)
-      counts.set(label, (counts.get(label) ?? 0) + 1)
-    }
-  }
-  return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([label]) => label)
-}
+const STREAK_N = 3 // skips rapides consécutifs = « ces biens ne me parlent pas »
+const SUGGESTION_COOLDOWN_VIEWS = 12 // biens à revoir avant qu'un intercalaire revienne
+// Délai de grâce sur la dernière carte : on laisse la vidéo se regarder avant de
+// proposer quoi que ce soit. Ouvrir l'intercalaire à l'instant où l'on arrive sur
+// le dernier bien reviendrait à le masquer sans que l'acquéreur l'ait vu.
+const STARVING_DELAY_MS = 6000
 
 export default function BiensScreen() {
   const insets = useSafeAreaInsets()
@@ -68,39 +57,95 @@ export default function BiensScreen() {
   const sheetRef = useRef<BottomSheetModal>(null)
   const [detail, setDetail] = useState<Property | null>(null)
 
-  // ── P6 — intercalaire « streak de rejets » ──────────────────────────────
+  // ── P6 — intercalaire « faire évoluer ma recherche » ─────────────────────
+  //
+  // Deux déclencheurs, un seul écran (FeedSuggestion) :
+  //  · `streak`   — STREAK_N rejets rapides d'affilée : les biens passent bien
+  //                 les filtres, mais ils ne plaisent pas → c'est le déclaratif
+  //                 fin (les critères) qui est le plus suspect ;
+  //  · `starving` — la dernière carte du feed est atteinte : sur ces filtres, il
+  //                 n'y a tout simplement plus rien à montrer.
+  //
+  // Budget d'interruption : au plus un intercalaire par SUGGESTION_COOLDOWN_VIEWS
+  // biens vus, toujours refermable sans rien changer, et jamais deux fois pour la
+  // même raison sur le même feed.
+  //
+  // Il n'est proposé que sur un feed PERSONNALISÉ (session `brief:`). Sur le
+  // catalogue générique, annoncer « votre recherche est trop étroite » serait
+  // faux : ce n'est pas elle qui a produit les cartes affichées.
   const shownAtRef = useRef(Date.now())
   const prevIndexRef = useRef(0)
   const streakRef = useRef(0)
-  const skippedRef = useRef<Property[]>([])
   const viewCountRef = useRef(0)
-  const probeCooldownRef = useRef(0)
-  const probeActiveRef = useRef(false)
-  const [probe, setProbe] = useState<string[] | null>(null)
+  const cooldownRef = useRef(0)
+  const suggestionActiveRef = useRef(false)
+  const starvedSessionRef = useRef<string | null>(null)
+  const starveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [suggestion, setSuggestion] = useState<Diagnosis | null>(null)
   const [rerunning, setRerunning] = useState(false)
 
-  const onProbePick = useCallback((label: string) => {
-    track({ type: 'probe_answer', meta: { label } })
-    track({ type: 'interstitial_accepted', meta: { kind: 'probe_skip', label } })
-    // Tap EXPLICITE = évolution du déclaratif → rédhibitoire, puis re-run.
-    useSearchStore.getState().addCustomCriteria([{ label, state: 3, polarity: 'negative' }])
-    setProbe(null)
-    probeActiveRef.current = false
-    probeCooldownRef.current = viewCountRef.current + PROBE_COOLDOWN_VIEWS
-    setRerunning(true)
+  const cancelStarveTimer = useCallback(() => {
+    if (starveTimerRef.current) {
+      clearTimeout(starveTimerRef.current)
+      starveTimerRef.current = null
+    }
   }, [])
 
-  const onProbeDismiss = useCallback(() => {
-    track({ type: 'interstitial_dismissed', meta: { kind: 'probe_skip' } })
-    setProbe(null)
-    probeActiveRef.current = false
-    probeCooldownRef.current = viewCountRef.current + PROBE_COOLDOWN_VIEWS
+  // Écran quitté (autre onglet, détail empilé) ou démonté : on désarme. Sinon
+  // l'intercalaire s'ouvrirait hors-champ et attendrait au retour.
+  useEffect(() => {
+    if (!isFocused) cancelStarveTimer()
+    return cancelStarveTimer
+  }, [isFocused, cancelStarveTimer])
+
+  // Point d'entrée unique des deux déclencheurs : le budget d'interruption et le
+  // garde-fou `brief:` vivent ici, en un seul endroit. Renvoie true si armé.
+  const openSuggestion = useCallback((trigger: DiagnosisTrigger) => {
+    if (suggestionActiveRef.current) return false
+    if (viewCountRef.current < cooldownRef.current) return false
+    if (!useFeedStore.getState().feedSessionId?.startsWith(BRIEF_FEED_PREFIX)) return false
+
+    const diagnosis = diagnoseSearch(useSearchStore.getState(), trigger)
+    suggestionActiveRef.current = true
+    streakRef.current = 0
+    track({
+      type: 'interstitial_shown',
+      meta: { kind: 'search_suggestion', trigger, lever: diagnosis.primary.kind },
+    })
+    setSuggestion(diagnosis)
+    return true
   }, [])
+
+  // Fermeture commune : referme l'écran et repousse le prochain intercalaire.
+  const closeSuggestion = useCallback(() => {
+    setSuggestion(null)
+    suggestionActiveRef.current = false
+    cooldownRef.current = viewCountRef.current + SUGGESTION_COOLDOWN_VIEWS
+  }, [])
+
+  const onSuggestionApply = useCallback(
+    (change: AppliedChange) => {
+      track({
+        type: 'interstitial_accepted',
+        meta: { kind: 'search_suggestion', lever: change.lever, summary: change.summary },
+      })
+      closeSuggestion()
+      // Le searchStore vient d'être modifié par l'écran (et seulement par lui,
+      // sur validation explicite) : on relance le moteur avec la mise en scène
+      // du récap, pour que le nombre annoncé soit celui du feed qui s'affiche.
+      setRerunning(true)
+    },
+    [closeSuggestion],
+  )
+
+  const onSuggestionDismiss = useCallback(() => {
+    track({ type: 'interstitial_dismissed', meta: { kind: 'search_suggestion' } })
+    closeSuggestion()
+  }, [closeSuggestion])
 
   const openDetail = useCallback((p: Property) => {
     // Ouvrir le détail = engagement → on casse la streak de rejets.
     streakRef.current = 0
-    skippedRef.current = []
     setDetail(p)
     sheetRef.current?.present()
   }, [])
@@ -133,6 +178,12 @@ export default function BiensScreen() {
       .then((r) => (r.ok ? r.json() : null))
       .then((live: Property[] | null) => {
         if (cancelled || !Array.isArray(live) || live.length === 0) return
+        // Re-test du garde-fou `brief:` À LA RÉSOLUTION, pas seulement au montage :
+        // l'onboarding pose son feed personnalisé APRÈS que ce fetch soit parti.
+        // Sans ce test, un /api/properties lent écrase le feed noté et l'écran
+        // affiche le catalogue générique alors qu'on vient d'annoncer « N biens
+        // trouvés » — exactement l'incohérence 4 annoncés / 3 affichés.
+        if (useFeedStore.getState().feedSessionId?.startsWith(BRIEF_FEED_PREFIX)) return
         const seedIds = SEED.map((p) => p.id).join(',')
         const liveIds = live.slice(0, SEED.length).map((p) => p.id).join(',')
         // Le seed n'est qu'un aperçu (SEED.length biens, = les plus récents de la
@@ -167,13 +218,11 @@ export default function BiensScreen() {
       if (newIndex > prev && leftCard && dwell < FAST_SKIP_MS) {
         track({ type: 'skip_fast', propertyId: leftCard.id, valueMs: dwell })
         streakRef.current += 1
-        skippedRef.current = [...skippedRef.current, leftCard].slice(-3)
       } else {
         if (newIndex > prev && leftCard) {
           track({ type: 'skip', propertyId: leftCard.id, valueMs: dwell })
         }
         streakRef.current = 0
-        skippedRef.current = []
       }
 
       prevIndexRef.current = newIndex
@@ -181,19 +230,30 @@ export default function BiensScreen() {
       viewCountRef.current += 1
       useFeedStore.getState().setCurrentIndex(newIndex)
 
-      if (
-        streakRef.current >= STREAK_N &&
-        !probeActiveRef.current &&
-        viewCountRef.current >= probeCooldownRef.current &&
-        skippedRef.current.length >= 2
-      ) {
-        const chips = deriveProbeChips(skippedRef.current)
-        if (chips.length > 0) {
-          probeActiveRef.current = true
-          streakRef.current = 0
-          track({ type: 'interstitial_shown', meta: { kind: 'probe_skip' } })
-          setProbe(chips)
+      if (streakRef.current >= STREAK_N) {
+        // Rejets rapides en série : les cartes défilent sans accrocher.
+        cancelStarveTimer()
+        openSuggestion('streak')
+      } else if (props.length >= 2 && newIndex >= props.length - 1) {
+        // Fin du feed atteinte : sur ces filtres, il n'y a plus rien. On arme un
+        // délai de grâce plutôt que d'ouvrir tout de suite — la dernière carte a
+        // droit d'être regardée. Une seule fois par feed généré, sinon un
+        // aller-retour sur la fin rouvrirait l'écran en boucle.
+        const sid = useFeedStore.getState().feedSessionId
+        if (sid && starvedSessionRef.current !== sid && !starveTimerRef.current) {
+          starveTimerRef.current = setTimeout(() => {
+            starveTimerRef.current = null
+            // Toujours sur la dernière carte du MÊME feed ? Alors c'est bien la
+            // recherche qui est à sec, pas un simple passage.
+            const f = useFeedStore.getState()
+            if (f.feedSessionId !== sid) return
+            if (f.currentIndex !== f.properties.length - 1) return
+            if (openSuggestion('starving')) starvedSessionRef.current = sid
+          }, STARVING_DELAY_MS)
         }
+      } else {
+        // On a quitté la fin du feed : le décompte de grâce n'a plus lieu d'être.
+        cancelStarveTimer()
       }
     },
   ).current
@@ -248,8 +308,15 @@ export default function BiensScreen() {
       {/* Detail sheet — partagé par toutes les cartes, présenté à la demande */}
       <PropertyDetailSheet ref={sheetRef} property={detail} />
 
-      {/* Intercalaire P6 « pourquoi ces biens ne vous parlent pas ? » */}
-      {probe && <FeedProbe chips={probe} onPick={onProbePick} onDismiss={onProbeDismiss} />}
+      {/* Intercalaire P6 — « faire évoluer ma recherche » :
+          constat → proposition pré-positionnée → validation explicite. */}
+      {suggestion && (
+        <FeedSuggestion
+          diagnosis={suggestion}
+          onApply={onSuggestionApply}
+          onDismiss={onSuggestionDismiss}
+        />
+      )}
 
       {/* Re-run du feed après évolution de la recherche (mise en scène ~7 s) */}
       {rerunning && (
