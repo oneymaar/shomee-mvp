@@ -154,7 +154,7 @@ export default function BiensScreen() {
     closeSuggestion()
   }, [closeSuggestion])
 
-  // « Revoir mon brief » — la sortie quand notre proposition n'est pas la
+  // « Revoir toute ma recherche » — la sortie quand notre proposition n'est pas la
   // bonne. On referme l'intercalaire AVANT de naviguer : sans cela il serait
   // encore ouvert au retour sur l'onglet, par-dessus un feed peut-être déjà
   // régénéré entre-temps.

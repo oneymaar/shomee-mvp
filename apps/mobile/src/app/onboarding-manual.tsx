@@ -77,7 +77,9 @@ export default function ManualOnboarding() {
 
   // Sortie commune des écrans « aucun bien » et « erreur » : on revient au
   // brief, seul endroit où TOUTE la recherche est modifiable. Un seul geste,
-  // un seul libellé — « Revoir mon brief ».
+  // un seul libellé — « Revoir toute ma recherche », le même mot à mot que
+  // dans l'intercalaire : deux libellés pour une destination unique feraient
+  // croire à deux destinations.
   const backToRecap = useCallback(() => {
     setPhase('idle')
     setRecapOpen(true)
@@ -98,7 +100,7 @@ export default function ManualOnboarding() {
   }
   // Aucun bien trouvé — ce n'est PAS une erreur : la recherche a abouti, elle
   // est simplement trop étroite. Même écran que les intercalaires du feed
-  // (constat → proposition pré-positionnée → validation), avec le déclencheur
+  // (constat → contrôle dans son état réel → validation), avec le déclencheur
   // `empty` : le diagnostic met alors les critères rédhibitoires en tête, eux
   // seuls pouvant vider un feed à eux tout seuls.
   if (phase === 'empty') {
@@ -125,7 +127,7 @@ export default function ManualOnboarding() {
           <Text style={styles.retryTxt}>Réessayer</Text>
         </Pressable>
         <Pressable onPress={backToRecap} hitSlop={8}>
-          <Text style={styles.retryAlt}>Revoir mon brief</Text>
+          <Text style={styles.retryAlt}>Revoir toute ma recherche</Text>
         </Pressable>
       </View>
     )

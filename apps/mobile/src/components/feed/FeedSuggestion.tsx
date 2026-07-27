@@ -6,9 +6,14 @@
  * geste, UN bouton. Quatre blocs, pas un de plus :
  *
  *   1. TITRE    — le constat, en gros, tout en haut. C'est l'information n°1.
- *   2. LEAD     — une seule phrase grise : ce qui bloque + le geste proposé.
- *   3. CONTRÔLE — l'élément d'onboarding correspondant, pré-positionné.
- *   4. ACTIONS  — « Appliquer et relancer », puis « Revoir mon brief ».
+ *   2. LEAD     — une seule phrase grise, GÉNÉRIQUE : ce qui bloque + le geste
+ *                 attendu. Elle ne nomme pas le critère — la pastille juste en
+ *                 dessous le porte déjà, le dire deux fois n'apprend rien.
+ *   3. CONTRÔLE — l'élément d'onboarding correspondant, dans son ÉTAT RÉEL.
+ *   4. SORTIE   — « Ce n'est pas ce qui vous bloque ? » + bouton secondaire
+ *                 « Revoir toute ma recherche », dans le flux et non en pied.
+ *   5. ACTIONS  — le CTA principal « Appliquer et relancer », seul en pied,
+ *                 grisé tant que rien n'a bougé.
  *
  * Ce qui a été retiré, et pourquoi :
  *   · la légende des quatre états — elle vient d'être vue à l'onboarding, et
@@ -32,10 +37,10 @@
  * des arrondissements, IRIS et quartiers du snapshot : un retrait ici
  * reviendrait par les IRIS, soit un geste sans effet visible.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Check, Plus, X } from 'lucide-react-native'
+import { ArrowRight, Check, Plus, X } from 'lucide-react-native'
 import type { ChipState } from '@shomee/core/stores/searchStore'
 import { useSearchStore } from '@/lib/stores'
 import {
@@ -53,8 +58,6 @@ import { ACCENT, ACCENT_DISABLED, BG, INK, MUTED } from '@/components/onboarding
 import {
   allCriteria,
   arrLabel,
-  suggestBudgetMax,
-  suggestMinSurface,
   suggestNeighbourArrs,
   type CriteriaEntry,
   type Diagnosis,
@@ -107,20 +110,34 @@ export interface AppliedChange {
 }
 
 /**
- * Pastille auto-descriptive : l'état est écrit dessus, donc aucune légende
- * n'est nécessaire. Le libellé peut être long (critère personnalisé saisi par
+ * Pastille auto-descriptive : l'état est écrit dessus, donc aucune légende n'est
+ * nécessaire. Le libellé peut être long (critère personnalisé saisi par
  * l'acquéreur) : il se rétracte et passe à la ligne plutôt que de déborder.
+ *
+ * `onRemove` ajoute la croix de suppression. Quand elle est là, l'icône d'état
+ * disparaît : une pastille rédhibitoire porterait sinon DEUX croix — l'une
+ * décorative, l'autre active — indiscernables au doigt. On ne perd rien,
+ * l'état est écrit en toutes lettres juste à côté.
+ *
+ * `stateText` remplace le mot d'état là où le vocabulaire des critères ne veut
+ * rien dire : un arrondissement jamais ajouté n'est pas « retiré ».
  */
 function Pastille({
   label,
   state,
+  stateText,
   onPress,
+  onRemove,
   accessibilityLabel,
+  removeLabel,
 }: {
   label: string
   state: ChipState
+  stateText?: string
   onPress: () => void
+  onRemove?: () => void
   accessibilityLabel: string
+  removeLabel?: string
 }) {
   const st = CHIP_STYLE[state]
   const Icon = state === 3 ? X : state === 2 ? Check : Plus
@@ -136,13 +153,28 @@ function Pastille({
         pressed && { opacity: 0.75 },
       ]}
     >
-      <Icon size={12} strokeWidth={3} color={st.fg} />
+      {onRemove == null && <Icon size={12} strokeWidth={3} color={st.fg} />}
       <Text style={[styles.pillLabel, { color: st.fg }]} numberOfLines={2}>
         {label}
       </Text>
       <Text style={[styles.pillState, { color: st.fg }]} numberOfLines={1}>
-        {STATE_LABEL[state]}
+        {stateText ?? STATE_LABEL[state]}
       </Text>
+      {onRemove != null && (
+        <Pressable
+          onPress={onRemove}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={removeLabel ?? `Retirer ${label}`}
+          style={({ pressed }) => [
+            styles.pillRemove,
+            { borderLeftColor: st.border },
+            pressed && { opacity: 0.55 },
+          ]}
+        >
+          <X size={13} strokeWidth={2.5} color={st.fg} />
+        </Pressable>
+      )}
     </Pressable>
   )
 }
@@ -158,8 +190,8 @@ export function FeedSuggestion({
   /** Croix en haut à droite — sortir sans rien changer. */
   onDismiss: () => void
   /**
-   * « Revoir mon brief » : la sortie quand notre proposition n'est pas la
-   * bonne. Optionnelle — sans elle, le bouton n'est simplement pas rendu.
+   * « Revoir toute ma recherche » : la sortie quand notre proposition n'est
+   * pas la bonne. Optionnelle — sans elle, le bloc n'est simplement pas rendu.
    */
   onEditBrief?: () => void
 }) {
@@ -193,28 +225,12 @@ export function FeedSuggestion({
     criteria: Object.fromEntries(baseCriteria.map((c) => [c.key, c.state])),
   }))
 
-  // Pré-positionnement de la suggestion, une seule fois au montage : l'écran
-  // arrive déjà porteur d'une proposition, sinon « Appliquer » resterait grisé
-  // et l'écran serait un cul-de-sac.
-  const primed = useRef(false)
-  useEffect(() => {
-    if (primed.current) return
-    primed.current = true
-    setStaged((prev) => {
-      if (lever === 'budget') return { ...prev, budgetMax: suggestBudgetMax(prev.budgetMax) }
-      if (lever === 'surface') return { ...prev, minSurface: suggestMinSurface(prev.minSurface) }
-      if (lever === 'zone') {
-        const next = suggestNeighbourArrs(prev.arrIds, 1)[0]
-        return next && !prev.arrIds.includes(next)
-          ? { ...prev, arrIds: [...prev.arrIds, next] }
-          : prev
-      }
-      // Critères : on vise le frein le plus fort (rédhibitoire) et on propose
-      // le geste le plus réversible — le passage en « souhaité ».
-      const first = blocking[0]
-      return first ? { ...prev, criteria: { ...prev.criteria, [first.key]: 1 } } : prev
-    })
-  }, [lever, blocking])
+  // AUCUN pré-positionnement. Les contrôles arrivent dans l'ÉTAT RÉEL de la
+  // recherche : on voit son propre réglage, pas une modification déjà faite en
+  // son nom. C'est aussi ce qui donne son sens au bouton grisé — il s'allume au
+  // premier geste, donc il confirme qu'on a bien changé quelque chose.
+  // Contrepartie assumée : l'écran n'est plus « prêt à appliquer » d'emblée ;
+  // la sortie reste « Revoir toute ma recherche », remontée dans le flux.
 
   // Bascule binaire et réversible : « souhaité » ⇄ état d'origine. Pas de cycle
   // à trois temps, donc rien à mémoriser ni à deviner.
@@ -223,6 +239,13 @@ export function FeedSuggestion({
       const cur = p.criteria[c.key] ?? c.state
       return { ...p, criteria: { ...p.criteria, [c.key]: cur === 1 ? c.state : 1 } }
     })
+  }, [])
+
+  // Retirer sans perdre la main : la pastille reste à l'écran, marquée
+  // « retiré », et un tap la restaure dans son état d'origine. Comme tout le
+  // reste, rien n'est écrit dans la recherche avant « Appliquer et relancer ».
+  const removeCriterion = useCallback((c: CriteriaEntry) => {
+    setStaged((p) => ({ ...p, criteria: { ...p.criteria, [c.key]: 0 } }))
   }, [])
 
   // Résumé des modifications — plus affiché (l'état d'après se lit sur le
@@ -407,6 +430,7 @@ export function FeedSuggestion({
                       key={id}
                       label={arrLabel(id)}
                       state={2}
+                      stateText="dans ma recherche"
                       onPress={() =>
                         setStaged((p) => ({ ...p, arrIds: p.arrIds.filter((x) => x !== id) }))
                       }
@@ -418,6 +442,7 @@ export function FeedSuggestion({
                       key={id}
                       label={arrLabel(id)}
                       state={0}
+                      stateText="ajouter"
                       onPress={() => setStaged((p) => ({ ...p, arrIds: [...p.arrIds, id] }))}
                       accessibilityLabel={`Ajouter le ${arrLabel(id)} à votre recherche`}
                     />
@@ -442,11 +467,17 @@ export function FeedSuggestion({
                       label={c.label}
                       state={st}
                       onPress={() => toggleCriterion(c)}
+                      // Pas de croix sur une pastille déjà retirée : il ne reste
+                      // qu'un geste, la restaurer.
+                      onRemove={st === 0 ? undefined : () => removeCriterion(c)}
                       accessibilityLabel={
-                        st === 1
-                          ? `${c.label}, souhaité. Toucher pour remettre en ${STATE_LABEL[c.state]}`
-                          : `${c.label}, ${STATE_LABEL[c.state]}. Toucher pour passer en souhaité`
+                        st === 0
+                          ? `${c.label}, retiré. Toucher pour le remettre en ${STATE_LABEL[c.state]}`
+                          : st === 1
+                            ? `${c.label}, souhaité. Toucher pour remettre en ${STATE_LABEL[c.state]}`
+                            : `${c.label}, ${STATE_LABEL[c.state]}. Toucher pour passer en souhaité`
                       }
+                      removeLabel={`Retirer ${c.label} de votre recherche`}
                     />
                   )
                 })
@@ -454,6 +485,28 @@ export function FeedSuggestion({
             </View>
           )}
         </View>
+
+        {/* Sortie latérale, remontée dans le flux : notre diagnostic peut se
+            tromper de levier, et il ne doit pas falloir chercher tout en bas de
+            page pour le dire. Bouton à contour, pas plein — « Appliquer et
+            relancer » reste le CTA principal de l'écran. */}
+        {onEditBrief != null && (
+          <View style={styles.aside}>
+            <Text style={styles.asideCap}>Ce n’est pas ce qui vous bloque ?</Text>
+            <Pressable
+              onPress={onEditBrief}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Revoir toute ma recherche"
+              style={({ pressed }) => [styles.asideBtn, pressed && { opacity: 0.65 }]}
+            >
+              <Text style={styles.asideBtnTxt} numberOfLines={1}>
+                Revoir toute ma recherche
+              </Text>
+              <ArrowRight size={16} strokeWidth={2.5} color={ACCENT} />
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
@@ -462,6 +515,9 @@ export function FeedSuggestion({
           disabled={!dirty}
           accessibilityRole="button"
           accessibilityState={{ disabled: !dirty }}
+          accessibilityHint={
+            dirty ? undefined : 'Modifiez d’abord un élément ci-dessus pour activer ce bouton.'
+          }
           style={({ pressed }) => [
             styles.primary,
             !dirty && styles.primaryOff,
@@ -470,17 +526,6 @@ export function FeedSuggestion({
         >
           <Text style={styles.primaryTxt}>Appliquer et relancer</Text>
         </Pressable>
-
-        {onEditBrief != null && (
-          <Pressable
-            onPress={onEditBrief}
-            hitSlop={8}
-            style={styles.ghost}
-            accessibilityRole="button"
-          >
-            <Text style={styles.ghostTxt}>Revoir mon brief</Text>
-          </Pressable>
-        )}
       </View>
     </View>
   )
@@ -514,6 +559,18 @@ const styles = StyleSheet.create({
   },
   pillLabel: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
   pillState: { fontSize: 12.5, fontWeight: '500', opacity: 0.72, flexShrink: 0 },
+  // Séparée par un filet vertical : on doit voir qu'il s'agit d'un SECOND
+  // bouton et non d'une décoration. hitSlop 12 rend la cible confortable au
+  // pouce sans agrandir la pastille.
+  pillRemove: {
+    marginLeft: 3,
+    marginRight: -6,
+    paddingLeft: 9,
+    paddingRight: 8,
+    paddingVertical: 7,
+    borderLeftWidth: 1,
+    flexShrink: 0,
+  },
 
   none: { fontSize: 14, color: MUTED, lineHeight: 20 },
 
@@ -547,6 +604,19 @@ const styles = StyleSheet.create({
   primaryOff: { backgroundColor: ACCENT_DISABLED },
   primaryTxt: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  ghost: { alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 8 },
-  ghostTxt: { fontSize: 14, fontWeight: '600', color: MUTED, textDecorationLine: 'underline' },
+  aside: { marginTop: 34, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.08)' },
+  asideCap: { fontSize: 14.5, fontWeight: '600', color: INK, lineHeight: 20, marginBottom: 12 },
+  asideBtn: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 46,
+    paddingHorizontal: 18,
+    borderRadius: 23,
+    borderWidth: 1.5,
+    borderColor: ACCENT,
+  },
+  asideBtnTxt: { fontSize: 15, fontWeight: '700', color: ACCENT, flexShrink: 1 },
 })
