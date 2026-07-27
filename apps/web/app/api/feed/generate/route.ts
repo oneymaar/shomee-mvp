@@ -205,13 +205,57 @@ function resolveAllArrs(snapshot: BriefSnapshot): number[] {
 }
 
 /**
+ * Zone de référence d'une fiche. `arr = 0` n'est PAS un arrondissement :
+ * c'est l'absence d'arrondissement. Une vidéo hors Paris (Neuilly,
+ * Levallois…) a `arrondissements: []`, et lui fabriquer « Paris 0e » a
+ * produit une contrainte impossible, envoyée telle quelle au modèle — qui
+ * a répondu par une fiche vide portant son propre refus en description.
+ * La zone est donc modélisée explicitement plutôt que par une sentinelle
+ * numérique qu'aucun appelant ne vérifiait.
+ */
+type FicheZone =
+  | { kind: 'arr'; arr: number; label: string }
+  | { kind: 'commune'; commune: string; label: string }
+
+function arrZoneLabel(n: number): string {
+  return n === 1 ? 'Paris 1er' : `Paris ${n}e`
+}
+
+/**
+ * Sélectionne la zone de référence de la fiche associée à cette vidéo.
+ * Priorité à l'intersection brief ∩ tags vidéo (vraie cohérence) —
+ * arrondissement d'abord, commune ensuite ; à défaut (widening), première
+ * zone de la vidéo. `null` = vidéo sans localisation exploitable : l'appelant
+ * la retire du lot au lieu de lui inventer une adresse.
+ */
+function pickZoneForFiche(
+  video: VideoTag,
+  userArrs: number[],
+  userCommunes: string[],
+): FicheZone | null {
+  const arrHit = video.arrondissements.find((a) => userArrs.includes(a))
+  if (arrHit) return { kind: 'arr', arr: arrHit, label: arrZoneLabel(arrHit) }
+  // Recherche portant sur une commune : une vidéo Neuilly ne doit pas se voir
+  // attribuer le 11e au prétexte qu'il figure aussi dans ses tags.
+  const communeHit = video.communes.find((c) => userCommunes.includes(c))
+  if (communeHit) return { kind: 'commune', commune: communeHit, label: communeHit }
+  const arr = video.arrondissements[0]
+  if (arr) return { kind: 'arr', arr, label: arrZoneLabel(arr) }
+  const commune = video.communes[0]
+  if (commune) return { kind: 'commune', commune, label: commune }
+  return null
+}
+
+/**
  * Choisit le nom de quartier à afficher pour une fiche.
+ *  - Hors Paris, le nom de la commune tient lieu de quartier.
  *  - Si l'utilisateur a sélectionné des quartiers sémantiques (`auteuil`…),
  *    on prend celui-là.
- *  - Sinon, on tire au hasard parmi `ARR_QUARTIERS[targetArr]` pour donner
+ *  - Sinon, on tire au hasard parmi `ARR_QUARTIERS[arr]` pour donner
  *    une localisation crédible à la fiche dans l'arrondissement.
  */
-function resolveDisplayQuartier(snapshot: BriefSnapshot, targetArr: number): string {
+function resolveDisplayQuartier(snapshot: BriefSnapshot, zone: FicheZone): string {
+  if (zone.kind === 'commune') return zone.commune
   // 1. Quartier sémantique explicite (auteuil, passy…) → nom direct.
   for (const id of snapshot.quartierIds ?? []) {
     if (id.startsWith('qu-')) continue // ID administratif, pas de nom mappable simple
@@ -223,20 +267,9 @@ function resolveDisplayQuartier(snapshot: BriefSnapshot, targetArr: number): str
     if (semantic) return semantic
   }
   // 2. Tirage aléatoire dans le catalogue d'arr.
-  const pool = ARR_QUARTIERS[targetArr] ?? []
-  if (pool.length === 0) return `Paris ${targetArr}e`
+  const pool = ARR_QUARTIERS[zone.arr] ?? []
+  if (pool.length === 0) return zone.label
   return pool[Math.floor(Math.random() * pool.length)]
-}
-
-/**
- * Sélectionne un arrondissement de référence pour la fiche associée à
- * cette vidéo. Priorité à l'intersection brief ∩ tags vidéo (vraie
- * cohérence). À défaut (widening), on prend le 1er arr de la vidéo.
- */
-function pickArrForFiche(video: VideoTag, userArrs: number[]): number {
-  const hit = video.arrondissements.find((a) => userArrs.includes(a))
-  if (hit) return hit
-  return video.arrondissements[0] ?? 0
 }
 
 // ─── Agency map (spec) ───────────────────────────────────────────────────
@@ -501,7 +534,10 @@ Les valeurs numériques doivent être réalistes pour le marché parisien.`
  */
 type VideoContext = {
   videoId: string
+  /** 0 = hors Paris. Ne rien décider sur ce champ : il ne sert qu'aux tables
+   *  indexées par arrondissement (PRICE_FLOORS, agences). La zone fait foi. */
   targetArr: number
+  zone: FicheZone
   quartier: string
   targetSurface: number
   maxSurface: number
@@ -515,7 +551,12 @@ function buildVideoContext(
   snapshot: BriefSnapshot,
   video: VideoTag,
   userArrs: number[],
-): VideoContext {
+  userCommunes: string[],
+): VideoContext | null {
+  // Aucune zone exploitable : mieux vaut 3 fiches justes que 4 dont une
+  // repose sur une localisation inventée.
+  const zone = pickZoneForFiche(video, userArrs, userCommunes)
+  if (!zone) return null
   const briefMinSurface = snapshot.minSurface ?? 0
   const briefMaxSurface = snapshot.maxSurface ?? Infinity
   const briefMinBudget = snapshot.budgetMin ?? 0
@@ -541,12 +582,12 @@ function buildVideoContext(
   let maxRooms = Math.min(briefMaxRooms, videoMaxRooms)
   if (maxRooms < targetRooms) maxRooms = targetRooms
 
-  const targetArr = pickArrForFiche(video, userArrs)
-  const quartier = resolveDisplayQuartier(snapshot, targetArr)
+  const quartier = resolveDisplayQuartier(snapshot, zone)
 
   return {
     videoId: video.videoId,
-    targetArr,
+    targetArr: zone.kind === 'arr' ? zone.arr : 0,
+    zone,
     quartier,
     targetSurface: Math.round(targetSurface),
     maxSurface: Math.round(maxSurface),
@@ -632,9 +673,8 @@ function buildUserPrompt(
   // verrouillé sur l'ordre des fiches et des vidéos.
   const constraintsBlock = contexts
     .map((c, i) => {
-      const arrLabel = c.targetArr === 1 ? 'Paris 1er' : `Paris ${c.targetArr}e`
       return (
-        `Fiche ${i + 1}: ${arrLabel} (${c.quartier}) · ` +
+        `Fiche ${i + 1}: ${c.zone.label} (${c.quartier}) · ` +
         `surface ${c.targetSurface}-${c.maxSurface} m² · ` +
         `pièces ${c.targetRooms}-${c.maxRooms}`
       )
@@ -759,6 +799,56 @@ function isFiche(x: unknown): x is Fiche {
   )
 }
 
+/**
+ * Bornes de vraisemblance d'un bien. `isFiche` ne juge que la FORME : un
+ * objet bien typé mais vide (0 m², 0 €, 0 pièce) la traverse sans encombre.
+ * Or un modèle qui n'arrive pas à satisfaire une contrainte ne répond pas
+ * toujours « non » — il lui arrive de répondre un objet conforme dont le
+ * contenu est nul et dont la description porte son propre refus. C'est le
+ * seul endroit où ce genre de réponse peut être arrêté : en aval, le moteur
+ * la note et l'écran l'affiche. On refuse donc ce qui n'est pas un bien
+ * plausible, sans chercher à interpréter l'intention du modèle.
+ */
+const FICHE_BOUNDS: ReadonlyArray<{ key: keyof Fiche; min: number; max: number }> = [
+  { key: 'surface', min: 8, max: 500 },
+  { key: 'price', min: 50000, max: 50000000 },
+  { key: 'rooms', min: 1, max: 15 },
+  { key: 'floor', min: -1, max: 50 },
+]
+
+/** Scores sémantiques : exigés présents. Une absence ne doit jamais être
+ *  remplacée par une valeur neutre en aval — elle satisferait un critère
+ *  rédhibitoire (cf. `semanticOrNull`). */
+const FICHE_SCORES: ReadonlyArray<keyof Fiche> = [
+  'luminosity',
+  'charm',
+  'quietness',
+  'outdoorUsability',
+]
+
+function ficheRejectionReason(f: Fiche): string | null {
+  for (const { key, min, max } of FICHE_BOUNDS) {
+    const v = f[key]
+    if (typeof v !== 'number' || !Number.isFinite(v)) {
+      return `${key} absent ou non numérique`
+    }
+    if (v < min || v > max) return `${key}=${v} hors bornes [${min}, ${max}]`
+  }
+  for (const key of FICHE_SCORES) {
+    const v = f[key]
+    if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 1) {
+      return `${key} absent ou hors [0, 1]`
+    }
+  }
+  if (typeof f.address !== 'string' || f.address.trim().length < 5) {
+    return 'adresse vide ou trop courte'
+  }
+  if (typeof f.title !== 'string' || f.title.trim().length < 3) {
+    return 'titre vide ou trop court'
+  }
+  return null
+}
+
 async function callLlm(
   snapshot: BriefSnapshot,
   videos: VideoTag[],
@@ -783,6 +873,21 @@ async function callLlm(
 
 function clamp01(n: number): number {
   if (!Number.isFinite(n)) return 0.5
+  return Math.max(0, Math.min(1, n))
+}
+
+/**
+ * Score sémantique renseigné, ou `null`. Ne JAMAIS substituer une valeur
+ * neutre ici : `clamp01(undefined)` renvoyait 0.5, et le moteur considère
+ * « ≥ 0.5 » comme satisfait. Une donnée absente validait donc un critère
+ * rédhibitoire — « Lumineux » en rédhibitoire était réputé satisfait par une
+ * fiche ne portant aucune information de luminosité, et cette fiche passait
+ * le filtre d'exclusion. `null` fait basculer le critère en « doute », ce que
+ * le tri-état du moteur sait traiter (un rédhibitoire inconnu n'exclut pas,
+ * mais il ne compte pas non plus comme validé).
+ */
+function semanticOrNull(n: number | undefined): number | null {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return null
   return Math.max(0, Math.min(1, n))
 }
 
@@ -922,12 +1027,12 @@ function ficheToProfile(fiche: Fiche, idx: number): PropertyProfile {
       dpe_rating: fiche.dpe,
     },
     semantic: {
-      luminosity: clamp01(fiche.luminosity),
-      quietness: clamp01(fiche.quietness),
-      charm: clamp01(fiche.charm),
+      luminosity: semanticOrNull(fiche.luminosity),
+      quietness: semanticOrNull(fiche.quietness),
+      charm: semanticOrNull(fiche.charm),
       spaciousness: null,
       living_quality: null,
-      outdoor_usability: clamp01(fiche.outdoorUsability),
+      outdoor_usability: semanticOrNull(fiche.outdoorUsability),
     },
     raw_description: fiche.description,
     enriched_at: new Date(),
@@ -1093,7 +1198,18 @@ export async function POST(req: NextRequest) {
   // l'arr et le quartier de la fiche soient déterministes (pas relancés
   // en aval).
   const userArrs = resolveAllArrs(snapshot)
-  const contexts = matchedVideos.map((v) => buildVideoContext(snapshot, v, userArrs))
+  const userCommunes = communeIdsToNames(snapshot.communeIds)
+  // Vidéo et contexte restent appariés : une vidéo sans zone exploitable sort
+  // des deux listes en même temps, jamais d'une seule — sinon la fiche N se
+  // retrouverait illustrée par la vidéo N+1.
+  const paired = matchedVideos
+    .map((v) => ({ video: v, context: buildVideoContext(snapshot, v, userArrs, userCommunes) }))
+    .filter(
+      (p): p is { video: VideoTag; context: VideoContext } => p.context !== null,
+    )
+  const videos = paired.map((p) => p.video)
+  const contexts = paired.map((p) => p.context)
+  if (videos.length === 0) return emptyFeed('no_catalog')
 
   // Charge par vidéo : chapitres + agence (nom/logo) + tags IA. Chaque
   // fiche est bâtie à partir d'une vidéo, qui correspond à un bien DB :
@@ -1133,13 +1249,31 @@ export async function POST(req: NextRequest) {
 
   let fiches: Fiche[] = []
   try {
-    fiches = await callLlm(snapshot, matchedVideos, contexts)
+    fiches = await callLlm(snapshot, videos, contexts)
   } catch (error) {
     console.error('[feed/generate] LLM call failed:', error)
     return NextResponse.json({ error: 'llm_failed' }, { status: 500 })
   }
 
-  if (fiches.length === 0) {
+  // Vraisemblance AVANT scoring — la rectification prix d'abord, pour juger la
+  // fiche telle qu'elle serait servie. Une fiche hors bornes n'est pas un
+  // bien : la scorer, c'est déjà la faire entrer dans le classement. Les index
+  // d'origine sont conservés pour que chaque fiche reste appariée à SA vidéo.
+  const usable = fiches
+    .map((raw, i) => ({ fiche: rectifyFichePrice(raw), i }))
+    .filter(({ fiche }) => {
+      const reason = ficheRejectionReason(fiche)
+      if (reason === null) return true
+      console.warn(
+        `[feed/generate] fiche écartée — ${reason} · title="${fiche.title}" address="${fiche.address}"`,
+      )
+      return false
+    })
+
+  // Rien d'exploitable : échec de génération, PAS une recherche trop étroite.
+  // L'acquéreur n'a rien à corriger de son côté — d'où `no_generation`, que le
+  // client traite en erreur et non en écran d'élargissement.
+  if (usable.length === 0) {
     return emptyFeed('no_generation')
   }
 
@@ -1160,14 +1294,13 @@ export async function POST(req: NextRequest) {
       doubts: pick('unknown'),
     }
   }
-  const scored: ViewProperty[] = fiches.map((rawFiche, i) => {
-    const fiche = rectifyFichePrice(rawFiche)
+  const scored: ViewProperty[] = usable.map(({ fiche, i }) => {
     const profile = ficheToProfile(fiche, i)
     const result = matchProperty(profile, brief)
     // Score AFFICHÉ calibré (D5 : plancher 60, 90+ réservé) — le badge du
     // feed fictif parle désormais le même langage que le feed réel.
     const cal = calibrateScore(result)
-    const video = matchedVideos[i % matchedVideos.length]
+    const video = videos[i % videos.length]
     const context = contexts[i % contexts.length]
     const chapters = chaptersByVideoId.get(video.videoId) ?? null
     const dbAgency = agencyByVideoId.get(video.videoId) ?? null
