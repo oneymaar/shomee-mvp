@@ -100,10 +100,20 @@ export default function BiensScreen() {
 
   // Point d'entrée unique des deux déclencheurs : le budget d'interruption et le
   // garde-fou `brief:` vivent ici, en un seul endroit. Renvoie true si armé.
-  const openSuggestion = useCallback((trigger: DiagnosisTrigger) => {
+  const openSuggestion = useCallback((trigger: DiagnosisTrigger, force = false) => {
     if (suggestionActiveRef.current) return false
-    if (viewCountRef.current < cooldownRef.current) return false
-    if (!useFeedStore.getState().feedSessionId?.startsWith(BRIEF_FEED_PREFIX)) return false
+    // `force` — le moteur vient de rendre ZÉRO bien. Ni le budget d'interruption
+    // ni le garde-fou `brief:` ne s'appliquent alors : il n'y a plus de feed à
+    // interrompre, et le cooldown vient justement d'être posé par la fermeture
+    // de l'écran précédent, ce qui bloquerait à coup sûr. On passe quand même
+    // par ce point d'entrée pour ne pas perdre le suivi ni la remise à zéro.
+    if (!force && viewCountRef.current < cooldownRef.current) return false
+    if (
+      !force &&
+      !useFeedStore.getState().feedSessionId?.startsWith(BRIEF_FEED_PREFIX)
+    ) {
+      return false
+    }
 
     const diagnosis = diagnoseSearch(useSearchStore.getState(), trigger)
     suggestionActiveRef.current = true
@@ -324,7 +334,15 @@ export default function BiensScreen() {
           <SearchStagingLoader
             run={generateFeedFromStore}
             getCount={() => useFeedStore.getState().properties.length}
-            onFinish={() => setRerunning(false)}
+            onFinish={(outcome) => {
+              setRerunning(false)
+              // Élargissement appliqué… et toujours rien. Renvoyer l'acquéreur
+              // sur l'ancien feed sans un mot lui laisserait croire que sa
+              // modification a été ignorée : on rouvre l'écran, cette fois sur
+              // le déclencheur `empty`, avec la recherche telle qu'elle vient
+              // d'être modifiée comme nouvelle référence.
+              if (outcome === 'empty') openSuggestion('empty', true)
+            }}
           />
         </View>
       )}

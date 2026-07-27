@@ -2,7 +2,9 @@
  * Écran de « mise en scène » du calcul de recherche — fond crème, une phrase à
  * la fois centrée (loader SHOMEE inline devant), chaque phrase apparaît, tient
  * ~1 s, puis remonte en fondu pour laisser place à la suivante. Se termine par
- * un check + « N biens trouvés », puis `onFinish(true)`.
+ * un check + « N biens trouvés », puis `onFinish('ok')`. Une issue `'empty'`
+ * (aucun bien) ou `'error'` (panne) court-circuite l'annonce chiffrée et rend
+ * la main aussitôt : c'est à l'appelant de décider de l'écran suivant.
  *
  * TIMING — la validation tombe JUSTE APRÈS l'effacement de la dernière phrase.
  * C'est la DERNIÈRE étape (« Sélection de vos biens ») qui absorbe l'attente
@@ -23,6 +25,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
 import { Check } from 'lucide-react-native'
 import { ShomeeLoader } from './ShomeeLoader'
+import type { FeedOutcome } from '@/lib/handoff'
 
 const BG = '#FDF5F2'
 const ACCENT = '#A64B27'
@@ -47,9 +50,9 @@ export function SearchStagingLoader({
   getCount,
   onFinish,
 }: {
-  run: () => Promise<boolean>
+  run: () => Promise<FeedOutcome>
   getCount: () => number
-  onFinish: (ok: boolean) => void
+  onFinish: (outcome: FeedOutcome) => void
 }) {
   const [index, setIndex] = useState(0)
   const [done, setDone] = useState<{ count: number } | null>(null)
@@ -65,10 +68,7 @@ export function SearchStagingLoader({
   useEffect(() => {
     let cancelled = false
     // Lancé au montage : le moteur travaille pendant toute la mise en scène.
-    const runP = cbs.current
-      .run()
-      .then((ok) => ok)
-      .catch(() => false)
+    const runP: Promise<FeedOutcome> = cbs.current.run().catch((): FeedOutcome => 'error')
 
     const animate = (value: Animated.Value, to: number, duration: number) =>
       new Promise<void>((resolve) => {
@@ -78,7 +78,7 @@ export function SearchStagingLoader({
       })
 
     void (async () => {
-      let ok = false
+      let outcome: FeedOutcome = 'error'
       for (let i = 0; i < STEPS.length; i++) {
         if (cancelled) return
         setIndex(i)
@@ -88,7 +88,7 @@ export function SearchStagingLoader({
         if (i === STEPS.length - 1) {
           // La dernière phrase tient AU MOINS HOLD, et davantage si le moteur
           // traîne — c'est elle qui porte l'attente, pas l'écran vide d'après.
-          ok = (await Promise.all([runP, wait(HOLD)]))[0]
+          outcome = (await Promise.all([runP, wait(HOLD)]))[0]
         } else {
           await wait(HOLD)
         }
@@ -96,8 +96,10 @@ export function SearchStagingLoader({
         await animate(slot, 2, EXIT) // remonte + fondu sortant
       }
       if (cancelled) return
-      if (!ok) {
-        cbs.current.onFinish(false)
+      // Vide ou en échec : pas d'annonce chiffrée. Un « 0 bien trouvé » coché
+      // en vert avant l'écran d'après serait une fausse bonne nouvelle.
+      if (outcome !== 'ok') {
+        cbs.current.onFinish(outcome)
         return
       }
       // Compteur lu au dernier moment : c'est bien l'état du feed AU MOMENT où
@@ -108,7 +110,7 @@ export function SearchStagingLoader({
       if (cancelled) return
       await wait(FINAL_HOLD)
       if (cancelled) return
-      cbs.current.onFinish(true)
+      cbs.current.onFinish('ok')
     })()
 
     return () => {

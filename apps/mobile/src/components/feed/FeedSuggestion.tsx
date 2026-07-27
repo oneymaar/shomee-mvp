@@ -61,6 +61,7 @@ import {
   suggestNeighbourArrs,
   type CriteriaEntry,
   type Diagnosis,
+  type DiagnosisTrigger,
   type Lever,
   type LeverKind,
 } from '@/lib/searchDiagnosis'
@@ -90,6 +91,21 @@ const LEGEND: Array<{ state: 1 | 2 | 3; label: string }> = [
   { state: 2, label: 'Obligatoire' },
   { state: 3, label: 'Rédhibitoire' },
 ]
+
+// L'écran sert trois moments différents ; seuls le sur-titre et la phrase
+// d'accroche changent, tout le reste (constat, contrôle, impact, validation)
+// est identique — c'est ce qui le rend reconnaissable d'une fois sur l'autre.
+const KICKER: Record<DiagnosisTrigger, string> = {
+  streak: 'Faire évoluer ma recherche',
+  starving: 'Faire évoluer ma recherche',
+  empty: 'Aucun bien pour l’instant',
+}
+const INTRO: Record<DiagnosisTrigger, string> = {
+  streak: 'Vous avez passé plusieurs biens rapidement.',
+  starving: 'Vous avez fait le tour des biens qui correspondent.',
+  empty:
+    'Votre recherche est trop étroite : aucun bien du catalogue ne la satisfait aujourd’hui.',
+}
 
 // ─── Estimation (mêmes bandes que la jauge de rareté du récap) ───────────────
 type Band = 'rare' | 'selective' | 'steady' | 'abundant'
@@ -130,10 +146,16 @@ export function FeedSuggestion({
   diagnosis,
   onApply,
   onDismiss,
+  dismissLabel = 'Garder ma recherche telle quelle',
 }: {
   diagnosis: Diagnosis
   onApply: (change: AppliedChange) => void
   onDismiss: () => void
+  /**
+   * Libellé de la sortie sans rien changer. Sur un feed vide il n'y a rien à
+   * « garder » derrière l'écran : l'appelant dit où mène la porte de sortie.
+   */
+  dismissLabel?: string
 }) {
   const insets = useSafeAreaInsets()
 
@@ -177,12 +199,19 @@ export function FeedSuggestion({
           ? { ...prev, arrIds: [...prev.arrIds, next] }
           : prev
       }
-      // Critères : on propose le passage en « souhaité » du premier critère
-      // obligatoire — le plus réversible et le moins destructeur des gestes.
-      const first = baseCriteria.find((c) => c.state === 2)
+      // Critères : on pré-positionne le passage en « souhaité » — le geste le
+      // plus réversible et le moins destructeur. Sur un feed vide on vise
+      // d'abord un RÉDHIBITOIRE (c'est lui qui exclut, donc lui qui explique le
+      // zéro) ; sinon un obligatoire. Sans ce repli, une recherche n'ayant qu'un
+      // rédhibitoire arrivait ici sans rien de pré-positionné : le bouton
+      // « Appliquer » restait grisé et l'écran devenait un cul-de-sac.
+      const dealbreaker = baseCriteria.find((c) => c.state === 3)
+      const mandatory = baseCriteria.find((c) => c.state === 2)
+      const first =
+        diagnosis.trigger === 'empty' ? (dealbreaker ?? mandatory) : (mandatory ?? dealbreaker)
       return first ? { ...prev, criteria: { ...prev.criteria, [first.key]: 1 } } : prev
     })
-  }, [lever, baseCriteria])
+  }, [lever, baseCriteria, diagnosis.trigger])
 
   // ── Récapitulatif des modifications en attente ────────────────────────────
   const changes = useMemo(() => {
@@ -353,23 +382,20 @@ export function FeedSuggestion({
   const activeCriteria = baseCriteria.filter((c) => (staged.criteria[c.key] ?? 0) !== 0)
   const droppedCriteria = baseCriteria.filter((c) => (staged.criteria[c.key] ?? 0) === 0)
 
-  const intro =
-    diagnosis.trigger === 'streak'
-      ? 'Vous avez passé plusieurs biens rapidement.'
-      : 'Vous avez fait le tour des biens qui correspondent.'
+  const intro = INTRO[diagnosis.trigger]
 
   const others = [diagnosis.primary, ...diagnosis.alternatives].filter((l) => l.kind !== lever)
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <View style={styles.topBar}>
-        <Text style={styles.kicker}>Faire évoluer ma recherche</Text>
+        <Text style={styles.kicker}>{KICKER[diagnosis.trigger]}</Text>
         <Pressable
           onPress={onDismiss}
           hitSlop={14}
           style={styles.close}
           accessibilityRole="button"
-          accessibilityLabel="Fermer et garder ma recherche telle quelle"
+          accessibilityLabel={dismissLabel}
         >
           <X size={20} color={MUTED} />
         </Pressable>
@@ -722,7 +748,7 @@ export function FeedSuggestion({
         </Pressable>
 
         <Pressable onPress={onDismiss} hitSlop={8} style={styles.ghost} accessibilityRole="button">
-          <Text style={styles.ghostTxt}>Garder ma recherche telle quelle</Text>
+          <Text style={styles.ghostTxt}>{dismissLabel}</Text>
         </Pressable>
       </View>
     </View>

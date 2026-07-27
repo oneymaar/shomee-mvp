@@ -29,7 +29,7 @@ import {
 import { resolveConstraints, type GeoConstraint } from '@shomee/core/geo/geoConstraintService'
 import type { LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
 import type { Property } from '@shomee/core/types/domain'
-import type { ChipState } from '@shomee/core/stores/searchStore'
+import type { ChipState, LocationIntent } from '@shomee/core/stores/searchStore'
 import { useSearchStore, useFeedStore } from '@/lib/stores'
 import { apiFetch } from '@/lib/api'
 
@@ -66,6 +66,8 @@ export type HandoffOutcome =
   | { status: 'success' }
   | { status: 'not_found' }
   | { status: 'expired' }
+  /** Brief valide, moteur OK, mais aucun bien ne satisfait la recherche. */
+  | { status: 'empty' }
   | { status: 'error' }
 
 // ─── Orchestrateur ──────────────────────────────────────────────────────────
@@ -84,18 +86,13 @@ export async function runBriefHandoff(token: string): Promise<HandoffOutcome> {
   //         Best-effort ; les échecs internes sont avalés (feed par critères).
   await injectBriefNative(fetched.brief)
 
-  // 5. Génération du feed noté à partir du snapshot du store.
-  let feed: Property[]
-  try {
-    feed = await generatePersonalizedFeed(buildSnapshotFromStore())
-  } catch {
-    return { status: 'error' }
-  }
-  if (!Array.isArray(feed) || feed.length === 0) return { status: 'error' }
-
-  // 6. Pose du feed personnalisé (session préfixée → protégé du refresh générique).
-  useFeedStore.getState().setFeed(feed, `${BRIEF_FEED_PREFIX}${Date.now()}`)
-  return { status: 'success' }
+  // 5 → 6. Génération + pose du feed personnalisé noté (session préfixée →
+  //        protégé du refresh générique). Chaîne factorisée (partagée avec le
+  //        funnel manuel S7). Le vide remonte tel quel : un brief trop étroit
+  //        n'est pas une panne et ne doit pas afficher le même écran.
+  const outcome = await generateFeedFromStore()
+  if (outcome === 'ok') return { status: 'success' }
+  return { status: outcome === 'empty' ? 'empty' : 'error' }
 }
 
 // ─── 1. GET onboarding-prefill ──────────────────────────────────────────────
@@ -125,73 +122,24 @@ async function fetchBrief(token: string): Promise<FetchBriefResult> {
 // ─── 2 → 4. injectBrief natif (réplique de aiBriefInjector.injectBrief) ──────
 
 async function injectBriefNative(brief: AIOnboardingBrief): Promise<void> {
-  // 2. Analyse de la zone (LLM/parser côté serveur). Échec avalé → le reste du
-  //    brief est quand même injecté (l'utilisateur voit ses critères/budget).
-  let analysis: LocationIntentAnalysis | null = null
-  try {
-    const res = await apiFetch('/api/location/analyze', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ input: brief.locationQuery }),
-    })
-    if (res.ok) analysis = (await res.json()) as LocationIntentAnalysis
-  } catch {
-    // analyze indispo → feed par critères, sans contrainte géo.
-  }
-
-  // 3. Résolution des contraintes géo en identifiants de zones (iris → parents).
-  let irisIds: string[] = []
-  let arrIds: string[] = []
-  let quartierIds: string[] = []
-  let communeIds: string[] = []
-  let locationLabel = brief.locationQuery
-
-  const constraints: GeoConstraint[] = analysis?.geoConstraints ?? []
-  if (constraints.length > 0) {
-    try {
-      const [arrs, qus, communes] = await Promise.all([
-        fetchParisArrondissements(),
-        fetchParisQuartiers(),
-        fetchSuburbanCommunes(),
-      ])
-      const iris = await fetchParisIris(qus, communes)
-      const result = resolveConstraints(constraints, iris, qus, communes)
-      irisIds = result.irisIds
-      ;({ arrIds, quartierIds, communeIds } = deriveParents(irisIds, iris, qus))
-      if (result.matchSummary.length > 0) {
-        locationLabel = result.matchSummary.join(' · ')
-      } else if (analysis?.mapAction?.centerQuery) {
-        locationLabel = analysis.mapAction.centerQuery
-      }
-      void arrs // parité avec le flux web (chargé mais non requis ici)
-    } catch {
-      // Réseau/parse géo KO → IRIS vide ; le feed reste personnalisé par critères.
-    }
-  } else if (analysis?.mapAction?.centerQuery) {
-    locationLabel = analysis.mapAction.centerQuery
-  }
+  // 2 → 3. Analyse de la zone + résolution des contraintes géo. Factorisé dans
+  //        `analyzeAndResolveGeo` (partagé avec l'étape Quartiers du funnel
+  //        manuel S7). Dégradation gracieuse identique : tout échec réseau/parse
+  //        laisse les listes vides → feed personnalisé par critères/budget.
+  const geo = await analyzeAndResolveGeo(brief.locationQuery)
 
   // 4. Seed atomique du store (mêmes champs que injectBrief). customCriteria est
   //    remis à [] ici car addCustomCriteria ajoute — le brief fait autorité.
   useSearchStore.setState({
     locationQuery: brief.locationQuery,
-    locationLabel,
+    locationLabel: geo.locationLabel,
     locationLat: null,
     locationLng: null,
-    locationIntent: analysis
-      ? {
-          location_terms: analysis.explicitLocations?.map((l) => l.label) ?? [],
-          lifestyle_terms: [],
-          transport_constraints: [],
-          confidence: 1,
-          geoConstraints: analysis.geoConstraints,
-          resolutionStrategy: analysis.resolutionStrategy,
-        }
-      : null,
-    selectedArrIds: arrIds,
-    selectedQuartierIds: quartierIds,
-    selectedIrisIds: irisIds,
-    selectedCommuneIds: communeIds,
+    locationIntent: geo.intent,
+    selectedArrIds: geo.arrIds,
+    selectedQuartierIds: geo.quartierIds,
+    selectedIrisIds: geo.irisIds,
+    selectedCommuneIds: geo.communeIds,
     propertyTypes: brief.propertyTypes,
     minRooms: brief.minRooms,
     maxRooms: brief.maxRooms ?? null,
@@ -243,16 +191,187 @@ function buildSnapshotFromStore() {
   }
 }
 
-async function generatePersonalizedFeed(
-  snapshot: ReturnType<typeof buildSnapshotFromStore>,
-): Promise<Property[]> {
-  const res = await apiFetch('/api/feed/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(snapshot),
+// ─── 5b. Génération du feed depuis le store (partagé handoff S6a + funnel S7) ─
+
+/**
+ * Issue de la génération. Le booléen d'avant confondait DEUX situations qui
+ * n'ont rien à voir et méritent deux écrans opposés :
+ *
+ *  · `error` — la requête a échoué (réseau, 4xx/5xx, corps illisible). Rien à
+ *    dire à l'acquéreur sur sa recherche : c'est nous. → « Oups, réessayez ».
+ *  · `empty` — la requête a RÉUSSI, le moteur n'a simplement retenu aucun bien
+ *    (typiquement : un critère rédhibitoire les exclut tous). Ce n'est pas une
+ *    panne, c'est un résultat. Afficher « Impossible de préparer votre
+ *    sélection » ici accusait l'app d'une décision prise par la recherche.
+ *    → écran « aucun bien » + leviers d'élargissement.
+ */
+export type FeedOutcome = 'ok' | 'empty' | 'error'
+
+/**
+ * Le serveur qualifie un tableau vide via `x-shomee-empty-reason` :
+ *  · `all_excluded` → le moteur a bien produit des biens, le matching les a tous
+ *    écartés. C'est un RÉSULTAT, imputable à la recherche → écran d'élargissement.
+ *  · `no_catalog` / `no_generation` → catalogue vidéo indisponible, ou génération
+ *    LLM muette. Deux pannes serveur : la recherche de l'acquéreur n'y est pour
+ *    rien, et lui proposer de l'élargir serait aussi mensonger que de crier à
+ *    l'erreur technique quand ses critères sont en cause → écran d'erreur.
+ * En-tête absente (build serveur antérieur à cette en-tête) → `empty` : sans
+ * information, on parie sur le cas de très loin le plus fréquent plutôt que
+ * d'accuser une panne qui n'a probablement pas eu lieu.
+ */
+function outcomeForEmpty(reason: string | null): FeedOutcome {
+  if (reason == null) return 'empty'
+  return reason === 'all_excluded' ? 'empty' : 'error'
+}
+
+/**
+ * Assemble le snapshot du store → POST /api/feed/generate → pose le feed noté
+ * (session préfixée `brief:` pour le protéger du refresh générique du feed
+ * générique). Utilisé par `runBriefHandoff` (handoff ChatGPT) ET par le récap du
+ * funnel manuel natif (S7) : le store est agnostique de la source (token ou
+ * wizard), la chaîne de génération est donc strictement la même.
+ */
+export async function generateFeedFromStore(): Promise<FeedOutcome> {
+  let res: Response
+  try {
+    res = await apiFetch('/api/feed/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(buildSnapshotFromStore()),
+    })
+  } catch {
+    return 'error'
+  }
+  if (!res.ok) return 'error'
+
+  let feed: unknown
+  try {
+    feed = await res.json()
+  } catch {
+    return 'error'
+  }
+  if (!Array.isArray(feed)) return 'error'
+  if (feed.length === 0) return outcomeForEmpty(res.headers.get('x-shomee-empty-reason'))
+
+  useFeedStore.getState().setFeed(feed as Property[], `${BRIEF_FEED_PREFIX}${Date.now()}`)
+  return 'ok'
+}
+
+// ─── Résolution géo partagée (handoff S6a + étape Quartiers du funnel S7) ─────
+
+export interface GeoResolution {
+  analysis: LocationIntentAnalysis | null
+  irisIds: string[]
+  arrIds: string[]
+  quartierIds: string[]
+  communeIds: string[]
+  /** Libellé lisible de la zone (matchSummary → centerQuery → requête brute). */
+  locationLabel: string
+  /** `locationIntent` prêt à poser dans le store (parité web injectBrief). */
+  intent: LocationIntent | null
+}
+
+/**
+ * Cœur de la résolution géographique — NE touche PAS au store. Réplique fidèle
+ * de l'ancienne partie géo de `injectBriefNative` (analyze → resolveConstraints
+ * → deriveParents), factorisée pour être partagée par le handoff (brief token)
+ * ET l'étape Quartiers du funnel manuel (S7). Dégradation gracieuse : tout échec
+ * réseau/parse laisse les listes vides (feed personnalisé par critères/budget).
+ */
+async function analyzeAndResolveGeo(query: string): Promise<GeoResolution> {
+  const trimmed = query.trim()
+
+  let analysis: LocationIntentAnalysis | null = null
+  try {
+    const res = await apiFetch('/api/location/analyze', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ input: trimmed }),
+    })
+    if (res.ok) analysis = (await res.json()) as LocationIntentAnalysis
+  } catch {
+    // analyze indispo → feed par critères, sans contrainte géo.
+  }
+
+  let irisIds: string[] = []
+  let arrIds: string[] = []
+  let quartierIds: string[] = []
+  let communeIds: string[] = []
+  let locationLabel = trimmed
+
+  const constraints: GeoConstraint[] = analysis?.geoConstraints ?? []
+  if (constraints.length > 0) {
+    try {
+      const [arrs, qus, communes] = await Promise.all([
+        fetchParisArrondissements(),
+        fetchParisQuartiers(),
+        fetchSuburbanCommunes(),
+      ])
+      const iris = await fetchParisIris(qus, communes)
+      const result = resolveConstraints(constraints, iris, qus, communes)
+      irisIds = result.irisIds
+      ;({ arrIds, quartierIds, communeIds } = deriveParents(irisIds, iris, qus))
+      if (result.matchSummary.length > 0) {
+        locationLabel = result.matchSummary.join(' · ')
+      } else if (analysis?.mapAction?.centerQuery) {
+        locationLabel = analysis.mapAction.centerQuery
+      }
+      void arrs // parité avec le flux web (chargé mais non requis ici)
+    } catch {
+      // Réseau/parse géo KO → IRIS vide ; le feed reste personnalisé par critères.
+    }
+  } else if (analysis?.mapAction?.centerQuery) {
+    locationLabel = analysis.mapAction.centerQuery
+  }
+
+  const intent: LocationIntent | null = analysis
+    ? {
+        location_terms: analysis.explicitLocations?.map((l) => l.label) ?? [],
+        lifestyle_terms: [],
+        transport_constraints: [],
+        confidence: 1,
+        geoConstraints: analysis.geoConstraints,
+        resolutionStrategy: analysis.resolutionStrategy,
+      }
+    : null
+
+  return { analysis, irisIds, arrIds, quartierIds, communeIds, locationLabel, intent }
+}
+
+export interface GeoResolveOutcome {
+  /** true si au moins un IRIS a été résolu (zone exploitable pour le feed). */
+  resolved: boolean
+  /** Libellé affichable de la zone résolue. */
+  label: string
+  irisCount: number
+}
+
+/**
+ * Étape Quartiers du funnel manuel (S7) : résout une requête texte en zones et
+ * SEED le store (location + selectedArr/Quartier/Iris/Commune). Même qualité de
+ * résolution que le handoff ChatGPT — ils partagent `analyzeAndResolveGeo`.
+ * Aucune carte : c'est la décision d'archi actée (texte, pas Leaflet).
+ */
+export async function resolveGeoFromText(query: string): Promise<GeoResolveOutcome> {
+  const geo = await analyzeAndResolveGeo(query)
+  useSearchStore.getState().setLocation({
+    query: query.trim(),
+    label: geo.locationLabel,
+    lat: 0,
+    lng: 0,
+    intent: geo.intent,
   })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return (await res.json()) as Property[]
+  useSearchStore.setState({
+    selectedArrIds: geo.arrIds,
+    selectedQuartierIds: geo.quartierIds,
+    selectedIrisIds: geo.irisIds,
+    selectedCommuneIds: geo.communeIds,
+  })
+  return {
+    resolved: geo.irisIds.length > 0,
+    label: geo.locationLabel,
+    irisCount: geo.irisIds.length,
+  }
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

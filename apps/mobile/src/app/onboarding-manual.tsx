@@ -28,12 +28,14 @@ import { StepBudget } from '@/components/onboarding/StepBudget'
 import { StepCriteres } from '@/components/onboarding/StepCriteres'
 import { Recap } from '@/components/onboarding/Recap'
 import { SearchStagingLoader } from '@/components/onboarding/SearchStagingLoader'
-import { useFeedStore } from '@/lib/stores'
+import { FeedSuggestion } from '@/components/feed/FeedSuggestion'
+import { diagnoseSearch } from '@/lib/searchDiagnosis'
+import { useFeedStore, useSearchStore } from '@/lib/stores'
 import { BG, ACCENT, INK, MUTED } from '@/components/onboarding/ui'
 
 const LOGO = require('../../assets/images/logo-shomee-terracotta.png')
 
-type Phase = 'idle' | 'generating' | 'error'
+type Phase = 'idle' | 'generating' | 'empty' | 'error'
 
 export default function ManualOnboarding() {
   const router = useRouter()
@@ -73,17 +75,34 @@ export default function ManualOnboarding() {
     setPhase('generating')
   }, [])
 
-  // ── Écrans de génération (loading / erreur) ──────────────────────────────
+  // ── Écrans de génération (loading / aucun bien / erreur) ─────────────────
   if (phase === 'generating') {
     return (
       <SearchStagingLoader
         run={generateFeedFromStore}
         getCount={() => useFeedStore.getState().properties.length}
-        onFinish={(ok) => {
-          if (ok) router.replace('/(tabs)')
-          else setPhase('error')
+        onFinish={(outcome) => {
+          if (outcome === 'ok') router.replace('/(tabs)')
+          else setPhase(outcome === 'empty' ? 'empty' : 'error')
         }}
       />
+    )
+  }
+  // Aucun bien trouvé — ce n'est PAS une erreur : la recherche a abouti, elle
+  // est simplement trop étroite. Même écran que les intercalaires du feed
+  // (constat → proposition pré-positionnée → validation), avec le déclencheur
+  // `empty` : le diagnostic met alors les critères rédhibitoires en tête, eux
+  // seuls pouvant vider un feed à eux tout seuls.
+  if (phase === 'empty') {
+    return (
+      <View style={styles.root}>
+        <FeedSuggestion
+          diagnosis={diagnoseSearch(useSearchStore.getState(), 'empty')}
+          dismissLabel="Revenir au récapitulatif"
+          onApply={() => setPhase('generating')}
+          onDismiss={() => { setPhase('idle'); setRecapOpen(true) }}
+        />
+      </View>
     )
   }
   if (phase === 'error') {

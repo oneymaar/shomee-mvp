@@ -1052,6 +1052,17 @@ function ficheToView(
 
 // ─── Route ───────────────────────────────────────────────────────────────
 
+/**
+ * Feed vide QUALIFIÉ. Le client ne peut pas distinguer « votre recherche
+ * n'admet aucun bien » (résultat, à traiter par un écran d'élargissement) de
+ * « le catalogue est indisponible » (panne, à traiter par un écran d'erreur)
+ * s'il ne reçoit qu'un `[]`. L'en-tête porte cette distinction sans changer la
+ * forme du corps : les clients antérieurs continuent de lire un tableau.
+ */
+function emptyFeed(reason: 'no_catalog' | 'no_generation' | 'all_excluded') {
+  return NextResponse.json([], { headers: { 'x-shomee-empty-reason': reason } })
+}
+
 export async function POST(req: NextRequest) {
   const guard = requireAppTokenOrTrustedOrigin(req)
   if (!guard.ok) return NextResponse.json(guard.body, { status: guard.status })
@@ -1072,7 +1083,7 @@ export async function POST(req: NextRequest) {
   const tags = readTagsFile()
   if (tags.length === 0) {
     // Tag file vide / manquant — la page feed retombera sur /api/properties.
-    return NextResponse.json([])
+    return emptyFeed('no_catalog')
   }
 
   const matchedVideos = pickMatchedVideos(snapshot, tags)
@@ -1129,7 +1140,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (fiches.length === 0) {
-    return NextResponse.json([])
+    return emptyFeed('no_generation')
   }
 
   const brief = buildBriefFromSnapshot(snapshot)
@@ -1181,6 +1192,10 @@ export async function POST(req: NextRequest) {
   const feed = scored
     .filter((p) => !p.isExcluded)
     .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0))
+
+  // Toutes les fiches écartées : un seul critère rédhibitoire suffit. C'est le
+  // cas le plus fréquent de feed vide, et le seul que l'acquéreur peut corriger.
+  if (feed.length === 0) return emptyFeed('all_excluded')
 
   return NextResponse.json(feed)
 }

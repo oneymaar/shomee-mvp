@@ -31,8 +31,13 @@ export type LeverKind = 'criteria' | 'budget' | 'surface' | 'zone'
  *                 (critères) qui est le plus suspect.
  *  · `starving` — le feed est quasi vide / épuisé : ce sont les filtres de
  *                 capacité (budget, zone, surface) qui étranglent la recherche.
+ *  · `empty`    — le moteur n'a rendu AUCUN bien. C'est le cas le plus dur :
+ *                 il n'y a rien à regarder, l'écran est donc un cul-de-sac s'il
+ *                 ne propose pas de sortie. Une exclusion (critère rédhibitoire)
+ *                 suffit à vider un feed à elle seule : elle passe donc en tête
+ *                 du diagnostic, avant les leviers de capacité.
  */
-export type DiagnosisTrigger = 'streak' | 'starving'
+export type DiagnosisTrigger = 'streak' | 'starving' | 'empty'
 
 /** Vue minimale du searchStore nécessaire au diagnostic. */
 export interface SearchSnapshot {
@@ -207,7 +212,7 @@ function budgetLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | null
           : 12
   return {
     kind: 'budget',
-    score: base + (trigger === 'starving' ? 15 : 0),
+    score: base + (trigger !== 'streak' ? 15 : 0),
     title:
       signal.tone === 'very_tight'
         ? 'Votre budget est très serré pour ces quartiers'
@@ -219,21 +224,51 @@ function budgetLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | null
   }
 }
 
+/**
+ * Un critère DUR est le seul levier capable de vider un feed à lui tout seul :
+ * « rédhibitoire » exclut le bien, quoi qu'il vaille par ailleurs. C'est pour
+ * cette raison qu'UN SEUL rédhibitoire suffit à ouvrir ce levier (le seuil de
+ * deux ne vaut que pour les obligatoires, plus progressifs), et qu'il passe
+ * devant tout le reste quand le moteur n'a rien rendu.
+ */
 function criteriaLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | null {
   const hard = hardCriteria(s)
-  if (hard.length < 2) return null
-  const mandatory = hard.filter((c) => c.state === 2).length
-  const dealbreakers = hard.length - mandatory
+  const dealbreaking = hard.filter((c) => c.state === 3)
+  const dealbreakers = dealbreaking.length
+  const mandatory = hard.length - dealbreakers
+  if (hard.length === 0) return null
+  if (dealbreakers === 0 && mandatory < 2) return null
   const plural = (n: number) => (n > 1 ? 's' : '')
+
+  // Un seul rédhibitoire : on le NOMME. « Vous avez 1 critère rédhibitoire »
+  // laisse l'acquéreur chercher lequel ; « "Lumineux" écarte tous les biens »
+  // désigne le frein et rend le geste suivant évident.
+  const named = dealbreakers === 1 ? `« ${dealbreaking[0].label} »` : null
+
+  const title =
+    trigger === 'empty'
+      ? named
+        ? `${named} écarte tous les biens`
+        : dealbreakers > 0
+          ? `Vos ${dealbreakers} critères rédhibitoires écartent tous les biens`
+          : `Vos ${mandatory} critères obligatoires ne sont jamais tous réunis`
+      : dealbreakers > mandatory
+        ? `Vous avez ${dealbreakers} critère${plural(dealbreakers)} rédhibitoire${plural(dealbreakers)}`
+        : `Vous avez ${mandatory} critère${plural(mandatory)} obligatoire${plural(mandatory)}`
+
   return {
     kind: 'criteria',
-    score: Math.min(95, 30 + 15 * hard.length) + (trigger === 'streak' ? 15 : 0),
-    title:
-      dealbreakers > mandatory
-        ? `Vous avez ${dealbreakers} critère${plural(dealbreakers)} rédhibitoire${plural(dealbreakers)}`
-        : `Vous avez ${mandatory} critère${plural(mandatory)} obligatoire${plural(mandatory)}`,
+    // Sur un feed vide, l'exclusion explique le résultat à elle seule : elle
+    // doit sortir devant budget / zone / surface, qui ne font que réduire.
+    score:
+      Math.min(95, 30 + 15 * hard.length) +
+      (trigger === 'streak' ? 15 : 0) +
+      (trigger === 'empty' ? (dealbreakers > 0 ? 120 : 40) : 0),
+    title,
     suggestion:
-      'Passer un critère en « souhaité » le garde dans le classement sans exclure les biens qui ne l’ont pas.',
+      dealbreakers > 0
+        ? 'Un critère rédhibitoire exclut le bien, quelles que soient ses autres qualités. En « souhaité », il fait redescendre les biens concernés dans le classement au lieu de les supprimer.'
+        : 'Passer un critère en « souhaité » le garde dans le classement sans exclure les biens qui ne l’ont pas.',
     short: 'Assouplir mes critères',
   }
 }
@@ -244,7 +279,7 @@ function zoneLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | null {
   const base = zones <= 1 ? 72 : zones === 2 ? 52 : zones === 3 ? 30 : 12
   return {
     kind: 'zone',
-    score: base + (trigger === 'starving' ? 15 : 0),
+    score: base + (trigger !== 'streak' ? 15 : 0),
     title:
       zones <= 1
         ? 'Votre recherche tient sur un seul secteur'
@@ -260,7 +295,7 @@ function surfaceLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | nul
   const base = min >= 80 ? 60 : min >= 60 ? 42 : 26
   return {
     kind: 'surface',
-    score: base + (trigger === 'starving' ? 15 : 0),
+    score: base + (trigger !== 'streak' ? 15 : 0),
     title: `Vous demandez au minimum ${min} m²`,
     suggestion: 'Quelques mètres carrés de moins font souvent basculer beaucoup de biens.',
     short: 'Revoir la surface',
