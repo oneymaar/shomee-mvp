@@ -75,6 +75,14 @@ export default function ManualOnboarding() {
     setPhase('generating')
   }, [])
 
+  // Sortie commune des écrans « aucun bien » et « erreur » : on revient au
+  // brief, seul endroit où TOUTE la recherche est modifiable. Un seul geste,
+  // un seul libellé — « Revoir mon brief ».
+  const backToRecap = useCallback(() => {
+    setPhase('idle')
+    setRecapOpen(true)
+  }, [])
+
   // ── Écrans de génération (loading / aucun bien / erreur) ─────────────────
   if (phase === 'generating') {
     return (
@@ -98,9 +106,9 @@ export default function ManualOnboarding() {
       <View style={styles.root}>
         <FeedSuggestion
           diagnosis={diagnoseSearch(useSearchStore.getState(), 'empty')}
-          dismissLabel="Revenir au récapitulatif"
           onApply={() => setPhase('generating')}
-          onDismiss={() => { setPhase('idle'); setRecapOpen(true) }}
+          onDismiss={backToRecap}
+          onEditBrief={backToRecap}
         />
       </View>
     )
@@ -116,8 +124,8 @@ export default function ManualOnboarding() {
         <Pressable style={styles.retry} onPress={launch} hitSlop={8}>
           <Text style={styles.retryTxt}>Réessayer</Text>
         </Pressable>
-        <Pressable onPress={() => { setPhase('idle'); setRecapOpen(true) }} hitSlop={8}>
-          <Text style={styles.retryAlt}>Revenir au récapitulatif</Text>
+        <Pressable onPress={backToRecap} hitSlop={8}>
+          <Text style={styles.retryAlt}>Revoir mon brief</Text>
         </Pressable>
       </View>
     )

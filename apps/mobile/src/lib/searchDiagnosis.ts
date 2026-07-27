@@ -18,6 +18,7 @@ import {
   BUDGET_MAX_INDEX,
   BUDGET_UNLIMITED,
   budgetIndex,
+  formatBudget,
   SURFACE_SCALE,
   surfaceIndex,
 } from './scales'
@@ -63,9 +64,15 @@ export interface CriteriaEntry {
 
 export interface Lever {
   kind: LeverKind
-  /** Constat — ce que le système a détecté comme bloquant. */
+  /**
+   * LA phrase de l'écran : constat + geste proposé, en une seule respiration.
+   * C'est le seul texte explicatif affiché — ce qui ne tient pas ici n'est pas
+   * assez essentiel pour être montré à ce moment-là.
+   */
+  lead: string
+  /** Constat seul — conservé pour le suivi et les tests. */
   title: string
-  /** Proposition concrète, en vouvoiement. */
+  /** Proposition seule — conservée pour le suivi et les tests. */
   suggestion: string
   /** Libellé court pour proposer ce levier en second rideau. */
   short: string
@@ -213,6 +220,7 @@ function budgetLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | null
   return {
     kind: 'budget',
     score: base + (trigger !== 'streak' ? 15 : 0),
+    lead: `Votre plafond de ${formatBudget(max)} est serré pour ces quartiers. Nous avons pré-positionné un cran au-dessus.`,
     title:
       signal.tone === 'very_tight'
         ? 'Votre budget est très serré pour ces quartiers'
@@ -256,8 +264,19 @@ function criteriaLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | nu
         ? `Vous avez ${dealbreakers} critère${plural(dealbreakers)} rédhibitoire${plural(dealbreakers)}`
         : `Vous avez ${mandatory} critère${plural(mandatory)} obligatoire${plural(mandatory)}`
 
+  // Une seule phrase, qui NOMME le frein quand il est unique : « Lumineux est
+  // rédhibitoire » se comprend d'un coup d'œil, « 1 critère rédhibitoire »
+  // oblige à aller le chercher.
+  const lead =
+    named != null
+      ? `${named} est rédhibitoire : tout bien qui ne l'a pas est écarté. En « souhaité », il classe sans exclure.`
+      : dealbreakers > 0
+        ? `Vos ${dealbreakers} critères rédhibitoires écartent un bien dès qu'il en manque un seul. Assouplissez-en un.`
+        : `Vos ${mandatory} critères obligatoires ne sont jamais tous réunis. Passez-en un en « souhaité ».`
+
   return {
     kind: 'criteria',
+    lead,
     // Sur un feed vide, l'exclusion explique le résultat à elle seule : elle
     // doit sortir devant budget / zone / surface, qui ne font que réduire.
     score:
@@ -280,6 +299,10 @@ function zoneLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | null {
   return {
     kind: 'zone',
     score: base + (trigger !== 'streak' ? 15 : 0),
+    lead:
+      zones <= 1
+        ? 'Votre recherche tient sur un seul secteur. Un arrondissement limitrophe offre souvent le même cadre de vie.'
+        : `Votre recherche tient sur ${zones} secteurs. Les arrondissements limitrophes offrent souvent le même cadre de vie.`,
     title:
       zones <= 1
         ? 'Votre recherche tient sur un seul secteur'
@@ -296,6 +319,7 @@ function surfaceLever(s: SearchSnapshot, trigger: DiagnosisTrigger): Lever | nul
   return {
     kind: 'surface',
     score: base + (trigger !== 'streak' ? 15 : 0),
+    lead: `Vous demandez ${min} m² au minimum. Quelques mètres carrés de moins font souvent basculer beaucoup de biens.`,
     title: `Vous demandez au minimum ${min} m²`,
     suggestion: 'Quelques mètres carrés de moins font souvent basculer beaucoup de biens.',
     short: 'Revoir la surface',
@@ -312,6 +336,7 @@ function fallbackLever(s: SearchSnapshot): Lever {
     return {
       kind: 'zone',
       score: 1,
+      lead: 'Ajouter un arrondissement limitrophe est le levier le plus rapide.',
       title: 'Affinons votre recherche',
       suggestion: 'Ajouter un arrondissement limitrophe est le levier le plus rapide.',
       short: 'Élargir la zone',
@@ -321,6 +346,7 @@ function fallbackLever(s: SearchSnapshot): Lever {
     return {
       kind: 'budget',
       score: 1,
+      lead: 'Remonter le plafond ouvre mécaniquement le champ des biens visibles.',
       title: 'Affinons votre recherche',
       suggestion: 'Remonter le plafond ouvre mécaniquement le champ des biens visibles.',
       short: 'Ajuster le budget',
@@ -329,6 +355,7 @@ function fallbackLever(s: SearchSnapshot): Lever {
   return {
     kind: 'criteria',
     score: 1,
+    lead: 'Assouplissez un critère : « souhaité » classe les biens au lieu de les exclure.',
     title: 'Affinons votre recherche',
     suggestion: 'Ajustez vos critères : « souhaité » classe sans exclure.',
     short: 'Ajuster mes critères',

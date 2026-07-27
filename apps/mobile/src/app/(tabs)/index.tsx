@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, View, type ViewToken } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { BottomSheetModal } from '@gorhom/bottom-sheet'
-import { useIsFocused } from 'expo-router'
+import { useIsFocused, useRouter } from 'expo-router'
 import { Volume2, VolumeX } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@shomee/core/types/domain'
@@ -37,6 +37,7 @@ const STARVING_DELAY_MS = 6000
 
 export default function BiensScreen() {
   const insets = useSafeAreaInsets()
+  const router = useRouter()
   // Hauteur réelle du conteneur (au-dessus de la barre d'onglets) mesurée via
   // onLayout — évite de deviner la math safe-area/tab-bar pour le paging.
   const [viewportH, setViewportH] = useState(0)
@@ -152,6 +153,16 @@ export default function BiensScreen() {
     track({ type: 'interstitial_dismissed', meta: { kind: 'search_suggestion' } })
     closeSuggestion()
   }, [closeSuggestion])
+
+  // « Revoir mon brief » — la sortie quand notre proposition n'est pas la
+  // bonne. On referme l'intercalaire AVANT de naviguer : sans cela il serait
+  // encore ouvert au retour sur l'onglet, par-dessus un feed peut-être déjà
+  // régénéré entre-temps.
+  const onSuggestionEditBrief = useCallback(() => {
+    track({ type: 'interstitial_dismissed', meta: { kind: 'search_suggestion' } })
+    closeSuggestion()
+    router.push('/onboarding-manual?recap=1')
+  }, [closeSuggestion, router])
 
   const openDetail = useCallback((p: Property) => {
     // Ouvrir le détail = engagement → on casse la streak de rejets.
@@ -325,6 +336,7 @@ export default function BiensScreen() {
           diagnosis={suggestion}
           onApply={onSuggestionApply}
           onDismiss={onSuggestionDismiss}
+          onEditBrief={onSuggestionEditBrief}
         />
       )}
 
