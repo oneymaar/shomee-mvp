@@ -1,0 +1,100 @@
+Shomee — mise à jour du 21/07/2026 15:51 — node v22.22.3
+
+━━━━━━━━ ÉTAPE 1/5 — Migration base de données ━━━━━━━━
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+Datasource "db": PostgreSQL database "neondb", schema "public" at "ep-mute-art-alqvoemq.c-3.eu-central-1.aws.neon.tech"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 2.83s
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.8.0 -> 7.9.0                        │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━ ÉTAPE 2/5 — Régénération client Prisma ━━━━━━━━
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (v7.8.0) to ./../../node_modules/@prisma/client in 142ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+━━━━━━━━ ÉTAPE 3/5 — Harnais matching (43/0 attendu) ━━━━━━━━
+
+═══ A — parser de critères (déterministe) ═══
+✓ parser OK
+
+═══ B — normaliseur bien (features/tags/description) ═══
+✓ normaliseur exécuté
+
+═══ C — moteur tri-état (D1) ═══
+✓ moteur exécuté
+
+═══ D — calibration affichage (plancher 60, 90+ réservé) ═══
+✓ calibration exécutée
+
+═══ E — estimateur (récap onboarding) ═══
+✓ estimateur exécuté
+
+43 vérifications, 0 échec(s).
+
+━━━━━━━━ ÉTAPE 4/5 — Déploiement API (push → Vercel) ━━━━━━━━
+To https://github.com/oneymaar/shomee-mvp.git
+   362d11c..ecd1a0f  feat/proto-quartiers -> feat/monorepo
+
+━━━━━━━━ ÉTAPE 5/5 — Backfill tri-état + IRIS (peut prendre 1-2 min) ━━━━━━━━
+/Users/oliviermenart/shomee-mvp/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:336
+        throw new PrismaClientInitializationError(
+              ^
+
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at new t (/Users/oliviermenart/shomee-mvp/node_modules/@prisma/client/src/runtime/getPrismaClient.ts:336:15)
+    at <anonymous> (/Users/oliviermenart/shomee-mvp/apps/web/scripts/backfill-attributes.ts:34:16)
+    at Object.<anonymous> (/Users/oliviermenart/shomee-mvp/apps/web/scripts/backfill-attributes.ts:216:38)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object.transformer (/Users/oliviermenart/.npm/_npx/fd45a72a545557e9/node_modules/tsx/dist/register-BoI6-WNn.cjs:9:3252)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at loadCJSModuleWithModuleLoad (node:internal/modules/esm/translators:335:3)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:235:7) {
+  clientVersion: '7.8.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+
+Node.js v22.22.3
+⚠️  Cette étape a averti (non bloquant) — détails dans le log.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Étapes critiques OK (base migrée + API déployée).
+     Une étape non bloquante a averti — envoie-moi maj-shomee.log.
+
+  Pour tester, quand tu veux :
+     npm run dev:mobile      puis recharge l'app sur l'iPhone
+  (Vercel déploie l'API pendant ~2 min — laisse-lui ce délai.)
+  Tu peux fermer cette fenêtre.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Entrée pour fermer…

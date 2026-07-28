@@ -1,8 +1,9 @@
 # SHOMEE — Architecture
 
-> État au terme des Sessions 1–2 de la migration. Doc de référence monorepo.
-> Voir aussi : `README.md` (commandes/structure), `MIGRATION_AUDIT.md` (audit
-> PWA→Expo), `SESSION_2_OUTCOME.md` (ce qui a été fait / reste).
+> État au terme des Sessions 1–2 de la migration (+ correctifs feed du 2026-06-15).
+> Doc de référence monorepo. Voir aussi : `ÉTAT_MIGRATION.md` (point de reprise —
+> fait / reste / dette / reprise), `README.md` (commandes/structure),
+> `MIGRATION_AUDIT.md` (audit PWA→Expo), `SESSION_2_OUTCOME.md` (détail S1–2).
 
 ## 1. Monorepo (Turborepo + npm workspaces)
 
@@ -41,7 +42,7 @@ Tous les stores sont des **factories** dans `@shomee/core/stores/` recevant le b
 |---|---|---|
 | `searchStore` | brief d'onboarding (zones, budget, pièces, critères, `onboardingCompleted`) | **persisté** (clé `shomee-search-v2`, `partialize` exclut `onboardingCompleted` et les `location*`/`selected*Ids`) |
 | `shomeeStore` (`store.ts`) | `favorites` (objet complet), `conversations` | persiste **favoris uniquement** (clé `shomee-favorites`) |
-| `feedStore` | `properties`, `feedSessionId`, `currentIndex` | **TRANSIENT** (pas de `persist`) — survit aux navigations internes, perdu au reload |
+| `feedStore` | `properties`, `feedSessionId`, `currentIndex`, `hasRevealed` | **TRANSIENT** (pas de `persist`) — survit aux navigations internes, perdu au reload |
 
 - `currentIndex` (carte active du feed) a été **consolidé** dans `feedStore` (retiré de `shomeeStore`) — source unique.
 - Web = `localStorage` injecté en thunk (comportement identique à l'avant-migration).
@@ -51,8 +52,9 @@ Tous les stores sont des **factories** dans `@shomee/core/stores/` recevant le b
 - **Handoff onboarding → feed** : `AIPreparationStep` (fin d'onboarding) pré-génère le feed via `POST /api/feed/generate` (~7–12 s, Claude Haiku) et le dépose en `sessionStorage` (`shomee:pregen-feed`, consume-once). `/feed` le transfère dans `feedStore`.
 - **3 cas d'entrée sur `/feed`** : (a) feed déjà en mémoire (`feedStore.hasFeed()`) → affichage immédiat, zéro fetch/loader ; (b) handoff sessionStorage → transfert au store ; (c) sinon fetch live **silencieux** (`GET /api/properties` ~180 ms, ou `feed/generate` si brief).
 - `AIPreparationStep` (écran narratif) ne joue **que** dans le tunnel d'onboarding — jamais sur `/feed` (il masque la latence des 7–12 s de génération).
-- `clearFeed()` sur reset onboarding (`profile`) force la régénération.
-- ⚠️ Migration mobile : `sessionStorage` (web-only) → remplacer le handoff par un champ transient du store ou un param `expo-router`.
+- `clearFeed()` sur reset onboarding (`profile`) force la régénération (et remet `hasRevealed` à `false`).
+- **Correctifs 2026-06-15** (commits `e3b7279` images / `f979841` figement) : (a) `feed/generate` remplit `imageUrlFallback`/`gallery` avec un **poster Cloudinary** dérivé de `videoUrl` (même transfo que `videoAnalysisService` : `so_0,w_800,h_600,c_fill,f_jpg`) ; `DEFAULT_FALLBACK_IMAGE` centralisé dans `@shomee/core/constants` + gardes sur les 4 `<Image>`. (b) **Vidéos figées au retour sur `/feed`** : l'effet des deux `IntersectionObserver` est keyé sur **`[feedItems]`** (et non `[resultsStage, properties]`) pour se ré-attacher au DOM réellement rendu — au retour, `properties` est déjà peuplé (ref inchangée) et les cartes ne montent qu'à la bascule `feedReady`, que l'ancien dep ne captait pas → observer mort. Flag **`hasRevealed`** : un feed déjà révélé rouvre directement en `'revealed'` (structure complète, b4 préservé).
+- ⚠️ Migration mobile : `sessionStorage` (web-only) → remplacer le handoff par un champ transient du store ou un param `expo-router`. L'`IntersectionObserver` du feed → `FlatList` (`onViewableItemsChanged`) en RN (cf. `MIGRATION_AUDIT` §10.3).
 
 ## 5. Sécurité des routes API (3 schémas coexistants)
 
@@ -74,6 +76,7 @@ Wrapper agnostique `@shomee/core/utils/apiFetch.ts` (`createApiFetch({ baseUrl, 
 ## 6. Déploiement
 
 - **Vercel** : Root Directory = `apps/web`, « Include files outside Root Directory » activé (pour `packages/core`). Build = `turbo run build`.
+- ⚠️ **Deploy CLI bloqué (2026-06-15)** : le lien `.vercel` vit dans `apps/web/.vercel` **ET** Root Directory = `apps/web` → ils se cumulent (`vercel --prod` depuis apps/web cherche `apps/web/apps/web` → "path does not exist"). Régler **l'un OU l'autre** : Root Directory vide/`.` (garder le lien dans apps/web, déployer de là) **ou** re-lier à la racine (`vercel link`) en gardant Root Directory = apps/web. Tant que non réglé, pas de `vercel --prod` CLI. Un build Vercel échoué ne touche pas la prod (promotion sur succès uniquement).
 - **Variables d'env** : déclarées dans `turbo.json` → `build.env` (sinon strippées en mode strict au build : `DATABASE_URL`, `ANTHROPIC_API_KEY`, `CLOUDINARY_*`, `NEXT_PUBLIC_APP_URL`, `SHOMEE_CRITERIA_MODEL`, `ADMIN_SECRET`, `SHOMEE_APP_TOKEN`, `SHOMEE_WEB_ORIGINS`). Définies côté Vercel par scope (Production / Preview). Secrets locaux dans `apps/web/.env.local` (gitignored).
 - **Mobile** : build EAS (sessions futures). Convention base URL API : `EXPO_PUBLIC_API_URL`.
 - Tag de sécurité avant migration : `pwa-stable-pre-monorepo`.

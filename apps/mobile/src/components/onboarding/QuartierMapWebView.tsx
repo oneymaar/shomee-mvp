@@ -40,17 +40,54 @@ try {
 
 export const MAP_WEBVIEW_AVAILABLE = RNWebView != null
 
+/**
+ * Le composant WebView lui-meme + le type de son message. Exportes pour que
+ * l'intercalaire du feed (`ZoneMapPicker`) monte LA MEME carte sans refaire un
+ * `require('react-native-webview')` de son cote.
+ */
+export const ZoneMapNativeWebView = RNWebView
+export type ZoneMapWebViewMessage = WebViewMessage
+
 const BRANCH_ALIAS = 'https://shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app'
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? BRANCH_ALIAS
 const BYPASS = process.env.EXPO_PUBLIC_VERCEL_BYPASS_TOKEN || undefined
 const CACHE_BUST = String(Date.now())
+
+/** Selection envoyee a l'embed en query-param `sel`. */
+export type ZoneMapSel = {
+  arrIds: string[]
+  quartierIds: string[]
+  irisIds: string[]
+  communeIds: string[]
+  label: string
+  safeTop: number
+  geoConstraints: unknown[]
+}
+
+/**
+ * URL de l'embed carte. Source unique pour l'onboarding ET l'intercalaire :
+ * l'ordre des parametres est celui d'origine, `embedded` n'etant pousse que
+ * lorsqu'on le demande — l'URL de l'onboarding reste donc inchangee.
+ */
+export function buildZoneMapUri(sel: ZoneMapSel, nonce?: string, embedded?: boolean) {
+  const params = [`sel=${encodeURIComponent(JSON.stringify(sel))}`, `_cb=${nonce || CACHE_BUST}`]
+  if (embedded) params.push('embedded=1')
+  if (BYPASS) {
+    params.push(`x-vercel-protection-bypass=${encodeURIComponent(BYPASS)}`)
+    params.push('x-vercel-set-bypass-cookie=true')
+  }
+  return `${BASE_URL}/embed/zonemap?${params.join('&')}`
+}
+
+/** En-tetes de contournement de la protection Vercel (previews). */
+export const ZONEMAP_HEADERS = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : undefined
 
 const BG = '#FDF5F2'
 const ACCENT = '#A64B27'
 const SCREEN_W = Dimensions.get('window').width
 
 // ── Skeleton : carte grisée + reflet qui balaie (rassure pendant le chargement) ─
-function MapSkeleton() {
+export function MapSkeleton() {
   const x = useSharedValue(0)
   useEffect(() => {
     x.value = withRepeat(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.ease) }), -1, false)
@@ -107,25 +144,24 @@ export function QuartierMapWebView({ onValidate, onBack, nonce }: Props) {
     return () => clearTimeout(t)
   }, [])
 
-  const uri = useMemo(() => {
-    const sel = JSON.stringify({
-      arrIds: selectedArrIds,
-      quartierIds: selectedQuartierIds,
-      irisIds: selectedIrisIds,
-      communeIds: selectedCommuneIds,
-      label: locationLabel,
-      safeTop: insets.top,
-      geoConstraints: geoConstraints ?? [],
-    })
-    const params = [`sel=${encodeURIComponent(sel)}`, `_cb=${nonce || CACHE_BUST}`]
-    if (BYPASS) {
-      params.push(`x-vercel-protection-bypass=${encodeURIComponent(BYPASS)}`)
-      params.push('x-vercel-set-bypass-cookie=true')
-    }
-    return `${BASE_URL}/embed/zonemap?${params.join('&')}`
-  }, [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, locationLabel, geoConstraints, nonce, insets.top])
+  const uri = useMemo(
+    () =>
+      buildZoneMapUri(
+        {
+          arrIds: selectedArrIds,
+          quartierIds: selectedQuartierIds,
+          irisIds: selectedIrisIds,
+          communeIds: selectedCommuneIds,
+          label: locationLabel,
+          safeTop: insets.top,
+          geoConstraints: geoConstraints ?? [],
+        },
+        nonce,
+      ),
+    [selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, locationLabel, geoConstraints, nonce, insets.top],
+  )
 
-  const headers = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : undefined
+  const headers = ZONEMAP_HEADERS
 
   const handleMessage = (e: WebViewMessage) => {
     try {

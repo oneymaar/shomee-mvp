@@ -116,7 +116,14 @@ export default function ProtoQuartiersClient() {
   // Pont vers le natif (WebView de l'onboarding) : renvoie la sélection / le retour.
   const postToNative = useCallback((payload: object) => {
     const w = window as unknown as { ReactNativeWebView?: { postMessage: (m: string) => void } }
-    if (w.ReactNativeWebView) w.ReactNativeWebView.postMessage(JSON.stringify(payload))
+    if (w.ReactNativeWebView) { w.ReactNativeWebView.postMessage(JSON.stringify(payload)); return }
+    // Hote WEB : le meme ecran est embarque dans une iframe same-origin par
+    // QuartiersProtoFrame (parcours /onboarding). On rejoue le meme contrat de
+    // message, avec un discriminant 'source' pour ne pas confondre avec
+    // d'autres postMessage de la page.
+    if (window.parent !== window) {
+      window.parent.postMessage({ source: 'shomee-proto-quartiers', ...payload }, window.location.origin)
+    }
   }, [])
 
   // ── Chargement géo (mêmes sources que LocationMapStep / embed) ────────────
@@ -138,9 +145,13 @@ export default function ProtoQuartiersClient() {
     return () => { cancelled = true }
   }, [])
 
+  // Vrai si on a demarre directement sur la carte (prefill ?q=&start=map) :
+  // dans ce cas on ne veut ni focus ni clavier.
+  const startedOnMapRef = useRef(false)
+
   // Focus le champ au montage (moment 1).
   useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 300)
+    const t = setTimeout(() => { if (!startedOnMapRef.current) inputRef.current?.focus() }, 300)
     return () => clearTimeout(t)
   }, [])
 
@@ -161,6 +172,10 @@ export default function ProtoQuartiersClient() {
     apply()
     vv?.addEventListener('resize', apply)
     vv?.addEventListener('scroll', apply)
+    // Cas iframe (hote WEB) : le clavier ne redimensionne pas le visualViewport
+    // du document embarque, c'est le PARENT qui reduit la hauteur de l'iframe.
+    // Ce redimensionnement declenche un window.resize ici : on le suit aussi.
+    window.addEventListener('resize', apply)
     // Coupe tout défilement du document (desktop + filet de sécurité).
     const html = document.documentElement
     const body = document.body
@@ -171,6 +186,7 @@ export default function ProtoQuartiersClient() {
     return () => {
       vv?.removeEventListener('resize', apply)
       vv?.removeEventListener('scroll', apply)
+      window.removeEventListener('resize', apply)
       html.style.overflow = savedHtml
       body.style.overflow = savedBody
     }
@@ -246,6 +262,25 @@ export default function ProtoQuartiersClient() {
   // ── Résolution (au submit ou dès que les IRIS arrivent si submit anticipé) ─
   const [queryToResolve, setQueryToResolve] = useState<string | null>(null)
   const resolvedRef = useRef<string | null>(null)
+
+  // Prefill : ?q=<recherche> [&start=map]. Utilise par l'hote WEB quand on
+  // revient modifier le bloc Quartiers depuis le recap : on repart de la
+  // recherche deja saisie, directement sur la carte.
+  // Lecture dans un effet (et pas en initialisation d'etat) : la page est
+  // rendue cote serveur, ou window.location n'existe pas encore. Un seul
+  // passage au montage, donc aucun risque de rendus en cascade.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const q = (sp.get('q') ?? '').trim()
+    if (!q) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill URL, une seule fois au montage
+    setQuery(q)
+    if (sp.get('start') === 'map') {
+      startedOnMapRef.current = true
+      setQueryToResolve(q)
+      setPhase('map')
+    }
+  }, [])
   useEffect(() => {
     if (!queryToResolve || iris.length === 0) return
     if (resolvedRef.current === queryToResolve) return
@@ -280,6 +315,19 @@ export default function ProtoQuartiersClient() {
       setInitialIris([]); setEntityGroups([]); setMatchSummary([]); setSel(EMPTY_SEL)
     }
   }, [queryToResolve, iris, quartiers, communes, deriveParents])
+
+  // Signale a l'hote WEB (QuartiersProtoFrame) que la carte est prete : la
+  // resolution est terminee ET la frame suivante est peinte. L'hote garde son
+  // ecran de chargement jusque-la, exactement comme le faisait l'ancien
+  // LocationMapStep (onReady). Sans interet en natif (aucun loader hote).
+  const readySentRef = useRef(false)
+  useEffect(() => {
+    if (readySentRef.current) return
+    if (!startedOnMapRef.current) return
+    if (phase !== 'map' || irisLoading || resolvedRef.current === null) return
+    readySentRef.current = true
+    requestAnimationFrame(() => requestAnimationFrame(() => postToNative({ action: 'ready' })))
+  }, [phase, irisLoading, initialIris, postToNative])
 
   const handleToMap = useCallback(() => {
     const q = query.trim()

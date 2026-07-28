@@ -1,9 +1,10 @@
 // `Tabs` importé depuis `expo-router/js-tabs` : `import { Tabs } from 'expo-router'`
 // est déprécié en SDK 56 (même implémentation, entrée non-dépréciée).
 import { Tabs } from 'expo-router/js-tabs'
-import { Home, Heart, MessageCircle, User } from 'lucide-react-native'
+import { Home, MessageCircle, User } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useShomeeStore, hasUnread } from '@/lib/stores'
+import { FavoritesTabIcon } from '@/components/flyHeart/FavoritesTabIcon'
 
 const ACTIVE = '#A64B27'
 const INACTIVE = '#A3A3A3' // tailwind neutral-400 (parité avec BottomNav web)
@@ -40,7 +41,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="favorites"
-        options={{ title: 'Favoris', tabBarIcon: ({ color }) => <Heart color={color} size={24} /> }}
+        options={{ title: 'Favoris', tabBarIcon: ({ color }) => <FavoritesTabIcon color={color} /> }}
       />
       <Tabs.Screen
         name="messages"

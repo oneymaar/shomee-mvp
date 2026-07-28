@@ -10,8 +10,9 @@
  *                 attendu. Elle ne nomme pas le critère — la pastille juste en
  *                 dessous le porte déjà, le dire deux fois n'apprend rien.
  *   3. CONTRÔLE — l'élément d'onboarding correspondant, dans son ÉTAT RÉEL.
- *   4. SORTIE   — « Ce n'est pas ce qui vous bloque ? » + bouton secondaire
- *                 « Revoir toute ma recherche », dans le flux et non en pied.
+ *   4. SORTIE   — un simple lien « Modifier d'autres critères » sous le CTA.
+ *                 Lien et non bouton : « Appliquer et relancer » doit rester le
+ *                 seul geste plein de l'écran.
  *   5. ACTIONS  — le CTA principal « Appliquer et relancer », seul en pied,
  *                 grisé tant que rien n'a bougé.
  *
@@ -31,16 +32,27 @@
  * « Appliquer et relancer » n'a pas été pressé — l'implicite ne modifie jamais
  * silencieusement le déclaratif.
  *
- * Garde-fou conservé — ZONES : on ne propose QUE d'ajouter des arrondissements
- * limitrophes, jamais d'en retirer. `setSelectedArrs` n'écrit que
- * `selectedArrIds`, alors que /api/feed/generate résout la zone cible en UNION
- * des arrondissements, IRIS et quartiers du snapshot : un retrait ici
- * reviendrait par les IRIS, soit un geste sans effet visible.
+ * Deux modes de présentation, une seule feuille :
+ *   · SURCOUCHE — sans prop `height`, l'écran se pose en absolute par-dessus
+ *     le feed. Réservé au cas `empty` : il n'y a alors aucun bien à traverser.
+ *   · LIGNE DE FEED — avec `height`, l'écran devient une ligne de la FlatList,
+ *     fabriquée UN BIEN À L'AVANCE. Il arrive donc au scroll, comme un bien,
+ *     au lieu de surgir après une temporisation sur un feed devenu inerte.
+ *
+ * ZONES — la carte, pas des pastilles. Le levier `zone` monte la carte de
+ * l'onboarding entière (ajout, retrait, zoom, déplacement), en mode embarqué :
+ * elle y masque ses propres CTA et se contente de pousser sa sélection. Le
+ * retrait, lui, devient réellement effectif — on écrit les QUATRE listes
+ * (arrondissements, quartiers, IRIS, communes), alors que l'ancien raccourci
+ * n'écrivait que `selectedArrIds` et se faisait annuler par les IRIS, puisque
+ * /api/feed/generate résout la zone cible en UNION de ces listes. Les pastilles
+ * d'arrondissements limitrophes restent le repli quand la WebView est
+ * indisponible (Expo Go, web) — et là, l'ajout seul reste la règle.
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { ArrowRight, Check, Plus, X } from 'lucide-react-native'
+import { Check, ChevronUp, Plus, X } from 'lucide-react-native'
 import type { ChipState } from '@shomee/core/stores/searchStore'
 import { useSearchStore } from '@/lib/stores'
 import {
@@ -54,7 +66,9 @@ import {
   formatSurface,
 } from '@/lib/scales'
 import { RangeSlider } from '@/components/onboarding/RangeSlider'
+import { MAP_WEBVIEW_AVAILABLE } from '@/components/onboarding/QuartierMapWebView'
 import { ACCENT, ACCENT_DISABLED, BG, INK, MUTED } from '@/components/onboarding/ui'
+import { ZoneMapPicker, type ZoneSelection } from './ZoneMapPicker'
 import {
   allCriteria,
   arrLabel,
@@ -99,6 +113,11 @@ interface Staged {
   minSurface: number | null
   maxSurface: number | null
   arrIds: string[]
+  /**
+   * Sélection remontée par la carte, en attente. `null` tant que la carte n'a
+   * rien poussé — donc tant que rien n'a changé de ce côté.
+   */
+  zones: ZoneSelection | null
   /** État par critère — clé = `CriteriaEntry.key`. */
   criteria: Record<string, ChipState>
 }
@@ -184,16 +203,34 @@ export function FeedSuggestion({
   onApply,
   onDismiss,
   onEditBrief,
+  onBack,
+  height,
 }: {
   diagnosis: Diagnosis
   onApply: (change: AppliedChange) => void
-  /** Croix en haut à droite — sortir sans rien changer. */
-  onDismiss: () => void
+  /**
+   * Croix en haut à droite — passer sans rien changer. Optionnelle : en mode
+   * ligne de feed, elle n'a de sens que s'il reste un bien APRÈS l'intercalaire.
+   * Sur la dernière ligne, « passer » ne mènerait nulle part.
+   */
+  onDismiss?: () => void
   /**
    * « Revoir toute ma recherche » : la sortie quand notre proposition n'est
    * pas la bonne. Optionnelle — sans elle, le bloc n'est simplement pas rendu.
    */
   onEditBrief?: () => void
+  /**
+   * Chevron « Revenir au bien précédent ». En mode ligne de feed, le scroll est
+   * gelé tant que l'intercalaire est posé (sinon un geste vertical partirait
+   * dans la carte du dessous) : ce bouton est la seule remontée possible.
+   */
+  onBack?: () => void
+  /**
+   * Hauteur imposée. Renseignée → l'écran devient une LIGNE de FlatList, dans
+   * le flux, à la hauteur du viewport. Absente → surcouche plein écran par
+   * dessus le feed (cas `empty` : il n'y a pas de feed à traverser).
+   */
+  height?: number
 }) {
   const insets = useSafeAreaInsets()
 
@@ -222,6 +259,7 @@ export function FeedSuggestion({
     minSurface: base.minSurface,
     maxSurface: base.maxSurface,
     arrIds: [...base.selectedArrIds],
+    zones: null,
     criteria: Object.fromEntries(baseCriteria.map((c) => [c.key, c.state])),
   }))
 
@@ -278,6 +316,23 @@ export function FeedSuggestion({
         `Secteur${added.length > 1 ? 's' : ''} ajouté${added.length > 1 ? 's' : ''} : ${added.map(arrLabel).join(', ')}`,
       )
     }
+
+    // Carte : comparaison d'ENSEMBLES, sur les quatre granularités. C'est ce qui
+    // rend le bouton honnête. Un simple drapeau « carte touchée » s'allumerait
+    // sur un zoom, et resterait allumé après un ajout suivi de son retrait —
+    // alors qu'on serait revenu très exactement à la sélection de départ.
+    if (staged.zones) {
+      const norm = (a: string[]) => [...a].sort().join(',')
+      const z = staged.zones
+      if (
+        norm(z.arrIds) !== norm(base.selectedArrIds) ||
+        norm(z.quartierIds) !== norm(base.selectedQuartierIds) ||
+        norm(z.irisIds) !== norm(base.selectedIrisIds) ||
+        norm(z.communeIds) !== norm(base.selectedCommuneIds)
+      ) {
+        out.push(`Zone : ${z.label || 'sélection modifiée sur la carte'}`)
+      }
+    }
     for (const c of baseCriteria) {
       const next = staged.criteria[c.key] ?? 0
       if (next === c.state) continue
@@ -299,6 +354,18 @@ export function FeedSuggestion({
     }
     // Ajout pur (cf. en-tête) : l'union côté serveur rend le geste toujours effectif.
     if (staged.arrIds.length !== base.selectedArrIds.length) s.setSelectedArrs(staged.arrIds)
+    // Carte : les QUATRE listes, sinon un retrait ne tiendrait pas (les IRIS
+    // ramèneraient la zone par l'union côté serveur). Le libellé suit la zone.
+    if (staged.zones) {
+      const z = staged.zones
+      useSearchStore.setState({
+        selectedArrIds: z.arrIds,
+        selectedQuartierIds: z.quartierIds,
+        selectedIrisIds: z.irisIds,
+        selectedCommuneIds: z.communeIds,
+        ...(z.label ? { locationLabel: z.label } : {}),
+      })
+    }
     for (const c of baseCriteria) {
       const next = staged.criteria[c.key] ?? 0
       if (next === c.state) continue
@@ -319,20 +386,78 @@ export function FeedSuggestion({
     [neighbours, staged.arrIds],
   )
 
+  // La carte remplace les pastilles dès qu'elle est montable. Sans
+  // `react-native-webview` (Expo Go, web), on garde le raccourci limitrophes :
+  // mieux vaut un geste réduit qu'un écran vide.
+  const isMap = lever === 'zone' && MAP_WEBVIEW_AVAILABLE
+
+  // La carte pousse sa sélection à chaque geste : on la met EN ATTENTE, jamais
+  // dans le store. C'est « Appliquer et relancer » qui décide.
+  const handleZoneChange = useCallback((sel: ZoneSelection) => {
+    setStaged((p) => ({ ...p, zones: sel }))
+  }, [])
+
   return (
-    <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
+    <View
+      style={[
+        styles.root,
+        height != null ? styles.rootRow : null,
+        height != null ? { height } : null,
+        { paddingTop: insets.top + 8 },
+      ]}
+    >
+      {/* Trois fentes : le chevron reste centré que la croix soit rendue ou
+          non — sinon le libellé se décalerait d'une ligne à l'autre. */}
       <View style={styles.topBar}>
-        <Pressable
-          onPress={onDismiss}
-          hitSlop={14}
-          style={styles.close}
-          accessibilityRole="button"
-          accessibilityLabel="Fermer sans rien modifier"
-        >
-          <X size={20} color={MUTED} />
-        </Pressable>
+        <View style={styles.topSide} />
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={14}
+            style={styles.back}
+            accessibilityRole="button"
+            accessibilityLabel="Revenir au bien précédent"
+          >
+            <ChevronUp size={18} color={INK} />
+            <Text style={styles.backTxt}>Revenir au bien précédent</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.back} />
+        )}
+        <View style={styles.topSide}>
+          {onDismiss != null && (
+            <Pressable
+              onPress={onDismiss}
+              hitSlop={14}
+              style={styles.close}
+              accessibilityRole="button"
+              accessibilityLabel="Passer sans rien modifier"
+            >
+              <X size={20} color={MUTED} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
+      {isMap ? (
+        /* Carte : mise en page NON scrollable. Un ScrollView ferait lutter le
+           geste vertical contre le déplacement de la carte, et `flex: 1` n'a
+           aucun sens dans un contenu scrollable. Titre compact, une phrase, et
+           tout le reste de la hauteur va à la carte. */
+        <View style={styles.mapBody}>
+          <View style={styles.mapHead}>
+            <Text style={[styles.title, styles.titleCompact]} numberOfLines={2}>
+              {HEADLINE[diagnosis.trigger]}
+            </Text>
+            <Text style={[styles.lead, styles.leadCompact]} numberOfLines={2}>
+              {diagnosis.primary.lead}
+            </Text>
+          </View>
+          <View style={styles.mapWrap}>
+            <ZoneMapPicker onChange={handleZoneChange} />
+          </View>
+        </View>
+      ) : (
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollBody}
@@ -486,28 +611,8 @@ export function FeedSuggestion({
           )}
         </View>
 
-        {/* Sortie latérale, remontée dans le flux : notre diagnostic peut se
-            tromper de levier, et il ne doit pas falloir chercher tout en bas de
-            page pour le dire. Bouton à contour, pas plein — « Appliquer et
-            relancer » reste le CTA principal de l'écran. */}
-        {onEditBrief != null && (
-          <View style={styles.aside}>
-            <Text style={styles.asideCap}>Ce n’est pas ce qui vous bloque ?</Text>
-            <Pressable
-              onPress={onEditBrief}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityLabel="Revoir toute ma recherche"
-              style={({ pressed }) => [styles.asideBtn, pressed && { opacity: 0.65 }]}
-            >
-              <Text style={styles.asideBtnTxt} numberOfLines={1}>
-                Revoir toute ma recherche
-              </Text>
-              <ArrowRight size={16} strokeWidth={2.5} color={ACCENT} />
-            </Pressable>
-          </View>
-        )}
       </ScrollView>
+      )}
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 4 }]}>
         <Pressable
@@ -526,6 +631,20 @@ export function FeedSuggestion({
         >
           <Text style={styles.primaryTxt}>Appliquer et relancer</Text>
         </Pressable>
+
+        {/* Sortie : notre diagnostic peut se tromper de levier. Un lien, pas un
+            second bouton — sinon l'écran redevient un choix entre deux gestes. */}
+        {onEditBrief != null && (
+          <Pressable
+            onPress={onEditBrief}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Modifier d'autres critères"
+            style={({ pressed }) => [styles.link, pressed && { opacity: 0.6 }]}
+          >
+            <Text style={styles.linkTxt}>Modifier d’autres critères</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   )
@@ -533,7 +652,20 @@ export function FeedSuggestion({
 
 const styles = StyleSheet.create({
   root: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: BG },
-  topBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 14 },
+  // Mode ligne de feed : la même feuille, mais dans le flux. `relative` annule
+  // l'absolute ci-dessus ; la largeur vient de l'étirement dans la FlatList et
+  // la hauteur est imposée par la prop.
+  rootRow: { position: 'relative' },
+  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14 },
+  topSide: { width: 34, alignItems: 'center', justifyContent: 'center' },
+  back: {
+    flex: 1,
+    height: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backTxt: { fontSize: 14, fontWeight: '700', color: INK, marginLeft: 6 },
   close: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
 
   scroll: { flex: 1 },
@@ -604,19 +736,13 @@ const styles = StyleSheet.create({
   primaryOff: { backgroundColor: ACCENT_DISABLED },
   primaryTxt: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
-  aside: { marginTop: 34, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.08)' },
-  asideCap: { fontSize: 14.5, fontWeight: '600', color: INK, lineHeight: 20, marginBottom: 12 },
-  asideBtn: {
-    alignSelf: 'flex-start',
-    maxWidth: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    height: 46,
-    paddingHorizontal: 18,
-    borderRadius: 23,
-    borderWidth: 1.5,
-    borderColor: ACCENT,
-  },
-  asideBtnTxt: { fontSize: 15, fontWeight: '700', color: ACCENT, flexShrink: 1 },
+  link: { alignSelf: 'center', marginTop: 2, paddingVertical: 11, paddingHorizontal: 10 },
+  linkTxt: { fontSize: 14.5, fontWeight: '700', color: ACCENT },
+
+  // Mode carte : le texte se serre pour que la carte respire.
+  mapBody: { flex: 1 },
+  mapHead: { paddingHorizontal: 20, paddingTop: 2 },
+  titleCompact: { fontSize: 22, lineHeight: 27 },
+  leadCompact: { fontSize: 14, lineHeight: 19, marginTop: 8 },
+  mapWrap: { flex: 1, marginTop: 14 },
 })

@@ -1,14 +1,12 @@
 'use client'
 
-import { Suspense, useState, useCallback, useEffect, useRef } from 'react'
+import { Suspense, useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
-import LocationStep from '@/components/onboarding/LocationStep'
-import LocationMapStep from '@/components/onboarding/LocationMapStep'
-import ClarificationStep from '@/components/onboarding/ClarificationStep'
+import QuartiersProtoFrame from '@/components/onboarding/QuartiersProtoFrame'
 import BienStep from '@/components/onboarding/BienStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
 import CriteriaStep from '@/components/onboarding/CriteriaStep'
@@ -16,81 +14,7 @@ import AIPreparationStep from '@/components/onboarding/AIPreparationStep'
 import AIBriefRecap from '@/components/onboarding/AIBriefRecap'
 import HandoffInstallPanel from '@/components/onboarding/HandoffInstallPanel'
 import { SURFACE_UNLIMITED } from '@/components/onboarding/BienStep'
-import { parseLocationIntent } from '@shomee/core/geo/locationIntentParser'
 import { injectBrief, type AIOnboardingBrief } from '@/lib/services/aiBriefInjector'
-import type { ClarificationOption, LocationIntentAnalysis } from '@shomee/core/geo/locationIntentAnalyzerService'
-
-// Coherent thinking steps for the pre-map analysis. Same visual system as
-// AIPreparationStep (typewriter + static dots + blinking caret). The overlay's
-// lifetime is driven by the parent (mapWillOpen && !mapUiReady, min 3s), so
-// these steps are purely cosmetic: they advance on their own timer and hold on
-// the last one if the analysis runs longer — never gating the reveal.
-const MAP_STEPS = [
-  'Analyse de votre recherche et préparation de la carte',
-]
-const MAP_STEP_DURATION = 1000
-
-// Blinking block caret (shared visual with AIPreparationStep).
-function LoaderCaret() {
-  return (
-    <motion.span
-      aria-hidden
-      animate={{ opacity: [1, 1, 0, 0] }}
-      transition={{ duration: 0.9, repeat: Infinity, ease: 'linear', times: [0, 0.5, 0.5, 1] }}
-      className="inline-block"
-      style={{ color: '#A64B27' }}
-    >
-      ▋
-    </motion.span>
-  )
-}
-
-function MapLoadingScreen() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [typed, setTyped] = useState('')
-  const currentLabel = MAP_STEPS[currentStep]
-  const typingDone = typed === currentLabel
-
-  // Advance through the steps, holding on the last (the parent unmounts us).
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = []
-    MAP_STEPS.forEach((_, i) => {
-      if (i === 0) return
-      timers.push(setTimeout(() => setCurrentStep(i), i * MAP_STEP_DURATION))
-    })
-    return () => timers.forEach(clearTimeout)
-  }, [])
-
-  // Typewriter: re-type the current step's label char by char.
-  useEffect(() => {
-    const label = MAP_STEPS[currentStep]
-    let i = 0
-    const id = setInterval(() => {
-      setTyped(label.slice(0, i))
-      if (i >= label.length) {
-        clearInterval(id)
-        return
-      }
-      i += 1
-    }, 30)
-    return () => clearInterval(id)
-  }, [currentStep])
-
-  return (
-    <div className="flex flex-col h-full items-center justify-center px-8 text-center">
-      <h2 className="text-[20px] font-bold text-neutral-900 mb-7">
-        SHOMEE analyse votre recherche…
-      </h2>
-      <div className="h-6 flex items-center justify-center w-full max-w-[300px]">
-        <span className="text-[13px] text-neutral-500 whitespace-nowrap">
-          {typed}
-          {typingDone && '...'}
-          <LoaderCaret />
-        </span>
-      </div>
-    </div>
-  )
-}
 
 // Brief-import landing screen: logo + discrete spinner. Shown while the
 // magic-link token is fetched and the geo resolver runs.
@@ -212,12 +136,11 @@ function OnboardingPageInner() {
   // persiste les ajustements sur le Handoff puis affiche le panneau
   // d'installation (au lieu de lancer le feed PWA).
   const handoffToken = searchParams.get('h')
-  const { onboardingCompleted, setLocation, completeOnboarding } = useSearchStore()
+  const { onboardingCompleted, completeOnboarding, locationQuery } = useSearchStore()
   // Step 0 (IntroStep) was removed — the splash screen now serves as the
   // intro, so onboarding opens directly on step 1 (Localisation).
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState<Direction>(1)
-  const [locationMapOpen, setLocationMapOpen] = useState(false)
   // ── AI brief magic-link flow ───────────────────────────────────────────
   // briefLoading: covers the screen with the BriefLoadingScreen while we
   //   fetch + inject. Defaults to true when ?brief=… is in the URL so the
@@ -243,27 +166,6 @@ function OnboardingPageInner() {
   const [handoffClaimed, setHandoffClaimed] = useState(false)
   const [handoffSaving, setHandoffSaving] = useState(false)
   const [handoffSaveError, setHandoffSaveError] = useState<string | null>(null)
-  // Sub-state of step 1 — when set, the dedicated ClarificationStep screen
-  // renders instead of LocationStep (textarea). The originalQuery is kept so
-  // the clarification screen can echo "votre recherche : …" and the
-  // "Ouvrir la carte quand même" CTA can fall back to that vague query.
-  const [clarificationData, setClarificationData] = useState<{
-    analysis: LocationIntentAnalysis
-    originalQuery: string
-  } | null>(null)
-  // Atomic-reveal architecture:
-  //   - mapWillOpen   : true the moment the user clicks "Afficher sur la carte"
-  //                     (before any analysis runs). Drives the loader overlay
-  //                     directly so the underlying button never has time to
-  //                     render an "Analyse en cours" state.
-  //   - locationMapOpen: true once LocationStep has finished analyzing and
-  //                     called setLocation + onOpenMap → LocationMapStep mounts.
-  //   - mapUiReady    : true when LocationMapStep has signaled onReady AND the
-  //                     3s minimum has elapsed → opacity flips to 1.
-  // The loader overlay is shown while (mapWillOpen && !mapUiReady).
-  const [mapWillOpen, setMapWillOpen] = useState(false)
-  const [mapUiReady, setMapUiReady] = useState(false)
-  const mapLoadingStartedAtRef = useRef<number>(0)
   // Dynamic viewport height — shrinks when keyboard opens on iOS.
   // Initialize from visualViewport on mount to avoid the null-then-100dvh flash.
   const [viewportH, setViewportH] = useState<number | null>(() => {
@@ -345,11 +247,6 @@ function OnboardingPageInner() {
 
   const goTo = useCallback((next: number, dir: Direction = 1) => {
     setDirection(dir)
-    setLocationMapOpen(false)
-    setMapUiReady(false)
-    setMapWillOpen(false)
-    setClarificationData(null)
-    mapLoadingStartedAtRef.current = 0
     setStep(next)
   }, [])
 
@@ -370,19 +267,6 @@ function OnboardingPageInner() {
     goTo(step + 1, 1)
   }, [step, goTo, editingFromRecap, handoffToken])
   const handleBack = useCallback(() => {
-    if (locationMapOpen) {
-      setLocationMapOpen(false)
-      setMapUiReady(false)
-      setMapWillOpen(false)
-      mapLoadingStartedAtRef.current = 0
-      return
-    }
-    if (clarificationData) {
-      // Back from clarification → typing form (still step 1).
-      setDirection(-1)
-      setClarificationData(null)
-      return
-    }
     if (editingFromRecap) {
       setEditingFromRecap(false)
       setAiRecapOpen(true)
@@ -394,7 +278,7 @@ function OnboardingPageInner() {
       return
     }
     goTo(step - 1, -1)
-  }, [step, locationMapOpen, clarificationData, editingFromRecap, goTo, router])
+  }, [step, editingFromRecap, goTo, router])
   const handleReady = useCallback(() => router.replace('/feed'), [router])
 
   // ── AI brief magic-link handlers ────────────────────────────────────────
@@ -521,20 +405,10 @@ function OnboardingPageInner() {
     (target: 1 | 2 | 3 | 4) => {
       setAiRecapOpen(false)
       setEditingFromRecap(true)
-      // Quartiers from recap → land directly on the Leaflet map so the
-      // user sees the pre-resolved IRIS rather than the empty textarea.
-      // LocationMapStep.initMap re-runs resolveConstraints from the stored
-      // locationIntent and ends up with the same selection — the atomic-
-      // reveal loader covers the re-resolve so the UI stays clean.
-      if (target === 1) {
-        goTo(1, 1)
-        mapLoadingStartedAtRef.current = Date.now()
-        setMapUiReady(false)
-        setMapWillOpen(true)
-        setLocationMapOpen(true)
-      } else {
-        goTo(target, 1)
-      }
+      // Quartiers : l'ecran embarque s'ouvre DIRECTEMENT sur la carte avec la
+      // zone du brief deja resolue (props initialQuery + startOnMap de
+      // QuartiersProtoFrame), et son propre ecran d'attente couvre le calcul.
+      goTo(target, 1)
     },
     [goTo],
   )
@@ -571,53 +445,8 @@ function OnboardingPageInner() {
     router.replace('/feed')
   }, [handoffToken, completeOnboarding, router])
 
-  // Called by LocationStep synchronously on button click — BEFORE the async
-  // analysis starts. The overlay appears in the same paint so the user never
-  // sees the button transition to a loading state.
-  const handleStartMapLoading = useCallback(() => {
-    mapLoadingStartedAtRef.current = Date.now()
-    setMapUiReady(false)
-    setMapWillOpen(true)
-  }, [])
-  // Called by LocationStep when the analysis ends up needing clarification or
-  // disambiguation from the user — we cancel the pending overlay and let the
-  // typing form become visible again.
-  const handleCancelMapLoading = useCallback(() => {
-    setMapWillOpen(false)
-    mapLoadingStartedAtRef.current = 0
-  }, [])
-  const handleOpenMap = useCallback(() => {
-    // For sync paths (e.g. disambiguation pick) handleStartMapLoading wasn't
-    // called first — initialise the timestamp now. For async paths it's
-    // already set; don't reset it (we want the 3s floor to count from click).
-    if (mapLoadingStartedAtRef.current === 0) {
-      mapLoadingStartedAtRef.current = Date.now()
-    }
-    setMapWillOpen(true)
-    setMapUiReady(false)
-    setLocationMapOpen(true)
-  }, [])
-  // 3s minimum visible duration for the loader (UX feel). The map keeps
-  // preparing in the background — this only delays the visual reveal so quick
-  // resolutions don't flash by. If the engine took longer than 3s, reveal
-  // happens immediately. Double rAF: let React commit latest state and Leaflet
-  // paint the styled zones in the same frame before we flip opacity.
-  const MIN_LOADING_DURATION = 3000
-  const handleMapReady = useCallback(() => {
-    const elapsed = Date.now() - mapLoadingStartedAtRef.current
-    const remaining = Math.max(0, MIN_LOADING_DURATION - elapsed)
-    window.setTimeout(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setMapUiReady(true)
-          setMapWillOpen(false)
-          mapLoadingStartedAtRef.current = 0
-        })
-      })
-    }, remaining)
-  }, [])
-  // Rebond récap (parité natif) : une zone validée depuis l'édition du bloc
-  // Quartiers revient au récap au lieu de dérouler le funnel vers Bien.
+  // Rebond recap (parite natif) : une zone validee depuis l'edition du bloc
+  // Quartiers revient au recap au lieu de derouler le funnel vers Bien.
   const handleMapValidate = useCallback(() => {
     if (editingFromRecap) {
       setEditingFromRecap(false)
@@ -627,77 +456,27 @@ function OnboardingPageInner() {
     goTo(2, 1)
   }, [editingFromRecap, goTo])
 
-  // ── Clarification handlers ──────────────────────────────────────────────
-  // LocationStep signals it needs clarification; we slide to ClarificationStep.
-  const handleNeedsClarification = useCallback(
-    (analysis: LocationIntentAnalysis, originalQuery: string) => {
-      setDirection(1)
-      setClarificationData({ analysis, originalQuery })
-    },
-    [],
-  )
-  // Build a SearchIntent from the chosen option's structured constraints and
-  // open the map directly. No second LLM call — the option already carries
-  // everything we need (see ClarificationOption.geoConstraints contract).
-  const handleClarificationSelectOption = useCallback(
-    (opt: ClarificationOption) => {
-      const effectiveQuery = opt.query?.trim() || clarificationData?.originalQuery || ''
-      const centerQuery = opt.centerQuery || effectiveQuery
-      const parsed = parseLocationIntent(centerQuery)
-      const intent = {
-        ...(opt.preselectZones?.length ? { ...parsed, location_terms: opt.preselectZones } : parsed),
-        ...(opt.geoConstraints?.length ? { geoConstraints: opt.geoConstraints } : {}),
-        ...(opt.resolutionStrategy ? { resolutionStrategy: opt.resolutionStrategy } : {}),
-        parserSource: 'llm_fallback' as const,
-      }
-      setLocation({ query: effectiveQuery, label: centerQuery, lat: 0, lng: 0, intent })
-      setClarificationData(null)
-      // Re-arm the loader timestamp here — handleCancelMapLoading reset it
-      // when the clarification UI took over.
-      mapLoadingStartedAtRef.current = Date.now()
-      setMapWillOpen(true)
-      setMapUiReady(false)
-      setLocationMapOpen(true)
-    },
-    [clarificationData?.originalQuery, setLocation],
-  )
-  // "Ouvrir la carte quand même" → open the map with the user's original
-  // vague query and no special constraints.
-  const handleClarificationOpenAnyway = useCallback(() => {
-    const q = clarificationData?.originalQuery?.trim() ?? ''
-    if (!q) return
-    const intent = parseLocationIntent(q)
-    setLocation({ query: q, label: q, lat: 0, lng: 0, intent })
-    setClarificationData(null)
-    mapLoadingStartedAtRef.current = Date.now()
-    setMapWillOpen(true)
-    setMapUiReady(false)
-    setLocationMapOpen(true)
-  }, [clarificationData?.originalQuery, setLocation])
-  const handleClarificationBack = useCallback(() => {
-    setDirection(-1)
-    setClarificationData(null)
-  }, [])
-
   // CriteriaStep collapses the chrome (back + progress) when its textarea
   // enters focus mode. Tracked here so the top bar can react.
   const [criteriaFocused, setCriteriaFocused] = useState(false)
 
-  const chromeHidden = step === 4 && criteriaFocused
+  const chromeHidden = (step === 4 && criteriaFocused) || step === 1
+  // L'ecran Quartiers ne se monte QUE s'il est reellement visible : sinon
+  // l'iframe se chargerait (clavier compris) derriere le recap / les ecrans
+  // de chargement du mode handoff.
+  const quartiersVisible =
+    step === 1 &&
+    !aiRecapOpen &&
+    !briefLoading &&
+    !briefError &&
+    !handoffDone &&
+    !handoffClaimed
   const showBack = step > 0 && !chromeHidden
   const showProgress = step >= 1 && step <= 4 && !chromeHidden
 
-  // Key does NOT depend on mapLoading — changing it would re-mount LocationMapStep
-  // and restart initMap, causing the partial-map flash bug.
-  // Step 1 has three sub-states: typing / clarification / map.
-  const screenKey =
-    step === 1
-      ? locationMapOpen
-        ? '1-map'
-        : clarificationData
-        ? '1-clarify'
-        : '1-text'
-      : String(step)
+  // Une cle par etape : l'etape 1 n'a plus de sous-ecrans (saisie/carte sont
+  // internes a l'ecran embarque).
+  const screenKey = String(step)
 
   return (
     <div
@@ -765,7 +544,7 @@ function OnboardingPageInner() {
       )}
 
       {/* Animated step content */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden" style={{ isolation: 'isolate' }}>
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={screenKey}
@@ -777,39 +556,13 @@ function OnboardingPageInner() {
             transition={{ duration: 0.38, ease: [0.32, 0.72, 0, 1] }}
             className="absolute inset-0"
           >
-            {step === 1 && !locationMapOpen && !clarificationData && (
-              <LocationStep
-                onOpenMap={handleOpenMap}
-                onStartMapLoading={handleStartMapLoading}
-                onCancelMapLoading={handleCancelMapLoading}
-                onNeedsClarification={handleNeedsClarification}
+            {quartiersVisible && (
+              <QuartiersProtoFrame
+                initialQuery={locationQuery}
+                startOnMap={editingFromRecap && locationQuery.trim().length > 0}
+                onValidate={handleMapValidate}
+                onBack={handleBack}
               />
-            )}
-
-            {step === 1 && !locationMapOpen && clarificationData && (
-              <ClarificationStep
-                originalQuery={clarificationData.originalQuery}
-                analysis={clarificationData.analysis}
-                onSelectOption={handleClarificationSelectOption}
-                onBackToTyping={handleClarificationBack}
-                onOpenAnyway={handleClarificationOpenAnyway}
-              />
-            )}
-
-            {step === 1 && locationMapOpen && (
-              // Atomic-reveal wrapper: LocationMapStep stays mounted but invisible
-              // until it has signaled (onReady) that its full UI is painted.
-              // opacity:0 instead of display:none so Leaflet computes the right size.
-              <div
-                className={`h-full ${mapUiReady ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                style={{ transition: 'opacity 180ms ease' }}
-              >
-                <LocationMapStep
-                  onValidate={handleMapValidate}
-                  onBack={() => { setLocationMapOpen(false); setMapUiReady(false) }}
-                  onReady={handleMapReady}
-                />
-              </div>
             )}
 
             {step === 2 && (
@@ -897,19 +650,6 @@ function OnboardingPageInner() {
         <BriefErrorScreen message={briefError} onStart={handleBriefErrorStart} />
       )}
 
-      {/* Atomic-reveal overlay — covers the whole viewport from the very click
-          (mapWillOpen is set BEFORE LocationStep starts its async analysis) and
-          stays up until LocationMapStep signals onReady AND the 3s floor has
-          elapsed. Sits above everything (incl. AnimatePresence + topbar) so
-          the user never sees the button transition through a loading state. */}
-      {mapWillOpen && !mapUiReady && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
-          style={{ background: '#FDF5F2' }}
-        >
-          <MapLoadingScreen />
-        </div>
-      )}
     </div>
   )
 }

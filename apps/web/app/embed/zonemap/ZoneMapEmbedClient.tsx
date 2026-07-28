@@ -85,7 +85,14 @@ function boundsOfFeatures(features: GeoZone[]): Bounds | null {
   return [[minLat, minLng], [maxLat, maxLng]]
 }
 
-export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
+export default function ZoneMapEmbedClient({
+  selParam,
+  embedded = false,
+}: {
+  selParam: string
+  /** Carte posee dans un ecran natif qui porte son propre CTA (feed). */
+  embedded?: boolean
+}) {
   const initial = useMemo(() => parseSel(selParam), [selParam])
 
   const [arrondissements, setArrondissements] = useState<GeoZone[]>([])
@@ -199,9 +206,29 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
     toggleIris(zone.id, zone.parentId, parentArrId, allQuartierSiblingIds, allArrQuartierIds)
   }, [iris, quartiers, toggleIris])
 
+  // ── Communes prises EN ENTIER ───────────────────────────────────────────────
+  // Le store seul ne permet PAS de distinguer « commune entiere » de « poche
+  // d'IRIS » : `deriveParents` (resolution native) inscrit la commune dans
+  // selectedCommuneIds des qu'UN SEUL de ses IRIS est pris. On memorise donc a
+  // part les communes que l'acquereur a explicitement prises en entier, pour
+  // (a) les afficher pleines immediatement, avant meme l'arrivee du fichier
+  // IRIS, et (b) completer leur cascade quand ces IRIS arrivent.
+  const [wholeCommuneIds, setWholeCommuneIds] = useState<string[]>([])
+
+  const toggleCommuneWhole = useCallback((comId: string) => {
+    const childIrisIds = iris.filter((i) => i.parentId === comId).map((i) => i.id)
+    const wasSelected = useSearchStore.getState().selectedCommuneIds.includes(comId)
+    toggleCommune(comId, childIrisIds)
+    setWholeCommuneIds((prev) =>
+      wasSelected
+        ? prev.filter((c) => c !== comId)
+        : prev.includes(comId) ? prev : [...prev, comId]
+    )
+  }, [iris, toggleCommune])
+
   const handleClickCommune = useCallback((zone: GeoZone) => {
-    toggleCommune(zone.id)
-  }, [toggleCommune])
+    toggleCommuneWhole(zone.id)
+  }, [toggleCommuneWhole])
 
   const handleClickCommuneIris = useCallback((zone: GeoZone) => {
     if (!zone.parentId) return
@@ -277,7 +304,14 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
 
   const displayArrIds = useMemo(() => [...coverage.fullArrIds], [coverage])
   const displayQuartierIds = useMemo(() => [...coverage.fullQuartierIds], [coverage])
-  const displayCommuneIds = useMemo(() => [...coverage.fullCommuneIds], [coverage])
+  // Une commune prise en entier s'affiche pleine des le clic : sinon elle
+  // resterait invisible tant que ses IRIS ne sont pas charges (et le resterait
+  // pour toujours si la commune n'a aucun IRIS dans le jeu de donnees).
+  const displayCommuneIds = useMemo(() => {
+    const out = new Set(coverage.fullCommuneIds)
+    for (const c of wholeCommuneIds) if (selectedCommuneIds.includes(c)) out.add(c)
+    return [...out]
+  }, [coverage, wholeCommuneIds, selectedCommuneIds])
   const partialArrIds = coverage.partialArrIds
   const partialCommuneIds = coverage.partialCommuneIds
 
@@ -289,6 +323,22 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
       selectedIrisIds: s.selectedIrisIds.filter((i) => !childI.includes(i)),
     }))
   }, [iris, quartiers])
+
+  // Rattrapage : une commune prise en entier AVANT l'arrivee des IRIS n'a pas pu
+  // cascader. Des qu'ils sont la, on complete — sinon la commune retomberait en
+  // « non pleine » et son remplissage disparaitrait sous les doigts.
+  useEffect(() => {
+    if (irisLoading || wholeCommuneIds.length === 0) return
+    const s = useSearchStore.getState()
+    const sel = new Set(s.selectedIrisIds)
+    const missing: string[] = []
+    for (const c of wholeCommuneIds) {
+      if (!s.selectedCommuneIds.includes(c)) continue
+      for (const i of iris) if (i.parentId === c && !sel.has(i.id)) missing.push(i.id)
+    }
+    if (missing.length === 0) return
+    useSearchStore.setState({ selectedIrisIds: [...s.selectedIrisIds, ...missing] })
+  }, [irisLoading, iris, wholeCommuneIds])
 
   const removePartialCommune = useCallback((comId: string) => {
     const childI = iris.filter((i) => i.parentId === comId).map((i) => i.id)
@@ -387,14 +437,18 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
 
   // Libellé : on garde le libellé sémantique initial (« Daumesnil ») quand il
   // existe — cohérence du titre (verif #5). Sinon on dérive des zones affichées.
-  const deriveLabel = useCallback(() => {
-    if (initial.label) return initial.label
+  const derivedZonesLabel = useMemo(() => {
     const parts: string[] = []
     for (const id of displayArrIds) { const z = arrById.get(id); if (z) parts.push(z.shortName || z.name) }
     for (const id of displayCommuneIds) { const z = communeById.get(id); if (z) parts.push(z.shortName || z.name) }
     for (const id of partialArrIds) { const z = arrById.get(id); if (z) parts.push(`${z.shortName || z.name} (secteur)`) }
     return parts.join(' · ')
-  }, [initial.label, displayArrIds, displayCommuneIds, partialArrIds, arrById, communeById])
+  }, [displayArrIds, displayCommuneIds, partialArrIds, arrById, communeById])
+
+  const deriveLabel = useCallback(
+    () => initial.label || derivedZonesLabel,
+    [initial.label, derivedZonesLabel],
+  )
 
   const handleValidate = useCallback(() => {
     const s = useSearchStore.getState()
@@ -471,6 +525,35 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
     if (w.ReactNativeWebView) w.ReactNativeWebView.postMessage(JSON.stringify({ action: 'ready' }))
   }, [irisLoading, arrondissements.length])
 
+  // ── Mode embarqué ─ la carte n'a pas de CTA : elle rend compte, elle ne valide pas.
+  // On pousse la sélection courante à chaque changement ; c'est l'écran natif qui
+  // la met en attente et qui décide si elle diffère de l'état initial. Rien n'est
+  // écrit dans la recherche ici.
+  //   · garde-fou 1 : on n'émet qu'une fois la carte prête, sinon l'état transitoire
+  //     du montage (avant seed, avant IRIS) allumerait le bouton natif tout seul ;
+  //   · garde-fou 2 : déduplication sur la charge utile — un zoom, un déplacement
+  //     ou un re-rendu n'émet rien, seul un vrai changement de sélection passe.
+  const lastSentRef = useRef('')
+  useEffect(() => {
+    if (!embedded || irisLoading || arrondissements.length === 0) return
+    const payload = JSON.stringify({
+      action: 'change',
+      selectedArrIds,
+      selectedQuartierIds,
+      selectedIrisIds,
+      selectedCommuneIds,
+      zonesLabel: derivedZonesLabel,
+    })
+    if (payload === lastSentRef.current) return
+    lastSentRef.current = payload
+    const w = window as unknown as { ReactNativeWebView?: { postMessage: (m: string) => void } }
+    if (w.ReactNativeWebView) w.ReactNativeWebView.postMessage(payload)
+  }, [
+    embedded, irisLoading, arrondissements.length,
+    selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds,
+    derivedZonesLabel,
+  ])
+
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: '#FDF5F2' }}>
       {/* Carte — on ATTEND le chargement des IRIS avant de monter ZoneMap : ainsi
@@ -531,7 +614,10 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
           </div>
         )}
 
-        {/* Encart flottant : zone recherchée + Modifier (retour au moment 1). */}
+        {/* Encart flottant : zone recherchée + Modifier (retour au moment 1).
+            Masqué en mode embarqué : l'écran natif porte déjà son titre, et
+            « Modifier » y renverrait vers la saisie texte de l'onboarding. */}
+        {!embedded && (
         <div className="absolute top-0 left-0 right-0 z-[1100] px-4" style={{ paddingTop: Math.max(initial.safeTop, 12) }}>
           <button onClick={handleModifier}
                   className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
@@ -544,12 +630,13 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
             </span>
           </button>
         </div>
+        )}
       </div>
 
       {/* Pastilles + Valider */}
       <div
         className="flex-shrink-0 px-4 pt-2"
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+        style={{ paddingBottom: embedded ? '8px' : 'max(env(safe-area-inset-bottom), 16px)' }}
       >
         {hasSelection && (
           <div className="mb-3 flex items-start gap-2">
@@ -575,7 +662,7 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
                 return (
                   <button
                     key={`com-${id}`}
-                    onClick={() => toggleCommune(id)}
+                    onClick={() => toggleCommuneWhole(id)}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
                     style={{ backgroundColor: 'rgba(166,75,39,0.14)', color: '#A64B27', borderColor: '#A64B27' }}
                   >
@@ -666,14 +753,19 @@ export default function ZoneMapEmbedClient({ selParam }: { selParam: string }) {
           </div>
         )}
 
-        <button
-          onClick={handleValidate}
-          disabled={!hasSelection}
-          className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white transition-opacity active:opacity-90"
-          style={{ backgroundColor: hasSelection ? '#A64B27' : '#DB947E' }}
-        >
-          Valider ma zone
-        </button>
+        {/* Un seul CTA à l'écran : en mode embarqué c'est « Appliquer et relancer »,
+            côté natif, qui valide. Les pastilles et le Reset restent : ce sont des
+            commandes de la carte, pas des boutons concurrents. */}
+        {!embedded && (
+          <button
+            onClick={handleValidate}
+            disabled={!hasSelection}
+            className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white transition-opacity active:opacity-90"
+            style={{ backgroundColor: hasSelection ? '#A64B27' : '#DB947E' }}
+          >
+            Valider ma zone
+          </button>
+        )}
       </div>
     </div>
   )

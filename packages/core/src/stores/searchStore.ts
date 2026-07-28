@@ -137,8 +137,8 @@ interface SearchStore extends SearchPreferences {
   toggleQuartier: (id: string, parentArrId: string, allSiblingIds: string[], childIrisIds: string[]) => void
   /** Toggle individual IRIS zone: propagates partial state up through quartier → arrondissement */
   toggleIris: (id: string, parentQuartierId: string, parentArrId: string, allQuartierSiblingIds: string[], allArrQuartierIds: string[]) => void
-  /** Toggle suburban commune (no hierarchy) */
-  toggleCommune: (id: string) => void
+  /** Toggle suburban commune: selects/deselects it + all its child iris */
+  toggleCommune: (id: string, childIrisIds?: string[]) => void
   /** Toggle IRIS zone inside a suburban commune — propagates up to commune */
   toggleCommuneIris: (id: string, parentCommuneId: string, allCommuneSiblingIds: string[]) => void
   setBudgetMin: (min: number | null) => void
@@ -296,13 +296,22 @@ export function createSearchStore(getStorage: () => StateStorage) {
         set({ selectedArrIds: newArrIds, selectedQuartierIds: newQuartierIds, selectedIrisIds: newIrisIds })
       },
 
-      toggleCommune: (id) => {
-        const { selectedCommuneIds } = get()
-        set({
-          selectedCommuneIds: selectedCommuneIds.includes(id)
-            ? selectedCommuneIds.filter((c) => c !== id)
-            : [...selectedCommuneIds, id],
-        })
+      toggleCommune: (id, childIrisIds = []) => {
+        const { selectedCommuneIds, selectedIrisIds } = get()
+        // Symetrie avec toggleArr : selectionner une commune entiere doit aussi
+        // prendre ses IRIS, sinon la couverture d'affichage (qui ne regarde QUE
+        // les IRIS) ne la voit jamais comme pleine et le clic reste invisible.
+        if (selectedCommuneIds.includes(id)) {
+          set({
+            selectedCommuneIds: selectedCommuneIds.filter((c) => c !== id),
+            selectedIrisIds: selectedIrisIds.filter((i) => !childIrisIds.includes(i)),
+          })
+        } else {
+          set({
+            selectedCommuneIds: [...selectedCommuneIds, id],
+            selectedIrisIds: [...new Set([...selectedIrisIds, ...childIrisIds])],
+          })
+        }
       },
 
       toggleCommuneIris: (id, parentCommuneId, allCommuneSiblingIds) => {

@@ -22,5 +22,9 @@ export default async function ZoneMapEmbedPage({
 }) {
   const sp = await searchParams
   const selParam = typeof sp.sel === 'string' ? sp.sel : ''
-  return <ZoneMapEmbedClient selParam={selParam} />
+  // `embedded=1` : la carte est posee DANS un ecran natif qui porte deja son
+  // propre bouton d'action (intercalaire du feed). Elle masque alors ses CTA et
+  // pousse sa selection au fil de l'eau au lieu d'attendre un « Valider ».
+  const embedded = sp.embedded === '1'
+  return <ZoneMapEmbedClient selParam={selParam} embedded={embedded} />
 }

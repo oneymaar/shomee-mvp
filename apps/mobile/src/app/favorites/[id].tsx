@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View, type ViewToken } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router'
 import type { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { ArrowLeft, Volume2, VolumeX } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
@@ -46,6 +46,9 @@ export default function FavoritesViewerScreen() {
   )
   const [currentIndex, setCurrentIndex] = useState(startIndex)
   const [viewportH, setViewportH] = useState(0)
+  // Pause la vidéo quand un écran est empilé par-dessus (ex. fil de discussion
+  // ouvert depuis le rail) — sinon le son continuerait derrière.
+  const isFocused = useIsFocused()
 
   // PropertyDetailSheet — même réplique locale que le feed (`(tabs)/index.tsx`) :
   // ref + `detail` + `openDetail`. Le BottomSheetModalProvider est global (root).
@@ -73,13 +76,13 @@ export default function FavoritesViewerScreen() {
     ({ item, index }: { item: Property; index: number }) => (
       <FeedItem
         property={item}
-        isActive={index === currentIndex}
+        isActive={index === currentIndex && isFocused}
         muted={muted}
         height={viewportH}
         onOpenDetail={openDetail}
       />
     ),
-    [currentIndex, muted, viewportH, openDetail],
+    [currentIndex, muted, viewportH, isFocused, openDetail],
   )
 
   const goBack = useCallback(() => {
@@ -98,7 +101,7 @@ export default function FavoritesViewerScreen() {
             data={favProperties}
             keyExtractor={(p) => p.id}
             renderItem={renderItem}
-            extraData={`${currentIndex}|${muted}`}
+            extraData={`${currentIndex}|${muted}|${isFocused}`}
             initialScrollIndex={startIndex}
             getItemLayout={(_, index) => ({
               length: viewportH,

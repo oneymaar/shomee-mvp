@@ -1,0 +1,29 @@
+Shomee — backfill du 21/07/2026 15:55
+
+Backfill tri-état + IRIS — mode ÉCRITURE
+Chargement des géométries IRIS (opendata)…
+  2743 IRIS chargés.
+(node:3227) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+0 biens réels à traiter.
+
+── Rapport ──
+biens modifiés     : 0
+reset → NULL       : 0 (fin du faux « false »)
+affirmations texte : 0
+étages extraits    : 0
+scores sémantiques : 0
+irisId calculés    : 0 (aucun IRIS trouvé : 0)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Backfill terminé. Regarde le rapport ci-dessus
+     (biens modifiés / irisId calculés).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Entrée pour fermer…

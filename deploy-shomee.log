@@ -1,0 +1,125 @@
+Shomee — déploiement du 26/07/2026 23:13
+
+━━━━━━━━ 1/3 — Client Prisma à jour ━━━━━━━━
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 7.8.0 -> 7.9.0                        │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+✔ Generated Prisma Client (v7.8.0) to ./../../node_modules/@prisma/client in 164ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+━━━━━━━━ 2/3 — Build de vérification (comme Vercel) ━━━━━━━━
+(peut prendre ~1 min ; c'est ce qui garantit que le déploiement passera)
+• turbo 2.9.17
+
+   • Packages in scope: @shomee/web
+   • Running build in 1 packages
+   • Remote caching disabled
+
+@shomee/web:build: cache miss, executing dc2408ec7edae0a4
+@shomee/web:build: 
+@shomee/web:build: > @shomee/web@0.1.0 build
+@shomee/web:build: > next build
+@shomee/web:build: 
+@shomee/web:build: ▲ Next.js 16.2.4 (Turbopack)
+@shomee/web:build: - Environments: .env.local, .env
+@shomee/web:build: 
+@shomee/web:build:   Creating an optimized production build ...
+@shomee/web:build: ✓ Compiled successfully in 3.1s
+@shomee/web:build:   Running TypeScript ...
+@shomee/web:build:   Finished TypeScript in 5.6s ...
+@shomee/web:build:   Collecting page data using 9 workers ...
+@shomee/web:build:   Generating static pages using 9 workers (0/18) ...
+@shomee/web:build:   Generating static pages using 9 workers (4/18) 
+@shomee/web:build:   Generating static pages using 9 workers (8/18) 
+@shomee/web:build:   Generating static pages using 9 workers (13/18) 
+@shomee/web:build: ✓ Generating static pages using 9 workers (18/18) in 230ms
+@shomee/web:build:   Finalizing page optimization ...
+@shomee/web:build: 
+@shomee/web:build: Route (app)
+@shomee/web:build: ┌ ○ /
+@shomee/web:build: ├ ○ /_not-found
+@shomee/web:build: ├ ƒ /admin/tiktok-studio
+@shomee/web:build: ├ ƒ /admin/video-tagger
+@shomee/web:build: ├ ƒ /agent/biens/[id]/editer
+@shomee/web:build: ├ ƒ /agent/biens/[id]/preview
+@shomee/web:build: ├ ƒ /agent/biens/archives
+@shomee/web:build: ├ ○ /agent/biens/nouveau
+@shomee/web:build: ├ ƒ /agent/dashboard
+@shomee/web:build: ├ ƒ /api/admin/create-properties
+@shomee/web:build: ├ ƒ /api/admin/derive-properties
+@shomee/web:build: ├ ƒ /api/admin/ingest-tiktok
+@shomee/web:build: ├ ƒ /api/admin/video-tags
+@shomee/web:build: ├ ƒ /api/admin/videos
+@shomee/web:build: ├ ƒ /api/agent/[agentId]/properties
+@shomee/web:build: ├ ƒ /api/agent/me/api-keys
+@shomee/web:build: ├ ƒ /api/agent/me/properties
+@shomee/web:build: ├ ƒ /api/auth/apple
+@shomee/web:build: ├ ƒ /api/auth/google
+@shomee/web:build: ├ ƒ /api/auth/guest
+@shomee/web:build: ├ ƒ /api/auth/me
+@shomee/web:build: ├ ƒ /api/biens/[id]
+@shomee/web:build: ├ ƒ /api/biens/[id]/analyze-video
+@shomee/web:build: ├ ƒ /api/biens/import-llm
+@shomee/web:build: ├ ƒ /api/buyer/onboarding-prefill
+@shomee/web:build: ├ ƒ /api/buyer/profile
+@shomee/web:build: ├ ƒ /api/criteria/analyze
+@shomee/web:build: ├ ƒ /api/criteria/parse
+@shomee/web:build: ├ ƒ /api/criteria/update-importance
+@shomee/web:build: ├ ƒ /api/events/batch
+@shomee/web:build: ├ ƒ /api/feed/estimate
+@shomee/web:build: ├ ƒ /api/feed/generate
+@shomee/web:build: ├ ƒ /api/handoff/claim
+@shomee/web:build: ├ ƒ /api/handoff/create
+@shomee/web:build: ├ ƒ /api/handoff/peek
+@shomee/web:build: ├ ƒ /api/handoff/update
+@shomee/web:build: ├ ƒ /api/location/analyze
+@shomee/web:build: ├ ƒ /api/location/geocode
+@shomee/web:build: ├ ƒ /api/matching/score
+@shomee/web:build: ├ ƒ /api/mcp
+@shomee/web:build: ├ ƒ /api/properties
+@shomee/web:build: ├ ƒ /api/upload/confirm
+@shomee/web:build: ├ ƒ /api/upload/sign
+@shomee/web:build: ├ ○ /assistant
+@shomee/web:build: ├ ƒ /embed/budgetmap
+@shomee/web:build: ├ ƒ /embed/zonemap
+@shomee/web:build: ├ ○ /favorites
+@shomee/web:build: ├ ƒ /favorites/[id]
+@shomee/web:build: ├ ○ /feed
+@shomee/web:build: ├ ƒ /feed/[id]
+@shomee/web:build: ├ ƒ /h/[token]
+@shomee/web:build: ├ ○ /manifest.webmanifest
+@shomee/web:build: ├ ○ /messages
+@shomee/web:build: ├ ○ /onboarding
+@shomee/web:build: ├ ○ /profile
+@shomee/web:build: ├ ƒ /proto/quartiers
+@shomee/web:build: └ ƒ /share/[id]
+@shomee/web:build: 
+@shomee/web:build: 
+@shomee/web:build: ○  (Static)   prerendered as static content
+@shomee/web:build: ƒ  (Dynamic)  server-rendered on demand
+@shomee/web:build: 
+
+ Tasks:    1 successful, 1 total
+Cached:    0 cached, 1 total
+  Time:    11.904s 
+
+
+━━━━━━━━ 3/3 — Push → Vercel (feat/monorepo) ━━━━━━━━
+To https://github.com/oneymaar/shomee-mvp.git
+   a346603..465b078  feat/proto-quartiers -> feat/monorepo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ Build local OK + push envoyé. Vercel déploie l'API (~2 min).
+     Dis-le-moi : je vérifie d'ici que le déploiement passe au vert.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Entrée pour fermer…
