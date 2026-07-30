@@ -176,6 +176,17 @@ export function arrLabel(id: string): string {
 }
 
 /**
+ * Voisins bruts d'un arrondissement, par numéro croissant (copie : la table
+ * reste privée). `suggestNeighbourArrs` répond à « que proposer d'ajouter ? » et
+ * classe ; la voie découverte, elle, a besoin de la RELATION seule — « ce bien
+ * du 19e touche-t-il un arrondissement que l'acquéreur a déclaré ? » — pour
+ * n'annoncer « limitrophe du Ne » que si ça l'est vraiment.
+ */
+export function neighbourArrsOf(arr: number): number[] {
+  return [...(ARR_NEIGHBOURS[arr] ?? [])]
+}
+
+/**
  * Arrondissements limitrophes non encore sélectionnés, triés par nombre de
  * contacts avec la zone actuelle (les plus « collés » d'abord) puis par numéro
  * pour rester déterministe.

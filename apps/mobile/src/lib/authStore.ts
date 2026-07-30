@@ -139,6 +139,45 @@ export async function loginGoogleIdToken(idToken: string): Promise<boolean> {
   return ok
 }
 
+/**
+ * Suppression DÉFINITIVE du compte. L'ordre est important :
+ *  1. le serveur d'abord — la requête a besoin du token encore en place.
+ *     Best-effort : hors ligne ou serveur pas encore déployé, la purge LOCALE
+ *     reste due à l'acquéreur (c'est elle qui efface son historique visible) ;
+ *  2. l'effacement local TOTAL : journal + biens vus + liste noire
+ *     (`wipeAll`, là où `clearFeed` les préserve), favoris, conversations, et
+ *     l'identité anonyme du tracker (deviceId régénéré → le comportement futur
+ *     ne peut plus être rattaché à l'historique supprimé) ;
+ *  3. `logout()` — brief, photo, token, retour à l'écran de connexion.
+ */
+export async function deleteAccount(): Promise<void> {
+  setState({ busy: true })
+  try {
+    const deviceId = await getDeviceId()
+    await apiFetch('/api/account/delete', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ deviceId }),
+    })
+  } catch {
+    /* best-effort — la purge serveur n'empêche jamais la purge locale */
+  }
+  try {
+    const stores = await import('@/lib/stores')
+    stores.useFeedStore.getState().wipeAll()
+    stores.useShomeeStore.setState({ favorites: [], conversations: [] })
+  } catch {
+    /* ignore */
+  }
+  try {
+    const tracker = await import('@/lib/tracker')
+    await tracker.resetTrackerIdentity()
+  } catch {
+    /* ignore */
+  }
+  await logout()
+}
+
 export async function logout(): Promise<void> {
   try {
     await secureDelete(TOKEN_KEY)

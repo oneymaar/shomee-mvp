@@ -122,6 +122,21 @@ export function flushNow(): void {
   void flush()
 }
 
+/**
+ * Suppression de compte : oublie l'identité anonyme ET la file en attente. Le
+ * prochain événement repartira sous un deviceId NEUF — plus rien ne peut
+ * rattacher le comportement futur à l'historique supprimé.
+ */
+export async function resetTrackerIdentity(): Promise<void> {
+  queue = []
+  deviceId = null
+  try {
+    await AsyncStorage.removeItem(DEVICE_ID_KEY)
+  } catch {
+    /* best-effort */
+  }
+}
+
 // ─── Session + favoris (aucune modification d'UI nécessaire) ────────────────
 
 let initialized = false

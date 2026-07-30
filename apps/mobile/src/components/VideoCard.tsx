@@ -1,53 +1,60 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import { useVideoPlayer, VideoView } from 'expo-video'
+import { VideoView, type VideoPlayer } from 'expo-video'
 import { Image } from 'expo-image'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
+import { normalizeChapters } from '@/lib/chapters'
+import { readDuration, safePlayer } from '@/lib/player'
 
 interface Props {
   property: Property
   isActive: boolean
   /** Son coupé — global au feed (feedStore.muted). */
   muted: boolean
+  /**
+   * Lecteur créé par `FeedItem`. Il vit un cran plus haut depuis que la barre
+   * de progression le partage : elle doit se poser PAR-DESSUS l'overlay, donc
+   * hors de cette carte, mais piloter le même lecteur.
+   */
+  player: VideoPlayer
 }
 
 /**
  * VideoCard RN (S4b-v2b) — lecture pilotée par la visibilité + hold-pause.
- * (Chapitres, progress, detail sheet → suite v2b.)
  *
- * `useVideoPlayer` gère le cycle de vie : le player est libéré quand la carte
- * se démonte (recyclage FlatList) → pas de lecteur fantôme jouant en fond.
+ * Le lecteur est créé par `FeedItem` (`useVideoPlayer`), qui gère son cycle
+ * de vie : il est libéré quand la ligne se démonte (recyclage FlatList) →
+ * pas de lecteur fantôme jouant en fond.
  *
  * Hold-pause : un `LongPress` (seuil 200 ms) met en pause tant que le doigt
  * reste posé, et reprend au relâché. Le seuil temporel + `maxDistance` font
  * que le swipe vertical (qui bouge tout de suite) annule le geste → le scroll
  * du FlatList n'est jamais bloqué.
  */
-export function VideoCard({ property, isActive, muted }: Props) {
+export function VideoCard({ property, isActive, muted, player }: Props) {
   const hasVideo = Boolean(property.videoUrl)
-
-  const player = useVideoPlayer(property.videoUrl ?? '', (p) => {
-    p.loop = true
-    p.muted = muted
-  })
 
   // Mute global synchronisé en continu (le flag vit dans le feedStore).
   useEffect(() => {
-    player.muted = muted
+    safePlayer(() => {
+      player.muted = muted
+    })
   }, [muted, player])
 
   // Seule la carte active joue ; les autres sont en pause et rembobinées à 0
   // (donc une vidéo rejouée repart du début quand on y revient).
   useEffect(() => {
     if (!hasVideo) return
-    if (isActive) {
-      player.play()
-    } else {
-      player.pause()
-      player.currentTime = 0
-    }
+    safePlayer(() => {
+      if (isActive) {
+        player.play()
+      } else {
+        player.pause()
+        player.currentTime = 0
+      }
+    })
   }, [isActive, hasVideo, player])
 
   // Hold-pause : pause à l'ACTIVATION du long-press (après 200 ms d'immobilité),
@@ -60,8 +67,10 @@ export function VideoCard({ property, isActive, muted }: Props) {
         .minDuration(200)
         .maxDistance(10)
         .runOnJS(true)
-        .onStart(() => player.pause())
-        .onFinalize(() => player.play()),
+        // `safePlayer` : un geste peut se conclure pendant le recyclage de la
+        // ligne, donc après la libération du lecteur par FeedItem.
+        .onStart(() => safePlayer(() => player.pause()))
+        .onFinalize(() => safePlayer(() => player.play())),
     [player],
   )
 
@@ -84,54 +93,49 @@ export function VideoCard({ property, isActive, muted }: Props) {
     return () => clearTimeout(id)
   }, [chapterLabel])
 
-  // Chapitres → secondes de début, triés. Gère les DEUX formes tolérées :
-  // `startSec` (feed live) OU `fraction` 0..1 × durée (legacy).
-  const getChapters = useCallback((): { label: string; startSec: number }[] => {
-    const raw = property.chapters as
-      | { label: string; startSec?: number; fraction?: number }[]
-      | undefined
-    if (!raw || raw.length === 0) return []
-    const dur = player.duration || 0
-    return raw
-      .map((c) => ({
-        label: c.label,
-        startSec:
-          typeof c.startSec === 'number'
-            ? c.startSec
-            : typeof c.fraction === 'number'
-              ? c.fraction * (dur || 1)
-              : 0,
-      }))
-      .sort((a, b) => a.startSec - b.startSec)
+  // Chapitres → secondes de début, triés. MÊME normalisation que la barre de
+  // progression (`lib/chapters`) : les deux doivent lire la même liste, sinon
+  // le segment surligné et le chapitre atteint au tap divergent.
+  // Tant que la durée est inconnue (métadonnées non lues), les chapitres en
+  // forme `fraction` se colleraient tous entre 0 et 1 s : on n'en sert aucun.
+  // On écarte aussi ceux qui tombent au-delà de la durée (donnée abîmée).
+  const getChapters = useCallback(() => {
+    const dur = readDuration(player)
+    if (!(dur > 0)) return []
+    return normalizeChapters(property.chapters, dur).filter((c) => c.startSec < dur)
   }, [property.chapters, player])
 
   const goNextChapter = useCallback(() => {
     const chs = getChapters()
     if (chs.length === 0) return // pas de chapitres → no-op
-    const t = player.currentTime
-    const next = chs.find((c) => c.startSec > t + 0.5)
-    if (next) {
-      player.currentTime = next.startSec // clamp au dernier : find undefined → rien
-      showChapterLabel(next.label)
-    }
+    safePlayer(() => {
+      const t = player.currentTime
+      const next = chs.find((c) => c.startSec > t + 0.5)
+      if (next) {
+        player.currentTime = next.startSec // clamp au dernier : find undefined → rien
+        showChapterLabel(next.label)
+      }
+    })
   }, [getChapters, player, showChapterLabel])
 
   const goPrevChapter = useCallback(() => {
     const chs = getChapters()
     if (chs.length === 0) return // pas de chapitres → no-op
-    const t = player.currentTime
-    let curIdx = 0
-    for (let i = 0; i < chs.length; i++) {
-      if (chs[i].startSec <= t) curIdx = i
-    }
-    const inChapterFor = t - chs[curIdx].startSec
-    let target: { label: string; startSec: number } | null = null
-    if (inChapterFor > 1.5) target = chs[curIdx] // +1,5 s dans le chapitre → restart
-    else if (curIdx > 0) target = chs[curIdx - 1] // sinon précédent (clamp au 1er)
-    if (target) {
-      player.currentTime = target.startSec
-      showChapterLabel(target.label)
-    }
+    safePlayer(() => {
+      const t = player.currentTime
+      let curIdx = 0
+      for (let i = 0; i < chs.length; i++) {
+        if (chs[i].startSec <= t) curIdx = i
+      }
+      const inChapterFor = t - chs[curIdx].startSec
+      let target: { label: string; startSec: number } | null = null
+      if (inChapterFor > 1.5) target = chs[curIdx] // +1,5 s dans le chapitre → restart
+      else if (curIdx > 0) target = chs[curIdx - 1] // sinon précédent (clamp au 1er)
+      if (target) {
+        player.currentTime = target.startSec
+        showChapterLabel(target.label)
+      }
+    })
   }, [getChapters, player, showChapterLabel])
 
   const tapChapter = useMemo(

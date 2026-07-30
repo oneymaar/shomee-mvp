@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useSearchStore } from '@/lib/searchStore'
+import { useFeedStore } from '@/lib/feedStore'
 import QuartiersProtoFrame from '@/components/onboarding/QuartiersProtoFrame'
 import BienStep from '@/components/onboarding/BienStep'
 import BudgetStep from '@/components/onboarding/BudgetStep'
@@ -15,6 +16,8 @@ import AIBriefRecap from '@/components/onboarding/AIBriefRecap'
 import HandoffInstallPanel from '@/components/onboarding/HandoffInstallPanel'
 import { SURFACE_UNLIMITED } from '@/components/onboarding/BienStep'
 import { injectBrief, type AIOnboardingBrief } from '@/lib/services/aiBriefInjector'
+import { buildBriefSummary, type BriefSummary } from '@/components/onboarding/briefSummary'
+import { writeTeaser } from '@/lib/handoff/teaser'
 
 // Brief-import landing screen: logo + discrete spinner. Shown while the
 // magic-link token is fetched and the geo resolver runs.
@@ -136,6 +139,12 @@ function OnboardingPageInner() {
   // persiste les ajustements sur le Handoff puis affiche le panneau
   // d'installation (au lieu de lancer le feed PWA).
   const handoffToken = searchParams.get('h')
+  // ?recap=1 — parcours d'AJUSTEMENT. Par defaut un lien LLM mene directement
+  // aux videos : afficher d'emblee un brief complet et modifiable promettrait
+  // une finesse de filtrage que des criteres donnes en trois phrases ne
+  // peuvent pas tenir, et retarde ce qui fait la valeur de SHOMEE — la video.
+  // Le recap complet vit dans l'app, apres installation.
+  const wantsRecap = searchParams.get('recap') === '1'
   const { onboardingCompleted, completeOnboarding, locationQuery } = useSearchStore()
   // Step 0 (IntroStep) was removed — the splash screen now serves as the
   // intro, so onboarding opens directly on step 1 (Localisation).
@@ -158,12 +167,12 @@ function OnboardingPageInner() {
   const [editingFromRecap, setEditingFromRecap] = useState(false)
   const [aiGeoResolved, setAiGeoResolved] = useState(true)
   // ── Handoff S9 — sous-états du mode ?h= ─────────────────────────────────
-  // handoffMeta: code court + expiration (affichés au panneau d'installation).
-  // handoffDone: brief validé (et persisté) → panneau d'installation.
-  // handoffClaimed: le brief est déjà dans l'app → panneau variante « déjà là ».
+  // handoffMeta: code court + expiration, transmis au feed teaser.
+  // handoffClaimed: le brief est déjà dans l'app → panneau « déjà là ».
+  // briefSummary: résumé affiché en HAUT de l'écran de chargement.
   const [handoffMeta, setHandoffMeta] = useState<{ shortCode: string; expiresAt: string } | null>(null)
-  const [handoffDone, setHandoffDone] = useState(false)
   const [handoffClaimed, setHandoffClaimed] = useState(false)
+  const [briefSummary, setBriefSummary] = useState<BriefSummary | null>(null)
   const [handoffSaving, setHandoffSaving] = useState(false)
   const [handoffSaveError, setHandoffSaveError] = useState<string | null>(null)
   // Dynamic viewport height — shrinks when keyboard opens on iOS.
@@ -279,7 +288,20 @@ function OnboardingPageInner() {
     }
     goTo(step - 1, -1)
   }, [step, editingFromRecap, goTo, router])
-  const handleReady = useCallback(() => router.replace('/feed'), [router])
+  // Fin de l'ecran de chargement → le feed.
+  // En mode handoff, le feed web est un TEASER : on lui depose le strict
+  // necessaire (token, code, expiration) pour afficher la modale
+  // d'installation apres la seconde video. Cf. lib/handoff/teaser.ts.
+  const handleReady = useCallback(() => {
+    if (handoffToken && !handoffClaimed) {
+      writeTeaser({
+        token: handoffToken,
+        shortCode: handoffMeta?.shortCode ?? '',
+        expiresAt: handoffMeta?.expiresAt ?? '',
+      })
+    }
+    router.replace('/feed')
+  }, [router, handoffToken, handoffClaimed, handoffMeta])
 
   // ── AI brief magic-link handlers ────────────────────────────────────────
   // Triggered once on mount when ?brief=<uuid> is present. Fetches the
@@ -379,7 +401,15 @@ function OnboardingPageInner() {
         if (cancelled) return
         const { selectedIrisIds } = useSearchStore.getState()
         setAiGeoResolved(selectedIrisIds.length > 0)
-        setAiRecapOpen(true)
+        if (wantsRecap) {
+          // Retour depuis la modale d'installation : « ajuster ma recherche ».
+          setAiRecapOpen(true)
+        } else {
+          // Parcours par defaut : on saute le recap. Le resume s'affiche en
+          // haut de l'ecran de chargement, puis la premiere video arrive nue.
+          setBriefSummary(buildBriefSummary())
+          goTo(5, 1)
+        }
         setBriefLoading(false)
       } catch (e) {
         console.error('[onboarding] handoff import failed:', e)
@@ -391,7 +421,7 @@ function OnboardingPageInner() {
     return () => {
       cancelled = true
     }
-  }, [handoffToken])
+  }, [handoffToken, wantsRecap, goTo])
 
   // Fallback CTA on the brief-error screen — drop the user into the normal
   // onboarding without the ?brief= param so a refresh doesn't refetch.
@@ -431,7 +461,16 @@ function OnboardingPageInner() {
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         setAiRecapOpen(false)
-        setHandoffDone(true)
+        // Après ajustement on ne renvoie pas vers un panneau d'installation :
+        // on repart vers les vidéos. L'installation se propose au bout du
+        // teaser, à un moment où l'envie existe.
+        //
+        // Les critères viennent de changer : le feed en mémoire est périmé.
+        // On le vide et on repasse par l'écran de chargement, qui régénère le
+        // feed ET réaffiche le brief mis à jour au-dessus des étapes.
+        useFeedStore.getState().clearFeed()
+        setBriefSummary(buildBriefSummary())
+        goTo(5, 1)
       } catch {
         setHandoffSaveError(
           'Vos ajustements n’ont pas pu être enregistrés — vérifiez votre connexion et réessayez.',
@@ -443,7 +482,7 @@ function OnboardingPageInner() {
     }
     completeOnboarding()
     router.replace('/feed')
-  }, [handoffToken, completeOnboarding, router])
+  }, [handoffToken, completeOnboarding, router, goTo])
 
   // Rebond recap (parite natif) : une zone validee depuis l'edition du bloc
   // Quartiers revient au recap au lieu de derouler le funnel vers Bien.
@@ -460,7 +499,9 @@ function OnboardingPageInner() {
   // enters focus mode. Tracked here so the top bar can react.
   const [criteriaFocused, setCriteriaFocused] = useState(false)
 
-  const chromeHidden = (step === 4 && criteriaFocused) || step === 1
+  // L'ecran de chargement (5) n'a ni fleche retour ni barre d'etapes : rien
+  // n'y est modifiable, et un retour vers Criteres n'aurait aucun sens.
+  const chromeHidden = (step === 4 && criteriaFocused) || step === 1 || step === 5
   // L'ecran Quartiers ne se monte QUE s'il est reellement visible : sinon
   // l'iframe se chargerait (clavier compris) derriere le recap / les ecrans
   // de chargement du mode handoff.
@@ -469,7 +510,6 @@ function OnboardingPageInner() {
     !aiRecapOpen &&
     !briefLoading &&
     !briefError &&
-    !handoffDone &&
     !handoffClaimed
   const showBack = step > 0 && !chromeHidden
   const showProgress = step >= 1 && step <= 4 && !chromeHidden
@@ -581,7 +621,7 @@ function OnboardingPageInner() {
             )}
 
             {step === 5 && (
-              <AIPreparationStep onReady={handleReady} />
+              <AIPreparationStep onReady={handleReady} summary={briefSummary} />
             )}
           </motion.div>
         </AnimatePresence>
@@ -614,9 +654,12 @@ function OnboardingPageInner() {
         )}
       </AnimatePresence>
 
-      {/* S9 — panneau d'installation du handoff (au-dessus du récap). */}
+      {/* S9 — panneau « déjà dans l'app » : le brief a déjà été récupéré par
+          l'application, l'éditer sur le web serait désynchronisé du serveur.
+          Le panneau d'installation du parcours normal, lui, s'affiche au bout
+          du teaser vidéo (cf. app/feed/page.tsx). */}
       <AnimatePresence>
-        {(handoffDone || handoffClaimed) && handoffToken && (
+        {handoffClaimed && handoffToken && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -629,15 +672,7 @@ function OnboardingPageInner() {
               token={handoffToken}
               shortCode={handoffMeta?.shortCode ?? ''}
               expiresAt={handoffMeta?.expiresAt ?? ''}
-              claimed={handoffClaimed}
-              onBackToRecap={
-                handoffClaimed
-                  ? undefined
-                  : () => {
-                      setHandoffDone(false)
-                      setAiRecapOpen(true)
-                    }
-              }
+              claimed
             />
           </motion.div>
         )}

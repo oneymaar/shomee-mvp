@@ -813,6 +813,20 @@ export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quar
       zoomControl={false}
       attributionControl={false}
       whenReady={whenMapReady}
+      // MUR AUX FRONTIÈRES — cause réelle du « les communes sont incliquables »
+      // (démontré au navigateur le 29/07) : sans maxBounds, l'inertie Leaflet
+      // n'est bornée par rien — un seul swipe rapide catapulte la vue à des
+      // centaines de kilomètres de Paris, en plein vide (le fond de carte n'a
+      // plus de tuiles, nos couches sont hors champ). L'acquéreur partait
+      // chercher Boulogne ou Neuilly, dépassait la petite couronne sans le
+      // voir, et tapait dans le désert. Le rectangle couvre Paris + la petite
+      // couronne avec marge ; viscosité 1 = mur ferme, le geste s'arrête à la
+      // limite au lieu de la traverser. `minZoom` empêche l'équivalent au
+      // dézoom (se perdre dans la France entière d'où nos zones sont
+      // invisibles).
+      maxBounds={[[48.68, 2.05], [49.02, 2.7]]}
+      maxBoundsViscosity={1}
+      minZoom={10}
     >
       {/* Base sans labels — nos labels custom restent les seuls au zoom large */}
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png" />

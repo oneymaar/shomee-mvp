@@ -22,7 +22,6 @@ import {
 } from '@/lib/searchStore'
 import { SURFACE_UNLIMITED } from './BienStep'
 import { BUDGET_UNLIMITED } from './BudgetStep'
-import RarityGaugeWeb from './RarityGaugeWeb'
 
 interface AIBriefRecapProps {
   /** Hint shown when the geo resolver couldn't narrow to any IRIS. */
@@ -276,8 +275,11 @@ export default function AIBriefRecap({
       {/* Blocks */}
       <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
         <div className="flex flex-col gap-2.5">
-          {/* Jauge de disponibilité — parité avec le récap natif (S7). */}
-          <RarityGaugeWeb />
+          {/* Jauge de disponibilité — MASQUÉE pour l'instant (29/07), comme sur
+              le récap natif et pour la même raison : calculée sur notre
+              catalogue et non sur le marché réel, elle donnait une indication
+              infidèle. Parité du masquage. Pour réactiver : remettre
+              `<RarityGaugeWeb />` et son import. */}
           <BlockCard
             icon={<MapPin size={16} />}
             title="Quartiers"

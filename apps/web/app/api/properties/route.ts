@@ -172,6 +172,36 @@ export async function POST(req: NextRequest) {
   try {
     const snapshot = body as BriefSnapshot
     const brief = buildBriefFromSnapshot(snapshot)
+
+    // ── Ré-hydratation du journal mobile (feed persistant, lot 1) ──────────
+    // Fiches fraîches pour des biens que l'acquéreur possède DÉJÀ : re-scorées
+    // avec le brief courant, mais SANS les portes du feed — ni gate géo, ni
+    // drop des exclus, ni dédup vidéo. Le journal est un historique, pas une
+    // nouvelle recherche : un bien entré hors critères (voie découverte) doit
+    // revenir tel quel. Les ids absents de la réponse SONT l'information — le
+    // bien n'est plus publié, le client le marquera périmé.
+    const rawIds = (body as { ids?: unknown }).ids
+    const ids = Array.isArray(rawIds)
+      ? rawIds.filter((x): x is string => typeof x === 'string').slice(0, 400)
+      : null
+    if (ids && ids.length > 0) {
+      const rows = await prisma.property.findMany({
+        where: { statut: PropertyStatus.PUBLISHED, id: { in: ids } },
+        include: PROPERTY_INCLUDE,
+      })
+      console.log(`[POST /api/properties] hydrate ${ids.length} ids -> ${rows.length} rows`)
+      // Réponse ENVELOPPÉE, pas un tableau nu : un serveur antérieur à cette
+      // route ignorerait `ids` et répondrait le feed normal — que le client
+      // prendrait pour une hydratation et dont il déduirait, à tort, que les
+      // biens absents sont vendus. `hydrated: true` est le marqueur de version.
+      return NextResponse.json({
+        hydrated: true,
+        properties: rows.map((p: PrismaPropertyWithRels) =>
+          projectWithMatch(p, matchProperty(toPropertyProfile(p), brief)),
+        ),
+      })
+    }
+
     const zoneNames = buildZoneNameFilter(snapshot)
     console.log(
       '[POST /api/properties] brief=' + brief.parsed_criteria.length + ' criteria' +
@@ -321,24 +351,32 @@ function scoreAndProject(
   const bySc = (a: { result: MatchResult }, b: { result: MatchResult }) =>
     b.result.global_score - a.result.global_score
 
-  const project = (property: PrismaPropertyWithRels, result: MatchResult): ViewProperty => {
-    const cal = calibrateScore(result)
-    const view = toViewProperty(property)
-    const enriched = projectPropertyExtras(property, view)
-    return {
-      ...enriched,
-      matchScore: cal.display / 100,
-      isExcluded: result.is_excluded,
-      matchDetail: buildMatchDetail(result, cal.display),
-    } as ViewProperty
-  }
-
   return {
     main: dedupeByVideoUrl(main.sort(bySc), ({ property }) => property.videoUrl)
-      .map(({ property, result }) => project(property, result)),
+      .map(({ property, result }) => projectWithMatch(property, result)),
     discovery: dedupeByVideoUrl(discovery.sort(bySc), ({ property }) => property.videoUrl)
-      .map(({ property, result, delta }) => ({ ...project(property, result), discoveryDelta: delta })),
+      .map(({ property, result, delta }) => ({ ...projectWithMatch(property, result), discoveryDelta: delta })),
   }
+}
+
+/**
+ * Projection d'un bien scoré vers le view-model du feed (badge, modale,
+ * chapitres, agence). Partagée par les deux voies de `scoreAndProject` ET par
+ * la ré-hydratation du journal (`ids`), qui projette sans filtrer.
+ */
+function projectWithMatch(
+  property: PrismaPropertyWithRels,
+  result: MatchResult,
+): ViewProperty {
+  const cal = calibrateScore(result)
+  const view = toViewProperty(property)
+  const enriched = projectPropertyExtras(property, view)
+  return {
+    ...enriched,
+    matchScore: cal.display / 100,
+    isExcluded: result.is_excluded,
+    matchDetail: buildMatchDetail(result, cal.display),
+  } as ViewProperty
 }
 
 /**

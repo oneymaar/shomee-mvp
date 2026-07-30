@@ -1,21 +1,73 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+/**
+ * Fiche descriptive du bien — jumelle web de
+ * `apps/mobile/src/components/PropertyDetailSheet.tsx`.
+ *
+ * Cette fiche est OUVERTE PENDANT LE TEASER (parcours S9 : lien LLM → web,
+ * avant installation de l'app). Tout ce qui change dans la fiche native doit
+ * donc être répercuté ici, sinon le visiteur découvre une fiche différente de
+ * celle qu'il retrouvera dans l'app.
+ *
+ * Ce que le web garde en propre, volontairement :
+ *   – la barre collante haute (agence + croix) : sur mobile la poignée du
+ *     bottom-sheet suffit à refermer, ici il faut une croix toujours visible ;
+ *   – `previewMode` (aperçu agent : les champs vides s'affichent en « — ») ;
+ *   – les compteurs like/partage des pastilles basses, qui n'existent pas
+ *     encore côté natif.
+ *
+ * Tout le reste — typographie de l'en-tête, onglets média soulignés, carte de
+ * quartier 260 px + légende + plein écran, stations groupées avec temps de
+ * marche, formatage des euros — est aligné au pixel sur l'app.
+ */
+
+import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 import {
   X, MapPin, Check, Heart, Share2, MessageCircle, Phone, CalendarPlus,
-  ChevronLeft, ChevronRight, Camera, Map, Globe,
+  Map as MapIcon, HelpCircle, Footprints, Maximize2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
 import { shareProperty } from '@/lib/share'
 import { formatLocation } from '@shomee/core/utils/format'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
+import PropertyMediaTabs from '@/components/property/PropertyMediaTabs'
+import { useNearbyPois, POI_COLORS, POI_LABELS, type PoiCat } from '@/lib/useNearbyPois'
 
+// Leaflet ne survit pas au rendu serveur : la carte est chargée côté client
+// seulement. La palette des repères vit dans `lib/useNearbyPois` pour que cette
+// fiche puisse s'en servir sans réimporter Leaflet.
 const MapZone = dynamic(() => import('./MapZone'), { ssr: false })
+
+// TODO : numéro de test — à remplacer par le téléphone de l'agence (feed live).
+const TEST_PHONE = '+33670744935'
+
+// TEMP démo média — appliqués à tous les biens tant que la base n'a ni galerie
+// ni plan ni visite. Mêmes valeurs que l'app : la fiche du teaser doit montrer
+// exactement les mêmes médias. À REMPLACER par les vrais médias.
+const DEMO_PHOTOS = [
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1000&q=80',
+  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1000&q=80',
+  'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=1000&q=80',
+]
+// Plan = carrousel. Copie web du plan bundlé dans l'app.
+const DEMO_PLAN_URLS = ['/plans/plan-demo.png']
+// Visite virtuelle réelle (Giraffe360).
+const DEMO_TOUR_URL = 'https://tour.giraffe360.com/4da4e76c9e9a4af5b95cc2afe33a1a22'
+
+const ACCENT = '#A64B27'
+
+/* ── Formatage FR ──────────────────────────────────────────────────────────
+   Espace fine tous les 3 chiffres, comme le natif (qui n'a pas Intl sous
+   Hermes). Utiliser la même fonction des deux côtés garantit le même rendu. */
+function groupThousands(n: number): string {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
+const euro = (n: number) => `${groupThousands(n)} €`
+const perSqm = (n: number) => `${groupThousands(n)} €/m²`
 
 /* ── DPE badge — flèche, lettre à gauche, couleurs ADEME officielles ────── */
 const DPE_COLORS: Record<string, string> = {
@@ -41,12 +93,11 @@ function DpeBadge({ grade, label }: { grade: string; label: string }) {
           backgroundColor: DPE_COLORS[grade],
           clipPath: 'polygon(0 0, calc(100% - 11px) 0, 100% 50%, calc(100% - 11px) 100%, 0 100%)',
           height: 36,
-          minWidth: 60,
-          maxWidth: 80,
+          width: 76,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          paddingLeft: 10,
+          paddingLeft: 12,
         }}
       >
         <span style={BADGE_LETTER_STYLE}>{grade}</span>
@@ -70,12 +121,11 @@ function GesBadge({ grade, label }: { grade: string; label: string }) {
           backgroundColor: GES_COLORS[grade],
           borderRadius: '0 9999px 9999px 0',
           height: 36,
-          minWidth: 60,
-          maxWidth: 80,
+          width: 76,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          paddingLeft: 10,
+          paddingLeft: 12,
         }}
       >
         <span style={BADGE_LETTER_STYLE}>{grade}</span>
@@ -84,7 +134,7 @@ function GesBadge({ grade, label }: { grade: string; label: string }) {
   )
 }
 
-/* ── Transport grouping ──────────────────────────────────────────────────── */
+/* ── Transports — parsing + couleurs de lignes (identiques au natif) ─────── */
 const METRO_COLORS: Record<string, string> = {
   '1': '#FFCD00', '2': '#003CA6', '3': '#837902', '3b': '#6EC4E8',
   '4': '#CF009E', '5': '#FF7E2E', '6': '#6ECA97', '7': '#FA9ABA',
@@ -95,48 +145,95 @@ const RER_COLORS: Record<string, string> = {
   A: '#FF2442', B: '#4DA4DC', C: '#FFD200', D: '#00814F', E: '#C25BAA',
 }
 
-function parseLine(str: string): { number: string; name: string; color: string; darkText?: boolean } {
-  const metro = str.match(/^M(\d{1,2}[ab]?)\s*(.*)$/)
+/** Jetons émis par le backfill : « M1 Bastille », « M7bis … », « RER A … », « TN H … ». */
+function parseLine(str: string): { number: string; name: string; color: string; darkText: boolean } {
+  const metro = str.match(/^M(\d{1,2})(bis)?\s+(.+)$/)
   if (metro) {
-    const n = metro[1]; const c = METRO_COLORS[n] || '#999'
-    return { number: n, name: metro[2], color: c, darkText: n === '1' || n === '9' || n === '13' }
+    const base = metro[1]
+    return {
+      number: metro[2] ? `${base}b` : base,
+      name: metro[3],
+      color: METRO_COLORS[base] || '#999',
+      darkText: base === '1' || base === '9' || base === '13',
+    }
   }
-  const rer = str.match(/^RER\s+([A-E])\s*(.*)$/)
+  const rer = str.match(/^RER\s+([A-E])\s+(.+)$/)
   if (rer) {
-    const l = rer[1]; const c = RER_COLORS[l] || '#999'
-    return { number: l, name: rer[2] || `RER ${l}`, color: c, darkText: l === 'C' }
+    const l = rer[1]
+    return { number: l, name: rer[2], color: RER_COLORS[l] || '#999', darkText: l === 'C' }
   }
-  const bus = str.match(/^Bus\s+(.+)$/)
-  if (bus) return { number: bus[1], name: `Bus ${bus[1]}`, color: '#5A9FC9' }
-  return { number: str, name: str, color: '#666' }
+  const tn = str.match(/^TN\s+([A-Z]{1,2})\s+(.+)$/)
+  if (tn) return { number: tn[1], name: tn[2], color: '#8D5BA6', darkText: false }
+  return { number: str, name: str, color: '#666', darkText: false }
 }
 
-function getTransportType(str: string): 'metro' | 'rer' | 'tramway' | 'bus' {
+function getTransportType(str: string): 'metro' | 'rer' | 'transilien' {
   if (str.match(/^M\d/)) return 'metro'
   if (str.match(/^RER/)) return 'rer'
-  if (str.match(/^T\d/)) return 'tramway'
-  return 'bus'
+  if (str.match(/^TN/)) return 'transilien'
+  return 'metro'
 }
 
-const TRANSPORT_ORDER: Array<'metro' | 'rer' | 'tramway' | 'bus'> = ['metro', 'rer', 'tramway', 'bus']
-const TRANSPORT_LABELS = { metro: 'Métro', rer: 'RER', tramway: 'Tramway', bus: 'Bus' }
+const TRANSPORT_ORDER = ['metro', 'rer', 'transilien'] as const
+const TRANSPORT_LABELS: Record<string, string> = {
+  metro: 'Métro', rer: 'RER', transilien: 'Transilien',
+}
 
-function TransportItem({ line }: { line: string }) {
-  const p = parseLine(line)
+type Badge = { number: string; color: string; darkText: boolean }
+
+/** Une ligne par STATION (et non par ligne) : les badges se cumulent. */
+function groupStations(strs: string[]): Array<{ name: string; badges: Badge[] }> {
+  const order: string[] = []
+  const byStation: Record<string, Badge[]> = {}
+  for (const s of strs) {
+    const p = parseLine(s)
+    let badges = byStation[p.name]
+    if (!badges) {
+      badges = []
+      byStation[p.name] = badges
+      order.push(p.name)
+    }
+    if (!badges.some((b) => b.number === p.number)) {
+      badges.push({ number: p.number, color: p.color, darkText: p.darkText })
+    }
+  }
+  return order.map((name) => ({ name, badges: byStation[name] ?? [] }))
+}
+
+function StationRow({ name, badges, walk }: { name: string; badges: Badge[]; walk?: number }) {
   return (
-    <div className="flex items-center gap-2.5 py-2 border-b border-black/8 last:border-0">
-      <div
-        className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 font-black text-[10px] leading-none"
-        style={{ backgroundColor: p.color, color: p.darkText ? '#000' : '#fff' }}
-      >
-        {p.number}
+    <div className="flex items-center gap-2.5 py-2 border-b border-black/8">
+      <div className="flex items-center shrink-0" style={{ gap: 3 }}>
+        {badges.map((b) => (
+          <span
+            key={b.number}
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: 20,
+              height: 20,
+              backgroundColor: b.color,
+              color: b.darkText ? '#000' : '#fff',
+              fontSize: 10,
+              fontWeight: 900,
+              lineHeight: 1,
+            }}
+          >
+            {b.number}
+          </span>
+        ))}
       </div>
-      <span className="text-neutral-600 text-sm">{p.name}</span>
+      <span className="truncate" style={{ color: '#57534E', fontSize: 14 }}>{name}</span>
+      {walk != null && (
+        <span className="flex items-center ml-auto shrink-0" style={{ gap: 3 }}>
+          <Footprints size={11} color="#A8A29E" />
+          <span style={{ color: '#A8A29E', fontSize: 12, fontWeight: 600 }}>{walk} min</span>
+        </span>
+      )}
     </div>
   )
 }
 
-/* ── Helpers ─────────────────────────────────────────────────────────────── */
+/* ── Helpers de mise en page ─────────────────────────────────────────────── */
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h3 className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest mb-3">{children}</h3>
 }
@@ -151,24 +248,14 @@ function GreyBox({ children, className, style }: { children: React.ReactNode; cl
 
 function TableRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between py-2.5 border-b border-black/8 last:border-0 gap-4">
+    <div className="flex items-start justify-between py-2.5 border-b border-black/8 gap-4">
       <span className="text-neutral-500 text-sm shrink-0">{label}</span>
       <span className="text-neutral-900 text-sm font-medium text-right">{value}</span>
     </div>
   )
 }
 
-/* ── Photo slide variants ────────────────────────────────────────────────── */
-const slideVariants = {
-  enter: (dir: number) => ({ x: dir >= 0 ? '100%' : '-100%', opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir >= 0 ? '-100%' : '100%', opacity: 0 }),
-}
-
-/* ── Media tab type ──────────────────────────────────────────────────────── */
-type MediaTab = 'photos' | 'plan' | 'matterport'
-
-/* ── Component ───────────────────────────────────────────────────────────── */
+/* ── Composant ───────────────────────────────────────────────────────────── */
 interface PropertyDetailSheetProps {
   property: Property | null
   open: boolean
@@ -208,111 +295,137 @@ export default function PropertyDetailSheet({
   hideBottomBar,
   previewMode = false,
 }: PropertyDetailSheetProps) {
-  const [mediaTab, setMediaTab] = useState<MediaTab>('photos')
-  const [photoState, setPhotoState] = useState({ index: 0, dir: 0 })
-  const [lightbox, setLightbox] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const touchStartX = useRef<number | null>(null)
-  const didSwipe = useRef(false)
+  const [mapFull, setMapFull] = useState(false)
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setMounted(true) }, [])
+  // Repères de quartier OpenStreetMap. APPEL AVANT tout retour anticipé :
+  // l'ordre des hooks ne doit jamais changer d'un rendu à l'autre.
+  const pois = useNearbyPois(property?.mapLat, property?.mapLng)
+  const poiCounts = useMemo(() => {
+    const c: Partial<Record<PoiCat, number>> = {}
+    for (const p of pois) c[p.cat] = (c[p.cat] ?? 0) + 1
+    return c
+  }, [pois])
 
   useEffect(() => {
-    if (!open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMediaTab('photos')
-      setPhotoState({ index: 0, dir: 0 })
-      setLightbox(false)
-    }
+    queueMicrotask(() => setMounted(true))
+  }, [])
+
+  useEffect(() => {
+    if (!open) queueMicrotask(() => setMapFull(false))
   }, [open])
 
   if (!property) return null
 
-  // Identité de marque = agence (logo + nom), fallback sur l'agent.
+  // Identité de marque = agence (logo + nom), repli sur l'agent.
   const brandName = property.agencyName ?? property.agentName
   const brandLogo = property.agencyLogo ?? property.agentAvatar
+  const brandInitial = (brandName?.trim().charAt(0) || '?').toUpperCase()
 
-  const gallery = property.gallery
-  // Garde défensive : ne jamais passer une src vide/undefined à <Image>.
-  // gallery peut être vide (source qui n'aurait pas de visuel) → repli.
-  const currentPhoto = gallery[photoState.index] ?? DEFAULT_FALLBACK_IMAGE
-  const fmtPrice = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)
-  const fmtPpm = property.pricePerSqm
-    ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.pricePerSqm)
-    : null
+  const ppm = property.pricePerSqm ?? Math.round(property.price / Math.max(property.surface, 1))
 
-  const goNext = () => setPhotoState(s => ({ index: (s.index + 1) % gallery.length, dir: 1 }))
-  const goPrev = () => setPhotoState(s => ({ index: (s.index - 1 + gallery.length) % gallery.length, dir: -1 }))
+  // « Cave » est déjà listée dans Caractéristiques : même filtre que le feed.
+  const features = (property.features ?? []).filter((f) => f !== 'Cave')
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    didSwipe.current = false
-  }
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return
-    const delta = e.changedTouches[0].clientX - touchStartX.current
-    if (Math.abs(delta) > 40) {
-      didSwipe.current = true
-      delta < 0 ? goNext() : goPrev()
+  // Temps de marche par station (pré-calculé au backfill ; min si plusieurs quais).
+  const walkByStation: Record<string, number> = {}
+  for (const mt of property.mapTransports ?? []) {
+    if (mt.walkMin != null) {
+      walkByStation[mt.name] =
+        walkByStation[mt.name] == null ? mt.walkMin : Math.min(walkByStation[mt.name], mt.walkMin)
     }
-    touchStartX.current = null
   }
-  const handlePhotoClick = () => { if (!didSwipe.current) setLightbox(true) }
 
-  const tabs = [
-    { key: 'photos' as MediaTab, label: 'Photos', Icon: Camera },
-    { key: 'plan' as MediaTab, label: 'Plan', Icon: Map },
-    ...(property.matterportUrl ? [{ key: 'matterport' as MediaTab, label: 'Visite virtuelle', Icon: Globe }] : []),
-  ]
+  const hasMap = property.mapLat != null && property.mapLng != null
 
-  /* ── Transport grouping ──────────────────────────────────────────────── */
-  const groupedTransports = TRANSPORT_ORDER.reduce<Record<string, string[]>>((acc, type) => {
-    acc[type] = (property.transports ?? []).filter(t => getTransportType(t) === type)
-    return acc
-  }, { metro: [], rer: [], tramway: [], bus: [] })
+  // Médias de démonstration : jamais dans l'aperçu agent, qui doit montrer
+  // exactement ce que l'agence a fourni (et rien d'autre).
+  const photos =
+    property.gallery.length > 0
+      ? property.gallery
+      : previewMode
+        ? []
+        : [property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE, ...DEMO_PHOTOS]
+  const planUrls = previewMode ? [] : DEMO_PLAN_URLS
+  const tourUrl = property.matterportUrl ?? (previewMode ? undefined : DEMO_TOUR_URL)
 
-  /* ── Photo lightbox (portal) ─────────────────────────────────────────── */
-  const LightboxPortal = mounted && lightbox ? createPortal(
-    <div
-      className="fixed inset-0 z-[500] bg-black flex items-center justify-center"
-      onClick={() => setLightbox(false)}
-    >
-      <div className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
-        <Image src={currentPhoto} alt="" fill className="object-contain" sizes="100vw" />
-        <button
-          onClick={() => setLightbox(false)}
-          className="absolute right-4 w-9 h-9 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
-          style={{ top: 'max(env(safe-area-inset-top, 16px), 16px)' }}
-        >
-          <X size={16} className="text-white" />
-        </button>
-        <div
-          className="absolute left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5 z-10"
-          style={{ top: 'max(env(safe-area-inset-top, 16px), 16px)' }}
-        >
-          <span className="text-white text-xs font-medium">{photoState.index + 1} / {gallery.length}</span>
-        </div>
-        <button
-          onClick={goPrev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center"
-        >
-          <ChevronLeft size={20} className="text-white" />
-        </button>
-        <button
-          onClick={goNext}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center"
-        >
-          <ChevronRight size={20} className="text-white" />
-        </button>
-      </div>
-    </div>,
-    document.body,
-  ) : null
+  const showQuartier =
+    previewMode ||
+    hasMap ||
+    Boolean(property.irisZone) ||
+    (property.transports?.length ?? 0) > 0 ||
+    (property.nearbyPlaces?.length ?? 0) > 0 ||
+    Boolean(property.neighborhoodVibe)
+
+  /* ── Carte plein écran (portail) ─────────────────────────────────────── */
+  const MapFullPortal =
+    mounted && mapFull && hasMap
+      ? createPortal(
+          <div className="fixed inset-0 z-[550]" style={{ backgroundColor: '#FDF5F2' }}>
+            <MapZone
+              lat={property.mapLat!}
+              lng={property.mapLng!}
+              polygon={property.irisPolygon}
+              transports={property.mapTransports}
+              pois={pois}
+              legacyPois={property.mapPois}
+              height="100%"
+              interactive
+              fit="all"
+            />
+            <button
+              type="button"
+              onClick={() => setMapFull(false)}
+              className="absolute flex items-center justify-center rounded-full z-10"
+              style={{
+                right: 14,
+                top: 'calc(env(safe-area-inset-top, 0px) + 8px)',
+                width: 38,
+                height: 38,
+                background: 'rgba(0,0,0,0.6)',
+              }}
+              aria-label="Fermer la carte"
+            >
+              <X size={24} strokeWidth={2.4} color="#fff" />
+            </button>
+            <div
+              className="absolute flex flex-col pointer-events-none z-10"
+              style={{
+                left: 14,
+                bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
+                background: 'rgba(255,255,255,0.94)',
+                borderRadius: 14,
+                paddingLeft: 13,
+                paddingRight: 13,
+                paddingTop: 11,
+                paddingBottom: 11,
+                gap: 7,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.14)',
+              }}
+            >
+              {(Object.keys(POI_LABELS) as PoiCat[]).map((cat) => (
+                <div key={cat} className="flex items-center" style={{ gap: 7 }}>
+                  <span
+                    className="rounded-full shrink-0"
+                    style={{ width: 8, height: 8, backgroundColor: POI_COLORS[cat] }}
+                  />
+                  <span style={{ color: '#44403c', fontSize: 11.5, fontWeight: 500 }}>
+                    {POI_LABELS[cat]}
+                  </span>
+                  <span style={{ color: '#A8A29E', fontSize: 11.5, fontWeight: 700 }}>
+                    {poiCounts[cat] ?? 0}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>,
+          document.body,
+        )
+      : null
 
   return (
     <>
-      {LightboxPortal}
+      {MapFullPortal}
 
       <AnimatePresence>
         {open && (
@@ -335,239 +448,315 @@ export default function PropertyDetailSheet({
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             >
-              {/* ── STICKY HEADER ─────────────────────────────────────── */}
-              <div className="shrink-0" style={{ backgroundColor: '#FDF5F2', paddingTop: 'max(env(safe-area-inset-top, 16px), 16px)', boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 0 rgba(0,0,0,0.06)' }}>
-                <div className="px-4 py-3">
-                  {/* Agency + Close */}
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/15 flex items-center justify-center">
-                        {brandLogo ? (
-                          <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
-                        ) : (
-                          <span className="text-white text-[11px] font-bold">{brandName.charAt(0)}</span>
-                        )}
-                      </div>
-                      <span className="text-neutral-600 text-sm font-medium truncate">{brandName}</span>
-                    </div>
-                    <button
-                      onClick={onClose}
-                      className="w-9 h-9 bg-black/8 rounded-full flex items-center justify-center shrink-0"
+              {/* ── BARRE COLLANTE — agence + croix ─────────────────────
+                  Spécifique au web : sur mobile, la poignée du bottom-sheet
+                  suffit à refermer. Tout le reste de l'en-tête défile, comme
+                  dans l'app. */}
+              <div
+                className="shrink-0"
+                style={{
+                  backgroundColor: '#FDF5F2',
+                  paddingTop: 'max(env(safe-area-inset-top, 12px), 12px)',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 0 rgba(0,0,0,0.06)',
+                }}
+              >
+                <div className="px-4 pb-3 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className="rounded-full overflow-hidden shrink-0 flex items-center justify-center"
+                      style={{
+                        width: 32,
+                        height: 32,
+                        backgroundColor: '#171717',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                      }}
                     >
-                      <X size={16} className="text-neutral-600" />
-                    </button>
-                  </div>
-
-                  {/* Price */}
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-neutral-900 font-black text-[22px] leading-none">{fmtPrice} €</span>
-                    {fmtPpm && <span className="text-neutral-500 text-xs">soit {fmtPpm} €/m²</span>}
-                  </div>
-
-                  {/* Location — prominent */}
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <MapPin size={12} className="text-neutral-400 shrink-0" />
-                    <span className="text-neutral-900 text-sm font-medium">{formatLocation(property.arrondissement, property.district)}</span>
-                  </div>
-
-                  {/* Stats chips */}
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {[
-                      { v: `${property.surface} m²` },
-                      { v: `${property.rooms} pièces` },
-                      ...(property.bedrooms ? [{ v: `${property.bedrooms} ch.` }] : []),
-                      ...(property.floor ? [{ v: property.totalFloors ? `${property.floor}e / ${property.totalFloors}e ét.` : `${property.floor}e ét.` }] : []),
-                    ].map(({ v }) => (
-                      <span key={v} className="bg-black/5 border border-black/8 rounded-xl px-2.5 py-1 text-neutral-800 text-xs font-semibold">{v}</span>
-                    ))}
-                  </div>
-
-                  {/* Feature checkmarks — Cave excluded */}
-                  {property.features && property.features.filter(f => f !== 'Cave').length > 0 && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-                      {property.features.filter(f => f !== 'Cave').map((f) => (
-                        <div key={f} className="flex items-center gap-1">
-                          <Check size={10} className="text-emerald-400 shrink-0" />
-                          <span className="text-neutral-600 text-xs">{f}</span>
-                        </div>
-                      ))}
+                      {brandLogo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-white text-[12px] font-bold">{brandInitial}</span>
+                      )}
                     </div>
-                  )}
+                    <span className="truncate" style={{ color: '#1C1917', fontSize: 14, fontWeight: 600 }}>
+                      {brandName}
+                    </span>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="w-9 h-9 bg-black/8 rounded-full flex items-center justify-center shrink-0"
+                    aria-label="Fermer"
+                  >
+                    <X size={16} className="text-neutral-600" />
+                  </button>
                 </div>
-                <div className="h-px bg-black/8 mx-4" />
               </div>
 
-              {/* ── CONTENT AREA ──────────────────────────────────────── */}
+              {/* ── ZONE DE CONTENU ────────────────────────────────────── */}
               <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: '#FDF5F2' }}>
-
-                {/* Scrollable body */}
                 <div className="absolute inset-0 overflow-y-auto scrollbar-hide" style={{ paddingBottom: 96 }}>
 
-                  {/* Media tabs + carousel */}
-                  <div className="px-3 pt-3">
-                    <div className="flex gap-1.5 mb-2">
-                      {tabs.map(({ key, label, Icon }) => (
-                        <button
-                          key={key}
-                          onClick={() => setMediaTab(key)}
-                          style={mediaTab === key ? { backgroundColor: '#A64B27' } : {}}
-                          className={clsx(
-                            'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all',
-                            mediaTab === key ? 'text-white' : 'text-neutral-500 border border-black/15',
-                          )}
+                  {/* ── EN-TÊTE TEXTE — prix · lieu · chips · critères ── */}
+                  <div className="px-4" style={{ paddingTop: 16 }}>
+                    {/* Prix + prix au m² */}
+                    <div className="flex items-baseline flex-wrap" style={{ columnGap: 8, marginTop: 4 }}>
+                      <span style={{ color: '#1C1917', fontSize: 24, fontWeight: 900, lineHeight: '26px' }}>
+                        {euro(property.price)}
+                      </span>
+                      <span style={{ color: '#78716C', fontSize: 12 }}>soit {perSqm(ppm)}</span>
+                    </div>
+
+                    {/* Localisation */}
+                    <div className="flex items-center" style={{ gap: 6, marginTop: 6 }}>
+                      <MapPin size={12} color="#A8A29E" strokeWidth={2.5} className="shrink-0" />
+                      <span style={{ color: '#1C1917', fontSize: 14, fontWeight: 500 }}>
+                        {formatLocation(property.arrondissement, property.district)}
+                      </span>
+                    </div>
+
+                    {/* Chips stats — l'étage vit dans Caractéristiques, comme dans l'app */}
+                    <div className="flex flex-wrap" style={{ gap: 6, marginTop: 10 }}>
+                      {[
+                        `${property.surface} m²`,
+                        `${property.rooms} pièces`,
+                        ...(property.bedrooms != null ? [`${property.bedrooms} ch.`] : []),
+                      ].map((v) => (
+                        <span
+                          key={v}
+                          style={{
+                            backgroundColor: 'rgba(0,0,0,0.05)',
+                            border: '1px solid rgba(0,0,0,0.08)',
+                            borderRadius: 12,
+                            padding: '5px 10px',
+                            color: '#292524',
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
                         >
-                          <Icon size={15} />
-                          {label}
-                        </button>
+                          {v}
+                        </span>
                       ))}
                     </div>
 
-                    <div className="relative rounded-2xl overflow-hidden bg-neutral-900 mb-5" style={{ aspectRatio: '4/3' }}>
-                      {mediaTab === 'photos' && (
-                        <>
-                          {/* Animated photo — swipe + tap */}
-                          <div
-                            className="absolute inset-0 cursor-pointer"
-                            onClick={handlePhotoClick}
-                            onTouchStart={handleTouchStart}
-                            onTouchEnd={handleTouchEnd}
-                          >
-                            <AnimatePresence initial={false} custom={photoState.dir} mode="sync">
-                              <motion.div
-                                key={photoState.index}
-                                custom={photoState.dir}
-                                variants={slideVariants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{ type: 'tween', duration: 0.22, ease: 'easeInOut' }}
-                                className="absolute inset-0"
-                              >
-                                <Image
-                                  src={currentPhoto}
-                                  alt={`Photo ${photoState.index + 1}`}
-                                  fill
-                                  className="object-cover"
-                                  sizes="400px"
-                                />
-                              </motion.div>
-                            </AnimatePresence>
-                          </div>
+                    {/* Équipements — puces ✓ vertes (même rendu que le feed) */}
+                    {features.length > 0 && (
+                      <div
+                        className="flex flex-wrap"
+                        style={{ columnGap: 14, rowGap: 8, marginTop: 12 }}
+                      >
+                        {features.map((f) => (
+                          <span key={f} className="flex items-center" style={{ gap: 4 }}>
+                            <Check size={11} color="#34d399" strokeWidth={3} className="shrink-0" />
+                            <span style={{ color: '#44403C', fontSize: 13 }}>{f}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
-                          {/* Left arrow — infinite */}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); goPrev() }}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
-                          >
-                            <ChevronLeft size={16} className="text-white" />
-                          </button>
-
-                          {/* Right arrow — infinite */}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); goNext() }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
-                          >
-                            <ChevronRight size={16} className="text-white" />
-                          </button>
-
-                          {/* Counter */}
-                          <div className="absolute bottom-2.5 right-3 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 z-10">
-                            <span className="text-white text-[11px] font-medium">{photoState.index + 1} / {gallery.length}</span>
-                          </div>
-                        </>
-                      )}
-                      {mediaTab === 'plan' && (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                          <Map size={36} className="text-neutral-300" />
-                          <p className="text-neutral-400 text-xs">Plan disponible sur demande</p>
-                        </div>
-                      )}
-                      {mediaTab === 'matterport' && property.matterportUrl && (
-                        <iframe src={property.matterportUrl} className="w-full h-full" allowFullScreen />
-                      )}
-                    </div>
+                    {/* Critères NON matchés (✗ barrés) puis doutes (?) — la fiche
+                        montre aussi ce qui ne colle pas, c'est la spec scoring. */}
+                    {(property.matchDetail?.unmatched?.length ?? 0) +
+                      (property.matchDetail?.doubts?.length ?? 0) >
+                      0 && (
+                      <div
+                        className="flex flex-wrap"
+                        style={{ columnGap: 14, rowGap: 8, marginTop: 12 }}
+                      >
+                        {(property.matchDetail?.unmatched ?? []).map((c) => (
+                          <span key={`um-${c.label}`} className="flex items-center" style={{ gap: 4 }}>
+                            <X size={11} color="#a8a29e" strokeWidth={3} className="shrink-0" />
+                            <span style={{ color: '#a8a29e', fontSize: 13, textDecoration: 'line-through' }}>
+                              {c.label}
+                            </span>
+                          </span>
+                        ))}
+                        {(property.matchDetail?.doubts ?? []).map((c) => (
+                          <span key={`db-${c.label}`} className="flex items-center" style={{ gap: 4 }}>
+                            <HelpCircle size={11} color="#d97706" strokeWidth={2.5} className="shrink-0" />
+                            <span style={{ color: '#b45309', fontSize: 13 }}>{c.label}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
+                  <div className="h-px bg-black/8 mx-4" style={{ marginTop: 14 }} />
+
+                  {/* ── MÉDIAS — onglets soulignés Photos / Plan / Visite ── */}
+                  <PropertyMediaTabs
+                    photos={photos}
+                    planUrls={planUrls}
+                    virtualTourUrl={tourUrl}
+                    coverUrl={property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE}
+                  />
+
                   {/* ── SECTIONS ── */}
-                  <div className="px-4 flex flex-col gap-7 pb-4">
+                  <div className="px-4 flex flex-col" style={{ paddingTop: 24, gap: 28 }}>
 
                     {/* Description */}
                     <div>
                       <SectionTitle>Description</SectionTitle>
                       <GreyBox className="px-4 py-4">
-                        <p className="text-neutral-600 text-sm leading-relaxed">{property.description}</p>
+                        <p style={{ color: '#57534E', fontSize: 14, lineHeight: '21px' }}>
+                          {property.description}
+                        </p>
                       </GreyBox>
                     </div>
 
                     {/* Quartier */}
-                    {(previewMode || (property.mapLat && property.mapLng)) && (
+                    {showQuartier && (
                       <div>
                         <SectionTitle>Quartier</SectionTitle>
+
                         {property.irisZone && (
-                          <div className="mb-3">
-                            <p className="text-neutral-900 text-sm font-semibold">{property.irisZone}</p>
+                          <div style={{ marginBottom: 12 }}>
+                            <p style={{ color: '#1C1917', fontSize: 14, fontWeight: 600 }}>
+                              {property.irisZone}
+                            </p>
                             {property.irisDescription && (
-                              <p className="text-neutral-500 text-xs mt-0.5 leading-relaxed">{property.irisDescription}</p>
+                              <p style={{ color: '#78716C', fontSize: 12, lineHeight: '17px', marginTop: 2 }}>
+                                {property.irisDescription}
+                              </p>
                             )}
                           </div>
                         )}
                         {previewMode && !property.irisZone && (
-                          <div className="mb-3">
+                          <div style={{ marginBottom: 12 }}>
                             <p className="text-neutral-300 italic text-sm">— Quartier non renseigné</p>
                           </div>
                         )}
 
-                        <GreyBox className="overflow-hidden mb-3" style={{ height: 200, isolation: 'isolate' }}>
-                          {property.mapLat && property.mapLng ? (
-                            <MapZone
-                              lat={property.mapLat}
-                              lng={property.mapLng}
-                              polygon={property.irisPolygon}
-                              transports={property.mapTransports}
-                              pois={property.mapPois}
-                            />
-                          ) : (
-                            <div className="flex flex-col items-center justify-center w-full h-full text-center px-6">
-                              <Map size={28} className="text-neutral-300 mb-2" />
-                              <p className="text-neutral-400 text-xs">Carte non disponible</p>
-                              <p className="text-neutral-300 text-[11px] mt-0.5">Sera générée à la publication.</p>
+                        {/* Carte de quartier — figée, comme dans l'app : les gestes
+                            Leaflet se disputeraient le défilement de la fiche. Le
+                            clic ouvre la version manipulable en plein écran. */}
+                        {hasMap ? (
+                          <>
+                            <div className="relative">
+                              <GreyBox className="overflow-hidden" style={{ height: 260, isolation: 'isolate' }}>
+                                <MapZone
+                                  lat={property.mapLat!}
+                                  lng={property.mapLng!}
+                                  polygon={property.irisPolygon}
+                                  transports={property.mapTransports}
+                                  pois={pois}
+                                  legacyPois={property.mapPois}
+                                  height="100%"
+                                  interactive={false}
+                                  fit="near"
+                                />
+                              </GreyBox>
+                              {/* Couche de clic POSÉE SUR la carte : Leaflet avale
+                                  les événements, un parent ne les verrait jamais. */}
+                              <button
+                                type="button"
+                                onClick={() => setMapFull(true)}
+                                className="absolute inset-0 rounded-2xl"
+                                aria-label="Agrandir la carte du quartier"
+                              />
+                              <span
+                                className="absolute flex items-center justify-center pointer-events-none"
+                                style={{
+                                  top: 10,
+                                  right: 10,
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: 10,
+                                  background: 'rgba(0,0,0,0.55)',
+                                }}
+                              >
+                                <Maximize2 size={17} strokeWidth={2.2} color="#fff" />
+                              </span>
                             </div>
-                          )}
-                        </GreyBox>
 
-                        {/* Transports groupés par type */}
+                            {/* Légende — même palette que les points de la carte */}
+                            <div
+                              className="flex flex-wrap items-center"
+                              style={{ gap: 10, marginTop: 9 }}
+                            >
+                              {(Object.keys(POI_LABELS) as PoiCat[]).map((cat) => (
+                                <span key={cat} className="flex items-center" style={{ gap: 5 }}>
+                                  <span
+                                    className="rounded-full shrink-0"
+                                    style={{ width: 8, height: 8, backgroundColor: POI_COLORS[cat] }}
+                                  />
+                                  <span style={{ color: '#78716c', fontSize: 10.5, fontWeight: 500 }}>
+                                    {POI_LABELS[cat]}
+                                  </span>
+                                </span>
+                              ))}
+                            </div>
+                            <p style={{ color: '#A8A29E', fontSize: 10, marginTop: 6, marginBottom: 12 }}>
+                              Repères OpenStreetMap · Toucher la carte pour l’agrandir
+                            </p>
+                          </>
+                        ) : (
+                          <GreyBox
+                            className="flex flex-col items-center justify-center"
+                            style={{ height: 150, gap: 6, marginBottom: 12 }}
+                          >
+                            <MapIcon size={26} color="#D6D3D1" />
+                            <p style={{ color: '#A8A29E', fontSize: 12 }}>
+                              Carte du quartier bientôt disponible
+                            </p>
+                          </GreyBox>
+                        )}
+
+                        {/* Transports — une ligne par STATION, badges cumulés */}
                         {property.transports && property.transports.length > 0 && (
-                          <GreyBox className="px-4 py-2 mb-3">
-                            {TRANSPORT_ORDER.map(type => {
-                              const lines = groupedTransports[type]
-                              if (!lines.length) return null
+                          <GreyBox className="px-4 py-1" style={{ marginBottom: 12 }}>
+                            {TRANSPORT_ORDER.map((type) => {
+                              const strs = (property.transports ?? []).filter(
+                                (t) => getTransportType(t) === type,
+                              )
+                              if (!strs.length) return null
                               return (
                                 <div key={type}>
-                                  <p className="text-neutral-400 text-[9px] font-bold uppercase tracking-wider pt-2 pb-0.5">
+                                  <p
+                                    className="uppercase"
+                                    style={{
+                                      color: '#A8A29E',
+                                      fontSize: 9,
+                                      fontWeight: 700,
+                                      letterSpacing: 1,
+                                      paddingTop: 8,
+                                      paddingBottom: 2,
+                                    }}
+                                  >
                                     {TRANSPORT_LABELS[type]}
                                   </p>
-                                  {lines.map(t => <TransportItem key={t} line={t} />)}
+                                  {groupStations(strs).map((g) => (
+                                    <StationRow
+                                      key={g.name}
+                                      name={g.name}
+                                      badges={g.badges}
+                                      walk={walkByStation[g.name]}
+                                    />
+                                  ))}
                                 </div>
                               )
                             })}
                           </GreyBox>
                         )}
 
-                        {(property.nearbyPlaces?.length || property.neighborhoodVibe) && (
+                        {((property.nearbyPlaces?.length ?? 0) > 0 || property.neighborhoodVibe) && (
                           <GreyBox className="px-4 py-1">
                             {property.nearbyPlaces && property.nearbyPlaces.length > 0 && (
                               <TableRow
                                 label="À proximité"
                                 value={
-                                  <div className="flex flex-col items-end gap-0.5">
+                                  <span className="flex flex-col items-end" style={{ gap: 2 }}>
                                     {property.nearbyPlaces.map((p) => (
-                                      <span key={p} className="text-neutral-600 text-sm">{p}</span>
+                                      <span key={p} style={{ color: '#57534E', fontSize: 14, fontWeight: 400 }}>
+                                        {p}
+                                      </span>
                                     ))}
-                                  </div>
+                                  </span>
                                 }
                               />
                             )}
-                            {property.neighborhoodVibe && <TableRow label="Ambiance" value={property.neighborhoodVibe} />}
+                            {property.neighborhoodVibe && (
+                              <TableRow label="Ambiance" value={property.neighborhoodVibe} />
+                            )}
                           </GreyBox>
                         )}
                       </div>
@@ -655,13 +844,13 @@ export default function PropertyDetailSheet({
                         <PreviewRow
                           label="Charges mensuelles"
                           hasValue={property.monthlyCharges !== undefined}
-                          value={`${property.monthlyCharges} €`}
+                          value={property.monthlyCharges != null ? euro(property.monthlyCharges) : null}
                           previewMode={previewMode}
                         />
                         <PreviewRow
                           label="Taxe foncière"
                           hasValue={property.propertyTax !== undefined}
-                          value={`${property.propertyTax} €`}
+                          value={property.propertyTax != null ? euro(property.propertyTax) : null}
                           previewMode={previewMode}
                         />
                       </GreyBox>
@@ -670,7 +859,7 @@ export default function PropertyDetailSheet({
                     {/* Diagnostics — DPE flèche, GES pilule */}
                     <div>
                       <SectionTitle>Diagnostics</SectionTitle>
-                      <GreyBox className="px-4 py-4 flex gap-8">
+                      <GreyBox className="px-4 py-4 flex gap-6">
                         <DpeBadge grade={property.dpe} label="DPE — Énergie" />
                         {property.ges && <GesBadge grade={property.ges} label="GES — Climat" />}
                       </GreyBox>
@@ -682,57 +871,55 @@ export default function PropertyDetailSheet({
                         <SectionTitle>Composition</SectionTitle>
                         <GreyBox className="px-4 py-1">
                           {property.composition.map(({ label, surface }) => (
-                            <div key={label} className="flex items-center justify-between py-2.5 border-b border-black/8 last:border-0">
-                              <span className="text-neutral-500 text-sm">{label}</span>
-                              <span className="text-neutral-900 text-sm font-semibold">{surface} m²</span>
-                            </div>
+                            <TableRow key={label} label={label} value={`${surface} m²`} />
                           ))}
                         </GreyBox>
                       </div>
                     )}
 
-                    {/* Marché */}
-                    {property.marketAvgPricePerSqm && (
+                    {/* Marché immobilier */}
+                    {property.marketAvgPricePerSqm != null && (
                       <div>
                         <SectionTitle>Marché immobilier</SectionTitle>
-                        <GreyBox className="px-4 py-3">
-                          <div className="flex items-baseline gap-2 mb-1">
-                            <span className="text-neutral-900 font-black text-xl">{fmtPrice} €</span>
-                            {fmtPpm && <span className="text-neutral-500 text-xs">{fmtPpm} €/m²</span>}
-                          </div>
-                          <div className="h-px bg-black/8 my-3" />
-                          <div className="flex flex-col gap-2.5">
-                            <div className="flex justify-between items-center">
-                              <span className="text-neutral-500 text-sm">Prix moyen secteur</span>
-                              <span className="text-neutral-900 text-sm font-medium">
-                                {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.marketAvgPricePerSqm)} €/m²
+                        <GreyBox className="px-4 py-4">
+                          <div className="flex items-baseline" style={{ gap: 8, marginBottom: 4 }}>
+                            <span style={{ color: '#1C1917', fontSize: 20, fontWeight: 900 }}>
+                              {euro(property.price)}
+                            </span>
+                            {property.pricePerSqm != null && (
+                              <span style={{ color: '#78716C', fontSize: 12 }}>
+                                {perSqm(property.pricePerSqm)}
                               </span>
-                            </div>
-                            {property.marketEvolution10y && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-neutral-500 text-sm">Évolution 10 ans</span>
-                                <span className={clsx('text-sm font-bold', property.marketEvolution10y.startsWith('+') ? 'text-emerald-600' : 'text-red-500')}>
+                            )}
+                          </div>
+                          <div className="h-px bg-black/8" style={{ marginTop: 12, marginBottom: 12 }} />
+                          <TableRow
+                            label="Prix moyen secteur"
+                            value={perSqm(property.marketAvgPricePerSqm)}
+                          />
+                          {property.marketEvolution10y && (
+                            <TableRow
+                              label="Évolution 10 ans"
+                              value={
+                                <span
+                                  className="font-bold"
+                                  style={{
+                                    color: property.marketEvolution10y.startsWith('+')
+                                      ? '#059669'
+                                      : '#ef4444',
+                                  }}
+                                >
                                   {property.marketEvolution10y}
                                 </span>
-                              </div>
-                            )}
-                            {property.marketHighPrice && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-neutral-500 text-sm">Prix haut</span>
-                                <span className="text-neutral-900 text-sm font-medium">
-                                  {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.marketHighPrice)} €/m²
-                                </span>
-                              </div>
-                            )}
-                            {property.marketLowPrice && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-neutral-500 text-sm">Prix bas</span>
-                                <span className="text-neutral-900 text-sm font-medium">
-                                  {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.marketLowPrice)} €/m²
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                              }
+                            />
+                          )}
+                          {property.marketHighPrice != null && (
+                            <TableRow label="Prix haut" value={perSqm(property.marketHighPrice)} />
+                          )}
+                          {property.marketLowPrice != null && (
+                            <TableRow label="Prix bas" value={perSqm(property.marketLowPrice)} />
+                          )}
                         </GreyBox>
                       </div>
                     )}
@@ -741,8 +928,7 @@ export default function PropertyDetailSheet({
                   </div>
                 </div>
 
-
-                {/* ── FLOATING PILLS ──────────────────────────────────── */}
+                {/* ── PASTILLES FLOTTANTES ────────────────────────────── */}
                 {!hideBottomBar && <div
                   className={clsx(
                     'absolute left-0 right-0 px-3 flex gap-2 items-center z-20',
@@ -750,11 +936,11 @@ export default function PropertyDetailSheet({
                   )}
                   style={{ bottom: 8, filter: 'drop-shadow(0 -2px 12px rgba(0,0,0,0.12))' }}
                 >
-                  {/* Left pill — 3 CTAs */}
-                  <div className="flex-1 rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden" style={{ backgroundColor: '#A64B27' }}>
+                  {/* Pastille gauche — 3 CTA */}
+                  <div className="flex-1 rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden" style={{ backgroundColor: ACCENT }}>
                     {[
                       { icon: MessageCircle, label: 'Message', onClick: onMessage },
-                      { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = 'tel:+33670744935' } },
+                      { icon: Phone, label: 'Appeler', onClick: () => { window.location.href = `tel:${TEST_PHONE}` } },
                       { icon: CalendarPlus, label: 'Visiter', onClick: undefined },
                     ].map(({ icon: Icon, label, onClick }, i, arr) => (
                       <div key={label} className="flex-1 flex items-center justify-center">
@@ -767,8 +953,8 @@ export default function PropertyDetailSheet({
                     ))}
                   </div>
 
-                  {/* Right pill — Like + Share */}
-                  <div className="rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden px-1" style={{ backgroundColor: '#A64B27' }}>
+                  {/* Pastille droite — Like + Partage (compteurs propres au web) */}
+                  <div className="rounded-full shadow-xl shadow-black/20 flex items-center overflow-hidden px-1" style={{ backgroundColor: ACCENT }}>
                     <button
                       onClick={onToggleFavorite}
                       className="flex flex-col items-center gap-0.5 px-3 py-2.5 rounded-full active:bg-white/10 transition-colors"

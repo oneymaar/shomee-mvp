@@ -17,7 +17,6 @@ import {
 } from '@/lib/scales'
 import { PROPERTY_TYPES } from '@/lib/onboardingCatalog'
 import { CriteriaChip } from './CriteriaChip'
-import { RarityGauge } from './RarityGauge'
 import { PrimaryButton, ACCENT, BG, INK, MUTED } from './ui'
 
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(
@@ -88,7 +87,12 @@ export function Recap({
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        <RarityGauge />
+        {/* Jauge de rareté — MASQUÉE pour l'instant (29/07) : calculée sur
+            NOTRE catalogue, pas sur le marché réel, elle pouvait déclarer
+            « rare » une recherche banale (« il y en a plein, des appartements
+            avec ces caractéristiques ») — indication infidèle, et un encart de
+            trop sur cet écran. À réactiver quand le catalogue reflétera le
+            marché : remettre `<RarityGauge />` et son import. */}
         <BlockCard icon={<MapPin size={16} color={ACCENT} />} title="Quartiers" onEdit={() => onEditBlock(1)}>
           <Text style={styles.value}>{locationText}</Text>
         </BlockCard>

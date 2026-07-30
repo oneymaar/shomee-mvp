@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -7,8 +6,6 @@ import { Image } from 'expo-image'
 import { Check, ChevronDown, Home, MapPin } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
 import { formatLocation } from '@shomee/core/utils/format'
-import { MatchBadge } from './MatchBadge'
-import { ScoreExplainModal } from './ScoreExplainModal'
 
 /** Prix formaté avec séparateurs de milliers (espace, style fr) sans dépendre
  *  d'Intl (support Hermes inégal). Ex. 1350000 → "1 350 000 €". */
@@ -29,7 +26,6 @@ interface Props {
  */
 export function PropertyOverlay({ property, onMore }: Props) {
   const insets = useSafeAreaInsets()
-  const [scoreOpen, setScoreOpen] = useState(false)
   const brandName = property.agencyName ?? property.agentName
   const brandLogo = property.agencyLogo ?? property.agentAvatar
   const initial = (brandName?.trim().charAt(0) ?? '?').toUpperCase()
@@ -78,8 +74,18 @@ export function PropertyOverlay({ property, onMore }: Props) {
 
             <View style={styles.row}>
               <Home size={14} color="#fff" strokeWidth={1.8} />
+              {/* Le type de bien (appartement/maison) n'apparaît plus ici — il
+                  vit dans la fiche ouverte. À la place : les CHAMBRES, l'info
+                  essentielle au premier coup d'œil (arbitrage du 29/07 — et le
+                  libellé d'avant disait « Appartement » en dur, même pour une
+                  maison). Omises proprement quand la donnée manque. */}
               <Text style={styles.spec} numberOfLines={1}>
-                Appartement · T{property.rooms} · {property.surface} m² · {formatPrice(property.price)}
+                T{property.rooms}
+                {property.bedrooms != null && property.bedrooms > 0
+                  ? ` · ${property.bedrooms} ch.`
+                  : ''}
+                {' · '}
+                {property.surface} m² · {formatPrice(property.price)}
               </Text>
             </View>
 
@@ -113,32 +119,21 @@ export function PropertyOverlay({ property, onMore }: Props) {
             )}
 
             <Pressable onPress={onMore} style={styles.more} hitSlop={8}>
-              <Text style={styles.moreTxt}>Voir l'annonce</Text>
+              <Text style={styles.moreTxt}>{"Voir l'annonce"}</Text>
               <ChevronDown size={14} color="#fff" />
             </Pressable>
           </View>
 
-          {/* MatchBadge — UNIQUEMENT si matchScore réel (jamais sur le seed).
-              Tapable quand le détail est transporté → modale d'explication
-              (matchés / non-matchés / doutes). */}
-          {property.matchScore != null && (
-            <Pressable
-              onPress={property.matchDetail ? () => setScoreOpen(true) : undefined}
-              hitSlop={6}
-            >
-              <MatchBadge score={property.matchScore} />
-            </Pressable>
-          )}
+          {/* MatchBadge (le % en bas à droite) — MASQUÉ pour l'instant, décision
+              du 29/07 : « c'est juste un chiffre et je préfère que les
+              utilisateurs soient focus sur ce qui est essentiel, à savoir la
+              vidéo ». Le score continue d'exister (matching, découverte,
+              plancher 60 %) — seul l'AFFICHAGE est retiré, partout : dans le
+              feed comme au-dessus de la fiche ouverte (c'est le même overlay).
+              Pour le réactiver : réimporter MatchBadge et rétablir
+              `{property.matchScore != null && <MatchBadge score={property.matchScore} />}`. */}
         </View>
       </View>
-
-      {property.matchDetail && (
-        <ScoreExplainModal
-          property={property}
-          visible={scoreOpen}
-          onClose={() => setScoreOpen(false)}
-        />
-      )}
     </View>
   )
 }

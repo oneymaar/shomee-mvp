@@ -20,6 +20,8 @@ import { apiFetch } from '@/lib/apiFetch'
 import { properties as mockProperties } from '@shomee/core/utils/mockData'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import type { Property } from '@/lib/types'
+import HandoffInstallPanel from '@/components/onboarding/HandoffInstallPanel'
+import { readTeaser, TEASER_VIDEO_COUNT, type TeaserHandoff } from '@/lib/handoff/teaser'
 
 // Identifiant de génération du feed — pour que feedStore.hasFeed() réponde vrai
 // aux montages suivants (retour navigation interne) sans re-fetch ni loader.
@@ -56,9 +58,18 @@ export default function FeedPage() {
   // navigations internes (favoris/messages/feed) sans re-fetch ni loader.
   const properties = useFeedStore((s) => s.properties)
   const [feedReady, setFeedReady] = useState(false)
+  // Mode teaser (S9) : arrivée depuis un lien de brief LLM pas encore revendiqué.
+  // Le web ne sert alors que TEASER_VIDEO_COUNT vidéos, puis la modale bloquante
+  // impose le passage par l'app. Cf. lib/handoff/teaser.ts.
+  const [teaser, setTeaser] = useState<TeaserHandoff | null>(null)
 
   useEffect(() => {
     let cancelled = false
+
+    // (0) Teaser : déposé par l'onboarding handoff juste avant le router.replace.
+    //     Lecture unique au montage (queueMicrotask → pas de setState dans l'effet).
+    const t = readTeaser()
+    if (t) queueMicrotask(() => { if (!cancelled) setTeaser(t) })
 
     // (a) Feed déjà en mémoire (retour navigation interne) → affichage immédiat.
     //     Pas de lecture sessionStorage, pas de fetch, pas d'écran narratif.
@@ -284,6 +295,16 @@ export default function FeedPage() {
     // flashing a mock video for the duration of the fetch.
     if (!feedReady || properties.length === 0) return items
 
+    // Teaser web : uniquement les premières vidéos, rien d'autre. Pas
+    // d'intercalaire, pas de fin de feed — la modale bloquante prend le relais
+    // dès le premier scroll.
+    if (teaser) {
+      for (const p of properties.slice(0, TEASER_VIDEO_COUNT)) {
+        items.push({ type: 'property', property: p })
+      }
+      return items
+    }
+
     for (const p of properties.slice(0, 3)) {
       items.push({ type: 'property', property: p })
       if (p.promising) items.push({ type: 'interstitial', property: p })
@@ -302,7 +323,11 @@ export default function FeedPage() {
     }
 
     return items
-  }, [resultsStage, properties, feedReady])
+  }, [resultsStage, properties, feedReady, teaser])
+
+  // Dérivé (surtout pas un état) : la modale bloquante s'ouvre dès que
+  // l'utilisateur atteint la dernière vidéo offerte en teaser.
+  const gateOpen = !!teaser && currentIndex >= TEASER_VIDEO_COUNT - 1
 
   // Step 1: BAIA found results → add b4 to DOM below eof-1 so the scroll has a destination
   const handleFoundResults = useCallback(() => {
@@ -393,7 +418,14 @@ export default function FeedPage() {
       <div
         ref={containerRef}
         className="absolute inset-x-0 top-0 overflow-y-scroll scrollbar-hide"
-        style={{ scrollSnapType: 'y mandatory', height: '100dvh' }}
+        style={{
+          scrollSnapType: 'y mandatory',
+          height: '100dvh',
+          // Teaser : la barre du bas n'est pas rendue, donc rien ne doit etre
+          // remonte pour la degager - sinon l'habillage de la video et la barre
+          // de progression flottent 60 px trop haut. Meme procede que /share/[id].
+          ...(teaser ? ({ '--nav-h': '0px' } as React.CSSProperties) : null),
+        }}
       >
         {feedItems.map((item, feedIndex) => {
 
@@ -479,18 +511,20 @@ export default function FeedPage() {
                   </>
                 )
               })()}
-              <ActionRail
-                property={property}
-                isFavorite={isFavorite}
-                onToggleFavorite={(rect) => handleToggleFavorite(property, rect, isFavorite)}
-                onMessage={() => router.push(`/messages?bien=${property.id}`)}
-              />
+              {!teaser && (
+                <ActionRail
+                  property={property}
+                  isFavorite={isFavorite}
+                  onToggleFavorite={(rect) => handleToggleFavorite(property, rect, isFavorite)}
+                  onMessage={() => router.push(`/messages?bien=${property.id}`)}
+                />
+              )}
             </div>
           )
         })}
       </div>
 
-      {!isOnSpecialCard && (
+      {!isOnSpecialCard && !gateOpen && (
         <motion.button
           className="absolute right-4 z-30 w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20"
           style={{ top: 'calc(env(safe-area-inset-top, 16px) + 12px)' }}
@@ -514,7 +548,47 @@ export default function FeedPage() {
       />
 
       <BAIAModal open={baiaOpen} onClose={() => setBaiaOpen(false)} />
-      {!detailProperty && !baiaOpen && <BottomNav />}
+      {!detailProperty && !baiaOpen && !teaser && <BottomNav />}
+
+      {/* Modale bloquante du teaser : la 2e vidéo s'affiche puis se fait
+          recouvrir aussitôt. Fond flouté ici, carte fournie par
+          HandoffInstallPanel (variant="gate"). */}
+      <AnimatePresence>
+        {gateOpen && teaser ? (
+          <motion.div
+            key="teaser-gate"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="absolute inset-0 z-[300] flex items-center justify-center px-5"
+            style={{
+              background: 'rgba(20,12,9,0.55)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+            }}
+          >
+            <motion.div
+              initial={{ y: 26, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
+              className="w-full flex justify-center"
+            >
+              <HandoffInstallPanel
+                variant="gate"
+                token={teaser.token}
+                shortCode={teaser.shortCode}
+                expiresAt={teaser.expiresAt}
+                claimed={false}
+                matchCount={properties.length}
+                onBackToRecap={() =>
+                  router.push(`/onboarding?h=${encodeURIComponent(teaser.token)}&recap=1`)
+                }
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {/* Burst heart on favorites tab */}
       <AnimatePresence>

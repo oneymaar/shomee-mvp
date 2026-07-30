@@ -3,11 +3,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
-import { Bell, Camera, ChevronRight, LogOut, Pencil, Settings, Shield, User } from 'lucide-react-native'
+import { Bell, Camera, ChevronRight, LogOut, Pencil, Settings, Shield, Trash2, User } from 'lucide-react-native'
 import feedSeed from '@shomee/core/data/feedSeed.json'
 import { useSearchStore, useShomeeStore, useFeedStore } from '@/lib/stores'
 import { useProfileStore } from '@/lib/profileStore'
-import { useAuth, logout } from '@/lib/authStore'
+import { useAuth, logout, deleteAccount } from '@/lib/authStore'
 
 const BG = '#FDF5F2'
 const ACCENT = '#A64B27'
@@ -99,10 +99,24 @@ export default function ProfileScreen() {
   }
 
   const confirmLogout = () => {
-    Alert.alert('Se déconnecter', 'Tu reviendras à l’écran de connexion.', [
+    Alert.alert('Se déconnecter', 'Vous reviendrez à l’écran de connexion.', [
       { text: 'Annuler', style: 'cancel' },
       { text: 'Se déconnecter', style: 'destructive', onPress: () => { void logout() } },
     ])
+  }
+
+  // Suppression de compte — double confirmation native, formulation sans
+  // ambiguïté sur l'irréversibilité. La purge locale est immédiate ; la purge
+  // serveur est best-effort (cf. authStore.deleteAccount).
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      'Supprimer votre compte',
+      'Vos recherches, votre historique et vos favoris seront définitivement effacés. Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Supprimer', style: 'destructive', onPress: () => { void deleteAccount() } },
+      ],
+    )
   }
 
   const stats = [
@@ -221,6 +235,18 @@ export default function ProfileScreen() {
         >
           <LogOut size={16} color="#b91c1c" />
           <Text style={styles.logoutTxt}>Se déconnecter</Text>
+        </Pressable>
+
+        {/* Suppression définitive — volontairement plus discret que la
+            déconnexion (texte nu, pas de cadre) : action rare, mais qui doit
+            exister et se trouver là où on la cherche, en bas du profil. */}
+        <Pressable
+          onPress={confirmDeleteAccount}
+          hitSlop={8}
+          style={({ pressed }) => [styles.deleteBtn, { opacity: pressed ? 0.6 : 0.85 }]}
+        >
+          <Trash2 size={14} color="#b91c1c" />
+          <Text style={styles.deleteTxt}>Supprimer mon compte</Text>
         </Pressable>
 
         <Text style={styles.version}>SHOMEE · v0.2.0</Text>
@@ -357,5 +383,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutTxt: { color: '#b91c1c', fontSize: 14.5, fontWeight: '600' },
+  deleteBtn: {
+    marginTop: 18,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  deleteTxt: { color: '#b91c1c', fontSize: 13.5, fontWeight: '600' },
   version: { fontSize: 12, color: '#A3A3A3', textAlign: 'center', marginTop: 28 },
 })

@@ -1,0 +1,75 @@
+<!DOCTYPE html><html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#FDF5F2}
+.leaflet-container{background:#FDF5F2;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}
+.stPill{display:flex;align-items:center;background:#fff;border-radius:999px;padding:2px 8px 2px 2px;
+        box-shadow:0 1px 4px rgba(0,0,0,.28);white-space:nowrap}
+.stPill b{width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+          font-size:9.5px;font-weight:800;margin-right:5px;flex:0 0 auto}
+.stPill span{font-size:10px;font-weight:700;color:#1c1917}
+.stPill em{font-style:normal;font-weight:600;color:#a8a29e;margin-left:4px}
+.leaflet-popup-content{margin:8px 12px;font-size:12.5px;font-weight:600;color:#1c1917}
+.leaflet-popup-content-wrapper{border-radius:10px}
+</style>
+</head><body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var D = {"lat":48.88493,"lng":2.32254,"polygon":[[48.8864,2.3184],[48.8871,2.3193],[48.884,2.3235],[48.8864,2.3184]],"transports":[{"name":"Rome","line":"M2","lat":48.8823,"lng":2.3218,"walkMin":5},{"name":"L'Étoile \u003cb>","line":"RER A","lat":48.8871,"lng":2.3257}],"fitAll":false,"nearWalkMax":8,"interactive":true,"colors":{"M2":{"bg":"#003CA6","text":"#fff"},"RER A":{"bg":"#E2231A","text":"#fff"}},"poiColors":{"shop":"#F97316","school":"#6366F1","park":"#16A34A","health":"#DC2626","monument":"#A855F7"},"accent":"#A64B27","poiR":5};
+var I = D.interactive;
+var map = L.map('map', {
+  zoomControl: I, attributionControl: false,
+  dragging: I, touchZoom: I, doubleClickZoom: I, scrollWheelZoom: I,
+  boxZoom: I, keyboard: I, tap: I
+}).setView([D.lat, D.lng], 15);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+
+/* ── Zone IRIS ─────────────────────────────────────────────────────────── */
+var bounds = null;
+function extend(latlng) { bounds = bounds ? bounds.extend(latlng) : L.latLngBounds(latlng, latlng); }
+if (D.polygon && D.polygon.length) {
+  var poly = L.polygon(D.polygon, { color: D.accent, fillColor: D.accent, fillOpacity: 0.13, weight: 2.4, opacity: 0.9 }).addTo(map);
+  D.polygon.forEach(extend);
+}
+
+/* ── Emplacement approximatif du bien ──────────────────────────────────── */
+L.circle([D.lat, D.lng], { radius: 150, color: D.accent, weight: 1.4, opacity: 0.5, dashArray: '4 3', fillColor: D.accent, fillOpacity: 0.14 }).addTo(map);
+L.circleMarker([D.lat, D.lng], { radius: 5, color: '#fff', weight: 2.4, fillColor: D.accent, fillOpacity: 1 }).addTo(map);
+extend([D.lat, D.lng]);
+
+/* ── Stations : pastille de ligne + nom + temps à pied ─────────────────── */
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+(D.transports || []).forEach(function (t) {
+  var c = D.colors[t.line] || { bg: '#555', text: '#fff' };
+  var num = String(t.line).replace(/^M/, '').replace(/^RER /, '');
+  var walk = (t.walkMin != null) ? '<em>' + t.walkMin + ' min</em>' : '';
+  var html = '<div class="stPill"><b style="background:' + c.bg + ';color:' + c.text + '">' + esc(num) + '</b>'
+           + '<span>' + esc(t.name) + '</span>' + walk + '</div>';
+  var w = 30 + String(t.name).length * 5.4 + (t.walkMin != null ? 34 : 0);
+  L.marker([t.lat, t.lng], {
+    icon: L.divIcon({ html: html, className: '', iconSize: [w, 21], iconAnchor: [10, 10] }),
+    interactive: false, keyboard: false
+  }).addTo(map);
+  if (D.fitAll || t.walkMin == null || t.walkMin <= D.nearWalkMax) extend([t.lat, t.lng]);
+});
+
+if (bounds) { try { map.fitBounds(bounds, { padding: [26, 26], maxZoom: 16 }); } catch (e) {} }
+
+/* ── Repères OpenStreetMap — injectés après coup ───────────────────────── */
+var poiLayer = L.layerGroup().addTo(map);
+window.__setPois = function (list) {
+  poiLayer.clearLayers();
+  (list || []).forEach(function (p) {
+    var col = D.poiColors[p.cat] || '#78716c';
+    var m = L.circleMarker([p.lat, p.lng], {
+      radius: D.poiR, color: '#fff', weight: 1.6, opacity: 1,
+      fillColor: col, fillOpacity: 1, interactive: I
+    }).addTo(poiLayer);
+    if (I && p.name) m.bindPopup(esc(p.name));
+  });
+};
+
+window.__setPois([{"name": "Boulangerie Truffaut 1", "cat": "shop", "lat": 48.88352066211866, "lng": 2.318350190087094}, {"name": "Boulangerie Truffaut 2", "cat": "shop", "lat": 48.88613747578432, "lng": 2.3174092354400107}, {"name": "Boulangerie Truffaut 3", "cat": "shop", "lat": 48.88521705603445, "lng": 2.320928267002951}, {"name": "Boulangerie Truffaut 4", "cat": "shop", "lat": 48.8813939913982, "lng": 2.3226292287982733}, {"name": "Boulangerie Truffaut 5", "cat": "shop", "lat": 48.881229965267536, "lng": 2.3217437482039487}, {"name": "Boulangerie Truffaut 6", "cat": "shop", "lat": 48.881488843388595, "lng": 2.3176285561601264}, {"name": "Boulangerie Truffaut 7", "cat": "shop", "lat": 48.884326153513136, "lng": 2.3264622254960643}, {"name": "Boulangerie Truffaut 8", "cat": "shop", "lat": 48.881920415689194, "lng": 2.3192188675752843}, {"name": "Boulangerie Truffaut 9", "cat": "shop", "lat": 48.88594946577924, "lng": 2.327912507309484}, {"name": "Boulangerie Truffaut 10", "cat": "shop", "lat": 48.88554682358894, "lng": 2.3213001656958094}, {"name": "Boulangerie Truffaut 11", "cat": "shop", "lat": 48.88874004084474, "lng": 2.317098992167413}, {"name": "Boulangerie Truffaut 12", "cat": "shop", "lat": 48.88779774767239, "lng": 2.3200153114359803}, {"name": "Boulangerie Truffaut 13", "cat": "shop", "lat": 48.882084040666854, "lng": 2.3179535068569406}, {"name": "Boulangerie Truffaut 14", "cat": "shop", "lat": 48.883397854592815, "lng": 2.3263335163094405}, {"name": "Boulangerie Truffaut 15", "cat": "shop", "lat": 48.88237581103939, "lng": 2.3235192019639497}, {"name": "Boulangerie Truffaut 16", "cat": "shop", "lat": 48.886041307751405, "lng": 2.3210087705127087}, {"name": "Boulangerie Truffaut 17", "cat": "shop", "lat": 48.885311955725676, "lng": 2.31729346769968}, {"name": "Boulangerie Truffaut 18", "cat": "shop", "lat": 48.881406809359724, "lng": 2.3190115045538318}, {"name": "Boulangerie Truffaut 19", "cat": "shop", "lat": 48.88637319978545, "lng": 2.321671107668033}, {"name": "Boulangerie Truffaut 20", "cat": "shop", "lat": 48.88344317736301, "lng": 2.323566742362092}, {"name": "Boulangerie Truffaut 21", "cat": "shop", "lat": 48.88455547501096, "lng": 2.3201372039623642}, {"name": "Boulangerie Truffaut 22", "cat": "shop", "lat": 48.88728503585218, "lng": 2.324927933204755}, {"name": "Boulangerie Truffaut 23", "cat": "shop", "lat": 48.88288277208577, "lng": 2.323433084523104}, {"name": "Boulangerie Truffaut 24", "cat": "shop", "lat": 48.88513157203049, "lng": 2.327041649946881}, {"name": "Boulangerie Truffaut 25", "cat": "shop", "lat": 48.88676556231551, "lng": 2.3199952531786825}, {"name": "Boulangerie Truffaut 26", "cat": "shop", "lat": 48.88877139877994, "lng": 2.3179567893390596}, {"name": "Boulangerie Truffaut 27", "cat": "shop", "lat": 48.884274982574276, "lng": 2.3256256911547832}, {"name": "Boulangerie Truffaut 28", "cat": "shop", "lat": 48.88214587627728, "lng": 2.3224075572057097}, {"name": "Boulangerie Truffaut 29", "cat": "shop", "lat": 48.88124365805638, "lng": 2.324558590278413}, {"name": "Boulangerie Truffaut 30", "cat": "shop", "lat": 48.8870465669297, "lng": 2.323416311283329}, {"name": "Boulangerie Truffaut 31", "cat": "shop", "lat": 48.887933822494645, "lng": 2.320304970154177}, {"name": "Boulangerie Truffaut 32", "cat": "shop", "lat": 48.886492362930184, "lng": 2.3236724385252603}, {"name": "Boulangerie Truffaut 33", "cat": "shop", "lat": 48.88556916163426, "lng": 2.322014463975617}, {"name": "Boulangerie Truffaut 34", "cat": "shop", "lat": 48.8876497422441, "lng": 2.3278761731412954}, {"name": "École Épinettes 1", "cat": "school", "lat": 48.884722786699356, "lng": 2.3245098264656963}, {"name": "École Épinettes 2", "cat": "school", "lat": 48.88141535542078, "lng": 2.324957904255653}, {"name": "École Épinettes 3", "cat": "school", "lat": 48.88610703083622, "lng": 2.3284571512735996}, {"name": "École Épinettes 4", "cat": "school", "lat": 48.88750539829287, "lng": 2.31995514638513}, {"name": "École Épinettes 5", "cat": "school", "lat": 48.88401633153957, "lng": 2.32456383259061}, {"name": "École Épinettes 6", "cat": "school", "lat": 48.881110503424445, "lng": 2.3220803434355974}, {"name": "Square des Batignolles 1", "cat": "park", "lat": 48.88227438703125, "lng": 2.317945149533781}, {"name": "Square des Batignolles 2", "cat": "park", "lat": 48.88140163535465, "lng": 2.3257587958616703}, {"name": "Square des Batignolles 3", "cat": "park", "lat": 48.88196472177615, "lng": 2.319511378004363}, {"name": "Square des Batignolles 4", "cat": "park", "lat": 48.884057597625066, "lng": 2.3269970636895154}, {"name": "Pharmacie des Dames 1", "cat": "health", "lat": 48.8815746504096, "lng": 2.321930248811392}, {"name": "Pharmacie des Dames 2", "cat": "health", "lat": 48.88532551927315, "lng": 2.327140605917298}, {"name": "Pharmacie des Dames 3", "cat": "health", "lat": 48.88748423870268, "lng": 2.326907813636382}, {"name": "Pharmacie des Dames 4", "cat": "health", "lat": 48.88315736851611, "lng": 2.3215235582065405}, {"name": "Pharmacie des Dames 5", "cat": "health", "lat": 48.88380016932265, "lng": 2.3271503139263787}, {"name": "Pharmacie des Dames 6", "cat": "health", "lat": 48.88859184963171, "lng": 2.3183510508694933}, {"name": "Pharmacie des Dames 7", "cat": "health", "lat": 48.88233974182792, "lng": 2.3193234824018343}, {"name": "Pharmacie des Dames 8", "cat": "health", "lat": 48.882796688669444, "lng": 2.3223595527640963}, {"name": "Église Sainte-Marie 1", "cat": "monument", "lat": 48.88564298802986, "lng": 2.3196929594315825}, {"name": "Église Sainte-Marie 2", "cat": "monument", "lat": 48.88096274882708, "lng": 2.321567358013504}, {"name": "Église Sainte-Marie 3", "cat": "monument", "lat": 48.883884028583154, "lng": 2.3233360946844765}]);
+</script></body></html>

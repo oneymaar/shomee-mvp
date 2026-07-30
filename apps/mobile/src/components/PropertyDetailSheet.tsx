@@ -1,5 +1,5 @@
-import { forwardRef, useCallback, useMemo } from 'react'
-import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native'
+import { forwardRef, useCallback, useMemo, useState } from 'react'
+import { Alert, Linking, Modal, Pressable, Share, StyleSheet, Text, View } from 'react-native'
 import {
   BottomSheetBackdrop,
   BottomSheetFooter,
@@ -11,14 +11,20 @@ import {
 } from '@gorhom/bottom-sheet'
 import { useRouter } from 'expo-router'
 import { Image } from 'expo-image'
-import { CalendarPlus, Check, Footprints, Heart, HelpCircle, Map, MapPin, MessageCircle, Phone, Send, X } from 'lucide-react-native'
+import { CalendarPlus, Check, Footprints, Heart, HelpCircle, Map, MapPin, Maximize2, MessageCircle, Phone, Send, X } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Path, Text as SvgText } from 'react-native-svg'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
 import { PropertyMediaTabs } from '@/components/property/PropertyMediaTabs'
-import { MapZone, MOBILE_MAP_AVAILABLE } from '@/components/property/MapZone'
+import {
+  MapZone,
+  MOBILE_MAP_AVAILABLE,
+  POI_COLORS,
+  POI_LABELS,
+} from '@/components/property/MapZone'
+import { useNearbyPois, type PoiCat } from '@/lib/useNearbyPois'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 const TEST_PHONE = '0670744935'
@@ -219,6 +225,19 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
     )
     const toggleFavorite = useShomeeStore((s) => s.toggleFavorite)
 
+    // Carte plein écran (au tap sur la vignette) — mêmes composants, cadrage
+    // élargi et interactions Leaflet rendues à l'acquéreur.
+    const [mapFull, setMapFull] = useState(false)
+    // Repères de quartier OpenStreetMap. Best-effort : [] tant que la réponse
+    // n'est pas là, et [] définitivement si Overpass ne répond pas.
+    const pois = useNearbyPois(property?.mapLat, property?.mapLng)
+    const poiCounts = useMemo(() => {
+      const c: Partial<Record<PoiCat, number>> = {}
+      for (const p of pois) c[p.cat] = (c[p.cat] ?? 0) + 1
+      return c
+    }, [pois])
+    const hasMap = Boolean(property?.mapLat && property?.mapLng && MOBILE_MAP_AVAILABLE)
+
     // Features → puces ✓ sous l'en-tête. Même filtre que le feed (« Cave » est
     // déjà listé dans Caractéristiques) pour la cohérence visuelle.
     const features = property ? (property.features ?? []).filter((f) => f !== 'Cave') : []
@@ -297,6 +316,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
     )
 
     return (
+      <>
       <BottomSheetModal
         ref={ref}
         snapPoints={snapPoints}
@@ -420,7 +440,8 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
               </View>
 
               {/* Quartier */}
-              {(property.irisZone ||
+              {(hasMap ||
+                property.irisZone ||
                 (property.transports?.length ?? 0) > 0 ||
                 (property.nearbyPlaces?.length ?? 0) > 0 ||
                 property.neighborhoodVibe) && (
@@ -436,16 +457,53 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                     </View>
                   )}
 
-                  {/* Carte quartier — Leaflet (WebView) : polygone IRIS + métro + POI.
+                  {/* Carte quartier — Leaflet (WebView) : zone IRIS + stations
+                      étiquetées + repères OpenStreetMap. Figée ici (les gestes
+                      Leaflet se disputeraient le défilement de la feuille) : le
+                      tap ouvre la version manipulable en plein écran.
                       Fallback placeholder si WebView indispo ou bien sans coords. */}
-                  {property.mapLat && property.mapLng && MOBILE_MAP_AVAILABLE ? (
-                    <MapZone
-                      lat={property.mapLat}
-                      lng={property.mapLng}
-                      polygon={property.irisPolygon}
-                      transports={property.mapTransports}
-                      pois={property.mapPois}
-                    />
+                  {hasMap ? (
+                    <>
+                      <View>
+                        <MapZone
+                          lat={property.mapLat!}
+                          lng={property.mapLng!}
+                          polygon={property.irisPolygon}
+                          transports={property.mapTransports}
+                          pois={pois}
+                          legacyPois={property.mapPois}
+                          height={260}
+                          interactive={false}
+                          fit="near"
+                        />
+                        {/* Le Pressable est POSÉ SUR la carte, jamais autour :
+                            une WebView consomme le toucher et un parent
+                            Pressable ne verrait jamais le tap (même motif que
+                            le bouton plein écran de PropertyMediaTabs). */}
+                        <Pressable
+                          style={StyleSheet.absoluteFill}
+                          onPress={() => setMapFull(true)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Agrandir la carte du quartier"
+                        />
+                        <View style={styles.mapExpand} pointerEvents="none">
+                          <Maximize2 size={17} color="#fff" strokeWidth={2.2} />
+                        </View>
+                      </View>
+
+                      {/* Légende — même palette que les points de la carte */}
+                      <View style={styles.legendRow}>
+                        {(Object.keys(POI_LABELS) as PoiCat[]).map((cat) => (
+                          <View key={cat} style={styles.legendItem}>
+                            <View style={[styles.legendDot, { backgroundColor: POI_COLORS[cat] }]} />
+                            <Text style={styles.legendTxt}>{POI_LABELS[cat]}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      <Text style={styles.mapSource}>
+                        Repères OpenStreetMap · Toucher la carte pour l&apos;agrandir
+                      </Text>
+                    </>
                   ) : (
                     <GreyBox style={styles.mapPlaceholder}>
                       <Map size={26} color="#D6D3D1" />
@@ -590,6 +648,44 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
           </BottomSheetScrollView>
         )}
       </BottomSheetModal>
+
+      {/* Carte plein écran — hors du BottomSheetModal (une Modal RN est une vue
+          native posée au-dessus de tout). Cadrage `all` : toutes les stations
+          entrent dans l'écran, y compris celles à plus de 8 min. */}
+      {mapFull && property && hasMap && (
+        <Modal visible animationType="slide" onRequestClose={() => setMapFull(false)} statusBarTranslucent>
+          <View style={styles.fsRoot}>
+            <MapZone
+              lat={property.mapLat!}
+              lng={property.mapLng!}
+              polygon={property.irisPolygon}
+              transports={property.mapTransports}
+              pois={pois}
+              legacyPois={property.mapPois}
+              interactive
+              fit="all"
+              style={styles.fsMap}
+            />
+            <Pressable
+              style={[styles.fsClose, { top: insets.top + 8 }]}
+              onPress={() => setMapFull(false)}
+              hitSlop={12}
+            >
+              <X size={24} color="#fff" strokeWidth={2.4} />
+            </Pressable>
+            <View style={[styles.fsLegend, { bottom: insets.bottom + 20 }]} pointerEvents="none">
+              {(Object.keys(POI_LABELS) as PoiCat[]).map((cat) => (
+                <View key={cat} style={styles.fsLegendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: POI_COLORS[cat] }]} />
+                  <Text style={styles.fsLegendTxt}>{POI_LABELS[cat]}</Text>
+                  <Text style={styles.fsLegendCount}>{poiCounts[cat] ?? 0}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </Modal>
+      )}
+      </>
     )
   },
 )
@@ -724,6 +820,33 @@ const styles = StyleSheet.create({
   walkTime: { color: '#A8A29E', fontSize: 12, fontWeight: '600' },
   nearbyCol: { alignItems: 'flex-end', gap: 2, flexShrink: 1 },
   nearbyItem: { color: '#57534E', fontSize: 14, textAlign: 'right' },
+
+  // Carte quartier
+  mapExpand: {
+    position: 'absolute', top: 10, right: 10, width: 32, height: 32, borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
+  },
+  legendRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 9 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendTxt: { color: '#78716c', fontSize: 10.5, fontWeight: '500' },
+  mapSource: { color: '#A8A29E', fontSize: 10, marginTop: 6, marginBottom: 12 },
+
+  // Carte plein écran
+  fsRoot: { flex: 1, backgroundColor: '#FDF5F2' },
+  fsMap: { flex: 1, height: '100%', borderRadius: 0, borderWidth: 0 },
+  fsClose: {
+    position: 'absolute', right: 14, width: 38, height: 38, borderRadius: 19,
+    backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center',
+  },
+  fsLegend: {
+    position: 'absolute', left: 14, backgroundColor: 'rgba(255,255,255,0.94)',
+    borderRadius: 14, paddingHorizontal: 13, paddingVertical: 11, gap: 7,
+    shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+  },
+  fsLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  fsLegendTxt: { color: '#44403c', fontSize: 11.5, fontWeight: '500' },
+  fsLegendCount: { color: '#A8A29E', fontSize: 11.5, fontWeight: '700' },
 
   // Diagnostics
   diagBox: { paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', gap: 24 },
