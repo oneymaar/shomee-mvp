@@ -24,7 +24,8 @@ import {
   formatBedrooms,
 } from '@/lib/scales'
 import { RangeSlider } from './RangeSlider'
-import { PrimaryButton, SectionLabel, StepHeader, ACCENT, INK, MUTED } from './ui'
+import { PrimaryButton, SectionLabel, StepHeader, INK, MUTED } from './ui'
+import { colors, fonts, radii } from '@/lib/theme'
 
 function coupledMinBedrooms(minRooms: number): number {
   return Math.min(BEDROOMS_MAX, Math.max(BEDROOMS_MIN, minRooms - 1))
@@ -154,7 +155,7 @@ function MinMax({ min, max }: { min: string; max: string }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { paddingHorizontal: 24, paddingBottom: 24 },
+  body: { paddingHorizontal: 22, paddingBottom: 24 },
   typeRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   typeChip: {
     flexDirection: 'row',
@@ -162,15 +163,15 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 14,
     paddingVertical: 9,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.09)',
+    borderRadius: radii.pill,
+    borderWidth: 1.5,
+    borderColor: colors.line,
     backgroundColor: '#fff',
   },
-  typeChipOn: { backgroundColor: '#fdf0ed', borderColor: '#e8907a' },
+  typeChipOn: { borderColor: colors.terracottaBright },
   typeEmoji: { fontSize: 15 },
   typeLabel: { fontSize: 13.5, fontWeight: '500', color: INK },
-  typeLabelOn: { color: '#9b4a2e' },
+  typeLabelOn: { color: colors.terracotta, fontWeight: '600' },
 
   block: { marginTop: 28 },
   minMax: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 2, marginBottom: 14 },
@@ -182,10 +183,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 3,
   },
-  minMaxVal: { fontSize: 17, fontWeight: '700', color: ACCENT },
+  minMaxVal: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink },
 
   footer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 22,
     paddingTop: 12,
   },
 })

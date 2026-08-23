@@ -33,7 +33,17 @@ import {
 
 const ZoneMap = dynamic(() => import('@/components/onboarding/ZoneMap'), { ssr: false })
 
-const TERRA = '#A64B27'
+const TERRA = '#A6512B'
+// Direction A — mêmes valeurs que `apps/mobile/src/lib/theme.ts`. Cet écran est
+// affiché en WebView À L'INTÉRIEUR de l'app : le moindre écart de teinte se voit
+// au passage vers l'étape suivante, qui est native.
+const TERRA_BRIGHT = '#C96B45'
+const CREAM = '#FAF3EE'
+const INK = '#201A16'
+const MUTED = '#8A7A6E'
+const LINE = '#E8D9CB'
+const SAND = '#EFE2D5'
+const SERIF = "var(--font-serif), Georgia, serif"
 const PARIS_CENTER: [number, number] = [48.8566, 2.3522]
 
 // ─── Pictos pastilles — `currentColor` : ils prennent la couleur du texte de
@@ -796,25 +806,31 @@ export default function ProtoQuartiersClient() {
       >
         {/* Barre de progression (agencement onboarding) */}
         <div className="flex-none flex items-center gap-3 px-4 pb-1" style={{ paddingTop: 'max(calc(env(safe-area-inset-top) + 6px), 58px)' }}>
-          <button onClick={() => postToNative({ action: 'back' })} className="w-9 h-9 rounded-full bg-white border border-black/8 flex items-center justify-center flex-none active:bg-black/5" style={{ color: '#404040' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+          <button onClick={() => postToNative({ action: 'back' })} className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-none active:opacity-70" style={{ color: INK, border: `1.5px solid ${LINE}` }}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
-          <div className="flex-1 flex gap-1.5">
-            {['Quartiers', 'Bien', 'Budget', 'Critères'].map((label, i) => (
-              <div key={label} className="flex-1 flex flex-col gap-[5px]">
-                <div className="h-1 rounded-full" style={{ backgroundColor: i === 0 ? TERRA : 'rgba(0,0,0,0.1)' }} />
-                <span className="text-[12px] leading-none text-center" style={{ color: i === 0 ? TERRA : '#525252', fontWeight: i === 0 ? 700 : 500 }}>{label}</span>
-              </div>
-            ))}
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] font-bold mb-[7px]" style={{ color: MUTED, letterSpacing: '2px' }}>
+              ÉTAPE 1 SUR 4 — QUARTIERS
+            </div>
+            <div className="flex gap-1.5">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex-1 h-1 rounded-full" style={{ backgroundColor: i === 0 ? TERRA : LINE }} />
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Titre */}
-        <div className="flex-1 min-h-0 flex items-center justify-center px-6">
-          <h2 className="text-[29px] font-bold text-neutral-900 text-center leading-tight tracking-tight">Où aimeriez-vous habiter&nbsp;?</h2>
+        {/* Titre — serif de marque, aligné à GAUCHE : centré ici et à gauche
+            sur toutes les étapes suivantes, la ligne se cassait au passage. */}
+        <div className="flex-none px-[22px] pt-7">
+          <h2 className="text-[27px]" style={{ fontFamily: SERIF, fontWeight: 500, color: INK, lineHeight: 1.25, letterSpacing: '-0.2px' }}>
+            Où aimeriez-vous<br />habiter&nbsp;?
+          </h2>
         </div>
+        <div className="flex-1 min-h-0" />
 
         {/* Bas : pastilles live + champ + CTA unique */}
         <div className="flex-none flex flex-col gap-3 px-4" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
@@ -829,10 +845,13 @@ export default function ProtoQuartiersClient() {
                   <span key={`${c.variant}-${c.label}-${i}`}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
                     style={{
-                      backgroundColor: isUnknown ? 'rgba(0,0,0,0.03)' : isExcl ? 'rgba(0,0,0,0.04)' : 'rgba(166,75,39,0.05)',
-                      color: isUnknown ? '#9ca3af' : isExcl ? '#6b7280' : TERRA,
-                      borderColor: isUnknown ? 'rgba(0,0,0,0.18)' : isExcl ? 'rgba(0,0,0,0.16)' : 'rgba(166,75,39,0.28)',
+                      // Reconnu → blanc liseré terracotta (l'état « souhaité » des
+                      // pastilles critères). Exclu / non compris → sable, en retrait.
+                      backgroundColor: isUnknown || isExcl ? SAND : '#fff',
+                      color: isUnknown || isExcl ? MUTED : TERRA,
+                      borderColor: isUnknown ? MUTED : isExcl ? SAND : TERRA_BRIGHT,
                       borderStyle: isUnknown ? 'dashed' : 'solid',
+                      borderWidth: 1.5,
                     }}>
                     {c.icon === 'station' ? <StationIcon /> : c.icon === 'pin' ? <PinIcon /> : null}
                     {isExcl && <span className="opacity-70">sans</span>}
@@ -845,22 +864,35 @@ export default function ProtoQuartiersClient() {
             </div>
           )}
 
-          <div className="bg-white border rounded-2xl px-4 py-3.5 shadow-sm"
-               style={{ borderColor: query.trim().length > 0 ? 'rgba(166,75,39,0.3)' : 'rgba(0,0,0,0.08)' }}>
+          <div className="bg-white rounded-[22px] px-4 py-3.5"
+               style={{
+                 border: `1.5px solid ${query.trim().length > 0 ? TERRA : LINE}`,
+                 boxShadow: query.trim().length > 0
+                   ? '0 8px 22px rgba(166,81,43,0.12)'
+                   : '0 4px 14px rgba(32,26,22,0.05)',
+                 transition: 'border-color .2s ease, box-shadow .2s ease',
+               }}>
             <textarea
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               rows={3}
               placeholder={'Décrivez librement une ou plusieurs zones.\nEx : Autour de Daumesnil et Nation, proche métro Bel-Air'}
-              className="w-full text-[16px] text-neutral-900 placeholder:text-neutral-400 bg-transparent outline-none resize-none leading-relaxed"
+              className="w-full text-[16px] placeholder:text-[#B7A99D] bg-transparent outline-none resize-none leading-relaxed"
+              style={{ color: INK }}
               autoComplete="off" autoCorrect="off" spellCheck={false}
             />
           </div>
 
           <button onClick={handleToMap} disabled={!canContinue}
-            className="w-full py-4 rounded-2xl font-semibold text-[16px] text-white flex items-center justify-center gap-2 transition-opacity active:opacity-90"
-            style={{ backgroundColor: canContinue ? TERRA : '#DB947E' }}>
+            className="w-full py-4 rounded-full font-semibold text-[15.5px] flex items-center justify-center gap-2 active:opacity-90"
+            style={{
+              backgroundColor: canContinue ? TERRA : SAND,
+              color: canContinue ? CREAM : MUTED,
+              // Le CTA flotte au-dessus du crème ; éteint, il se pose (plus d'ombre).
+              boxShadow: canContinue ? '0 10px 22px rgba(166,81,43,0.28)' : 'none',
+              transition: 'background-color .2s ease, box-shadow .2s ease, color .2s ease',
+            }}>
             Voir sur la carte
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>

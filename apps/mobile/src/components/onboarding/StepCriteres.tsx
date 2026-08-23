@@ -24,8 +24,9 @@ import type { ChipState } from '@shomee/core/stores/searchStore'
 import { useSearchStore } from '@/lib/stores'
 import { apiFetch } from '@/lib/api'
 import { PROPERTY_TAGS, BUILDING_TAGS } from '@/lib/onboardingCatalog'
-import { CriteriaChip } from './CriteriaChip'
+import { CriteriaChip, CHIP_STATE_STYLES } from './CriteriaChip'
 import { PrimaryButton, SectionLabel, StepHeader, ACCENT, INK } from './ui'
+import { colors, radii } from '@/lib/theme'
 
 // Défaut d'ajout = OBLIGATOIRE (2). Re-tap : 2 → 1 → 3 → 2.
 const DEFAULT_STATE: ChipState = 2
@@ -33,11 +34,12 @@ function nextState(s: ChipState): ChipState {
   return s === 2 ? 1 : s === 1 ? 3 : 2
 }
 
-// Palette légende / pastilles sélectionnées (parité CriteriaChip).
+// Légende = la palette RÉELLE des pastilles, importée. Une copie locale
+// finissait toujours par diverger de CriteriaChip.
 const LEGEND_STYLE: Record<1 | 2 | 3, { bg: string; fg: string; border: string }> = {
-  1: { bg: '#fdf0ed', fg: '#9b4a2e', border: '#e8907a' },
-  2: { bg: '#C1533A', fg: '#ffffff', border: '#C1533A' },
-  3: { bg: '#f3f0ee', fg: '#9a9a9a', border: 'rgba(0,0,0,0.10)' },
+  1: CHIP_STATE_STYLES[1],
+  2: CHIP_STATE_STYLES[2],
+  3: CHIP_STATE_STYLES[3],
 }
 const LEGEND: Array<{ state: 1 | 2 | 3; label: string; icon: 'plus' | 'check' | 'x' }> = [
   { state: 1, label: 'Souhaité', icon: 'plus' },
@@ -266,7 +268,7 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
                 if (error) setError(null)
               }}
               placeholder="Autre critère ? Décrivez-le…"
-              placeholderTextColor="#a3a3a3"
+              placeholderTextColor="#B7A99D"
               style={styles.input}
               autoCorrect={false}
               returnKeyType="send"
@@ -275,13 +277,13 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
             <Pressable
               onPress={handleAdd}
               disabled={!canAdd}
-              style={[styles.addBtn, { backgroundColor: canAdd ? ACCENT : 'rgba(0,0,0,0.07)' }]}
+              style={[styles.addBtn, { backgroundColor: canAdd ? ACCENT : colors.sand }]}
               hitSlop={8}
             >
               {analyzing ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={colors.creamOnDark} size="small" />
               ) : (
-                <ArrowRight size={16} color={canAdd ? '#fff' : 'rgba(0,0,0,0.35)'} />
+                <ArrowRight size={16} color={canAdd ? colors.creamOnDark : colors.muted} />
               )}
             </Pressable>
           </View>
@@ -333,7 +335,7 @@ export function StepCriteres({ onNext }: { onNext: () => void }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { paddingHorizontal: 24, paddingBottom: 24 },
+  body: { paddingHorizontal: 22, paddingBottom: 24 },
 
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 2, marginBottom: 2 },
   legendChip: {
@@ -352,15 +354,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.09)',
-    borderRadius: 999,
+    borderColor: colors.line,
+    borderRadius: radii.pill,
     paddingLeft: 16,
     paddingRight: 6,
     paddingVertical: 5,
   },
   input: { flex: 1, fontSize: 16, color: INK, paddingVertical: 6 },
   addBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  error: { fontSize: 12, color: '#B23228', marginTop: 8 },
+  error: { fontSize: 12, color: '#B0442C', marginTop: 8 },
 
   section: { marginTop: 22 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -380,15 +382,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     alignSelf: 'stretch',
-    backgroundColor: 'rgba(26,26,26,0.94)',
+    backgroundColor: 'rgba(23,18,16,0.94)',
     borderRadius: 12,
     paddingLeft: 13,
     paddingRight: 8,
     paddingVertical: 9,
   },
   coachTextCol: { flex: 1 },
-  coachTxt: { color: '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '600' },
-  coachSub: { color: 'rgba(255,255,255,0.78)', fontSize: 11, lineHeight: 15, marginTop: 2 },
+  coachTxt: { color: colors.creamOnDark, fontSize: 12.5, lineHeight: 16, fontWeight: '600' },
+  coachSub: { color: 'rgba(246,237,230,0.78)', fontSize: 11, lineHeight: 15, marginTop: 2 },
   coachClose: { padding: 2 },
   coachArrow: {
     alignSelf: 'flex-start',
@@ -399,9 +401,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 7,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: 'rgba(26,26,26,0.94)',
+    borderTopColor: 'rgba(23,18,16,0.94)',
     marginTop: -1,
   },
 
-  footer: { paddingHorizontal: 24, paddingTop: 12 },
+  footer: { paddingHorizontal: 22, paddingTop: 12 },
 })

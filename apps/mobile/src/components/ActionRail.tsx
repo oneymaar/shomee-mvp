@@ -1,17 +1,81 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Alert, Animated, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native'
+import Reanimated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated'
 import { Heart, MessageCircle, Phone, Send } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
 import type { Property } from '@shomee/core/types/domain'
 import { useFlyHeartStore } from '@/lib/flyHeartStore'
+import { colors, radii } from '@/lib/theme'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 // Property n'a pas encore de champ agencyPhone ; quand il existera, il sera
 // utilisé en priorité (cf. handleCall) et cette constante deviendra inutile.
 const TEST_PHONE = '0670744935'
 
+/** easeOutQuint du référentiel mouvement. Reanimated n'expose pas `quint` :
+ *  `poly(5)` EST la quintique (t⁵), `out` la retourne. */
+const EASE_OUT_QUINT = Easing.out(Easing.poly(5))
+
+/** Rouge du like — exception assumée à la palette terracotta : c'est la
+ *  convention universelle du « j'aime ». Décision d'Olivier (22/08). */
+const LIKE_RED = '#EF4444'
+
 function formatPrice(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €'
+}
+
+/**
+ * Compteur en ROULEMENT vertical : l'ancienne valeur monte et s'efface pendant
+ * que la nouvelle arrive du bas. 280 ms, easeOutQuint (référentiel mouvement).
+ * Rendu inchangé tant que la valeur ne bouge pas.
+ */
+function RollingCount({ value }: { value: number }) {
+  const [shown, setShown] = useState(value)
+  const [incoming, setIncoming] = useState<number | null>(null)
+  const p = useSharedValue(0)
+
+  useEffect(() => {
+    if (value === shown) return
+    setIncoming(value)
+    p.value = 0
+    p.value = withTiming(1, { duration: 280, easing: EASE_OUT_QUINT }, (finished) => {
+      if (finished) runOnJS(setShown)(value)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+
+  // `shown` rattrapé → on retire la couche entrante et on remet la piste à zéro.
+  useEffect(() => {
+    if (incoming != null && shown === incoming) {
+      setIncoming(null)
+      p.value = 0
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, incoming])
+
+  const outStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -12 * p.value }],
+    opacity: 1 - p.value,
+  }))
+  const inStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: 12 * (1 - p.value) }],
+    opacity: p.value,
+  }))
+
+  return (
+    <View style={styles.countBox} pointerEvents="none">
+      <Reanimated.Text style={[styles.count, outStyle]}>{shown}</Reanimated.Text>
+      {incoming != null && (
+        <Reanimated.Text style={[styles.count, inStyle]}>{incoming}</Reanimated.Text>
+      )}
+    </View>
+  )
 }
 
 interface Props {
@@ -21,12 +85,14 @@ interface Props {
 }
 
 /**
- * Colonne d'actions à droite du feed (S4b-v2a).
+ * Colonne d'actions à droite du feed.
  * Chaque bouton est une zone tactile isolée (Pressable) → ne déclenche ni le
  * scroll du FlatList ni les gestes vidéo.
- *  - Cœur : favori fonctionnel (store) + pulse au tap. Pas de fly-heart (v2+).
- *  - Message : ouvre le fil de discussion du bien (/messages/[id]).
- *  - Partage : feuille système iOS via Share.share (API react-native, pas de natif).
+ *
+ * REFONTE GRAPHIQUE (direction A) : chaque icône est posée dans un cercle de
+ * verre fumé de 46 px — les glyphes nus se perdaient sur les vidéos claires.
+ * L'animation du like (pression, remplissage rouge, cœur qui s'envole) est
+ * CELLE DE L'APP, inchangée ; seul le compteur passe en roulement.
  */
 export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
   const router = useRouter()
@@ -77,41 +143,71 @@ export function ActionRail({ property, isFavorite, onToggleFavorite }: Props) {
   return (
     <View style={styles.rail} pointerEvents="box-none">
       {/* Message — ouvre le fil de discussion du bien */}
-      <Pressable onPress={handleMessage} style={styles.btn} hitSlop={8}>
-        <MessageCircle size={28} color="#fff" strokeWidth={1.5} />
+      <Pressable onPress={handleMessage} style={styles.item} hitSlop={8}>
+        <View style={styles.circle}>
+          <MessageCircle size={22} color={colors.creamOnDark} strokeWidth={1.9} />
+        </View>
       </Pressable>
 
       {/* Téléphone — ouvre l'app téléphone native (tel:) */}
-      <Pressable onPress={handleCall} style={styles.btn} hitSlop={8}>
-        <Phone size={25} color="#fff" strokeWidth={1.5} />
+      <Pressable onPress={handleCall} style={styles.item} hitSlop={8}>
+        <View style={styles.circle}>
+          <Phone size={21} color={colors.creamOnDark} strokeWidth={1.9} />
+        </View>
       </Pressable>
 
-      {/* Cœur — favori fonctionnel */}
-      <Pressable onPress={handleFavorite} style={styles.btn} hitSlop={8}>
+      {/* Cœur — favori fonctionnel, ROUGE une fois liké */}
+      <Pressable onPress={handleFavorite} style={styles.item} hitSlop={8}>
         <View ref={heartWrapRef} collapsable={false}>
-          <Animated.View style={{ transform: [{ scale }] }}>
+          <Animated.View style={[styles.circle, { transform: [{ scale }] }]}>
             <Heart
-              size={28}
-              strokeWidth={1.5}
-              color={isFavorite ? '#ef4444' : '#fff'}
-              fill={isFavorite ? '#ef4444' : 'transparent'}
+              size={22}
+              strokeWidth={1.9}
+              color={isFavorite ? LIKE_RED : colors.creamOnDark}
+              fill={isFavorite ? LIKE_RED : 'transparent'}
             />
           </Animated.View>
         </View>
-        <Text style={styles.count}>{likeCount}</Text>
+        <RollingCount value={likeCount} />
       </Pressable>
 
       {/* Partage — natif */}
-      <Pressable onPress={handleShare} style={styles.btn} hitSlop={8}>
-        <Send size={25} color="#fff" strokeWidth={1.5} />
-        <Text style={styles.count}>{property.shareCount ?? 0}</Text>
+      <Pressable onPress={handleShare} style={styles.item} hitSlop={8}>
+        <View style={styles.circle}>
+          <Send size={21} color={colors.creamOnDark} strokeWidth={1.9} />
+        </View>
+        <RollingCount value={property.shareCount ?? 0} />
       </Pressable>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  rail: { position: 'absolute', right: 12, bottom: 150, alignItems: 'center', gap: 22 },
-  btn: { alignItems: 'center', gap: 4 },
-  count: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  // 216 : le bloc d'infos monte désormais jusqu'à ~188 (il a été décollé de la
+  // barre de lecture). La colonne reste entièrement au-dessus de lui.
+  rail: { position: 'absolute', right: 12, bottom: 216, alignItems: 'center', gap: 18 },
+  item: { alignItems: 'center' },
+  circle: {
+    width: 46,
+    height: 46,
+    borderRadius: radii.pill,
+    backgroundColor: colors.smoke,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Piste du compteur : hauteur fixe, les deux chiffres empilés en absolu pour
+  // qu'ils se croisent sans pousser la mise en page.
+  countBox: { height: 14, width: 34, marginTop: 3, overflow: 'hidden' },
+  count: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: '#fff',
+    fontSize: 11.5,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowRadius: 6,
+    textShadowOffset: { width: 0, height: 1 },
+  },
 })

@@ -19,7 +19,8 @@ import {
 } from '@/lib/scales'
 import { RangeSlider } from './RangeSlider'
 import { BudgetMapWebView } from './BudgetMapWebView'
-import { PrimaryButton, SectionLabel, StepHeader, ACCENT, INK, MUTED } from './ui'
+import { PrimaryButton, SectionLabel, StepHeader, INK, MUTED } from './ui'
+import { colors, fonts, radii } from '@/lib/theme'
 
 // Dégradé de légende — 5 arrêts (miroir STOPS de budgetFeasibility).
 const LEGEND_STOPS = ['#C17A6F', '#C4956A', '#C4B48A', '#A8C4A0', '#7DA882'] as const
@@ -140,7 +141,7 @@ export function StepBudget({ onNext }: { onNext: () => void }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { paddingHorizontal: 24, paddingBottom: 24 },
+  body: { paddingHorizontal: 22, paddingBottom: 24 },
   minMax: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 2, marginBottom: 14 },
   minMaxCap: {
     fontSize: 10,
@@ -150,18 +151,26 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 3,
   },
-  minMaxVal: { fontSize: 17, fontWeight: '700', color: ACCENT },
+  minMaxVal: { fontFamily: fonts.serif, fontSize: 18, color: colors.ink },
 
   signalRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 22, marginTop: 18 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   signalText: { flex: 1, fontSize: 13, fontWeight: '500', color: INK, lineHeight: 18 },
   signalMuted: { flex: 1, fontSize: 13, color: MUTED, lineHeight: 18 },
 
-  legendWrap: { marginTop: 28 },
-  legendBar: { height: 6, borderRadius: 3, width: '100%' },
-  legendLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  legendTxt: { fontSize: 11, color: MUTED },
-  mapWrap: { marginTop: 24 },
+  legendWrap: {
+    marginTop: 24,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.card,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+  },
+  legendBar: { height: 8, borderRadius: 4, width: '100%' },
+  legendLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 7 },
+  legendTxt: { fontSize: 10, fontWeight: '600', color: '#B7A99D' },
+  mapWrap: { marginTop: 16, borderRadius: radii.card, overflow: 'hidden', borderWidth: 1, borderColor: colors.line },
 
-  footer: { paddingHorizontal: 24, paddingTop: 12 },
+  footer: { paddingHorizontal: 22, paddingTop: 12 },
 })

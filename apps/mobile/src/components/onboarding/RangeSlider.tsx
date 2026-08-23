@@ -31,10 +31,14 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated'
 
-const THUMB = 28
+import { colors } from '@/lib/theme'
+
+const THUMB = 26
 const TRACK_H = 5
-const ACCENT = '#A64B27'
-const TRACK_BG = 'rgba(0,0,0,0.08)'
+const ACCENT = colors.terracotta
+// Piste SABLE plutôt qu'un noir transparent : sur le crème, un gris translucide
+// vire au sale — le sable de la palette reste chaud.
+const TRACK_BG = colors.sand
 const HIT_SLOP = { top: 14, bottom: 14, left: 10, right: 10 }
 
 export interface RangeSliderProps {
@@ -185,11 +189,11 @@ const styles = StyleSheet.create({
     height: THUMB,
     borderRadius: THUMB / 2,
     backgroundColor: '#fff',
-    borderWidth: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
+    borderWidth: 2.5,
+    shadowColor: colors.ink,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   },
 })

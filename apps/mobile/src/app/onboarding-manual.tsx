@@ -32,6 +32,7 @@ import { FeedSuggestion } from '@/components/feed/FeedSuggestion'
 import { diagnoseSearch } from '@/lib/searchDiagnosis'
 import { useFeedStore, useSearchStore } from '@/lib/stores'
 import { BG, ACCENT, INK, MUTED } from '@/components/onboarding/ui'
+import { colors, fonts, radii } from '@/lib/theme'
 
 const LOGO = require('../../assets/images/logo-shomee-terracotta.png')
 
@@ -143,7 +144,7 @@ export default function ManualOnboarding() {
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <View style={styles.topbar}>
         <Pressable onPress={handleBack} style={styles.backBtn} hitSlop={8}>
-          <ChevronLeft size={18} color="#525252" />
+          <ChevronLeft size={19} color={colors.ink} strokeWidth={2.2} />
         </Pressable>
         {!recapOpen && <WizardProgress step={step} />}
         {recapOpen && <View style={{ flex: 1 }} />}
@@ -180,18 +181,18 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: radii.pill,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
   overlay: { flex: 1, backgroundColor: BG, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   logo: { width: 132, height: 44 },
-  overlayTitle: { fontSize: 18, fontWeight: '700', color: INK, marginTop: 24 },
+  overlayTitle: { fontFamily: fonts.serif, fontSize: 24, color: INK, marginTop: 24 },
   overlayText: { fontSize: 15, color: MUTED, textAlign: 'center', marginTop: 12, lineHeight: 21 },
   retry: { marginTop: 24, backgroundColor: ACCENT, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 999 },
-  retryTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  retryTxt: { color: colors.creamOnDark, fontSize: 15, fontWeight: '600' },
   retryAlt: { color: ACCENT, fontSize: 13.5, fontWeight: '500', marginTop: 16 },
 })

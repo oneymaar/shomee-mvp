@@ -6,7 +6,7 @@
  */
 import type { ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Home, MapPin, Pencil, Sparkles, Wallet } from 'lucide-react-native'
+import { Home, MapPin, Pencil, RotateCcw, Sparkles, Wallet } from 'lucide-react-native'
 import type { ChipState } from '@shomee/core/stores/searchStore'
 import { useSearchStore } from '@/lib/stores'
 import {
@@ -18,6 +18,7 @@ import {
 import { PROPERTY_TYPES } from '@/lib/onboardingCatalog'
 import { CriteriaChip } from './CriteriaChip'
 import { PrimaryButton, ACCENT, BG, INK, MUTED } from './ui'
+import { colors, fonts, radii, serifSizes } from '@/lib/theme'
 
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   PROPERTY_TYPES.map((t) => [t.value, t.label]),
@@ -119,13 +120,14 @@ export function Recap({
             <Text style={styles.valueMuted}>Aucun critère sélectionné</Text>
           )}
         </BlockCard>
+        <Pressable onPress={onEditManual} style={styles.restart} hitSlop={6}>
+          <RotateCcw size={15} color={ACCENT} strokeWidth={2.2} />
+          <Text style={styles.restartTxt}>Reprendre du début</Text>
+        </Pressable>
       </ScrollView>
 
       <View style={styles.footer}>
-        <PrimaryButton label="Voir ma sélection" onPress={onLaunch} />
-        <Pressable onPress={onEditManual} style={styles.editManual} hitSlop={6}>
-          <Text style={styles.editManualTxt}>Recommencer à zéro</Text>
-        </Pressable>
+        <PrimaryButton label="Lancer la recherche" onPress={onLaunch} />
       </View>
     </View>
   )
@@ -156,35 +158,35 @@ function BlockCard({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
-  header: { paddingHorizontal: 24, paddingTop: 12, paddingBottom: 12 },
+  header: { paddingHorizontal: 22, paddingTop: 12, paddingBottom: 12 },
   kicker: {
     fontSize: 11,
     fontWeight: '700',
     color: ACCENT,
-    letterSpacing: 1.4,
+    letterSpacing: 2.2,
     textTransform: 'uppercase',
     marginBottom: 6,
   },
-  title: { fontSize: 22, fontWeight: '700', color: INK, letterSpacing: -0.3 },
-  sub: { fontSize: 13.5, color: MUTED, marginTop: 6 },
+  title: { fontFamily: fonts.serif, fontSize: serifSizes.stepTitle, color: INK, letterSpacing: -0.2, lineHeight: 34 },
+  sub: { fontSize: 14, color: MUTED, marginTop: 6, lineHeight: 21 },
 
-  body: { paddingHorizontal: 24, paddingBottom: 20, gap: 10 },
+  body: { paddingHorizontal: 22, paddingBottom: 20, gap: 10 },
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
-    borderRadius: 16,
+    borderColor: colors.line,
+    borderRadius: radii.card,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   cardIcon: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(166,75,39,0.10)',
+    borderRadius: radii.pill,
+    backgroundColor: colors.sand,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -197,10 +199,19 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   value: { fontSize: 14.5, fontWeight: '600', color: INK, lineHeight: 20 },
-  valueMuted: { fontSize: 14, color: '#a3a3a3', fontStyle: 'italic' },
+  valueMuted: { fontSize: 14, color: '#B7A99D', fontStyle: 'italic' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 },
 
-  footer: { paddingHorizontal: 24, paddingTop: 8, gap: 6 },
-  editManual: { alignItems: 'center', paddingVertical: 10 },
-  editManualTxt: { fontSize: 13.5, fontWeight: '500', color: ACCENT },
+  footer: { paddingHorizontal: 22, paddingTop: 8 },
+  // « Reprendre du début » : sous les cartes, pas collé au CTA — c'est un
+  // geste de repli, il ne doit pas rivaliser avec le geste d'avancée.
+  restart: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 14,
+    marginTop: 2,
+  },
+  restartTxt: { fontSize: 13.5, fontWeight: '600', color: ACCENT },
 })

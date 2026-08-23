@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Stack, useRouter } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
+import { useFonts } from 'expo-font'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -21,8 +22,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {})
  *
  *  - Providers à la racine (gestes + insets + sheets modaux).
  *  - Gating d'hydratation SANS loader JS : tant que les stores persistés
- *    (favoris + brief) ET l'auth n'ont pas réhydraté, on ne rend RIEN — le
- *    splash natif reste seul à l'écran. Pas de spinner, pas de fond noir.
+ *    (favoris + brief), l'auth ET les polices de marque n'ont pas fini de
+ *    charger, on ne rend RIEN — le splash natif reste seul à l'écran.
  *  - Hydraté : si aucune session → écran de connexion (Apple / Google /
  *    invité) ; sinon le `<Stack>` racine (onglets + funnels).
  */
@@ -31,7 +32,21 @@ export default function RootLayout() {
   const searchHydrated = useStoreHydrated(useSearchStore)
   const auth = useAuth()
   const router = useRouter()
-  const hydrated = favHydrated && searchHydrated && auth.status !== 'loading'
+
+  // Polices de marque (refonte, direction A) : Frank Ruhl Libre pour les prix /
+  // scores / lettrines, Montserrat Light pour la tagline d'accueil. Les clés
+  // sont les fontFamily consommées via `fonts` de `@/lib/theme`. Chargement
+  // local (assets/fonts), donc quasi instantané ; en cas d'erreur on ne bloque
+  // PAS le démarrage (fontsError libère le gate, la police système prend le
+  // relais silencieusement).
+  const [fontsLoaded, fontsError] = useFonts({
+    'FrankRuhlLibre-Medium': require('../../assets/fonts/FrankRuhlLibre_500Medium.ttf'),
+    'FrankRuhlLibre-SemiBold': require('../../assets/fonts/FrankRuhlLibre_600SemiBold.ttf'),
+    'Montserrat-Light': require('../../assets/fonts/Montserrat_300Light.ttf'),
+  })
+
+  const hydrated =
+    favHydrated && searchHydrated && auth.status !== 'loading' && (fontsLoaded || !!fontsError)
 
   // Restaure la session (SecureStore) au démarrage.
   useEffect(() => {

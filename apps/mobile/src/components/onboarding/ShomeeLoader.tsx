@@ -25,7 +25,9 @@ import Svg, { Path } from 'react-native-svg'
 
 const AnimatedPath = Animated.createAnimatedComponent(Path)
 
-const STROKE = '#C17A6F'
+import { colors } from '@/lib/theme'
+
+const STROKE = colors.terracottaDisabled
 const DASH = 164
 const VB_W = 120
 const VB_H = 150

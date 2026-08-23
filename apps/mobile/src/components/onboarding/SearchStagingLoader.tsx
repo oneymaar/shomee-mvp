@@ -42,10 +42,12 @@ import { Check } from 'lucide-react-native'
 import { ShomeeLoader } from './ShomeeLoader'
 import type { FeedOutcome } from '@/lib/handoff'
 
-const BG = '#FDF5F2'
-const ACCENT = '#A64B27'
-const INK = '#1c1817'
-const MUTED = '#78716c'
+import { colors, fonts } from '@/lib/theme'
+
+const BG = colors.cream
+const ACCENT = colors.terracotta
+const INK = colors.ink
+const MUTED = colors.muted
 
 /** Fin d'onboarding — la recherche se construit sous les yeux de l'acquéreur. */
 export const STEPS_ONBOARDING = [
@@ -185,7 +187,7 @@ export function SearchStagingLoader({
           style={[styles.row, { opacity: finalSlot, transform: [{ translateY: finalY }] }]}
         >
           <View style={styles.check}>
-            <Check size={16} strokeWidth={3} color="#fff" />
+            <Check size={16} strokeWidth={3} color={colors.creamOnDark} />
           </View>
           <Text style={styles.result}>
             <Text style={styles.count}>{done.count}</Text>{' '}
@@ -231,5 +233,5 @@ const styles = StyleSheet.create({
   },
   // Noir : c'est la phrase de validation.
   result: { fontSize: 17, color: INK, fontWeight: '600' },
-  count: { color: ACCENT, fontWeight: '800' },
+  count: { color: ACCENT, fontFamily: fonts.serifStrong },
 })
