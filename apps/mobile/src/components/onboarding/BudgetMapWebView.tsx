@@ -36,7 +36,7 @@ export const BUDGET_MAP_AVAILABLE = RNWebView != null
 const BRANCH_ALIAS = 'https://shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app'
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? BRANCH_ALIAS
 const BYPASS = process.env.EXPO_PUBLIC_VERCEL_BYPASS_TOKEN || undefined
-const BG = '#f5f5f4'
+const BG = '#FAF3EE'
 
 interface Props {
   arrIds: string[]

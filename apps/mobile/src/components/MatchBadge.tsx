@@ -16,9 +16,9 @@ const R = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * R
 const DISC = SIZE - STROKE * 2
 
-const TERRACOTTA = '#A64B27'
+const TERRACOTTA = '#A6512B'
 const TRACK = 'rgba(166,75,39,0.18)'
-const CREAM = '#FDF5F2'
+const CREAM = '#FAF3EE'
 
 interface Props {
   /** Score de match normalisé 0..1 (source : Property.matchScore). */

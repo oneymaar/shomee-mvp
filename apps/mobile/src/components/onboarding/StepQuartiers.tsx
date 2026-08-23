@@ -93,7 +93,7 @@ export function StepQuartiers({
             value={query}
             onChangeText={setQuery}
             placeholder="Ex : Le Marais, Belleville, près de la Tour Eiffel…"
-            placeholderTextColor="#a3a3a3"
+            placeholderTextColor="#B7A99D"
             style={styles.input}
             autoFocus
             autoCorrect={false}

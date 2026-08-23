@@ -131,5 +131,5 @@ export function ZoneMapPicker({ onChange }: { onChange: (sel: ZoneSelection) => 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#e8e3df', overflow: 'hidden' },
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
-  fallbackTxt: { fontSize: 14, color: '#78716c', textAlign: 'center', lineHeight: 20 },
+  fallbackTxt: { fontSize: 14, color: '#8A7A6E', textAlign: 'center', lineHeight: 20 },
 })

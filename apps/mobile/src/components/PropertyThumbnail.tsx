@@ -5,6 +5,7 @@ import { Heart } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
+import { colors, fonts } from '@/lib/theme'
 
 /**
  * Séparateurs de milliers + « € », sans Intl (support Hermes inégal) — aligné
@@ -84,7 +85,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: { padding: 12 },
-  title: { fontSize: 12, fontWeight: '600', color: '#1c1917', lineHeight: 16 },
-  price: { fontSize: 14, fontWeight: '700', color: '#1c1917', marginTop: 4 },
-  surface: { fontSize: 12, color: '#78716c', marginTop: 2 },
+  title: { fontSize: 12, fontWeight: '600', color: '#201A16', lineHeight: 16 },
+  price: { fontFamily: fonts.serif, fontSize: 15, color: colors.ink, marginTop: 4 },
+  surface: { fontSize: 12, color: '#8A7A6E', marginTop: 2 },
 })

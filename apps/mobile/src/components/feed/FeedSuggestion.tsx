@@ -78,6 +78,7 @@ import {
   type DiagnosisTrigger,
   type LeverKind,
 } from '@/lib/searchDiagnosis'
+import { colors, fonts, serifSizes } from '@/lib/theme'
 
 // Vocabulaire des états — strictement celui de l'onboarding.
 const STATE_LABEL: Record<ChipState, string> = {
@@ -94,9 +95,9 @@ const STATE_LABEL: Record<ChipState, string> = {
  * de l'écran — il est assombri à ~4,5:1 pour rester lisible.
  */
 const CHIP_STYLE: Record<ChipState, { bg: string; fg: string; border: string }> = {
-  0: { bg: '#ffffff', fg: '#1a1a1a', border: 'rgba(0,0,0,0.09)' },
-  1: { bg: '#fdf0ed', fg: '#9b4a2e', border: '#e8907a' },
-  2: { bg: '#C1533A', fg: '#ffffff', border: '#C1533A' },
+  0: { bg: '#ffffff', fg: '#201A16', border: 'rgba(0,0,0,0.09)' },
+  1: { bg: '#FFFFFF', fg: '#9b4a2e', border: '#e8907a' },
+  2: { bg: '#A6512B', fg: '#ffffff', border: '#A6512B' },
   3: { bg: '#f1ecea', fg: '#6b6461', border: 'rgba(0,0,0,0.16)' },
 }
 
@@ -665,13 +666,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backTxt: { fontSize: 14, fontWeight: '700', color: INK, marginLeft: 6 },
+  backTxt: { fontSize: 14, fontWeight: '600', color: INK, marginLeft: 6 },
   close: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
 
   scroll: { flex: 1 },
   scrollBody: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 24 },
 
-  title: { fontSize: 27, fontWeight: '800', color: INK, lineHeight: 33, letterSpacing: -0.4 },
+  // Serif de marque : l'intercalaire pose une QUESTION à l'acquéreur, il a le
+  // même statut éditorial qu'une étape du funnel.
+  title: {
+    fontFamily: fonts.serif,
+    fontSize: serifSizes.stepTitle,
+    color: INK,
+    lineHeight: 34,
+    letterSpacing: -0.2,
+  },
   lead: { fontSize: 15, color: MUTED, lineHeight: 22, marginTop: 12 },
 
   control: { marginTop: 28 },
@@ -716,14 +725,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: MUTED,
   },
-  minMaxVal: { fontSize: 21, fontWeight: '800', color: INK, marginTop: 2 },
+  minMaxVal: { fontFamily: fonts.serif, fontSize: 21, color: INK, marginTop: 2 },
   minMaxValChanged: { color: ACCENT },
 
   footer: {
     paddingHorizontal: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.07)',
+    borderTopColor: '#E8D9CB',
     backgroundColor: BG,
   },
   primary: {
@@ -734,7 +743,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primaryOff: { backgroundColor: ACCENT_DISABLED },
-  primaryTxt: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  primaryTxt: { fontSize: 15.5, fontWeight: '600', color: colors.creamOnDark },
 
   link: { alignSelf: 'center', marginTop: 2, paddingVertical: 11, paddingHorizontal: 10 },
   linkTxt: { fontSize: 14.5, fontWeight: '700', color: ACCENT },

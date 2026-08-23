@@ -378,5 +378,5 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.18)',
   },
   hintTxt: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  hintTime: { color: '#d6d3d1', fontWeight: '500' },
+  hintTime: { color: '#E8D9CB', fontWeight: '500' },
 })

@@ -151,7 +151,7 @@ function BlockCard({
         <Text style={styles.cardTitle}>{title}</Text>
         {children}
       </View>
-      <Pencil size={14} color="#a3a3a3" />
+      <Pencil size={14} color="#B7A99D" />
     </Pressable>
   )
 }

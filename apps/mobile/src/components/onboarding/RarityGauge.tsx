@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', gap: 4 },
   seg: { flex: 1, height: 7, borderRadius: 4 },
   labels: { flexDirection: 'row' },
-  label: { flex: 1, fontSize: 10.5, color: '#a3a3a3', textAlign: 'center', fontWeight: '600' },
+  label: { flex: 1, fontSize: 10.5, color: '#B7A99D', textAlign: 'center', fontWeight: '600' },
   labelActive: { color: ACCENT, fontWeight: '800' },
   msg: { fontSize: 13, color: INK, lineHeight: 19, marginTop: 2 },
 })

@@ -82,8 +82,8 @@ export function buildZoneMapUri(sel: ZoneMapSel, nonce?: string, embedded?: bool
 /** En-tetes de contournement de la protection Vercel (previews). */
 export const ZONEMAP_HEADERS = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : undefined
 
-const BG = '#FDF5F2'
-const ACCENT = '#A64B27'
+const BG = '#FAF3EE'
+const ACCENT = '#A6512B'
 const SCREEN_W = Dimensions.get('window').width
 
 // ── Skeleton : carte grisée + reflet qui balaie (rassure pendant le chargement) ─
@@ -236,10 +236,10 @@ const styles = StyleSheet.create({
     gap: 10,
     overflow: 'hidden',
   },
-  skeletonTxt: { fontSize: 13, color: '#a8a29e', fontWeight: '600' },
+  skeletonTxt: { fontSize: 13, color: '#B7A99D', fontWeight: '600' },
 
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 20 },
-  fallbackTxt: { fontSize: 15, color: '#57534e', textAlign: 'center', lineHeight: 21 },
+  fallbackTxt: { fontSize: 15, color: '#8A7A6E', textAlign: 'center', lineHeight: 21 },
   cta: { backgroundColor: ACCENT, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 999 },
   ctaTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
 })

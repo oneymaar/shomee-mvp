@@ -4,8 +4,8 @@ import { Image } from 'expo-image'
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router'
 import { runBriefHandoff, type HandoffOutcome } from '@/lib/handoff'
 
-const BG = '#FDF5F2'
-const TERRACOTTA = '#A64B27'
+const BG = '#FAF3EE'
+const TERRACOTTA = '#A6512B'
 const LOGO = require('../../assets/images/logo-shomee-terracotta.png')
 
 /**
@@ -84,8 +84,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   logo: { width: 132, height: 44, marginBottom: 28 },
   spinner: { marginBottom: 16 },
-  title: { color: '#1c1917', fontSize: 18, fontWeight: '700', textAlign: 'center' },
-  message: { color: '#57534e', fontSize: 15, lineHeight: 21, textAlign: 'center', marginTop: 10 },
+  title: { color: '#201A16', fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  message: { color: '#8A7A6E', fontSize: 15, lineHeight: 21, textAlign: 'center', marginTop: 10 },
   cta: {
     marginTop: 28,
     backgroundColor: TERRACOTTA,

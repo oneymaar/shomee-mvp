@@ -2,8 +2,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { Check, HelpCircle, X } from 'lucide-react-native'
 import type { MatchCriterionRef, Property } from '@shomee/core/types/domain'
 
-const TERRACOTTA = '#A64B27'
-const CREAM = '#FDF5F2'
+const TERRACOTTA = '#A6512B'
+const CREAM = '#FAF3EE'
 
 interface Props {
   property: Property
@@ -27,8 +27,8 @@ export function ScoreExplainModal({ property, visible, onClose }: Props) {
   const rows = (items: MatchCriterionRef[], kind: 'ok' | 'ko' | 'doubt') =>
     items.map((c, i) => (
       <View key={`${kind}-${c.label}-${i}`} style={styles.row}>
-        {kind === 'ok' && <Check size={14} color="#34d399" strokeWidth={3} />}
-        {kind === 'ko' && <X size={14} color="#a8a29e" strokeWidth={3} />}
+        {kind === 'ok' && <Check size={14} color="#7BC9A2" strokeWidth={3} />}
+        {kind === 'ko' && <X size={14} color="#B7A99D" strokeWidth={3} />}
         {kind === 'doubt' && <HelpCircle size={14} color="#d97706" strokeWidth={2.5} />}
         <Text style={[styles.rowTxt, kind === 'ko' && styles.rowTxtMuted]}>
           {c.label}
@@ -58,7 +58,7 @@ export function ScoreExplainModal({ property, visible, onClose }: Props) {
               </Text>
             </View>
             <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
-              <X size={18} color="#78716c" />
+              <X size={18} color="#8A7A6E" />
             </Pressable>
           </View>
 
@@ -133,13 +133,13 @@ const styles = StyleSheet.create({
   scorePct: { color: TERRACOTTA, fontWeight: '900', fontSize: 14, lineHeight: 16 },
   scoreLbl: { color: TERRACOTTA, fontWeight: '700', fontSize: 6.5, letterSpacing: 0.5 },
   headerTxt: { flex: 1, minWidth: 0 },
-  title: { fontSize: 16, fontWeight: '700', color: '#1c1917' },
-  subtitle: { fontSize: 12, color: '#78716c', marginTop: 2 },
+  title: { fontSize: 16, fontWeight: '700', color: '#201A16' },
+  subtitle: { fontSize: 12, color: '#8A7A6E', marginTop: 2 },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#EFE2D5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 16 },
   section: { marginBottom: 16 },
   sectionTitle: {
-    color: '#A8A29E',
+    color: '#B7A99D',
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -163,8 +163,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
-  rowTxt: { color: '#292524', fontSize: 13.5, flexShrink: 1 },
-  rowTxtMuted: { color: '#a8a29e', textDecorationLine: 'line-through' },
+  rowTxt: { color: '#201A16', fontSize: 13.5, flexShrink: 1 },
+  rowTxtMuted: { color: '#B7A99D', textDecorationLine: 'line-through' },
   importanceTag: {
     marginLeft: 'auto',
     color: TERRACOTTA,
@@ -173,5 +173,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  doubtHint: { color: '#a8a29e', fontSize: 11.5, marginTop: 6, lineHeight: 15 },
+  doubtHint: { color: '#B7A99D', fontSize: 11.5, marginTop: 6, lineHeight: 15 },
 })

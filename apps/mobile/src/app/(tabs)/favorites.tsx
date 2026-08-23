@@ -6,9 +6,10 @@ import { Heart } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
 import { useShomeeStore } from '@/lib/stores'
 import { PropertyThumbnail } from '@/components/PropertyThumbnail'
+import { colors, fonts } from '@/lib/theme'
 
-const ACCENT = '#A64B27'
-const BG = '#FDF5F2'
+const ACCENT = '#A6512B'
+const BG = '#FAF3EE'
 
 // Cellule fantôme pour équilibrer une rangée impaire (garde le dernier bien
 // aligné à gauche en demi-largeur au lieu de s'étirer sur toute la ligne).
@@ -66,7 +67,7 @@ export default function FavoritesScreen() {
         <Header count={0} />
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
-            <Heart size={28} color="#A3A3A3" />
+            <Heart size={28} color="#B7A99D" />
           </View>
           <Text style={styles.emptyText}>
             Sauvegardez des biens depuis le feed pour les retrouver ici.
@@ -106,10 +107,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: '#E8D9CB',
   },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#1c1917', letterSpacing: -0.3 },
-  headerSub: { fontSize: 12, color: '#78716c', marginTop: 2 },
+  // Titre d'onglet en serif de marque — même famille que les questions du
+  // funnel et les prix : c'est la signature typographique de l'app.
+  headerTitle: {
+    fontFamily: fonts.serif,
+    fontSize: 27,
+    color: colors.ink,
+    letterSpacing: -0.2,
+    lineHeight: 34,
+  },
+  headerSub: { fontSize: 13, color: colors.muted, marginTop: 3 },
 
   grid: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 },
   row: { gap: 12 },
@@ -127,15 +136,15 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#EFE2D5',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyText: {
     fontSize: 14,
-    color: '#78716c',
+    color: '#8A7A6E',
     textAlign: 'center',
     lineHeight: 21,
   },

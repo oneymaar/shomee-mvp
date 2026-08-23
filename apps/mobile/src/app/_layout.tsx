@@ -12,7 +12,7 @@ import { FlyHeartOverlay } from '@/components/flyHeart/FlyHeartOverlay'
 import { useAuth, hydrateAuth } from '@/lib/authStore'
 import { AuthScreen } from '@/components/auth/AuthScreen'
 
-const BG = '#FDF5F2'
+const BG = '#FAF3EE'
 
 // Tient le splash NATIF affiché tant qu'on ne l'a pas explicitement masqué.
 SplashScreen.preventAutoHideAsync().catch(() => {})
@@ -99,8 +99,17 @@ export default function RootLayout() {
                   <Stack.Screen name="(tabs)" />
                   {/* Handoff deep-link (shomee://onboarding?brief=…). */}
                   <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
-                  {/* Funnel d'onboarding manuel natif (S7). */}
-                  <Stack.Screen name="onboarding-manual" options={{ animation: 'slide_from_right' }} />
+                  {/* Funnel d'onboarding manuel natif (S7).
+                      `gestureEnabled: false` : le funnel gère sa propre navigation
+                      (étapes 1→4, récap) et porte un bouton retour explicite. Le
+                      balayage iOS, lui, sort du funnel ENTIER — et sur l'étape
+                      Quartiers il entrait en conflit direct avec le déplacement du
+                      doigt sur la carte : un glissé vers la droite pour se déplacer
+                      faisait quitter l'écran. On coupe le geste, on garde le bouton. */}
+                  <Stack.Screen
+                    name="onboarding-manual"
+                    options={{ animation: 'slide_from_right', gestureEnabled: false }}
+                  />
                 </Stack>
                 <FlyHeartOverlay />
               </>

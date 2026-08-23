@@ -25,10 +25,11 @@ import Svg, { Path } from 'react-native-svg'
 import { appleModuleAvailable, signInWithApple } from './appleAuth'
 import { GoogleSignInButton } from './GoogleSignInButton'
 import { useAuth, loginGuest, loginApple, loginGoogleIdToken } from '@/lib/authStore'
+import { fonts, serifSizes } from '@/lib/theme'
 
-const BEIGE = '#FDF5F2'
-const ACCENT = '#A64B27'
-const MUTED = '#78716c'
+const BEIGE = '#FAF3EE'
+const ACCENT = '#A6512B'
+const MUTED = '#8A7A6E'
 const LOINTAIN = '#544C47' // gris chaud du haut de la vidéo, avant son chargement
 
 const LOGO = require('../../../assets/images/logo-shomee-terracotta.png')
@@ -150,7 +151,10 @@ export function AuthScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.hero}>
           <Image source={LOGO} style={styles.logo} contentFit="contain" tintColor={BEIGE} />
-          <Text style={styles.tagline}>La recherche immobilière{'\n'}en vidéo.</Text>
+          <Text style={styles.tagline}>
+            La recherche immobilière,{'\n'}
+            <Text style={styles.taglineSerif}>en vidéo.</Text>
+          </Text>
         </View>
 
         <View style={[styles.socle, { paddingBottom: Math.max(insets.bottom, 16) }]}>
@@ -203,12 +207,15 @@ const styles = StyleSheet.create({
 
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 13, paddingHorizontal: 28 },
   logo: { width: 104, height: 104 },
+  // Montserrat Light — une sans plus élégante et plus fine que la police
+  // système (« un tout petit peu plus fine », retour du 21/08). Pas de
+  // fontWeight avec une police chargée : Android en synthétiserait un faux gras.
   tagline: {
-    fontSize: 24,
-    fontWeight: '400',
-    lineHeight: 31,
-    letterSpacing: -0.2,
-    color: '#FDF5F2',
+    fontFamily: fonts.taglineSans,
+    fontSize: 26,
+    lineHeight: 33,
+    letterSpacing: 0.2,
+    color: '#FAF3EE',
     textAlign: 'center',
     // Ombre large et diffuse plutôt que marquée : elle doit décoller le texte
     // des visites claires sans se voir comme un contour.
@@ -216,6 +223,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 18,
     textShadowOffset: { width: 0, height: 2 },
   },
+
+  // « en vidéo. » — et rien d'autre — porte la serif de marque : deux mots en
+  // relief suffisent à signer, la phrase entière en serif ferait littéraire.
+  taglineSerif: { fontFamily: fonts.serif, fontSize: serifSizes.tagline },
 
   // paddingBottom posé à l'exécution depuis l'inset bas (home indicator).
   socle: { backgroundColor: BEIGE, paddingHorizontal: 28, paddingTop: 22 },
@@ -240,6 +251,6 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.6 },
   pressed: { opacity: 0.85 },
 
-  error: { fontSize: 13, color: '#b91c1c', textAlign: 'center' },
+  error: { fontSize: 13, color: '#B0442C', textAlign: 'center' },
   legal: { fontSize: 11, color: MUTED, textAlign: 'center', lineHeight: 16, marginTop: 2 },
 })

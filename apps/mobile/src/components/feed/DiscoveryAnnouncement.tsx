@@ -31,11 +31,12 @@ import { Animated, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChevronDown, Euro, ListChecks, MapPin, Ruler } from 'lucide-react-native'
 import type { DiscoveryNotice, NoticeKind } from '@/lib/wideningPlan'
+import { colors, fonts, radii, serifSizes } from '@/lib/theme'
 
-const BG = '#FDF5F2'
-const ACCENT = '#A64B27'
-const INK = '#1c1817'
-const MUTED = '#78716c'
+const BG = '#FAF3EE'
+const ACCENT = '#A6512B'
+const INK = '#201A16'
+const MUTED = '#8A7A6E'
 /** Fond de la pastille d'icône — l'accent à 9 %, comme sur tout l'onboarding. */
 const SOFT = 'rgba(166,75,39,0.09)'
 /** Gris du chevron : plus clair que le texte, il indique sans réclamer. */
@@ -126,7 +127,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 18,
   },
-  head: { fontSize: 18.5, lineHeight: 24, fontWeight: '600', color: INK, textAlign: 'center' },
+  head: {
+    fontFamily: fonts.serif,
+    fontSize: 24,
+    lineHeight: 31,
+    color: INK,
+    textAlign: 'center',
+    letterSpacing: -0.2,
+  },
   line: { fontSize: 15.5, lineHeight: 23, color: MUTED, textAlign: 'center', marginTop: 9 },
   detail: {
     marginTop: 16,

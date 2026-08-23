@@ -63,7 +63,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ]
 
 const HERO_HEIGHT = 260
-const ACCENT = '#A64B27'
+const ACCENT = '#A6512B'
 
 const imgSource = (m: MediaSource) => (typeof m === 'string' ? { uri: m } : m)
 
@@ -340,8 +340,8 @@ const styles = StyleSheet.create({
   ghost: { opacity: 0 },
   labelAbs: { position: 'absolute', top: 0, left: 0, right: 0, textAlign: 'center' },
   label: { fontSize: 14 },
-  labelBold: { fontWeight: '700', color: '#1C1917' },
-  labelMuted: { fontWeight: '500', color: '#A8A29E' },
+  labelBold: { fontWeight: '700', color: '#201A16' },
+  labelMuted: { fontWeight: '500', color: '#B7A99D' },
   underline: { height: 2, borderRadius: 1, marginTop: 6, backgroundColor: 'transparent' },
   underlineOn: { backgroundColor: ACCENT },
 
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   },
 
   // Tour fallback (CTA)
-  mediaCard: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A1A1A' },
+  mediaCard: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#201A16' },
   overlay: {
     position: 'absolute',
     top: 0,
@@ -422,5 +422,5 @@ const styles = StyleSheet.create({
 
   // Vide
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { fontSize: 14, color: '#A8A29E' },
+  emptyText: { fontSize: 14, color: '#B7A99D' },
 })

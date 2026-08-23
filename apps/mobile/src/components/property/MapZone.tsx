@@ -87,7 +87,7 @@ interface Props {
 const LINE_COLORS: Record<string, { bg: string; text: string }> = {
   M1: { bg: '#FFCD00', text: '#000' }, M2: { bg: '#003CA6', text: '#fff' },
   M3: { bg: '#9F9825', text: '#fff' }, M4: { bg: '#BE418D', text: '#fff' },
-  M5: { bg: '#FF7E2E', text: '#fff' }, M6: { bg: '#6ECA97', text: '#000' },
+  M5: { bg: '#FF7E2E', text: '#fff' }, M6: { bg: '#7BC9A2', text: '#000' },
   M7: { bg: '#FA9ABA', text: '#000' }, M8: { bg: '#E19BDF', text: '#000' },
   M9: { bg: '#B6BD00', text: '#000' }, M10: { bg: '#C9910D', text: '#fff' },
   M11: { bg: '#704B1C', text: '#fff' }, M12: { bg: '#007852', text: '#fff' },
@@ -114,7 +114,7 @@ export const POI_LABELS: Record<PoiCat, string> = {
   monument: 'Monuments',
 }
 
-const ACCENT = '#A64B27'
+const ACCENT = '#A6512B'
 const NEAR_WALK_MAX = 8 // minutes
 
 /** JSON sûr à coller dans une balise <script> (un nom OSM peut tout contenir). */
@@ -153,15 +153,15 @@ function buildHtml(p: HtmlArgs): string {
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
-html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#FDF5F2}
-.leaflet-container{background:#FDF5F2;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}
+html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#FAF3EE}
+.leaflet-container{background:#FAF3EE;font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}
 .stPill{display:flex;align-items:center;background:#fff;border-radius:999px;padding:2px 8px 2px 2px;
         box-shadow:0 1px 4px rgba(0,0,0,.28);white-space:nowrap}
 .stPill b{width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;
           font-size:9.5px;font-weight:800;margin-right:5px;flex:0 0 auto}
-.stPill span{font-size:10px;font-weight:700;color:#1c1917}
-.stPill em{font-style:normal;font-weight:600;color:#a8a29e;margin-left:4px}
-.leaflet-popup-content{margin:8px 12px;font-size:12.5px;font-weight:600;color:#1c1917}
+.stPill span{font-size:10px;font-weight:700;color:#201A16}
+.stPill em{font-style:normal;font-weight:600;color:#B7A99D;margin-left:4px}
+.leaflet-popup-content{margin:8px 12px;font-size:12.5px;font-weight:600;color:#201A16}
 .leaflet-popup-content-wrapper{border-radius:10px}
 </style>
 </head><body>
@@ -213,7 +213,7 @@ var poiLayer = L.layerGroup().addTo(map);
 window.__setPois = function (list) {
   poiLayer.clearLayers();
   (list || []).forEach(function (p) {
-    var col = D.poiColors[p.cat] || '#78716c';
+    var col = D.poiColors[p.cat] || '#8A7A6E';
     var m = L.circleMarker([p.lat, p.lng], {
       radius: D.poiR, color: '#fff', weight: 1.6, opacity: 1,
       fillColor: col, fillOpacity: 1, interactive: I
@@ -292,5 +292,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.08)',
   },
-  web: { flex: 1, backgroundColor: '#FDF5F2' },
+  web: { flex: 1, backgroundColor: '#FAF3EE' },
 })

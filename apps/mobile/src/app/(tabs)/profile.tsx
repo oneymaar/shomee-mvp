@@ -8,9 +8,10 @@ import feedSeed from '@shomee/core/data/feedSeed.json'
 import { useSearchStore, useShomeeStore, useFeedStore } from '@/lib/stores'
 import { useProfileStore } from '@/lib/profileStore'
 import { useAuth, logout, deleteAccount } from '@/lib/authStore'
+import { colors, fonts } from '@/lib/theme'
 
-const BG = '#FDF5F2'
-const ACCENT = '#A64B27'
+const BG = '#FAF3EE'
+const ACCENT = '#A6512B'
 const SEED_COUNT = (feedSeed as unknown[]).length
 
 const MENU_ITEMS = [
@@ -156,7 +157,7 @@ export default function ProfileScreen() {
                 onError={() => setPhoto(null)}
               />
             ) : (
-              <User size={36} color="#A3A3A3" />
+              <User size={36} color="#B7A99D" />
             )}
             <View style={styles.editBadge}>
               <Camera size={13} color="#fff" />
@@ -206,13 +207,13 @@ export default function ProfileScreen() {
           {MENU_ITEMS.map(({ icon: Icon, label, description }, i) => (
             <View key={label} style={[styles.menuRow, i > 0 && styles.rowBorder]}>
               <View style={styles.menuIcon}>
-                <Icon size={15} color="#78716c" />
+                <Icon size={15} color="#8A7A6E" />
               </View>
               <View style={styles.menuText}>
                 <Text style={styles.menuLabel}>{label}</Text>
                 <Text style={styles.menuDesc}>{description}</Text>
               </View>
-              <ChevronRight size={14} color="#A3A3A3" />
+              <ChevronRight size={14} color="#B7A99D" />
             </View>
           ))}
         </View>
@@ -233,7 +234,7 @@ export default function ProfileScreen() {
           onPress={confirmLogout}
           style={({ pressed }) => [styles.logoutBtn, { opacity: pressed ? 0.9 : 1 }]}
         >
-          <LogOut size={16} color="#b91c1c" />
+          <LogOut size={16} color="#B0442C" />
           <Text style={styles.logoutTxt}>Se déconnecter</Text>
         </Pressable>
 
@@ -245,7 +246,7 @@ export default function ProfileScreen() {
           hitSlop={8}
           style={({ pressed }) => [styles.deleteBtn, { opacity: pressed ? 0.6 : 0.85 }]}
         >
-          <Trash2 size={14} color="#b91c1c" />
+          <Trash2 size={14} color="#B0442C" />
           <Text style={styles.deleteTxt}>Supprimer mon compte</Text>
         </Pressable>
 
@@ -262,10 +263,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: '#E8D9CB',
   },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#1c1917', letterSpacing: -0.3 },
-  headerSub: { fontSize: 12, color: '#78716c', marginTop: 2 },
+  // Titre d'onglet en serif de marque — même famille que les questions du
+  // funnel et les prix : c'est la signature typographique de l'app.
+  headerTitle: {
+    fontFamily: fonts.serif,
+    fontSize: 27,
+    color: colors.ink,
+    letterSpacing: -0.2,
+    lineHeight: 34,
+  },
+  headerSub: { fontSize: 13, color: colors.muted, marginTop: 3 },
 
   scroll: { paddingBottom: 32 },
 
@@ -274,9 +283,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#EFE2D5',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -300,20 +309,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  statValue: { fontSize: 24, fontWeight: '700', color: '#1c1917' },
-  statLabel: { fontSize: 12, color: '#78716c', marginTop: 2 },
+  statValue: { fontFamily: fonts.serif, fontSize: 26, color: colors.ink },
+  statLabel: { fontSize: 12, color: '#8A7A6E', marginTop: 2 },
 
-  divider: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.08)', marginHorizontal: 20, marginTop: 24 },
+  divider: { borderTopWidth: 1, borderTopColor: '#E8D9CB', marginHorizontal: 20, marginTop: 24 },
 
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#A3A3A3',
+    color: '#B7A99D',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     paddingHorizontal: 20,
@@ -326,11 +335,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     borderRadius: 16,
     overflow: 'hidden',
   },
-  rowBorder: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)' },
+  rowBorder: { borderTopWidth: 1, borderTopColor: '#E8D9CB' },
 
   searchBtn: {
     marginHorizontal: 20,
@@ -353,21 +362,21 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 12,
   },
-  prefLabel: { fontSize: 14, color: '#1c1917' },
-  prefValue: { flex: 1, fontSize: 14, color: '#78716c', textAlign: 'right' },
+  prefLabel: { fontSize: 14, color: '#201A16' },
+  prefValue: { flex: 1, fontSize: 14, color: '#8A7A6E', textAlign: 'right' },
 
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   menuIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#EFE2D5',
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuText: { flex: 1 },
-  menuLabel: { fontSize: 14, fontWeight: '500', color: '#1c1917' },
-  menuDesc: { fontSize: 12, color: '#78716c', marginTop: 1 },
+  menuLabel: { fontSize: 14, fontWeight: '500', color: '#201A16' },
+  menuDesc: { fontSize: 12, color: '#8A7A6E', marginTop: 1 },
 
   logoutBtn: {
     marginHorizontal: 20,
@@ -382,7 +391,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  logoutTxt: { color: '#b91c1c', fontSize: 14.5, fontWeight: '600' },
+  logoutTxt: { color: '#B0442C', fontSize: 14.5, fontWeight: '600' },
   deleteBtn: {
     marginTop: 18,
     alignSelf: 'center',
@@ -390,6 +399,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  deleteTxt: { color: '#b91c1c', fontSize: 13.5, fontWeight: '600' },
-  version: { fontSize: 12, color: '#A3A3A3', textAlign: 'center', marginTop: 28 },
+  deleteTxt: { color: '#B0442C', fontSize: 13.5, fontWeight: '600' },
+  version: { fontSize: 12, color: '#B7A99D', textAlign: 'center', marginTop: 28 },
 })

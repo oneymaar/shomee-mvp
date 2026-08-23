@@ -8,8 +8,9 @@ import { formatLocation } from '@shomee/core/utils/format'
 import type { Conversation, Property } from '@shomee/core/types/domain'
 import { hasUnread, useShomeeStore } from '@/lib/stores'
 import { usePropertyResolver } from '@/lib/useResolveProperty'
+import { colors, fonts } from '@/lib/theme'
 
-const BG = '#FDF5F2'
+const BG = '#FAF3EE'
 
 /** Séparateurs de milliers + « € », sans Intl (support Hermes inégal). */
 function formatPrice(n: number): string {
@@ -120,7 +121,7 @@ export default function MessagesScreen() {
         <Header />
         <View style={styles.empty}>
           <View style={styles.emptyIcon}>
-            <MessageCircle size={28} color="#A3A3A3" />
+            <MessageCircle size={28} color="#B7A99D" />
           </View>
           <Text style={styles.emptyTitle}>Aucun message</Text>
           <Text style={styles.emptyText}>Vos échanges avec les agents{'\n'}apparaîtront ici.</Text>
@@ -156,10 +157,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: '#E8D9CB',
   },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: '#1c1917', letterSpacing: -0.3 },
-  headerSub: { fontSize: 12, color: '#78716c', marginTop: 2 },
+  // Titre d'onglet en serif de marque — même famille que les questions du
+  // funnel et les prix : c'est la signature typographique de l'app.
+  headerTitle: {
+    fontFamily: fonts.serif,
+    fontSize: 27,
+    color: colors.ink,
+    letterSpacing: -0.2,
+    lineHeight: 34,
+  },
+  headerSub: { fontSize: 13, color: colors.muted, marginTop: 3 },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14 },
   avatarWrap: { position: 'relative' },
@@ -169,13 +178,13 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#E8D9CB',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   avatarImg: { width: '100%', height: '100%' },
-  avatarInitial: { fontSize: 15, fontWeight: '700', color: '#404040' },
+  avatarInitial: { fontSize: 15, fontWeight: '700', color: '#201A16' },
   unreadDot: {
     position: 'absolute',
     top: -1,
@@ -190,27 +199,27 @@ const styles = StyleSheet.create({
 
   rowBody: { flex: 1, minWidth: 0 },
   rowTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  brand: { flex: 1, fontSize: 14, fontWeight: '600', color: '#1c1917' },
+  brand: { flex: 1, fontSize: 14, fontWeight: '600', color: '#201A16' },
   brandUnread: { fontWeight: '800' },
-  time: { fontSize: 11, color: '#A3A3A3' },
-  timeUnread: { color: '#1c1917', fontWeight: '700' },
+  time: { fontSize: 11, color: '#B7A99D' },
+  timeUnread: { color: '#201A16', fontWeight: '700' },
   sub: { fontSize: 12, color: '#525252', marginTop: 1 },
-  preview: { fontSize: 13, color: '#A3A3A3', marginTop: 2 },
-  previewUnread: { color: '#292524', fontWeight: '600' },
+  preview: { fontSize: 13, color: '#B7A99D', marginTop: 2 },
+  previewUnread: { color: '#201A16', fontWeight: '600' },
 
-  sep: { height: 1, marginHorizontal: 20, backgroundColor: 'rgba(0,0,0,0.06)' },
+  sep: { height: 1, marginHorizontal: 20, backgroundColor: '#EFE2D5' },
 
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 12 },
   emptyIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#EFE2D5',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyTitle: { fontSize: 14, fontWeight: '600', color: '#78716c' },
-  emptyText: { fontSize: 12, color: '#A3A3A3', textAlign: 'center', lineHeight: 18 },
+  emptyTitle: { fontSize: 14, fontWeight: '600', color: '#8A7A6E' },
+  emptyText: { fontSize: 12, color: '#B7A99D', textAlign: 'center', lineHeight: 18 },
 })

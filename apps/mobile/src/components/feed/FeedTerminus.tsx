@@ -19,11 +19,12 @@
  */
 import { StyleSheet, Text, View, Pressable } from 'react-native'
 import { BellRing } from 'lucide-react-native'
+import { colors, fonts, radii, serifSizes } from '@/lib/theme'
 
-const BG = '#FDF5F2'
-const ACCENT = '#A64B27'
-const INK = '#1c1817'
-const MUTED = '#78716c'
+const BG = '#FAF3EE'
+const ACCENT = '#A6512B'
+const INK = '#201A16'
+const MUTED = '#8A7A6E'
 /** Fond de la pastille d'icône — l'accent à 9 %, comme sur tout l'onboarding. */
 const SOFT = 'rgba(166,75,39,0.09)'
 
@@ -70,14 +71,14 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   head: {
-    fontSize: 21,
-    lineHeight: 27,
-    fontWeight: '700',
+    fontFamily: fonts.serif,
+    fontSize: 24,
+    letterSpacing: -0.2,
     color: INK,
     textAlign: 'center',
-    letterSpacing: -0.3,
+    lineHeight: 31,
   },
   line: { fontSize: 15, lineHeight: 22, color: MUTED, textAlign: 'center', marginTop: 10 },
   link: { marginTop: 22 },
-  linkTxt: { fontSize: 14.5, fontWeight: '700', color: ACCENT },
+  linkTxt: { fontSize: 14, fontWeight: '600', color: ACCENT },
 })

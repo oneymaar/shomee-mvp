@@ -39,8 +39,8 @@ export const PROTO_WEBVIEW_AVAILABLE = RNWebView != null
 const BRANCH_ALIAS = 'https://shomee-mvp-git-feat-monorepo-oneymaars-projects.vercel.app'
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? BRANCH_ALIAS
 const BYPASS = process.env.EXPO_PUBLIC_VERCEL_BYPASS_TOKEN || undefined
-const BG = '#FDF5F2'
-const ACCENT = '#A64B27'
+const BG = '#FAF3EE'
+const ACCENT = '#A6512B'
 
 interface Props {
   onValidate: () => void
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   web: { flex: 1, backgroundColor: BG },
   placeholder: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: BG },
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 20, backgroundColor: BG },
-  fallbackTxt: { fontSize: 15, color: '#57534e', textAlign: 'center', lineHeight: 21 },
+  fallbackTxt: { fontSize: 15, color: '#8A7A6E', textAlign: 'center', lineHeight: 21 },
   cta: { backgroundColor: ACCENT, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 999 },
   ctaTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
 })

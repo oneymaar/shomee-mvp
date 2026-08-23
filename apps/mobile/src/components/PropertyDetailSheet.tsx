@@ -17,6 +17,7 @@ import Svg, { Path, Text as SvgText } from 'react-native-svg'
 import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
+import { colors, fonts, radii, serifSizes } from '@/lib/theme'
 import { PropertyMediaTabs } from '@/components/property/PropertyMediaTabs'
 import {
   MapZone,
@@ -28,7 +29,7 @@ import { useNearbyPois, type PoiCat } from '@/lib/useNearbyPois'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 const TEST_PHONE = '0670744935'
-const ACCENT = '#A64B27'
+const ACCENT = '#A6512B'
 
 // TEMP démo média — appliqués à tous les biens tant que la base n'a ni galerie
 // ni plan ni visite (0% aujourd'hui). À REMPLACER par les vrais médias fournis
@@ -118,7 +119,7 @@ function DiagBadge({ kind, grade, label }: { kind: 'dpe' | 'ges'; grade: Grade; 
 /* ── Transports — parsing + couleurs lignes (miroir web) ───────────────────── */
 const METRO_COLORS: Record<string, string> = {
   '1': '#FFCD00', '2': '#003CA6', '3': '#837902', '3b': '#6EC4E8', '4': '#CF009E',
-  '5': '#FF7E2E', '6': '#6ECA97', '7': '#FA9ABA', '7b': '#6ECA97', '8': '#E19BDF',
+  '5': '#FF7E2E', '6': '#7BC9A2', '7': '#FA9ABA', '7b': '#7BC9A2', '8': '#E19BDF',
   '9': '#B6BD00', '10': '#C9910D', '11': '#704B1C', '12': '#007852', '13': '#98D4E2', '14': '#62259D',
 }
 const RER_COLORS: Record<string, string> = {
@@ -191,7 +192,7 @@ function StationRow({ name, badges, walk }: { name: string; badges: Badge[]; wal
       </Text>
       {walk != null && (
         <View style={styles.walkRow}>
-          <Footprints size={11} color="#A8A29E" />
+          <Footprints size={11} color="#B7A99D" />
           <Text style={styles.walkTime}>{walk} min</Text>
         </View>
       )}
@@ -361,7 +362,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
 
               {/* Localisation — épingle + arrondissement · quartier */}
               <View style={styles.locationRow}>
-                <MapPin size={12} color="#A8A29E" strokeWidth={2.5} />
+                <MapPin size={12} color="#B7A99D" strokeWidth={2.5} />
                 <Text style={styles.location}>
                   {property.arrondissement}
                   {property.district ? ` · ${property.district}` : ''}
@@ -386,7 +387,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 <View style={styles.featuresRow}>
                   {features.map((f) => (
                     <View key={f} style={styles.chip}>
-                      <Check size={11} color="#34d399" strokeWidth={3} />
+                      <Check size={11} color="#7BC9A2" strokeWidth={3} />
                       <Text style={styles.chipTxt}>{f}</Text>
                     </View>
                   ))}
@@ -399,7 +400,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 <View style={styles.featuresRow}>
                   {property!.matchDetail!.unmatched.map((c) => (
                     <View key={`um-${c.label}`} style={styles.chip}>
-                      <X size={11} color="#a8a29e" strokeWidth={3} />
+                      <X size={11} color="#B7A99D" strokeWidth={3} />
                       <Text style={styles.chipTxtMuted}>{c.label}</Text>
                     </View>
                   ))}
@@ -506,7 +507,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                     </>
                   ) : (
                     <GreyBox style={styles.mapPlaceholder}>
-                      <Map size={26} color="#D6D3D1" />
+                      <Map size={26} color="#E8D9CB" />
                       <Text style={styles.mapPlaceholderTxt}>Carte du quartier bientôt disponible</Text>
                     </GreyBox>
                   )}
@@ -719,8 +720,8 @@ function Divider() {
 }
 
 const styles = StyleSheet.create({
-  sheetBg: { backgroundColor: '#FDF5F2' },
-  handle: { backgroundColor: '#D6D3D1', width: 40 },
+  sheetBg: { backgroundColor: '#FAF3EE' },
+  handle: { backgroundColor: '#E8D9CB', width: 40 },
   content: { paddingBottom: 120 },
 
   hero: { width: '100%', height: 220, backgroundColor: '#E7E5E4' },
@@ -729,29 +730,38 @@ const styles = StyleSheet.create({
   agencyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   logo: {
     width: 32, height: 32, borderRadius: 16, overflow: 'hidden', backgroundColor: '#171717',
-    borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: '#E8D9CB', alignItems: 'center', justifyContent: 'center',
   },
   logoImg: { width: '100%', height: '100%' },
   logoInitial: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  agencyName: { color: '#1C1917', fontSize: 14, fontWeight: '600', flexShrink: 1 },
+  agencyName: { color: colors.ink, fontSize: 14.5, fontWeight: '600', flexShrink: 1 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 8, marginTop: 4 },
-  price: { color: '#1C1917', fontSize: 24, fontWeight: '900', lineHeight: 26 },
-  perSqm: { color: '#78716C', fontSize: 12 },
+  // Le prix de la fiche : serif de marque à l'échelle validée (« 96 % »).
+  // Le poids 900 d'une police système faisait « appli de petites annonces » ;
+  // la serif porte le montant sans avoir besoin de crier.
+  price: {
+    color: colors.ink,
+    fontFamily: fonts.serifStrong,
+    fontSize: serifSizes.priceSheet,
+    lineHeight: serifSizes.priceSheet + 4,
+    letterSpacing: -0.5,
+  },
+  perSqm: { color: '#8A7A6E', fontSize: 12 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
-  location: { color: '#1C1917', fontSize: 14, fontWeight: '500' },
+  location: { color: '#201A16', fontSize: 14, fontWeight: '500' },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   statChip: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: '#EFE2D5',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  statChipTxt: { color: '#292524', fontSize: 12, fontWeight: '600' },
+  statChipTxt: { color: '#201A16', fontSize: 12, fontWeight: '600' },
   headerDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: '#EFE2D5',
     marginTop: 14,
     marginHorizontal: 16,
   },
@@ -759,26 +769,31 @@ const styles = StyleSheet.create({
 
   featuresRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 8, marginTop: 12 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  chipTxt: { color: '#44403C', fontSize: 13 },
-  chipTxtMuted: { color: '#a8a29e', fontSize: 13, textDecorationLine: 'line-through' },
+  chipTxt: { color: '#8A7A6E', fontSize: 13 },
+  chipTxtMuted: { color: '#B7A99D', fontSize: 13, textDecorationLine: 'line-through' },
   chipTxtDoubt: { color: '#b45309', fontSize: 13 },
 
   sections: { paddingHorizontal: 16, paddingTop: 24, gap: 28 },
 
   sectionTitle: {
-    color: '#A8A29E',
-    fontSize: 10,
+    color: colors.terracotta,
+    fontSize: 10.5,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1.5,
+    letterSpacing: 2.2,
     marginBottom: 12,
   },
 
-  greyBox: { backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)', borderRadius: 16 },
+  greyBox: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radii.card,
+  },
   boxPadded: { paddingHorizontal: 16, paddingVertical: 16 },
   boxRows: { paddingHorizontal: 16, paddingVertical: 4 },
 
-  description: { color: '#57534E', fontSize: 14, lineHeight: 21 },
+  description: { color: '#8A7A6E', fontSize: 14, lineHeight: 21 },
 
   row: {
     flexDirection: 'row',
@@ -787,39 +802,39 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: '#E8D9CB',
   },
-  rowLabel: { color: '#78716C', fontSize: 14, flexShrink: 0 },
-  rowValue: { color: '#1C1917', fontSize: 14, fontWeight: '500', textAlign: 'right', flexShrink: 1 },
+  rowLabel: { color: '#8A7A6E', fontSize: 14, flexShrink: 0 },
+  rowValue: { color: '#201A16', fontSize: 14, fontWeight: '500', textAlign: 'right', flexShrink: 1 },
 
   marketHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 4 },
-  marketPrice: { color: '#1C1917', fontSize: 20, fontWeight: '900' },
-  marketPpm: { color: '#78716C', fontSize: 12 },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(0,0,0,0.08)', marginVertical: 12 },
+  marketPrice: { color: colors.ink, fontFamily: fonts.serif, fontSize: 20 },
+  marketPpm: { color: '#8A7A6E', fontSize: 12 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: '#EFE2D5', marginVertical: 12 },
 
   // Quartier
   irisBlock: { marginBottom: 12 },
-  irisZone: { color: '#1C1917', fontSize: 14, fontWeight: '600' },
-  irisDesc: { color: '#78716C', fontSize: 12, lineHeight: 17, marginTop: 2 },
+  irisZone: { color: '#201A16', fontSize: 14, fontWeight: '600' },
+  irisDesc: { color: '#8A7A6E', fontSize: 12, lineHeight: 17, marginTop: 2 },
   mapPlaceholder: { height: 150, alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 },
-  mapPlaceholderTxt: { color: '#A8A29E', fontSize: 12 },
+  mapPlaceholderTxt: { color: '#B7A99D', fontSize: 12 },
   qSpace: { marginBottom: 12 },
   transportGroup: {
-    color: '#A8A29E', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
+    color: '#B7A99D', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
     letterSpacing: 1, paddingTop: 8, paddingBottom: 2,
   },
   transportItem: {
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E8D9CB',
   },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   lineBadge: { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   lineNumber: { fontSize: 10, fontWeight: '900' },
-  transportName: { color: '#57534E', fontSize: 14, flexShrink: 1 },
+  transportName: { color: '#8A7A6E', fontSize: 14, flexShrink: 1 },
   walkRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 'auto' },
-  walkTime: { color: '#A8A29E', fontSize: 12, fontWeight: '600' },
+  walkTime: { color: '#B7A99D', fontSize: 12, fontWeight: '600' },
   nearbyCol: { alignItems: 'flex-end', gap: 2, flexShrink: 1 },
-  nearbyItem: { color: '#57534E', fontSize: 14, textAlign: 'right' },
+  nearbyItem: { color: '#8A7A6E', fontSize: 14, textAlign: 'right' },
 
   // Carte quartier
   mapExpand: {
@@ -829,11 +844,11 @@ const styles = StyleSheet.create({
   legendRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 9 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendTxt: { color: '#78716c', fontSize: 10.5, fontWeight: '500' },
-  mapSource: { color: '#A8A29E', fontSize: 10, marginTop: 6, marginBottom: 12 },
+  legendTxt: { color: '#8A7A6E', fontSize: 10.5, fontWeight: '500' },
+  mapSource: { color: '#B7A99D', fontSize: 10, marginTop: 6, marginBottom: 12 },
 
   // Carte plein écran
-  fsRoot: { flex: 1, backgroundColor: '#FDF5F2' },
+  fsRoot: { flex: 1, backgroundColor: '#FAF3EE' },
   fsMap: { flex: 1, height: '100%', borderRadius: 0, borderWidth: 0 },
   fsClose: {
     position: 'absolute', right: 14, width: 38, height: 38, borderRadius: 19,
@@ -845,14 +860,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
   },
   fsLegendItem: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  fsLegendTxt: { color: '#44403c', fontSize: 11.5, fontWeight: '500' },
-  fsLegendCount: { color: '#A8A29E', fontSize: 11.5, fontWeight: '700' },
+  fsLegendTxt: { color: '#8A7A6E', fontSize: 11.5, fontWeight: '500' },
+  fsLegendCount: { color: '#B7A99D', fontSize: 11.5, fontWeight: '700' },
 
   // Diagnostics
   diagBox: { paddingHorizontal: 16, paddingVertical: 16, flexDirection: 'row', gap: 24 },
   diag: { flex: 1 },
   diagLabel: {
-    color: '#A8A29E', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
+    color: '#B7A99D', fontSize: 9, fontWeight: '700', textTransform: 'uppercase',
     letterSpacing: 1, marginBottom: 8,
   },
 

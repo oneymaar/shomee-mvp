@@ -9,8 +9,8 @@ import { useFeedStore, useShomeeStore } from '@/lib/stores'
 import { FeedItem } from '@/components/FeedItem'
 import { PropertyDetailSheet } from '@/components/PropertyDetailSheet'
 
-const ACCENT = '#A64B27'
-const BAR_BG = '#FDF5F2'
+const ACCENT = '#A6512B'
+const BAR_BG = '#FAF3EE'
 const BAR_HEIGHT = 60
 // Identités stables exigées par FlatList (pas de recréation par render).
 const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 60 } as const
@@ -138,7 +138,7 @@ export default function FavoritesViewerScreen() {
         ]}
       >
         <Pressable style={styles.barSide} onPress={goBack} hitSlop={10}>
-          <ArrowLeft size={22} color="#1c1917" />
+          <ArrowLeft size={22} color="#201A16" />
         </Pressable>
         <View style={styles.barCenter}>
           <Text style={styles.barText}>
@@ -178,11 +178,11 @@ const styles = StyleSheet.create({
     backgroundColor: BAR_BG,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    borderTopColor: '#E8D9CB',
   },
   barSide: { width: 56, alignItems: 'center', justifyContent: 'center' },
   barCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   barText: { fontSize: 18 },
-  barLabel: { fontWeight: '700', color: '#1c1917' },
+  barLabel: { fontWeight: '700', color: '#201A16' },
   barCounter: { fontWeight: '600', color: ACCENT },
 })

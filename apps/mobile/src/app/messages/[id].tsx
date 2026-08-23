@@ -27,8 +27,8 @@ import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
 import { usePropertyResolver } from '@/lib/useResolveProperty'
 
-const ACCENT = '#A64B27'
-const BG = '#FDF5F2'
+const ACCENT = '#A6512B'
+const BG = '#FAF3EE'
 
 // Réponses agence simulées — identiques au web (ConversationView). Le 1er message
 // déclenche l'accueil, les suivants avancent dans la liste (bornés au dernier).
@@ -179,7 +179,7 @@ export default function ConversationScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Pressable onPress={goToList} style={styles.back} hitSlop={8}>
-          <ChevronLeft size={24} color="#78716c" />
+          <ChevronLeft size={24} color="#8A7A6E" />
         </Pressable>
         <View style={styles.headerAvatar}>
           {brandLogo ? (
@@ -282,7 +282,7 @@ export default function ConversationScreen() {
               value={text}
               onChangeText={setText}
               placeholder="Message..."
-              placeholderTextColor="#A3A3A3"
+              placeholderTextColor="#B7A99D"
               style={styles.input}
               multiline
             />
@@ -292,7 +292,7 @@ export default function ConversationScreen() {
             disabled={!text.trim()}
             style={[styles.sendBtn, text.trim() ? styles.sendBtnActive : styles.sendBtnIdle]}
           >
-            <Send size={15} strokeWidth={2.2} color={text.trim() ? '#fff' : '#A3A3A3'} />
+            <Send size={15} strokeWidth={2.2} color={text.trim() ? '#fff' : '#B7A99D'} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: '#E8D9CB',
   },
   back: { marginLeft: -6 },
   headerAvatar: {
@@ -320,16 +320,16 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#E8D9CB',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   headerAvatarImg: { width: '100%', height: '100%' },
-  headerAvatarInitial: { fontSize: 13, fontWeight: '700', color: '#404040' },
+  headerAvatarInitial: { fontSize: 13, fontWeight: '700', color: '#201A16' },
   headerText: { flex: 1, minWidth: 0 },
-  headerName: { fontSize: 14, fontWeight: '700', color: '#1c1917' },
-  headerTitle: { fontSize: 11, color: '#78716c', marginTop: 1 },
+  headerName: { fontSize: 14, fontWeight: '700', color: '#201A16' },
+  headerTitle: { fontSize: 11, color: '#8A7A6E', marginTop: 1 },
 
   messages: { paddingHorizontal: 16, paddingVertical: 18, gap: 12 },
 
@@ -348,14 +348,14 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   bubbleTextUser: { color: '#fff', fontSize: 14, lineHeight: 19 },
-  bubbleTextAgent: { color: '#1c1917', fontSize: 14, lineHeight: 19 },
+  bubbleTextAgent: { color: '#201A16', fontSize: 14, lineHeight: 19 },
   bubbleTime: { fontSize: 10, textAlign: 'right', marginTop: 3 },
   bubbleTimeUser: { color: 'rgba(255,255,255,0.6)' },
-  bubbleTimeAgent: { color: '#A3A3A3' },
-  readMark: { fontSize: 11, color: '#A3A3A3', paddingHorizontal: 4 },
+  bubbleTimeAgent: { color: '#B7A99D' },
+  readMark: { fontSize: 11, color: '#B7A99D', paddingHorizontal: 4 },
 
   typingBubble: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 13 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#A3A3A3' },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#B7A99D' },
 
   emptyWrap: { alignItems: 'center', gap: 18, paddingTop: 12, paddingBottom: 8 },
   emptyAvatar: {
@@ -364,31 +364,31 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: '#E8D9CB',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  emptyAvatarInitial: { fontSize: 26, fontWeight: '700', color: '#404040' },
+  emptyAvatarInitial: { fontSize: 26, fontWeight: '700', color: '#201A16' },
   emptyBrandBlock: { alignItems: 'center' },
-  emptyBrand: { fontSize: 17, fontWeight: '700', color: '#1c1917' },
-  emptyBrandSub: { fontSize: 13, color: '#78716c', marginTop: 2 },
+  emptyBrand: { fontSize: 17, fontWeight: '700', color: '#201A16' },
+  emptyBrandSub: { fontSize: 13, color: '#8A7A6E', marginTop: 2 },
   propertyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: '#E8D9CB',
     borderRadius: 16,
     padding: 10,
     width: '100%',
   },
   propertyThumb: { width: 46, height: 46, borderRadius: 12, backgroundColor: '#EFE7E2' },
   propertyCardBody: { flex: 1, minWidth: 0 },
-  propertyCardTitle: { fontSize: 13, fontWeight: '600', color: '#1c1917' },
-  propertyCardSub: { fontSize: 12, color: '#78716c', marginTop: 2 },
-  emptyHint: { fontSize: 13, color: '#78716c', textAlign: 'center', lineHeight: 20 },
+  propertyCardTitle: { fontSize: 13, fontWeight: '600', color: '#201A16' },
+  propertyCardSub: { fontSize: 12, color: '#8A7A6E', marginTop: 2 },
+  emptyHint: { fontSize: 13, color: '#8A7A6E', textAlign: 'center', lineHeight: 20 },
 
   inputBar: {
     flexDirection: 'row',
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.08)',
+    borderTopColor: '#E8D9CB',
     backgroundColor: BG,
   },
   inputWrap: {
@@ -412,8 +412,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
   },
-  input: { fontSize: 14, color: '#1c1917', maxHeight: 120, padding: 0 },
+  input: { fontSize: 14, color: '#201A16', maxHeight: 120, padding: 0 },
   sendBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   sendBtnActive: { backgroundColor: ACCENT },
-  sendBtnIdle: { backgroundColor: 'rgba(0,0,0,0.08)' },
+  sendBtnIdle: { backgroundColor: '#EFE2D5' },
 })
