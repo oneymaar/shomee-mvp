@@ -14,6 +14,7 @@ import MediaUploader from '@/components/agent/MediaUploader'
 import type { Chapter } from '@/components/agent/VideoChapterEditor'
 import VideoChapterEditorModal from '@/components/agent/VideoChapterEditorModal'
 import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
+import SharePropertyPanel from '@/components/agent/SharePropertyPanel'
 import VideoProgressBar from '@/components/VideoProgressBar'
 import { useAutoSave } from '@shomee/core/hooks/useAutoSave'
 
@@ -75,7 +76,14 @@ type SectionKey =
   | 'general' | 'features' | 'specs' | 'composition' | 'copro'
   | 'energy' | 'finance' | 'annonce' | 'video' | 'autres_medias' | 'mandat'
 
-export default function EditBienClient({ initialProperty }: { initialProperty: Property }) {
+export default function EditBienClient({
+  initialProperty,
+  initialIsShareable = true,
+}: {
+  initialProperty: Property
+  /** P0 — état du garde-fou « Partage public », lu en base par la page. */
+  initialIsShareable?: boolean
+}) {
   const router = useRouter()
   const [form, setForm] = useState<Property>(initialProperty)
   const [openSection, setOpenSection] = useState<SectionKey | null>('general')
@@ -1552,6 +1560,15 @@ export default function EditBienClient({ initialProperty }: { initialProperty: P
             />
           </Field>
         </Section>
+
+        {/* ─── 12. Partage public (P0) ────────────────────────────────── */}
+        {form.id !== 'draft-001' && (
+          <SharePropertyPanel
+            propertyId={form.id}
+            statut={form.statut ?? 'DRAFT'}
+            initialIsShareable={initialIsShareable}
+          />
+        )}
       </main>
 
       {/* ── Save / publish bar (no AgentBottomNav on editor) ───────────── */}

@@ -299,6 +299,13 @@ model Property {
   propertyTaxSource      String?
   compositionSource      String?
 
+  // ── Partage public (P0 — page /p/<token>) ──
+  // Token non devinable, généré à la première demande de lien : nullable tant
+  // que le bien n’a jamais été partagé. `isShareable` est le garde-fou
+  // off-market — coupé, le lien rend une page morte.
+  shareToken            String?         @unique
+  isShareable           Boolean         @default(true)
+
   // Relations
   agencyId              String
   createdByAgentId      String
@@ -308,6 +315,7 @@ model Property {
   propertyTags          PropertyTag[]
   videoAnalysis         VideoAnalysis?
   documents             Document[]
+  shareViews            ShareView[]
 
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
@@ -359,6 +367,24 @@ model Document {
   createdAt  DateTime     @default(now())
 
   @@index([propertyId])
+}
+
+// ─── Partage public d’un bien (P0) ─────────────────────────────────────────
+// Une ligne par rendu serveur de la page /p/<token>. `isBot` marque les
+// crawlers d’aperçu (WhatsApp, Facebook, Slack…) : ils déclenchent un hit à
+// chaque lien collé dans une conversation et ne doivent pas gonfler les vues
+// réelles. On loggue tout, le flag fait le tri.
+
+model ShareView {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  ref        String?
+  userAgent  String?
+  isBot      Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId, createdAt])
 }
 
 // ─── Buyer AI brief — magic-link tokens (multi-use, 24h TTL) ──────────────

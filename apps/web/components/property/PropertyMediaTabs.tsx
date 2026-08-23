@@ -36,6 +36,13 @@ interface Props {
   planUrls?: string[]
   virtualTourUrl?: string
   coverUrl?: string
+  /**
+   * Masque les onglets sans contenu au lieu d'afficher « … bientôt
+   * disponible ». Réservé aux surfaces publiques (lien partagé) : un
+   * acquéreur qui reçoit un bien n'a pas à voir les cases vides de l'agence.
+   * Par défaut `false` — le feed et l'aperçu agent gardent les trois onglets.
+   */
+  hideEmptyTabs?: boolean
 }
 
 /* ── Message d'absence ─────────────────────────────────────────────────── */
@@ -246,7 +253,13 @@ function TourFrame({ url }: { url: string }) {
 }
 
 /* ── Composant ─────────────────────────────────────────────────────────── */
-export default function PropertyMediaTabs({ photos, planUrls, virtualTourUrl, coverUrl }: Props) {
+export default function PropertyMediaTabs({
+  photos,
+  planUrls,
+  virtualTourUrl,
+  coverUrl,
+  hideEmptyTabs = false,
+}: Props) {
   const has = {
     photos: (photos?.length ?? 0) > 0 || !!coverUrl,
     plan: (planUrls?.length ?? 0) > 0,
@@ -256,13 +269,26 @@ export default function PropertyMediaTabs({ photos, planUrls, virtualTourUrl, co
 
   const photoList = (photos?.length ?? 0) > 0 ? photos! : coverUrl ? [coverUrl] : []
 
+  const visibleTabs = hideEmptyTabs ? TABS.filter((t) => has[t.key]) : TABS
+  // L'onglet choisi peut avoir disparu : on retombe sur le premier disponible.
+  const activeTab: TabKey | undefined = visibleTabs.some((t) => t.key === tab)
+    ? tab
+    : visibleTabs[0]?.key
+
+  // Aucun média du tout : la section entière s'efface.
+  if (visibleTabs.length === 0 || !activeTab) return null
+
+  // Un seul média : la barre d'onglets n'a plus rien à arbitrer.
+  const showTabBar = visibleTabs.length > 1
+
   return (
     <div style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 12 }}>
       {/* Onglets soulignés. Le libellé gras est doublé en fantôme invisible :
           il fixe la largeur, sinon la ligne saute au changement d'onglet. */}
+      {showTabBar && (
       <div className="flex" style={{ gap: 20, marginBottom: 12 }}>
-        {TABS.map((t) => {
-          const on = tab === t.key
+        {visibleTabs.map((t) => {
+          const on = activeTab === t.key
           return (
             <button
               key={t.key}
@@ -301,8 +327,9 @@ export default function PropertyMediaTabs({ photos, planUrls, virtualTourUrl, co
           )
         })}
       </div>
+      )}
 
-      {tab === 'photos' &&
+      {activeTab === 'photos' &&
         (has.photos ? (
           <MediaCarousel items={photoList} />
         ) : (
@@ -314,7 +341,7 @@ export default function PropertyMediaTabs({ photos, planUrls, virtualTourUrl, co
           </div>
         ))}
 
-      {tab === 'plan' &&
+      {activeTab === 'plan' &&
         (has.plan ? (
           <MediaCarousel items={planUrls!} contain />
         ) : (
@@ -326,7 +353,7 @@ export default function PropertyMediaTabs({ photos, planUrls, virtualTourUrl, co
           </div>
         ))}
 
-      {tab === 'tour' &&
+      {activeTab === 'tour' &&
         (has.tour ? (
           <TourFrame url={virtualTourUrl!} />
         ) : (

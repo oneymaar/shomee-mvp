@@ -265,6 +265,12 @@ interface PropertyDetailSheetProps {
   onMessage?: () => void
   hideBottomBar?: boolean
   previewMode?: boolean
+  /**
+   * Lien public partagé : aucun média de démonstration, et les onglets sans
+   * contenu disparaissent. Un acquéreur qui reçoit un bien ne doit jamais voir
+   * les photos, le plan ou la visite d'un autre logement.
+   */
+  publicMode?: boolean
 }
 
 const EMPTY_VALUE = <span className="text-neutral-300 italic">—</span>
@@ -294,6 +300,7 @@ export default function PropertyDetailSheet({
   onMessage,
   hideBottomBar,
   previewMode = false,
+  publicMode = false,
 }: PropertyDetailSheetProps) {
   const [mounted, setMounted] = useState(false)
   const [mapFull, setMapFull] = useState(false)
@@ -339,15 +346,17 @@ export default function PropertyDetailSheet({
   const hasMap = property.mapLat != null && property.mapLng != null
 
   // Médias de démonstration : jamais dans l'aperçu agent, qui doit montrer
-  // exactement ce que l'agence a fourni (et rien d'autre).
+  // exactement ce que l'agence a fourni — ni sur un lien public, où ils
+  // feraient croire à l'acquéreur qu'il regarde les photos de CE bien.
+  const noDemoMedia = previewMode || publicMode
   const photos =
     property.gallery.length > 0
       ? property.gallery
-      : previewMode
+      : noDemoMedia
         ? []
         : [property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE, ...DEMO_PHOTOS]
-  const planUrls = previewMode ? [] : DEMO_PLAN_URLS
-  const tourUrl = property.matterportUrl ?? (previewMode ? undefined : DEMO_TOUR_URL)
+  const planUrls = noDemoMedia ? [] : DEMO_PLAN_URLS
+  const tourUrl = property.matterportUrl ?? (noDemoMedia ? undefined : DEMO_TOUR_URL)
 
   const showQuartier =
     previewMode ||
@@ -588,6 +597,7 @@ export default function PropertyDetailSheet({
                     planUrls={planUrls}
                     virtualTourUrl={tourUrl}
                     coverUrl={property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE}
+                    hideEmptyTabs={publicMode}
                   />
 
                   {/* ── SECTIONS ── */}

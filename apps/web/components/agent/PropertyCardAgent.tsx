@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Video, Pencil, EyeOff, Check, Trash2, Archive, ArchiveRestore } from 'lucide-react'
+import { Video, Pencil, EyeOff, Check, Trash2, Archive, ArchiveRestore, Share, Loader2 } from 'lucide-react'
 import type { PropertyStatus, MandatType } from '@prisma/client'
+import { useShareBien } from './useShareBien'
 
 const DEMO_API_KEY = 'shomee_test_kr3tz_0001'
 
@@ -54,6 +55,16 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [confirmKind, setConfirmKind] = useState<ConfirmKind>(null)
+
+  // P0 — partage depuis la liste : l'agent envoie un bien sans avoir a l'ouvrir.
+  const {
+    share: shareBien,
+    warm: warmShare,
+    busy: shareBusy,
+    toast: shareToast,
+    error: shareError,
+    fallbackUrl: shareFallbackUrl,
+  } = useShareBien(id)
 
   const isExclusive = badges.includes('EXCLUSIVITE') || mandatType === 'EXCLUSIF'
   const isAvantPremiere = avantPremiere || badges.includes('AVANT_PREMIERE')
@@ -288,6 +299,40 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
           </>
         )}
       </div>
+
+      {/* P0 — partage : disponible directement dans la liste, archives exclues. */}
+      {statut !== 'ARCHIVED' && (
+        <div className="border-t border-gray-200">
+          <button
+            type="button"
+            onPointerDown={warmShare}
+            onClick={shareBien}
+            disabled={shareBusy}
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-[#0a0a0a] active:bg-gray-100 disabled:opacity-60 transition-colors"
+          >
+            {shareBusy ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : shareToast ? (
+              <Check size={13} strokeWidth={2.4} />
+            ) : (
+              <Share size={13} />
+            )}
+            {shareToast ?? 'Partager le bien'}
+          </button>
+
+          {shareFallbackUrl && (
+            <input
+              readOnly
+              value={shareFallbackUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="w-full bg-gray-50 border-t border-gray-200 px-3 py-2 text-[11px] text-[#0a0a0a]"
+            />
+          )}
+          {shareError && (
+            <p className="px-3 pb-2 text-[11px] text-red-600">{shareError}</p>
+          )}
+        </div>
+      )}
 
       <AnimatePresence>
         {confirmKind && (

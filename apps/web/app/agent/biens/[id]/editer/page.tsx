@@ -112,11 +112,17 @@ export default async function EditBienPage({
   const { id } = await params
 
   let initial: Property = MOCK_PROPERTY
+  // P0 — le garde-fou de partage ne transite pas par le view-model : on le lit
+  // en base et on le passe tel quel au bloc « Partage ».
+  let isShareable = true
 
   if (id !== 'draft-001') {
     const dbProp = await prisma.property.findUnique({ where: { id } })
-    if (dbProp) initial = toViewProperty(dbProp)
+    if (dbProp) {
+      initial = toViewProperty(dbProp)
+      isShareable = dbProp.isShareable
+    }
   }
 
-  return <EditBienClient initialProperty={initial} />
+  return <EditBienClient initialProperty={initial} initialIsShareable={isShareable} />
 }
