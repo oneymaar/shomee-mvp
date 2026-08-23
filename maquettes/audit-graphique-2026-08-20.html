@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHOMEE — Audit graphique &amp; UX</title>
+<style>
+  :root {
+    --cream: #FDF5F2;
+    --paper: #FFFFFF;
+    --ink: #1C1917;
+    --muted: #78716C;
+    --accent: #A64B27;
+    --accent-soft: #F3DDD3;
+    --line: #EBE0DA;
+    --good: #2F7D5B;
+    --warn: #B45309;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 780px; margin: 0 auto; padding: 56px 28px 96px; }
+  .kicker {
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 14px;
+  }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 40px; line-height: 1.15; font-weight: 500;
+    letter-spacing: -0.01em; margin-bottom: 10px;
+  }
+  .date { color: var(--muted); font-size: 14px; margin-bottom: 40px; }
+  h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 26px; font-weight: 500; letter-spacing: -0.01em;
+    margin: 56px 0 6px;
+  }
+  h2 .num {
+    display: inline-block; width: 30px; height: 30px; line-height: 30px;
+    text-align: center; background: var(--ink); color: var(--cream);
+    border-radius: 50%; font-size: 14px; font-family: -apple-system, sans-serif;
+    font-weight: 600; margin-right: 10px; vertical-align: 3px;
+  }
+  h3 { font-size: 16px; font-weight: 650; margin: 26px 0 6px; }
+  p { margin: 12px 0; }
+  p.lead { font-size: 18.5px; line-height: 1.6; }
+  .muted { color: var(--muted); }
+  .card {
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: 14px; padding: 22px 24px; margin: 20px 0;
+  }
+  .verdict {
+    background: var(--ink); color: var(--cream); border: none;
+    padding: 26px 28px;
+  }
+  .verdict p { color: #E7DDD7; }
+  .verdict strong { color: #fff; }
+  .verdict .kicker { color: #E8907A; }
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14.5px; }
+  th {
+    text-align: left; font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 10px 12px 8px;
+    border-bottom: 1.5px solid var(--ink);
+  }
+  td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { font-weight: 650; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .sw {
+    width: 44px; height: 44px; border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.08); position: relative;
+  }
+  .sw span {
+    position: absolute; top: 48px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; color: var(--muted); white-space: nowrap;
+  }
+  .swrow { margin-bottom: 34px; }
+  .swrow .label { font-size: 13px; font-weight: 650; margin-bottom: 2px; }
+  .swrow .note { font-size: 13px; color: var(--muted); }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  .stat {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 14px; text-align: center;
+  }
+  .stat .n { font-family: Georgia, serif; font-size: 32px; line-height: 1.1; color: var(--accent); }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
+  .phase { display: flex; gap: 16px; margin: 22px 0; }
+  .phase .badge {
+    flex: 0 0 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; margin-top: 2px;
+  }
+  .phase.done .badge { background: var(--good); }
+  .phase h3 { margin: 4px 0 4px; }
+  .phase p { margin: 4px 0; font-size: 15px; }
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 99px; margin-left: 8px;
+    vertical-align: 2px;
+  }
+  .tag.done { background: #DCEDE3; color: var(--good); }
+  .tag.next { background: var(--accent-soft); color: var(--accent); }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 13.5px; color: var(--muted); }
+  em { font-style: italic; }
+  .screenname { color: var(--accent); font-weight: 650; }
+  @media (max-width: 640px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    h1 { font-size: 32px; }
+    .page { padding: 36px 18px 72px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="kicker">SHOMEE · Refonte graphique</div>
+  <h1>Audit graphique &amp; UX</h1>
+  <p class="date">20 août 2026 · réalisé sur l'app en conditions réelles (simulateur iPhone 17 Pro, build du jour) + analyse des 65 fichiers d'interface du code · complété le jour même avec l'accueil et le parcours de recherche complet (captures et vidéo d'Olivier)</p>
+
+  <div class="card verdict">
+    <div class="kicker">Le diagnostic en un mot</div>
+    <p><strong>Ton app n'a pas un problème de goût, elle a un problème de langage.</strong> Chaque écran pris isolément est propre et bien construit. Mais ils ne parlent pas la même langue : le feed vit dans un monde sombre façon TikTok, tout le reste vit dans un monde crème façon site immobilier haut de gamme, et aucun des deux n'est poussé à fond. Comme il n'existe aucune « grammaire » commune (couleurs, police, espacements définis une fois pour toutes), chaque écran a réinventé ses propres règles — d'où l'impression de brouillon que tu décris, alors que le fond est très solide.</p>
+    <p>La bonne nouvelle : la base crème + terracotta est un <strong>excellent socle premium</strong>, rare chez les concurrents (Jinka, SeLoger sont bleus et froids). Il ne faut pas repartir de zéro — il faut choisir, unifier, et mettre du mouvement.</p>
+  </div>
+
+  <h2><span class="num">1</span>Ce que les chiffres disent</h2>
+  <p>J'ai passé le code de l'interface au peigne fin. Ces quatre chiffres expliquent à eux seuls la sensation d'incohérence :</p>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="n">104</div><div class="l">couleurs différentes codées en dur (+ 47 transparences)</div></div>
+    <div class="stat"><div class="n">19</div><div class="l">tailles de police différentes, sans échelle</div></div>
+    <div class="stat"><div class="n">25</div><div class="l">rayons d'arrondi différents (de 0 à 999)</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">police de marque, animation ressort ou retour haptique</div></div>
+  </div>
+
+  <p>Pour te donner une idée concrète : une app au rendu « premium » type Airbnb tourne avec <em>une douzaine</em> de couleurs, <em>6 à 8</em> tailles de texte et <em>3 ou 4</em> arrondis, définis à un seul endroit et réutilisés partout. C'est cette discipline — invisible à l'œil nu — qui produit la sensation de qualité.</p>
+
+  <h3>La preuve par la couleur</h3>
+  <p>Exemples relevés dans le code. Ce ne sont pas des nuances voulues : ce sont des approximations successives de la même intention.</p>
+
+  <div class="card">
+    <div class="swrow">
+      <div class="label">6 terracottas différents pour « la » couleur SHOMEE</div>
+      <div class="swatches">
+        <div class="sw" style="background:#A64B27"><span>#A64B27</span></div>
+        <div class="sw" style="background:#C1533A"><span>#C1533A</span></div>
+        <div class="sw" style="background:#9B4A2E"><span>#9B4A2E</span></div>
+        <div class="sw" style="background:#C17A6F"><span>#C17A6F</span></div>
+        <div class="sw" style="background:#DB947E"><span>#DB947E</span></div>
+        <div class="sw" style="background:#E8907A"><span>#E8907A</span></div>
+      </div>
+      <div class="note">Visible à l'écran : le bouton « Modifier la recherche » (profil), la barre « Message / Appeler / Visiter » (fiche) et le bouton « Voir sur la carte » (recherche) ne sont pas de la même couleur.</div>
+    </div>
+    <div class="swrow">
+      <div class="label">2 familles de gris qui cohabitent (chaude et froide)</div>
+      <div class="swatches">
+        <div class="sw" style="background:#78716C"><span>#78716C</span></div>
+        <div class="sw" style="background:#A8A29E"><span>#A8A29E</span></div>
+        <div class="sw" style="background:#57534E"><span>#57534E</span></div>
+        <div class="sw" style="background:#A3A3A3"><span>#A3A3A3</span></div>
+        <div class="sw" style="background:#9A9A9A"><span>#9A9A9A</span></div>
+        <div class="sw" style="background:#525252"><span>#525252</span></div>
+      </div>
+      <div class="note">Les trois premiers sont des gris « chauds » assortis au crème ; les trois derniers sont des gris « froids » qui jurent avec — dont celui des onglets inactifs de la barre du bas.</div>
+    </div>
+    <div class="swrow">
+      <div class="label">5 fonds crème et 2 verts « validé »</div>
+      <div class="swatches">
+        <div class="sw" style="background:#FDF5F2"><span>#FDF5F2</span></div>
+        <div class="sw" style="background:#FDF0ED"><span>#FDF0ED</span></div>
+        <div class="sw" style="background:#F3F0EE"><span>#F3F0EE</span></div>
+        <div class="sw" style="background:#EFE7E2"><span>#EFE7E2</span></div>
+        <div class="sw" style="background:#E8E3DF"><span>#E8E3DF</span></div>
+        <div class="sw" style="background:#6ECA97; margin-left:22px"><span>#6ECA97</span></div>
+        <div class="sw" style="background:#34D399"><span>#34D399</span></div>
+      </div>
+      <div class="note" style="margin-top:26px">Un embryon de palette officielle existe bien dans le code (crème, terracotta, encre, gris chaud)… mais il n'est branché que sur les écrans de recherche. Partout ailleurs, chaque fichier recopie ses couleurs à la main.</div>
+    </div>
+  </div>
+
+  <h3>Des couleurs qui ne savent plus ce qu'elles veulent dire</h3>
+  <p>Au-delà du nombre, il y a un problème de <em>sens</em>. Le saumon clair veut dire trois choses selon l'écran : « bouton désactivé » (Voir sur la carte, Appliquer et relancer), « étape déjà passée » (le fil Quartiers · Bien · Budget · Critères) et « critère souhaité » (les pastilles de préférences). Le terracotta, lui, est à la fois la couleur de la marque, celle de la sélection… et celle de l'alerte : sur l'écran budget, la carte qui vire au rouge « budget très limité » est quasiment de la même couleur que la zone terracotta neutre de l'écran précédent. Quand la même couleur dit « tout va bien, c'est nous » et « attention, problème », l'utilisateur ne peut plus lire l'interface d'un coup d'œil. Une des décisions clés de la refonte sera d'assigner un rôle unique à chaque couleur.</p>
+
+  <h3>La typographie, angle mort de l'identité</h3>
+  <p>L'app utilise partout la police système de l'iPhone (celle de Réglages ou de Notes), en jouant uniquement sur le gras — la moitié des textes est en très gras. C'est le facteur n°1 du rendu « générique » : aucune app à forte identité (Airbnb, Notion, Arc…) ne s'affiche en police système brute. Il n'y a par ailleurs aucune vraie hiérarchie : 19 tailles de texte concentrées entre 10 et 15 px, donc beaucoup de petits textes denses et peu de respirations spectaculaires (le « 1 580 000 € » de la fiche est une exception réussie).</p>
+
+  <h2><span class="num">2</span>Ce qui marche déjà — à protéger</h2>
+  <p>Avant les critiques, ce qu'il ne faut surtout pas perdre dans la refonte. La <strong>structure</strong> est saine : quatre onglets clairs, un feed plein écran, une fiche en tiroir qui monte sur la vidéo — le squelette est exactement le bon. La <strong>fiche bien est remarquablement complète</strong> : quartier nommé et délimité sur carte, temps de marche vers métro/RER, ambiance, prix du secteur avec évolution sur 10 ans, composition pièce par pièce — c'est objectivement plus riche qu'une fiche SeLoger, et c'est un vrai argument premium à mettre en scène. Les <strong>intercalaires</strong> du feed (« Un bien qui pourrait vous intéresser — il dépasse un peu votre budget ») sont une idée forte : l'app explique <em>pourquoi</em> elle montre les choses, personne d'autre ne fait ça. Les <strong>états vides</strong> (Favoris, Messages) sont propres et vouvoyés correctement. Enfin le jeu d'icônes (Lucide) est cohérent d'un bout à l'autre — un des rares éléments déjà unifiés.</p>
+  <p>Le parcours de recherche ajoute trois pépites. La <strong>mosaïque vidéo de l'accueil</strong> : des vraies visites qui bougent derrière le logo, c'est la promesse du produit résumée en une image — aucun concurrent n'a ça. L'<strong>écran budget</strong> : la carte qui passe du vert au rouge en direct quand on resserre le budget est le meilleur moment d'interface de toute l'app — un retour marché instantané, différenciant, à mettre en scène davantage. Et l'<strong>écran « Aucun bien ne correspond »</strong> qui explique quels critères bloquent et propose de les assouplir : pédagogiquement excellent. Fait révélateur : le funnel de recherche est la zone la plus cohérente de l'app… et c'est justement la seule qui possède un embryon de nuancier centralisé dans le code. La preuve par l'exemple que la méthode « design system d'abord » fonctionne.</p>
+
+  <h2><span class="num">3</span>Le tour des écrans</h2>
+  <p>Ce que j'ai relevé en naviguant, écran par écran. Rien de rédhibitoire — mais l'accumulation fait le rendu « prototype ».</p>
+
+  <table>
+    <tr><th style="width:130px">Écran</th><th>Constats</th></tr>
+    <tr>
+      <td>Accueil &amp; connexion</td>
+      <td>Le concept est superbe (mosaïque de vraies visites en mouvement derrière le logo), mais un voile crème <strong>lave toute la scène</strong> : les vidéos deviennent laiteuses, et le logo blanc — dessiné pour vivre sur du noir — se retrouve blanc sur fond clair délavé, presque sans contraste. La tagline blanche passe sur des tuiles claires et devient par endroits illisible (« en vidéo. » disparaît selon le défilement). Trois éléments se disputent l'attention (mosaïque, logo, boutons) sans zone d'ombre pour les départager. Et « Continuer sans compte » — le chemin de l'essai sans friction, celui qu'un nouveau testeur curieux voudra prendre — est l'élément le moins visible de l'écran.</td>
+    </tr>
+    <tr>
+      <td>Feed vidéo</td>
+      <td>Le choc des deux mondes : vidéo immersive sombre… posée sur une barre d'onglets crème très claire qui casse l'immersion (TikTok garde tout sombre, précisément pour ça). Les icônes d'action à droite sont fines, petites et inégalement espacées, avec des compteurs « 0 » qui font vide. La ligne de critères (« ✓ Vue Eiffel ✓ Balcon… ») est <strong>coupée net au bord droit de l'écran</strong> sur la plupart des biens. « Boulogne-billancourt » s'affiche sans majuscule.</td>
+    </tr>
+    <tr>
+      <td>Fiche bien</td>
+      <td>Le meilleur écran de l'app — riche, aéré, bien sectionné. Trois accrocs : la barre « Message / Appeler / Visiter » flotte <strong>par-dessus le contenu et masque les titres de section</strong> pendant qu'on lit ; elle n'est pas de la même couleur que les autres boutons principaux ; et l'onglet « Photos » recycle des images de la vidéo au lieu de vraies photos (donnée, pas design, mais ça se voit).</td>
+    </tr>
+    <tr>
+      <td>Intercalaires</td>
+      <td>Bonne idée, mise en scène timide : une petite icône, deux lignes centrées, 70 % d'écran vide. Un moment parfait pour affirmer l'identité (grande typo, fond de marque, illustration) au lieu d'un écran qui semble en attente de contenu.</td>
+    </tr>
+    <tr>
+      <td>Recherche — quartiers</td>
+      <td>La mécanique est bonne (on tape « Paris 14 », la pastille « Paris 14e » se crée toute seule), mais l'écran « Où aimeriez-vous habiter ? » est déséquilibré : question seule au centre, saisie tout en bas, 60 % de vide — et c'est le seul écran du parcours avec un titre centré, tous les suivants sont alignés à gauche. En modification, le champ arrive <strong>vide</strong> (les quartiers actuels ne sont pas repris). Le bouton désactivé reste saumon, l'air cliquable, sans aucune réaction au tap. Le bouton rond sombre (BAIA) est <strong>rogné par le bord de l'écran</strong>. À l'ouverture, écran crème vide ~5 s sans indicateur.</td>
+    </tr>
+    <tr>
+      <td>Recherche — carte</td>
+      <td>Le fond de carte aux tons chauds va bien avec la palette. Mais l'indication gestuelle est ratée : un gros disque brun opaque à deux points blancs posé sur la zone, qu'on prend d'abord pour un bug d'affichage, avant de comprendre que c'est un geste de pincement. Une fois zoomé, rien ne montre <strong>quels quartiers sont sélectionnés ni qu'on peut les toucher</strong> — le remplissage est uniforme, sans état visuel. Les noms de lieux affichés sont les données brutes de la carte (« Faubourg-du-roule », « Ecole-militaire » sans accent ni majuscules propres), et les pastilles métro bleu vif détonnent dans l'univers terracotta. Détail : la pastille du bas dit « 14e » quand la saisie disait « Paris 14e ».</td>
+    </tr>
+    <tr>
+      <td>Recherche — bien, budget, critères</td>
+      <td>Les trois écrans les plus aboutis de l'app — sliders lisibles, notation cohérente (« 500 m² + », « 7p + »), et le coup de génie de la carte budget vert/rouge. Trois réserves : les types de bien utilisent des <strong>émojis Apple (🏢 🏡)</strong> au milieu d'une app entièrement en icônes filaires — effet « bricolé » immédiat ; la jauge « Lecture marché » en dégradé n'a <strong>aucun curseur</strong> (elle décore au lieu d'informer : où suis-je entre « serré » et « confortable » ?) ; et le minimum budget « 50 K€ » par défaut n'a aucun sens à Paris. Sur les critères : la légende (souhaité / obligatoire / rédhibitoire) ressemble à trois boutons cliquables, et le rédhibitoire cumule texte barré + deux croix (« ✕ Vis-à-vis ✕ ») — on ne sait plus laquelle supprime.</td>
+    </tr>
+    <tr>
+      <td>« Aucun bien ne correspond »</td>
+      <td>Le fond est excellent (dire <em>quels</em> critères bloquent et proposer de les assouplir, personne ne fait ça). La forme dessert : un mur de pastilles terracotta pleines toutes identiques, le bouton « Appliquer et relancer » en saumon désactivé qui semble actif (on tape, rien), et une croix de fermeture en haut dont on ne sait pas où elle mène (on ferme… vers quoi ?).</td>
+    </tr>
+    <tr>
+      <td>Loader « Sélection de vos biens… »</td>
+      <td>Le moment le plus précieux du produit — l'instant où SHOMEE trie les visites <em>pour vous</em> — est réduit à un petit pictogramme et une ligne de texte gris perdus au centre d'un écran vide. C'est ici qu'il faut de la mise en scène : le logo qui s'anime, les étapes qui défilent (« Analyse de vos quartiers… lecture du marché… tri des visites… »), l'attente devient une promesse au lieu d'un temps mort.</td>
+    </tr>
+    <tr>
+      <td>Profil</td>
+      <td>Propre et lisible. Détails : « Statut : oliviermenart@gmail.com » (un e-mail n'est pas un statut), « Budget 50 K€ – 1,7 M€ » au récap (le 50 K€ est un minimum par défaut que personne n'a choisi — il fait bizarre), avatar gris par défaut sans personnalité.</td>
+    </tr>
+    <tr>
+      <td>Lancement</td>
+      <td>Un écran de lancement au logo terracotta est bien configuré, mais l'enchaînement vers la suite se fait d'un coup, sans transition. Tes maquettes d'avril prévoyaient un noir au logo blanc autrement plus marquant — et la première seconde est le moment le plus « premium » d'une app (pense à l'ouverture de Netflix). À noter : passé l'accueil, le logo SHOMEE ne réapparaît plus nulle part dans l'app.</td>
+    </tr>
+  </table>
+
+  <h2><span class="num">4</span>Pourquoi ça ne « glisse » pas</h2>
+  <p>Tu as mis « pas assez fluide » en tête de tes gênes, et le code le confirme : il n'y a quasiment <strong>aucun mouvement délibéré</strong> dans l'app. Pas d'animations à ressort (ces rebonds doux qui font le moelleux d'iOS), aucun retour haptique (la micro-vibration quand on like — TikTok et Instagram en mettent partout, c'est ce qui rend l'action « physique »), très peu de transitions entre états : les contenus apparaissent d'un coup, les chargements sont des écrans figés (le blanc du démarrage, le crème vide de la carte), et les enchaînements d'écrans utilisent les réglages par défaut. La fluidité n'est pas une question de puissance ou de code compliqué — c'est une couche de finition qui se pose à la fin, et elle transformera la sensation de l'app plus que n'importe quel changement de couleur.</p>
+
+  <h2><span class="num">5</span>La méthode que je te propose</h2>
+  <p>Dans l'ordre, en gardant notre règle « maquette avant code » à chaque étape. L'erreur classique serait de retoucher les écrans un par un sans avoir d'abord fixé la grammaire — on retomberait dans les 104 couleurs en trois semaines.</p>
+
+  <div class="phase done">
+    <div class="badge">✓</div>
+    <div><h3>Audit <span class="tag done">fait</span></h3>
+    <p>C'est ce document. On sait précisément quoi corriger et pourquoi.</p></div>
+  </div>
+
+  <div class="phase">
+    <div class="badge">2</div>
+    <div><h3>Direction artistique <span class="tag next">prochaine étape</span></h3>
+    <p>Je te prépare <strong>3 planches maquettées</strong> (l'accueil + le feed + la fiche, en PNG, comme d'habitude) incarnant trois directions : <strong>A. Éditorial chaleureux</strong> — le crème/terracotta actuel assumé à fond, une belle police à empattements pour les titres, chrome sombre sur le feed ; <strong>B. Nuit immersive</strong> — retour au noir/blanc de tes maquettes d'avril et du logo, ambiance TikTok premium ; <strong>C. Galerie minimale</strong> — blanc, noir, la photo avant tout, esprit magazine d'architecture. Tu choisis (ou on croise), et ce choix devient LA référence.</p></div>
+  </div>
+
+  <div class="phase">
+    <div class="badge">3</div>
+    <div><h3>Fondations</h3>
+    <p>Je crée le « nuancier officiel » dans le code (un seul fichier : ~10 couleurs, 7 tailles de texte, 4 arrondis, la police de marque) et les composants de base (bouton, carte, pastille, titre de section). Invisible à l'écran, mais c'est ce qui rend les incohérences <em>impossibles</em> ensuite.</p></div>
+  </div>
+
+  <div class="phase">
+    <div class="badge">4</div>
+    <div><h3>Application écran par écran</h3>
+    <p>Dans l'ordre d'impact : feed → fiche bien → parcours recherche → profil/favoris/messages. À chaque écran : maquette, ton feu vert, code. L'app reste utilisable en permanence entre deux écrans refaits.</p></div>
+  </div>
+
+  <div class="phase">
+    <div class="badge">5</div>
+    <div><h3>Mouvement &amp; matière</h3>
+    <p>La couche de fluidité : écran d'ouverture au logo, transitions douces entre écrans, ressorts sur les gestes, retours haptiques (like, swipe, validation), squelettes de chargement à la place des écrans vides. C'est l'étape qui fait passer de « joli » à « premium ».</p></div>
+  </div>
+
+  <div class="phase">
+    <div class="badge">6</div>
+    <div><h3>Épreuve du réel</h3>
+    <p>Build TestFlight sur ton iPhone à chaque jalon — une interface se juge au pouce, pas au simulateur.</p></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Et en attendant, 6 corrections sans risque</h3>
+    <p>Indépendantes de la direction artistique, faisables dès maintenant : la ligne de critères coupée au bord du feed, le bouton BAIA rogné, la barre d'actions qui masque le bas de la fiche, les majuscules des villes, un indicateur de chargement sur la carte des quartiers, la reprise de tes quartiers actuels dans le champ de modification, les émojis 🏢 🏡 remplacés par les icônes de l'app, et un curseur sur la jauge « Lecture marché ». Petites choses — mais ce sont elles qu'un testeur remarque en premier.</p>
+  </div>
+
+  <div class="footer">
+    Audit réalisé le 20 août 2026 en pilotant l'app dans le simulateur (feed, fiche complète, intercalaires, favoris, messages, profil, relance de l'app) et en analysant les 65 fichiers d'interface d'<code>apps/mobile/src</code> — complété le jour même par l'accueil (vidéo) et le parcours de recherche de bout en bout (10 captures d'Olivier : saisie, carte, bien, budget, critères, blocage, loader). Synthèse sauvegardée dans le projet SHOMEE : <code>claude/AUDIT_GRAPHIQUE_UX.md</code>.
+  </div>
+
+</div>
+</body>
+</html>
