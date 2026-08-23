@@ -77,6 +77,14 @@ export default function SplashPage() {
           >
             Aller directement sur le feed
           </button>
+          {/* Exigé par la vérification Meta Business : le lien doit être
+              trouvable depuis la page d'accueil. */}
+          <a
+            href="/mentions-legales"
+            className="text-white/40 text-[11px] active:opacity-60 transition-opacity"
+          >
+            Mentions légales
+          </a>
         </motion.div>
       )}
     </motion.div>
