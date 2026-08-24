@@ -189,10 +189,15 @@ const styles = StyleSheet.create({
 
   // Pleine largeur : la colonne d'actions est ENTIÈREMENT au-dessus de ce
   // bloc (son bas est à 216), donc rien ne justifie de réserver 74 px à
-  // droite — les critères couraient jusqu'aux deux tiers de l'écran pour
-  // rien. `bottom: 40` dégage la zone tactile du scrub (24 px) : à 16 px, le
-  // bouton « Voir l'annonce » chevauchait la barre de lecture.
-  bottom: { position: 'absolute', left: 16, right: 16, bottom: 40 },
+  // droite — les critères couraient jusqu'aux deux tiers de l'écran pour rien.
+  //
+  // `bottom: 24` — le bas du bouton « Voir l'annonce » se pose EXACTEMENT sur
+  // le haut de la zone tactile du scrub. C'est la valeur la plus basse qui
+  // garde le bouton entièrement tactile, et elle donne 12,5 px jusqu'à la
+  // barre visible : le même blanc, à 2 px près, que les 10 px qui séparent le
+  // bouton de la ligne de critères au-dessus. (16 px le faisait chevaucher le
+  // scrub ; 40 px laissait deux fois trop d'air en dessous.)
+  bottom: { position: 'absolute', left: 16, right: 16, bottom: 24 },
 
   // Plus de capsule : le rembourrage gauche décalait cette ligne par rapport
   // au prix et aux caractéristiques juste en dessous. Elle est désormais au
