@@ -18,7 +18,11 @@ import type { Property } from '@shomee/core/types/domain'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
 import { colors, fonts, radii, serifSizes } from '@/lib/theme'
+
+/** Rouge du like — même valeur que le feed et l'onglet Favoris. */
+const LIKE_RED = '#EF4444'
 import { PropertyMediaTabs } from '@/components/property/PropertyMediaTabs'
+import { DropCapText } from '@/components/property/DropCapText'
 import {
   MapZone,
   MOBILE_MAP_AVAILABLE,
@@ -29,7 +33,6 @@ import { useNearbyPois, type PoiCat } from '@/lib/useNearbyPois'
 
 // TODO: numéro de test — remplacer par le téléphone de l'agence (feed live).
 const TEST_PHONE = '0670744935'
-const ACCENT = '#A6512B'
 
 // TEMP démo média — appliqués à tous les biens tant que la base n'a ni galerie
 // ni plan ni visite (0% aujourd'hui). À REMPLACER par les vrais médias fournis
@@ -290,25 +293,23 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
         if (!property) return null
         return (
           <BottomSheetFooter {...props} bottomInset={insets.bottom}>
+            {/* UNE action principale, deux secondaires (maquette validée le
+                21/08). Planifier une visite est le seul geste qui fait avancer
+                l'achat : il prend toute la largeur restante et porte l'ombre.
+                Message et Appeler sont des cercles fantômes — accessibles,
+                mais ils ne rivalisent pas. Like et Partage ont quitté la barre :
+                ils vivent en haut de la fiche, près de l'identité du bien. */}
             <View style={styles.footer}>
-              {/* Pill gauche — 3 CTA à parts égales (flex:1 chacun) */}
-              <View style={[styles.pill, styles.pillLeft]}>
-                <CtaButton icon={MessageCircle} label="Message" onPress={handleMessage} grow />
-                <Divider />
-                <CtaButton icon={Phone} label="Appeler" onPress={handleCall} grow />
-                <Divider />
-                <CtaButton icon={CalendarPlus} label="Visiter" onPress={() => {}} grow />
-              </View>
-              {/* Pill droite — Like + Share */}
-              <View style={[styles.pill, styles.pillRight]}>
-                <CtaButton
-                  icon={Heart}
-                  active={isFavorite}
-                  onPress={() => toggleFavorite(property)}
-                />
-                <Divider />
-                <CtaButton icon={Send} onPress={handleShare} />
-              </View>
+              <Pressable onPress={() => {}} style={styles.mainCta} hitSlop={6}>
+                <CalendarPlus size={19} strokeWidth={2} color={colors.creamOnDark} />
+                <Text style={styles.mainCtaTxt}>Planifier une visite</Text>
+              </Pressable>
+              <Pressable onPress={handleMessage} style={styles.roundCta} hitSlop={6}>
+                <MessageCircle size={20} strokeWidth={1.9} color={colors.ink} />
+              </Pressable>
+              <Pressable onPress={handleCall} style={styles.roundCta} hitSlop={6}>
+                <Phone size={19} strokeWidth={1.9} color={colors.ink} />
+              </Pressable>
             </View>
           </BottomSheetFooter>
         )
@@ -347,6 +348,25 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 <Text style={styles.agencyName} numberOfLines={1}>
                   {brandName}
                 </Text>
+                {/* Like et Partage — en haut à droite, au niveau de l'identité
+                    du bien plutôt que dans la barre d'action du bas. */}
+                <View style={styles.headBtns}>
+                  <Pressable
+                    onPress={() => property && toggleFavorite(property)}
+                    style={styles.headBtn}
+                    hitSlop={8}
+                  >
+                    <Heart
+                      size={19}
+                      strokeWidth={1.9}
+                      color={isFavorite ? LIKE_RED : colors.ink}
+                      fill={isFavorite ? LIKE_RED : 'transparent'}
+                    />
+                  </Pressable>
+                  <Pressable onPress={handleShare} style={styles.headBtn} hitSlop={8}>
+                    <Send size={18} strokeWidth={1.9} color={colors.ink} />
+                  </Pressable>
+                </View>
               </View>
 
               {/* Prix + prix/m² */}
@@ -436,7 +456,7 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
               <View>
                 <SectionTitle>Description</SectionTitle>
                 <GreyBox style={styles.boxPadded}>
-                  <Text style={styles.description}>{property.description}</Text>
+                  <DropCapText text={property.description} style={styles.description} />
                 </GreyBox>
               </View>
 
@@ -691,34 +711,6 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
   },
 )
 
-/* ── Sous-composants CTA ───────────────────────────────────────────────────── */
-function CtaButton({
-  icon: Icon,
-  label,
-  onPress,
-  active,
-  grow,
-}: {
-  icon: typeof Phone
-  label?: string
-  onPress: () => void
-  active?: boolean
-  /** flex:1 → utilisé seulement dans la pill gauche (3 boutons à parts égales).
-   *  La pill droite (Like/Share) reste dimensionnée par son contenu. */
-  grow?: boolean
-}) {
-  return (
-    <Pressable onPress={onPress} style={[styles.cta, grow && styles.ctaGrow]} hitSlop={6}>
-      <Icon size={18} strokeWidth={1.8} color="#fff" fill={active ? '#fff' : 'transparent'} />
-      {label ? <Text style={styles.ctaLabel}>{label}</Text> : null}
-    </Pressable>
-  )
-}
-
-function Divider() {
-  return <View style={styles.ctaDivider} />
-}
-
 const styles = StyleSheet.create({
   sheetBg: { backgroundColor: '#FAF3EE' },
   handle: { backgroundColor: '#E8D9CB', width: 40 },
@@ -793,7 +785,7 @@ const styles = StyleSheet.create({
   boxPadded: { paddingHorizontal: 16, paddingVertical: 16 },
   boxRows: { paddingHorizontal: 16, paddingVertical: 4 },
 
-  description: { color: '#8A7A6E', fontSize: 14, lineHeight: 21 },
+  description: { color: 'rgba(32,26,22,0.86)', fontSize: 14.5, lineHeight: 23 },
 
   row: {
     flexDirection: 'row',
@@ -871,12 +863,42 @@ const styles = StyleSheet.create({
     letterSpacing: 1, marginBottom: 8,
   },
 
-  footer: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingBottom: 8 },
-  pill: { backgroundColor: ACCENT, borderRadius: 9999, flexDirection: 'row', alignItems: 'center', overflow: 'hidden' },
-  pillLeft: { flex: 1 },
-  pillRight: { paddingHorizontal: 4 },
-  cta: { alignItems: 'center', gap: 2, paddingVertical: 10, paddingHorizontal: 12 },
-  ctaGrow: { flex: 1 },
-  ctaLabel: { color: '#fff', fontSize: 10, fontWeight: '600' },
-  ctaDivider: { width: StyleSheet.hairlineWidth, height: 24, backgroundColor: 'rgba(255,255,255,0.2)' },
+  footer: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingBottom: 8 },
+  mainCta: {
+    flex: 1,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: colors.terracotta,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    shadowColor: colors.terracotta,
+    shadowOpacity: 0.3,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
+  },
+  mainCtaTxt: { color: colors.creamOnDark, fontSize: 15.5, fontWeight: '600' },
+  roundCta: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headBtns: { marginLeft: 'auto', flexDirection: 'row', gap: 8 },
+  headBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })
