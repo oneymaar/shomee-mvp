@@ -6,7 +6,7 @@ import { Image } from 'expo-image'
 import { Check, ChevronDown, MapPin } from 'lucide-react-native'
 import type { Property } from '@shomee/core/types/domain'
 import { formatLocation } from '@shomee/core/utils/format'
-import { colors, fonts, radii, serifSizes } from '@/lib/theme'
+import { colors, fonts, serifSizes } from '@/lib/theme'
 
 /** Prix formaté avec séparateurs de milliers (espace, style fr) sans dépendre
  *  d'Intl (support Hermes inégal). Ex. 1350000 → "1 350 000 €". */
@@ -99,7 +99,7 @@ export function PropertyOverlay({ property, onMore }: Props) {
       {/* Bas — la colonne d'infos. `right: 74` dégage la colonne d'actions. */}
       <View style={styles.bottom} pointerEvents="box-none">
         {/* 1. La localisation, en capsule — l'info n°1 */}
-        <View style={styles.locPill}>
+        <View style={styles.locRow}>
           <MapPin size={11} color={colors.creamOnDark} strokeWidth={2.2} />
           <Text style={styles.locTxt} numberOfLines={1}>
             {formatLocation(property.arrondissement, property.district).toUpperCase()}
@@ -194,16 +194,15 @@ const styles = StyleSheet.create({
   // bouton « Voir l'annonce » chevauchait la barre de lecture.
   bottom: { position: 'absolute', left: 16, right: 16, bottom: 40 },
 
-  locPill: {
+  // Plus de capsule : le rembourrage gauche décalait cette ligne par rapport
+  // au prix et aux caractéristiques juste en dessous. Elle est désormais au
+  // même fer que le reste du bloc.
+  locRow: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     maxWidth: '100%',
-    backgroundColor: colors.smoke,
-    borderRadius: radii.pill,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
   },
   locTxt: {
     color: colors.creamOnDark,
@@ -211,6 +210,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1.5,
     flexShrink: 1,
+    textShadowColor: 'rgba(0,0,0,0.45)',
+    textShadowRadius: 8,
+    textShadowOffset: { width: 0, height: 1 },
   },
 
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 8, marginBottom: 1 },
