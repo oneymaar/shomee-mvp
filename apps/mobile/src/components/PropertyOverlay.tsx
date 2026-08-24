@@ -1,4 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useState } from 'react'
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
 import MaskedView from '@react-native-masked-view/masked-view'
@@ -12,6 +21,88 @@ import { colors, fonts, serifSizes } from '@/lib/theme'
  *  d'Intl (support Hermes inégal). Ex. 1350000 → "1 350 000 €". */
 function formatPrice(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €'
+}
+
+/** Largeur du fondu à chaque extrémité. */
+const FADE = 30
+
+/**
+ * La ligne des critères satisfaits — plus large que l'écran la plupart du
+ * temps, donc **défilante à l'horizontale**.
+ *
+ * Le fondu ne se contente pas de décorer : il DIT qu'il reste quelque chose de
+ * ce côté-là. Il n'apparaît donc qu'au bord où il reste effectivement des
+ * critères — pas de fondu à gauche tant qu'on n'a pas commencé à défiler, pas
+ * de fondu à droite une fois arrivé au bout, aucun des deux si tout tient.
+ *
+ * Technique : le MaskedView applique un masque ALPHA, donc c'est l'opacité du
+ * TEXTE lui-même qui tombe — la vidéo se voit à travers. Un calque sombre
+ * dégradé, lui, se verrait comme une salissure sur les plans clairs. Pour
+ * éteindre un fondu, on remplace le dégradé par un aplat opaque : le masque
+ * devient plein, le texte reste entier.
+ */
+function MatchedCriteria({ tags }: { tags: string[] }) {
+  // Trois mesures suffisent à tout décider : où on en est, quelle largeur fait
+  // le contenu, quelle largeur fait la fenêtre. On en DÉDUIT les deux bords
+  // plutôt que de les stocker — impossible qu'ils se désynchronisent.
+  const [x, setX] = useState(0)
+  const [contentW, setContentW] = useState(0)
+  const [viewW, setViewW] = useState(0)
+
+  const max = contentW - viewW
+  const scrollable = max > 1
+  const atStart = !scrollable || x <= 1
+  const atEnd = !scrollable || x >= max - 1
+
+  return (
+    <MaskedView
+      style={styles.tagsMask}
+      maskElement={
+        <View style={styles.maskRow}>
+          {atStart ? (
+            <View style={styles.maskEdgeSolid} />
+          ) : (
+            <LinearGradient
+              colors={['transparent', '#000']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.maskFade}
+            />
+          )}
+          <View style={styles.maskSolid} />
+          {atEnd ? (
+            <View style={styles.maskEdgeSolid} />
+          ) : (
+            <LinearGradient
+              colors={['#000', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.maskFade}
+            />
+          )}
+        </View>
+      }
+    >
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) =>
+          setX(e.nativeEvent.contentOffset.x)
+        }
+        onLayout={(e) => setViewW(e.nativeEvent.layout.width)}
+        onContentSizeChange={(w) => setContentW(w)}
+        contentContainerStyle={styles.tags}
+      >
+        {tags.map((f) => (
+          <View key={f} style={styles.tag}>
+            <Check size={12} color={colors.greenOnDark} strokeWidth={2.4} />
+            <Text style={styles.tagTxt}>{f}</Text>
+          </View>
+        ))}
+      </ScrollView>
+    </MaskedView>
+  )
 }
 
 interface Props {
@@ -120,34 +211,7 @@ export function PropertyOverlay({ property, onMore }: Props) {
         </Text>
 
         {/* 4. Les critères satisfaits — coche verte, fondu au bord droit */}
-        {tags.length > 0 && (
-          // MaskedView : le masque (alpha) fait baisser l'opacité du TEXTE
-          // lui-même jusqu'à 0 sur les 30px droits → la vidéo se voit à
-          // travers (vrai fondu, pas un calque sombre). Équivalent maskImage web.
-          <MaskedView
-            style={styles.tagsMask}
-            maskElement={
-              <View style={styles.maskRow}>
-                <View style={styles.maskSolid} />
-                <LinearGradient
-                  colors={['#000', 'transparent']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.maskFade}
-                />
-              </View>
-            }
-          >
-            <View style={styles.tags}>
-              {tags.map((f) => (
-                <View key={f} style={styles.tag}>
-                  <Check size={12} color={colors.greenOnDark} strokeWidth={2.4} />
-                  <Text style={styles.tagTxt}>{f}</Text>
-                </View>
-              ))}
-            </View>
-          </MaskedView>
-        )}
+        {tags.length > 0 && <MatchedCriteria tags={tags} />}
 
         {/* 5. Le bouton fantôme — chevron vers le BAS : la fiche s'ouvre en
             descendant (le chevron vers le haut était une erreur, cf. 20/08). */}
@@ -241,13 +305,15 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
   },
 
-  // Une seule ligne ; le MaskedView (alpha) fond le texte vers la transparence
-  // sur les 30px droits. `alignSelf: stretch` → le cadre = largeur de la colonne
-  // (le fondu tombe donc au bord droit, pas au bout du texte).
+  // `alignSelf: stretch` → le cadre fait la largeur de la colonne, donc les
+  // fondus tombent aux bords de l'écran et pas au bout du texte.
   tagsMask: { alignSelf: 'stretch', height: 18, marginBottom: 10 },
   maskRow: { flex: 1, flexDirection: 'row' },
   maskSolid: { flex: 1, backgroundColor: '#000' },
-  maskFade: { width: 30 },
+  maskFade: { width: FADE },
+  // Bord ÉTEINT : un aplat opaque au lieu du dégradé → le masque est plein,
+  // le texte reste entier jusqu'au bord.
+  maskEdgeSolid: { width: FADE, backgroundColor: '#000' },
   tags: { flexDirection: 'row', gap: 11, alignItems: 'center', height: 18 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 },
   tagTxt: { color: 'rgba(246,237,230,0.85)', fontSize: 11.5, fontWeight: '500' },
