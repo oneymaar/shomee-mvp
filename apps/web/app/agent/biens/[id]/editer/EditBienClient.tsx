@@ -623,8 +623,8 @@ export default function EditBienClient({
     <div>
       {/* ── Sticky header + progress bar ─────────────────────────────── */}
       <div
-        className="sticky top-0 z-30"
-        style={{ backgroundColor: '#F7F5F2', paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="sticky top-0 z-30 pt-safe"
+        style={{ backgroundColor: '#F7F5F2' }}
       >
         <header className="flex items-center gap-2 px-3 py-3">
           <button

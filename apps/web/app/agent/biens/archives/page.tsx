@@ -30,7 +30,7 @@ export default async function AgentArchivesPage() {
   })
 
   return (
-    <main className="px-5 pt-6 pb-32">
+    <main className="px-5 pt-safe-page pb-32">
       <header className="flex items-center gap-2 mb-5">
         <Link
           href="/agent/dashboard"

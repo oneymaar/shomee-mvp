@@ -53,7 +53,7 @@ export default function AgentMessagesPage() {
   }, [])
 
   return (
-    <main className="min-h-dvh px-5 py-8 max-w-3xl mx-auto" style={{ backgroundColor: '#FAF3EE' }}>
+    <main className="min-h-dvh px-5 pb-8 pt-safe-page max-w-3xl mx-auto" style={{ backgroundColor: '#FAF3EE' }}>
       <div className="flex items-baseline justify-between mb-6">
         <h1 className="text-[26px]" style={{ fontFamily: 'var(--font-serif), Georgia, serif', color: '#201A16' }}>
           Messages

@@ -212,7 +212,7 @@ export default function NouveauBienPage() {
   const titreEtape = ['Étape 1 sur 3 — Adresse', 'Étape 2 sur 3 — Vidéo', 'Étape 3 sur 3 — Ce qui a été reconnu'][rang]
 
   return (
-    <main className="px-5 pt-4 pb-[132px] overflow-x-hidden">
+    <main className="px-5 pt-safe-page pb-[132px] overflow-x-hidden">
       <header className="flex items-center gap-2 mb-4 -ml-2">
         <button type="button" onClick={retour} aria-label="Retour"
           className="w-9 h-9 rounded-full flex items-center justify-center text-[#0a0a0a] active:bg-black/5">

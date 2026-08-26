@@ -152,7 +152,7 @@ export default function AgentThreadPage({ params }: { params: Promise<{ id: stri
 
   return (
     <main className="min-h-dvh flex flex-col max-w-3xl mx-auto" style={{ backgroundColor: '#FAF3EE' }}>
-      <header className="px-5 pt-6 pb-3 sticky top-0 z-10" style={{ backgroundColor: '#FAF3EE', borderBottom: '1px solid #E8D9CB' }}>
+      <header className="px-5 pt-safe-page pb-3 sticky top-0 z-10" style={{ backgroundColor: '#FAF3EE', borderBottom: '1px solid #E8D9CB' }}>
         <Link href="/agent/messages" className="text-[13px] font-semibold underline" style={{ color: '#A6512B' }}>
           ← Messages
         </Link>

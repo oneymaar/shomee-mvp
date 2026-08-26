@@ -133,7 +133,7 @@ export default function AgentAdminPage() {
   }
 
   return (
-    <main className="min-h-dvh px-5 py-8 max-w-3xl mx-auto" style={{ backgroundColor: '#FAF3EE' }}>
+    <main className="min-h-dvh px-5 pb-8 pt-safe-page max-w-3xl mx-auto" style={{ backgroundColor: '#FAF3EE' }}>
       <h1 className="text-[26px] mb-6" style={{ fontFamily: 'var(--font-serif), Georgia, serif', color: '#201A16' }}>
         Comptes agents
       </h1>

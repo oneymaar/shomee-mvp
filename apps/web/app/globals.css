@@ -10,6 +10,27 @@
   --safe-top: env(safe-area-inset-top, 0px);
 }
 
+/*
+ * MARGE HAUTE DES ÉCRANS — pourquoi ce n'est pas juste env().
+ *
+ * `env(safe-area-inset-top)` vaut 0 partout où l'encoche n'est pas déclarée au
+ * navigateur : Safari classique, simulateur, aperçu embarqué. Un en-tête qui
+ * s'appuie UNIQUEMENT dessus se retrouve alors collé au bord haut — c'est ce
+ * qui coupait le titre de l'éditeur de bien. On garde donc toujours un
+ * plancher.
+ *
+ * .pt-safe       barres compactes et collantes : l'encoche REMPLACE la marge
+ *                (sinon on cumule et la barre devient énorme sur iPhone).
+ * .pt-safe-page  haut d'un écran plein cadre : l'encoche S'AJOUTE à la marge,
+ *                comme le fait déjà le tableau de bord.
+ */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 16px);
+}
+.pt-safe-page {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
