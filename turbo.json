@@ -14,7 +14,11 @@
         "SHOMEE_CRITERIA_MODEL",
         "ADMIN_SECRET",
         "SHOMEE_APP_TOKEN",
-        "SHOMEE_WEB_ORIGINS"
+        "SHOMEE_WEB_ORIGINS",
+        "SHOMEE_SESSION_SECRET",
+        "SHOMEE_VERCEL_BYPASS",
+        "GOOGLE_CLIENT_IDS",
+        "MCP_PRIVATE_KEY"
       ]
     },
     "dev": {

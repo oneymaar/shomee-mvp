@@ -105,7 +105,7 @@ export default async function AgentDashboardPage({
           <Link href="/agent/messages" className="text-[12.5px] font-semibold underline" style={{ color: '#A6512B' }}>
             Messages
           </Link>
-          <Link href="/agent/reglages" className="text-[12.5px] font-semibold underline" style={{ color: '#A6512B' }}>
+          <Link href="/agent/parametres" className="text-[12.5px] font-semibold underline" style={{ color: '#A6512B' }}>
             Réglages
           </Link>
         </nav>
