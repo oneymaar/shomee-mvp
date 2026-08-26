@@ -539,10 +539,9 @@ export default function EditBienClient({
     }
   }, [form.id])
 
-  // Disable auto-save on the mock draft and on already-published biens —
-  // the PATCH endpoint rejects content edits once a bien leaves DRAFT.
-  const autoSaveEnabled =
-    form.id !== 'draft-001' && (form.statut ?? 'DRAFT') === 'DRAFT'
+  // L'enregistrement continu ne vaut qu'en brouillon : la route refuse les
+  // modifications de contenu dès qu'un bien est publié.
+  const autoSaveEnabled = (form.statut ?? 'DRAFT') === 'DRAFT'
 
   const {
     status: autoSaveStatus,
@@ -564,10 +563,6 @@ export default function EditBienClient({
 
   const publier = async () => {
     if (isPublishing) return
-    if (form.id === 'draft-001') {
-      setPublishError("Cette fiche est une démonstration : elle n'existe pas en base et ne peut pas être publiée.")
-      return
-    }
     if (!form.videoUrl && !window.confirm(
       "Ce bien n'a pas de vidéo : il ne pourra pas apparaître dans le feed. Publier quand même ?",
     )) return
@@ -1597,7 +1592,7 @@ export default function EditBienClient({
         </Section>
 
         {/* ─── 12. Partage public (P0) ────────────────────────────────── */}
-        {form.id !== 'draft-001' && (
+        {(
           <SharePropertyPanel
             propertyId={form.id}
             statut={form.statut ?? 'DRAFT'}

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { toViewProperty } from '@/lib/serializers/property'
-import type { Property } from '@/lib/types'
 import PreviewClient from './PreviewClient'
 
 export const dynamic = 'force-dynamic'
@@ -13,14 +12,11 @@ export default async function PreviewBienPage({
 }) {
   const { id } = await params
 
-  let property: Property | null = null
+  // Le cas particulier `draft-001` disparaît avec la fiche fictive : c'était
+  // lui qui produisait un 404 juste après l'assistant, sur un bien qui
+  // n'existait pas.
+  const dbProp = await prisma.property.findUnique({ where: { id } })
+  if (!dbProp) notFound()
 
-  if (id !== 'draft-001') {
-    const dbProp = await prisma.property.findUnique({ where: { id } })
-    if (dbProp) property = toViewProperty(dbProp)
-  }
-
-  if (!property) notFound()
-
-  return <PreviewClient property={property} />
+  return <PreviewClient property={toViewProperty(dbProp)} />
 }

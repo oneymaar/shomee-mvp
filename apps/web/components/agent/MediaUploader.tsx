@@ -3,13 +3,13 @@
 import { useRef, useState } from 'react'
 import { Upload, Video, Image as ImageIcon, FileText, Loader2, X, Link as LinkIcon, Plus } from 'lucide-react'
 import clsx from 'clsx'
+import { televerser, ACCEPT, type MediaType } from '@/lib/media/upload'
+import { VIDEO_HINT } from '@/lib/media/limits'
 
 // Aucune clé d'API ici : l'agent est authentifié par son cookie de session, et
 // authenticateBearer l'accepte en repli. Une clé écrite en dur partait dans le
 // bundle de tous les navigateurs — et comme c'était celle d'un AUTRE compte,
 // chaque appel se heurtait au contrôle d'agence et revenait en 403.
-
-type MediaType = 'video' | 'photo' | 'plan' | 'visite_virtuelle'
 
 interface MediaUploaderProps {
   bienId: string
@@ -20,59 +20,10 @@ interface MediaUploaderProps {
   variant?: 'default' | 'tile'
 }
 
-const SIZE_LIMIT_BYTES: Record<MediaType, number> = {
-  video:           500 * 1024 * 1024,
-  photo:            20 * 1024 * 1024,
-  plan:             20 * 1024 * 1024,
-  visite_virtuelle: 0,
-}
-
-const VIDEO_MAX_DURATION_SEC = 80
-
-function probeVideoDuration(file: File): Promise<number | null> {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file)
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    const cleanup = () => {
-      URL.revokeObjectURL(url)
-      video.removeAttribute('src')
-      video.load()
-    }
-    video.onloadedmetadata = () => {
-      const d = Number.isFinite(video.duration) ? video.duration : null
-      cleanup()
-      resolve(d)
-    }
-    video.onerror = () => {
-      cleanup()
-      resolve(null)
-    }
-    video.src = url
-  })
-}
-const ACCEPT: Record<MediaType, string> = {
-  video:            'video/mp4,video/quicktime,video/webm',
-  photo:            'image/jpeg,image/png,image/webp',
-  plan:             'image/jpeg,image/png,application/pdf',
-  visite_virtuelle: '',
-}
-const RESOURCE_TYPE: Record<MediaType, 'video' | 'image' | 'raw'> = {
-  video:            'video',
-  photo:            'image',
-  plan:             'image',
-  visite_virtuelle: 'image',
-}
-const FOLDER: Record<MediaType, string> = {
-  video:            'shomee/videos',
-  photo:            'shomee/photos',
-  plan:             'shomee/plans',
-  visite_virtuelle: 'shomee/misc',
-}
 const LABEL: Record<MediaType, { cta: string; hint: string; Icon: typeof Upload }> = {
   video: {
     cta:  'Déposer une vidéo',
-    hint: 'MP4, MOV, WEBM · max 80 secondes',
+    hint: VIDEO_HINT,
     Icon: Video,
   },
   photo: {
@@ -92,22 +43,6 @@ const LABEL: Record<MediaType, { cta: string; hint: string; Icon: typeof Upload 
   },
 }
 
-interface CloudinaryResponse {
-  secure_url: string
-  public_id:  string
-}
-
-interface SignResponse {
-  signature:     string
-  timestamp:     number
-  cloud_name:    string
-  api_key:       string
-  folder:        string
-  eager?:        string
-  eager_async?:  string
-  upload_preset?: string
-}
-
 export default function MediaUploader({ bienId, type, onSuccess, multiple, variant = 'default' }: MediaUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [activeCount, setActiveCount] = useState(0)
@@ -120,90 +55,20 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
    * Promise.allSettled in the multi-upload path can surface the count
    * of failures. onSuccess is called per file as soon as it completes.
    */
+  /**
+   * Un seul fichier, de bout en bout. Toute la mécanique (contrôles, signature,
+   * envoi, confirmation) vit dans lib/media/upload.ts, partagée avec
+   * l'assistant « Nouveau bien » — deux copies du même geste finissaient
+   * toujours par diverger, et l'une des deux était fausse.
+   */
   async function performUpload(file: File, onProgress?: (p: number) => void): Promise<void> {
-    const limit = SIZE_LIMIT_BYTES[type]
-    if (file.size > limit) {
-      throw new Error(`${file.name} dépasse ${Math.round(limit / 1024 / 1024)} Mo`)
-    }
-
-    if (type === 'video') {
-      const duration = await probeVideoDuration(file)
-      if (duration !== null && duration > VIDEO_MAX_DURATION_SEC) {
-        throw new Error(`Vidéo trop longue — maximum ${VIDEO_MAX_DURATION_SEC} secondes`)
-      }
-    }
-
-    // 1. Signature serveur
-    const signRes = await fetch('/api/upload/sign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        folder: FOLDER[type],
-        ...(type === 'video' ? { eager: 'so_auto' } : {}),
-      }),
+    const { url } = await televerser({
+      file,
+      type,
+      bienId,
+      onProgress: onProgress ? (pourcent) => onProgress(pourcent) : undefined,
     })
-    if (!signRes.ok) throw new Error(`Signature ${signRes.status}`)
-    const sig = (await signRes.json()) as SignResponse
-
-    // 2. Upload signé direct vers Cloudinary
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${sig.cloud_name}/${RESOURCE_TYPE[type]}/upload`
-    const form = new FormData()
-    form.append('file',      file)
-    form.append('api_key',   sig.api_key)
-    form.append('timestamp', String(sig.timestamp))
-    form.append('signature', sig.signature)
-    form.append('folder',    sig.folder)
-    if (sig.eager)       form.append('eager',       sig.eager)
-    if (sig.eager_async) form.append('eager_async', sig.eager_async)
-    if (sig.upload_preset) form.append('upload_preset', sig.upload_preset)
-
-    const cloudinaryRes = await new Promise<CloudinaryResponse>((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
-      xhr.open('POST', uploadUrl)
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100))
-      }
-      xhr.onload = () => {
-        console.log('[upload] cloudinary onload', { status: xhr.status, statusText: xhr.statusText, bodySnippet: xhr.responseText?.slice(0, 300) })
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try { resolve(JSON.parse(xhr.responseText)) }
-          catch { reject(new Error('Réponse Cloudinary illisible')) }
-        } else {
-          reject(new Error(`Cloudinary ${xhr.status} ${xhr.statusText}: ${xhr.responseText.slice(0, 200)}`))
-        }
-      }
-      xhr.onerror = () => {
-        console.error('[upload] cloudinary onerror', { status: xhr.status, statusText: xhr.statusText, readyState: xhr.readyState, bodySnippet: xhr.responseText?.slice(0, 300) })
-        reject(new Error(`Erreur réseau (status=${xhr.status} state=${xhr.readyState})`))
-      }
-      xhr.ontimeout = () => {
-        console.error('[upload] cloudinary ontimeout')
-        reject(new Error('Upload timeout'))
-      }
-      xhr.onabort = () => {
-        console.error('[upload] cloudinary onabort')
-        reject(new Error('Upload annulé'))
-      }
-      xhr.send(form)
-    })
-
-    // 3. Confirmation côté Next (persiste l'URL + recompute completion)
-    const confirmRes = await fetch('/api/upload/confirm', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bien_id:   bienId,
-        type,
-        url:       cloudinaryRes.secure_url,
-        public_id: cloudinaryRes.public_id,
-      }),
-    })
-    if (!confirmRes.ok) {
-      const errBody = await confirmRes.json().catch(() => ({}))
-      throw new Error(`Confirm ${confirmRes.status}: ${JSON.stringify(errBody)}`)
-    }
-
-    onSuccess(cloudinaryRes.secure_url)
+    onSuccess(url)
   }
 
   async function handleFiles(files: FileList) {
@@ -255,8 +120,8 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
         body: JSON.stringify({ bien_id: bienId, type, url: trimmed }),
       })
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}))
-        throw new Error(`Confirm ${res.status}: ${JSON.stringify(errBody)}`)
+        const corps = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(corps?.error ?? `Enregistrement refusé (HTTP ${res.status}).`)
       }
       onSuccess(trimmed)
       setUrlDraft('')
