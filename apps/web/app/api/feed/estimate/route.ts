@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { PropertyStatus, type Prisma } from '@prisma/client'
+import { variantesArrondissement } from '@/lib/geo/zoneKey'
 import { prisma } from '@/lib/prisma'
 import { estimateRarity } from '@shomee/core/matching/estimator'
 import type { BriefSnapshot } from '@/lib/matching/buyerBriefBuilder'
@@ -19,13 +20,16 @@ export const dynamic = 'force-dynamic'
  * Réponse : { perWeekMin, perWeekMax, band, message, matchingCount }.
  */
 
-// arr-N → Property.arrondissement (copie locale du mapping de /api/properties).
-function arrIdToName(id: string): string | null {
+// arr-N → toutes les orthographes possibles de Property.arrondissement.
+// Ce filtre s'exécute en SQL et ne peut donc pas normaliser : il élargit la
+// liste plutôt que de parier sur une graphie. Il comparait « Paris 11ème » à
+// des lignes écrites « PARIS 11e » — donc zéro résultat, silencieusement.
+function arrIdToNames(id: string): string[] {
   const m = id.match(/^arr-(\d{1,2})$/)
-  if (!m) return null
+  if (!m) return []
   const n = Number(m[1])
-  if (!Number.isFinite(n) || n < 1 || n > 20) return null
-  return n === 1 ? 'Paris 1er' : `Paris ${n}ème`
+  if (!Number.isFinite(n) || n < 1 || n > 20) return []
+  return variantesArrondissement(n)
 }
 
 const COMMUNE_ID_TO_NAME: Record<string, string> = {
@@ -41,8 +45,7 @@ const COMMUNE_ID_TO_NAME: Record<string, string> = {
 function zoneNames(snapshot: BriefSnapshot): string[] {
   const out: string[] = []
   for (const id of snapshot.arrondissementIds ?? []) {
-    const n = arrIdToName(id)
-    if (n) out.push(n)
+    out.push(...arrIdToNames(id))
   }
   for (const id of snapshot.communeIds ?? []) {
     const n = COMMUNE_ID_TO_NAME[id]

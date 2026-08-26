@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAppTokenOrTrustedOrigin } from '@/lib/auth/appToken'
 import { PropertyStatus } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { cleZone, cleDepuisArrondissementId } from '@/lib/geo/zoneKey'
 import { toViewProperty } from '@/lib/serializers/property'
 import { matchProperty } from '@shomee/core/matching/engine'
 import { calibrateScore } from '@shomee/core/matching/calibration'
@@ -29,13 +30,7 @@ type RawChapter = { label: string; startSec?: number; fraction?: number }
  * arr-N → Property.arrondissement string. The DB seed + scraper use the
  * "Paris Xème" pattern with "1er" as the only exception.
  */
-function arrIdToName(id: string): string | null {
-  const m = id.match(/^arr-(\d{1,2})$/)
-  if (!m) return null
-  const n = Number(m[1])
-  if (!Number.isFinite(n) || n < 1 || n > 20) return null
-  return n === 1 ? 'Paris 1er' : `Paris ${n}ème`
-}
+
 
 /**
  * com-{INSEE} → Property.arrondissement string. Only the suburbs that
@@ -53,15 +48,24 @@ const COMMUNE_ID_TO_NAME: Record<string, string> = {
   'com-94081': 'Vincennes',
 }
 
-function buildZoneNameFilter(body: BriefSnapshot): string[] {
-  const out: string[] = []
+/**
+ * Les zones demandées, sous forme de CLÉS de comparaison.
+ *
+ * Ce filtre comparait auparavant « Paris 11ème » (ce qu'il fabriquait) à
+ * « PARIS 11e » (ce que la base contient réellement), en SQL, à l'octet près :
+ * un bien publié dans une zone sélectionnée n'apparaissait jamais. Le tri se
+ * fait donc désormais en mémoire, sur des clés normalisées — insensibles à la
+ * casse, aux accents et au suffixe ordinal.
+ */
+function buildZoneKeyFilter(body: BriefSnapshot): Set<string> {
+  const out = new Set<string>()
   for (const id of body.arrondissementIds ?? []) {
-    const name = arrIdToName(id)
-    if (name) out.push(name)
+    const cle = cleDepuisArrondissementId(id)
+    if (cle) out.add(cle)
   }
   for (const id of body.communeIds ?? []) {
     const name = COMMUNE_ID_TO_NAME[id]
-    if (name) out.push(name)
+    if (name) out.add(cleZone(name))
   }
   return out
 }
@@ -202,27 +206,29 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const zoneNames = buildZoneNameFilter(snapshot)
+    const zoneKeys = buildZoneKeyFilter(snapshot)
     console.log(
       '[POST /api/properties] brief=' + brief.parsed_criteria.length + ' criteria' +
-      (zoneNames.length > 0 ? ' | zones=' + zoneNames.join(',') : ' | zones=ALL') +
+      (zoneKeys.size > 0 ? ' | zones=' + [...zoneKeys].join(',') : ' | zones=ALL') +
       ' | ' +
       brief.parsed_criteria
         .map((c) => c.importance[0] + ':' + c.display_label)
         .join(' | '),
     )
-    const properties = await prisma.property.findMany({
-      where: {
-        statut: PropertyStatus.PUBLISHED,
-        // Hard geo gate arr/commune (héritage). Le raffinement IRIS exact se
-        // fait juste en dessous, en mémoire, sur la colonne irisId peuplée
-        // par le backfill — un bien SANS irisId (pas encore backfillé) reste
-        // servi au grain arrondissement (dégradation douce, jamais un trou).
-        ...(zoneNames.length > 0 ? { arrondissement: { in: zoneNames } } : {}),
-      },
+    const publies = await prisma.property.findMany({
+      where: { statut: PropertyStatus.PUBLISHED },
       orderBy: { createdAt: 'desc' },
       include: PROPERTY_INCLUDE,
     })
+
+    // Barrière géographique arrondissement/commune, en mémoire et sur clés
+    // normalisées. Le raffinement IRIS exact se fait juste en dessous — un bien
+    // SANS irisId (pas encore backfillé) reste servi au grain arrondissement
+    // (dégradation douce, jamais un trou).
+    const properties =
+      zoneKeys.size > 0
+        ? publies.filter((p) => zoneKeys.has(cleZone(p.arrondissement)))
+        : publies
 
     // ── Gate IRIS exact (quand la sélection est infra-arrondissement) ──
     const irisIds = Array.isArray(snapshot.irisIds)

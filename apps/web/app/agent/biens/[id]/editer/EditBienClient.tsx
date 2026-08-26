@@ -17,6 +17,7 @@ import AutoSaveIndicator from '@/components/agent/AutoSaveIndicator'
 import SharePropertyPanel from '@/components/agent/SharePropertyPanel'
 import VideoProgressBar from '@/components/VideoProgressBar'
 import { useAutoSave } from '@shomee/core/hooks/useAutoSave'
+import QUARTIERS_CONNUS from '@shomee/core/data/quartiers.json'
 
 const ALL_FEATURES = [
   'Ascenseur', 'Cave', 'Parking', 'Balcon', 'Terrasse', 'Gardien',
@@ -38,11 +39,19 @@ const MANDAT_OPTIONS: Array<{ value: MandatType; label: string }> = [
 ]
 
 // Mock IRIS suggestions for the demo
-const QUARTIER_OPTIONS = [
-  'Faubourg-du-Roule — Madeleine',
-  'Champs-Élysées — Triangle d\'or',
-  'Saint-Honoré — Élysée',
-]
+/**
+ * Les 115 quartiers connus, en SUGGESTIONS et non en choix imposé.
+ *
+ * Il y avait ici trois quartiers du 8e arrondissement, vestiges de la fiche de
+ * démonstration Kretz — servis tels quels à n'importe quel bien, y compris un
+ * bien du 11e. Pire : le champ n'écrivait nulle part (il vivait dans __uiState,
+ * strippé avant le PATCH), donc le vrai quartier du bien n'était ni affiché ni
+ * modifiable. Le catalogue ne porte pas d'arrondissement, on ne peut donc pas
+ * filtrer : ce sera une saisie libre assistée plutôt qu'une liste fausse.
+ */
+const QUARTIER_SUGGESTIONS: string[] = QUARTIERS_CONNUS
+  .map((q) => q.name)
+  .sort((a, b) => a.localeCompare(b, 'fr'))
 
 const TAGS_FROM_VIDEO = new Set([
   'Séjour orienté sud',
@@ -89,7 +98,6 @@ export default function EditBienClient({
   // Extra form state (not in Property model)
   const [displayAddress, setDisplayAddress] = useState(true)
   const [displayPrice, setDisplayPrice]   = useState(true)
-  const [quartier, setQuartier]            = useState<string>(QUARTIER_OPTIONS[0])
   const [propertyType, setPropertyType]    = useState<'appartement' | 'maison' | 'loft' | 'atelier'>('appartement')
   const [featureCounts, setFeatureCounts]  = useState<Record<string, number>>({})
   const [annexSurfaces, setAnnexSurfaces]  = useState<Record<string, number>>({})
@@ -447,7 +455,7 @@ export default function EditBienClient({
   const completion = useMemo(() => {
     const checks = [
       !!form.location?.trim(),
-      !!quartier,
+      !!form.district,
       !!form.title?.trim(),
       form.surface > 0,
       form.rooms > 0,
@@ -460,11 +468,11 @@ export default function EditBienClient({
       !!energy.gesLabel,
     ]
     return Math.round((checks.filter(Boolean).length / checks.length) * 100)
-  }, [form, quartier, finance.prixFAI, photos.length, energy.consoLabel, energy.gesLabel])
+  }, [form, finance.prixFAI, photos.length, energy.consoLabel, energy.gesLabel])
 
   // ── Summaries ──────────────────────────────────────────────────────────
   const priceFmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(finance.prixFAI)
-  const sumGeneral    = `${form.rooms} pièces · ${form.surface}m² · ${quartier}`
+  const sumGeneral    = `${form.rooms} pièces · ${form.surface}m² · ${form.district || 'quartier à préciser'}`
   const sumFeatures   = (form.features?.length ?? 0) > 0 ? `${form.features!.length} caractéristique${form.features!.length > 1 ? 's' : ''}` : 'Aucune'
   const sumSpecs      = `${form.tags.length} spécificité${form.tags.length > 1 ? 's' : ''}`
   const sumComposition = `${form.composition?.length ?? 0} pièces · ${annexEntries.length} annexe${annexEntries.length > 1 ? 's' : ''}`
@@ -502,7 +510,6 @@ export default function EditBienClient({
     __uiState: {
       displayAddress,
       displayPrice,
-      quartier,
       propertyType,
       featureCounts,
       annexSurfaces,
@@ -515,7 +522,7 @@ export default function EditBienClient({
     },
   }), [
     form, photos, matterportUrl, chapters,
-    displayAddress, displayPrice, quartier, propertyType,
+    displayAddress, displayPrice, propertyType,
     featureCounts, annexSurfaces,
     annoncePrefix, annonceSuffix,
     plans, copro, finance, energy,
@@ -706,14 +713,19 @@ export default function EditBienClient({
             onChange={setDisplayAddress}
           />
           <Field label="Quartier">
-            <select
-              value={quartier}
-              onChange={(e) => setQuartier(e.target.value)}
+            <input
+              value={form.district ?? ''}
+              onChange={(e) => update({ district: e.target.value })}
+              list="quartiers-connus"
+              placeholder="Aligre, Bastille, Chartrons…"
               className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] text-[#0a0a0a] focus:outline-none focus:border-[#0a0a0a]/40"
-            >
-              {QUARTIER_OPTIONS.map((q) => <option key={q} value={q}>{q}</option>)}
-            </select>
-            <p className="text-[10px] text-gray-400 mt-1">Suggéré automatiquement d&apos;après l&apos;adresse.</p>
+            />
+            <datalist id="quartiers-connus">
+              {QUARTIER_SUGGESTIONS.map((q) => <option key={q} value={q} />)}
+            </datalist>
+            <p className="text-[10px] text-gray-400 mt-1">
+              C&apos;est ce que voient les acquéreurs à la place de l&apos;adresse exacte. Le quartier vécu, pas l&apos;arrondissement.
+            </p>
           </Field>
           <Field label="Type de bien">
             <select

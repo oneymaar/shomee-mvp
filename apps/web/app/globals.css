@@ -19,16 +19,25 @@
  * qui coupait le titre de l'éditeur de bien. On garde donc toujours un
  * plancher.
  *
+ * Déclarés en @utility (et non en CSS nu) pour que Tailwind 4 les génère et
+ * les place dans la bonne couche de cascade.
+ *
  * .pt-safe       barres compactes et collantes : l'encoche REMPLACE la marge
  *                (sinon on cumule et la barre devient énorme sur iPhone).
  * .pt-safe-page  haut d'un écran plein cadre : l'encoche S'AJOUTE à la marge,
  *                comme le fait déjà le tableau de bord.
  */
-.pt-safe {
+@utility pt-safe {
   padding-top: max(env(safe-area-inset-top, 0px), 16px);
 }
-.pt-safe-page {
+@utility pt-safe-page {
   padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
+}
+@utility pb-safe-nav {
+  /* Barre de navigation : l'indicateur d'accueil de l'iPhone mange le bas de
+     l'écran. Même piège qu'en haut — `env()` seul vaut 0 partout où l'encoche
+     n'est pas déclarée, et les libellés passaient alors sous la barre noire. */
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
 }
 
 @theme inline {
