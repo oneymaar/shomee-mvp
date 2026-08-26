@@ -903,7 +903,7 @@ function introuvable(): Response {
 const EN_TETES_CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, mcp-session-id, mcp-protocol-version, last-event-id',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key, mcp-session-id, mcp-protocol-version, last-event-id',
   'Access-Control-Expose-Headers': 'mcp-session-id, mcp-protocol-version',
 }
 
@@ -932,10 +932,29 @@ const EN_TETES_CORS = {
  */
 const FRAICHEUR_LAST_USED_MS = 60 * 60 * 1000
 
+/**
+ * La clé peut arriver par deux chemins. Claude sait désormais envoyer des
+ * en-têtes de requête sur un connecteur personnalisé (« Request headers ») :
+ * quand c'est disponible, le secret voyage dans l'en-tête et l'adresse collée
+ * reste propre. Partout ailleurs — ChatGPT, versions plus anciennes — il n'y a
+ * que l'URL. On accepte les deux, l'en-tête d'abord.
+ */
+function lireCle(req: Request, url: URL): string | null {
+  const entete = req.headers.get('authorization') ?? req.headers.get('Authorization')
+  if (entete && entete.toLowerCase().startsWith('bearer ')) {
+    const valeur = entete.slice(7).trim()
+    if (valeur) return valeur
+  }
+  const apiKey = req.headers.get('x-api-key')
+  if (apiKey && apiKey.trim()) return apiKey.trim()
+  const parametre = url.searchParams.get('k')
+  return typeof parametre === 'string' && parametre.length > 0 ? parametre : null
+}
+
 async function lireContexte(req: Request): Promise<Contexte | null> {
   const url = new URL(req.url)
-  const fourni = url.searchParams.get('k')
-  if (typeof fourni !== 'string' || fourni.length === 0) return null
+  const fourni = lireCle(req, url)
+  if (!fourni) return null
 
   const clientBrut = url.searchParams.get('client')
   const client: Client =

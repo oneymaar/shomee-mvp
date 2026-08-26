@@ -73,11 +73,16 @@ avant(async () => {
 
 let idRpc = 0
 
-async function rpc(url: string, methode: string, params?: unknown): Promise<{ statut: number; corps: unknown }> {
+async function rpc(
+  url: string,
+  methode: string,
+  params?: unknown,
+  entetes: Record<string, string> = {},
+): Promise<{ statut: number; corps: unknown }> {
   const res = await POST(
     new Request(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', ...entetes },
       body: JSON.stringify({ jsonrpc: '2.0', id: ++idRpc, method: methode, params: params ?? {} }),
     }),
   )
@@ -438,6 +443,30 @@ describe("les chiffres d'audience", () => {
     expect(classement[0].bien_id).toBe('P1')
     expect((lu.totaux as Record<string, unknown>).vues).toBe(10)
     expect((lu.biens_sans_aucune_vue as string[]).length).toBe(classement.length - 1)
+  })
+})
+
+
+// ─── La clé en en-tête ─────────────────────────────────────────────────────
+
+describe('la clé passée en en-tête', () => {
+  const nu = 'https://test.local/api/mcp?client=claude'
+
+  it('accepte Authorization: Bearer — l’adresse collée reste propre', async () => {
+    await rpc(nu, 'initialize', {}, { Authorization: `Bearer ${CLE_A}` })
+    const { corps } = await rpc(nu, 'tools/list', {}, { Authorization: `Bearer ${CLE_A}` })
+    expect(nomsOutils(corps)).toContain('shomee_ma_journee')
+  })
+
+  it('accepte x-api-key', async () => {
+    await rpc(nu, 'initialize', {}, { 'x-api-key': CLE_B })
+    const { corps } = await rpc(nu, 'tools/call', { name: 'shomee_ping', arguments: {} }, { 'x-api-key': CLE_B })
+    expect(texteOutil(corps)).toContain('Agence Confrère')
+  })
+
+  it('refuse toujours un en-tête porteur d’une clé inconnue', async () => {
+    const { statut } = await rpc(nu, 'initialize', {}, { Authorization: 'Bearer shomee_inventee' })
+    expect(statut).toBe(404)
   })
 })
 

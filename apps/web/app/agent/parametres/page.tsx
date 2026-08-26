@@ -36,14 +36,14 @@ const EXEMPLES: Array<{ quand: string; phrase: string }> = [
 
 const ETAPES: Record<'claude' | 'chatgpt', Array<{ fort: string; suite: string; note?: string }>> = {
   claude: [
-    { fort: 'Réglages → Connecteurs', suite: ' dans Claude.', note: 'l’intitulé peut varier selon la version' },
+    { fort: 'Réglages → Personnaliser → Connecteurs', suite: ' dans Claude.', note: '« Personnaliser » est tout en bas de la colonne de gauche' },
     { fort: 'Ajouter un connecteur personnalisé', suite: ' : collez l’adresse ci-dessus, puis validez.' },
-    { fort: '« Qu’est-ce qui m’attend aujourd’hui ? »', suite: ' — demandez-le dans une conversation.' },
+    { fort: 'Le bouton + de la conversation', suite: ' → Connecteurs, activez SHOMEE, puis demandez « Qu’est-ce qui m’attend aujourd’hui ? »' },
   ],
   chatgpt: [
     { fort: 'Paramètres → Connecteurs', suite: ' dans ChatGPT, puis activez le mode développeur.', note: 'une seule fois' },
     { fort: 'Créer un connecteur', suite: ' : collez l’adresse ci-dessus, puis validez.' },
-    { fort: '« Qu’est-ce qui m’attend aujourd’hui ? »', suite: ' — activez SHOMEE dans la conversation et demandez-le.' },
+    { fort: 'Activez SHOMEE dans la conversation', suite: ' et demandez « Qu’est-ce qui m’attend aujourd’hui ? »' },
   ],
 }
 
