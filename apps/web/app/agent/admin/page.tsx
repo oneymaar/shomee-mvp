@@ -181,7 +181,7 @@ export default function AgentAdminPage() {
               style={a.hasPassword
                 ? { backgroundColor: 'rgba(53,132,95,.12)', color: '#35845F' }
                 : { backgroundColor: '#EFE2D5', color: '#8A7A6E' }}>
-              {a.hasPassword ? 'actif' : a.pendingSetup ? 'en attente' : 'lien expiré'}
+              {a.hasPassword ? 'actif' : a.pendingSetup ? 'lien envoyé' : 'à activer'}
             </span>
             {a.setupPath ? (
               <button onClick={() => copy(a.setupPath!, a.id)} className="text-[12.5px] font-semibold underline flex-none"
