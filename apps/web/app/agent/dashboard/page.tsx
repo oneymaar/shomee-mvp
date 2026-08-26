@@ -8,6 +8,13 @@ import { requireAgentOrRedirect } from '@/lib/auth/agentGuard'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * « Il y a sept jours ». Isolée hors du composant : la règle de pureté du
+ * compilateur React interdit Date.now() dans un corps de composant, sans faire
+ * la différence avec un Server Component, exécuté une fois par requête.
+ */
+const depuisUneSemaine = () => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
 function parseFilter(raw: string | string[] | undefined): DashboardFilter {
   const v = Array.isArray(raw) ? raw[0] : raw
   if (v === 'draft' || v === 'published' || v === 'unpublished') return v
@@ -55,7 +62,17 @@ export default async function AgentDashboardPage({
   const draftsCount    = properties.filter((p) => p.statut === PropertyStatus.DRAFT).length
   const publishedCount = properties.filter((p) => p.statut === PropertyStatus.PUBLISHED).length
   const activeCount    = properties.length
-  const weeklyViews    = 1247 // mock
+  // Vraies vues des 7 derniers jours — c'était une valeur en dur (1247), qui
+  // s'affichait donc à l'identique sur un compte créé la minute d'avant.
+  const weeklyViews = properties.length === 0
+    ? 0
+    : await prisma.interactionEvent.count({
+        where: {
+          propertyId: { in: properties.map((p) => p.id) },
+          type: 'video_start',
+          createdAt: { gte: depuisUneSemaine() },
+        },
+      })
   const quotaReached   = activeCount >= agent.agency.maxProperties
 
   return (

@@ -18,8 +18,6 @@ import SharePropertyPanel from '@/components/agent/SharePropertyPanel'
 import VideoProgressBar from '@/components/VideoProgressBar'
 import { useAutoSave } from '@shomee/core/hooks/useAutoSave'
 
-const AGENT_BEARER_TOKEN = 'shomee_test_kr3tz_0001'
-
 const ALL_FEATURES = [
   'Ascenseur', 'Cave', 'Parking', 'Balcon', 'Terrasse', 'Gardien',
   'Parquet', 'Cheminée', 'Double vitrage', 'Digicode', 'Jardin',
@@ -173,12 +171,7 @@ export default function EditBienClient({
     setIsAnalyzingVideo(true)
     setAnalysisError(null)
     try {
-      const res = await fetch(`/api/biens/${form.id}/analyze-video`, {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer shomee_test_kr3tz_0001',
-        },
-      })
+      const res = await fetch(`/api/biens/${form.id}/analyze-video`, { method: 'POST' })
       if (!res.ok) {
         const body = await res.json().catch(() => null) as { error?: string } | null
         const message = body?.error ?? `Analyse indisponible (HTTP ${res.status}).`
@@ -533,10 +526,11 @@ export default function EditBienClient({
     const { __uiState, ...payload } = data
     const res = await fetch(`/api/biens/${form.id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${AGENT_BEARER_TOKEN}`,
-      },
+      // Pas de clé ici : l'agent est déjà authentifié par son cookie de
+      // session, et authenticateBearer l'accepte en repli. Une clé écrite en
+      // dur partait dans le bundle de TOUS les navigateurs — et c'était celle
+      // d'un autre compte, donc chaque enregistrement finissait en 403.
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
     if (!res.ok) {
@@ -560,6 +554,47 @@ export default function EditBienClient({
     onSave: persistSnapshot,
     enabled: autoSaveEnabled,
   })
+
+  // ── Publication ─────────────────────────────────────────────────────────
+  // Le bouton existait depuis le début sans le moindre gestionnaire : cliquer
+  // dessus ne faisait rien, en silence. La route accepte la transition
+  // DRAFT → PUBLISHED ; il ne manquait que l'appel.
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+
+  const publier = async () => {
+    if (isPublishing) return
+    if (form.id === 'draft-001') {
+      setPublishError("Cette fiche est une démonstration : elle n'existe pas en base et ne peut pas être publiée.")
+      return
+    }
+    if (!form.videoUrl && !window.confirm(
+      "Ce bien n'a pas de vidéo : il ne pourra pas apparaître dans le feed. Publier quand même ?",
+    )) return
+
+    setIsPublishing(true)
+    setPublishError(null)
+    try {
+      // On enregistre d'abord : publier une version périmée de la fiche serait
+      // pire que ne pas publier.
+      if (autoSaveIsDirty) await saveNow()
+      const res = await fetch(`/api/biens/${form.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: 'PUBLISHED' }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(body?.error ?? `Publication refusée (HTTP ${res.status}).`)
+      }
+      update({ statut: 'PUBLISHED' })
+      router.push(`/agent/biens/${form.id}/preview`)
+    } catch (e) {
+      setPublishError(e instanceof Error ? e.message : 'Publication impossible.')
+    } finally {
+      setIsPublishing(false)
+    }
+  }
 
   const handleVideoUploaded = (url: string) => {
     resetVideoAnalysis()
@@ -1586,11 +1621,25 @@ export default function EditBienClient({
         </div>
         <button
           type="button"
-          className="flex-1 py-3 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[14px] active:bg-[#222]"
+          onClick={() => { void publier() }}
+          disabled={isPublishing || (form.statut ?? 'DRAFT') !== 'DRAFT'}
+          className="flex-1 py-3 rounded-xl bg-[#0a0a0a] text-white font-semibold text-[14px] active:bg-[#222] disabled:bg-gray-300"
         >
-          Publier
+          {isPublishing
+            ? 'Publication…'
+            : (form.statut ?? 'DRAFT') === 'DRAFT'
+              ? 'Publier'
+              : 'Publié'}
         </button>
       </div>
+      {publishError && (
+        <div
+          className="fixed left-0 right-0 z-40 px-4 py-2 text-[12.5px] font-medium text-center"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)', color: '#B0442C', backgroundColor: '#FDECE7' }}
+        >
+          {publishError}
+        </div>
+      )}
 
       {/* ── Feature picker dialog ──────────────────────────────────── */}
       <AnimatePresence>
