@@ -22,7 +22,10 @@ import { Check, Loader2, Share } from 'lucide-react'
 import clsx from 'clsx'
 import { useShareBien } from './useShareBien'
 
-const DEMO_API_KEY = 'shomee_test_kr3tz_0001'
+// Aucune clé d'API ici : l'agent est authentifié par son cookie de session, et
+// authenticateBearer l'accepte en repli. Une clé écrite en dur partait dans le
+// bundle de tous les navigateurs — et comme c'était celle d'un AUTRE compte,
+// chaque appel se heurtait au contrôle d'agence et revenait en 403.
 
 export default function SharePropertyPanel({
   propertyId,
@@ -51,10 +54,7 @@ export default function SharePropertyPanel({
       try {
         const res = await fetch(`/api/properties/${propertyId}/share-link`, {
           method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${DEMO_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ isShareable: next }),
         })
         if (!res.ok) {

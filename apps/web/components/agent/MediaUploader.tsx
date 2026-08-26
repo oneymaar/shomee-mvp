@@ -4,9 +4,10 @@ import { useRef, useState } from 'react'
 import { Upload, Video, Image as ImageIcon, FileText, Loader2, X, Link as LinkIcon, Plus } from 'lucide-react'
 import clsx from 'clsx'
 
-// MVP: hardcoded demo Bearer token. Tied to the seeded Kretz agent.
-// Replace with session-based auth once a real login flow exists.
-const DEMO_API_KEY = 'shomee_test_kr3tz_0001'
+// Aucune clé d'API ici : l'agent est authentifié par son cookie de session, et
+// authenticateBearer l'accepte en repli. Une clé écrite en dur partait dans le
+// bundle de tous les navigateurs — et comme c'était celle d'un AUTRE compte,
+// chaque appel se heurtait au contrôle d'agence et revenait en 403.
 
 type MediaType = 'video' | 'photo' | 'plan' | 'visite_virtuelle'
 
@@ -135,10 +136,7 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
     // 1. Signature serveur
     const signRes = await fetch('/api/upload/sign', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${DEMO_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         folder: FOLDER[type],
         ...(type === 'video' ? { eager: 'so_auto' } : {}),
@@ -192,10 +190,7 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
     // 3. Confirmation côté Next (persiste l'URL + recompute completion)
     const confirmRes = await fetch('/api/upload/confirm', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${DEMO_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         bien_id:   bienId,
         type,
@@ -256,10 +251,7 @@ export default function MediaUploader({ bienId, type, onSuccess, multiple, varia
     try {
       const res = await fetch('/api/upload/confirm', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${DEMO_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bien_id: bienId, type, url: trimmed }),
       })
       if (!res.ok) {

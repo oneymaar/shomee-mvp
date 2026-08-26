@@ -9,7 +9,10 @@ import { Video, Pencil, EyeOff, Check, Trash2, Archive, ArchiveRestore, Share, L
 import type { PropertyStatus, MandatType } from '@prisma/client'
 import { useShareBien } from './useShareBien'
 
-const DEMO_API_KEY = 'shomee_test_kr3tz_0001'
+// Aucune clé d'API ici : l'agent est authentifié par son cookie de session, et
+// authenticateBearer l'accepte en repli. Une clé écrite en dur partait dans le
+// bundle de tous les navigateurs — et comme c'était celle d'un AUTRE compte,
+// chaque appel se heurtait au contrôle d'agence et revenait en 403.
 
 interface PropertyCardAgentProps {
   id: string
@@ -77,10 +80,7 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
     try {
       const res = await fetch(`/api/biens/${id}`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${DEMO_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statut: next }),
       })
       if (!res.ok) {
@@ -99,7 +99,6 @@ export default function PropertyCardAgent(props: PropertyCardAgentProps) {
     try {
       const res = await fetch(`/api/biens/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${DEMO_API_KEY}` },
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))

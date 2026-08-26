@@ -22,7 +22,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const DEMO_API_KEY = 'shomee_test_kr3tz_0001'
+// Aucune clé d'API ici : l'agent est authentifié par son cookie de session, et
+// authenticateBearer l'accepte en repli.
 const TOAST_DURATION_MS = 2200
 
 export interface ShareLinkPayload {
@@ -69,7 +70,6 @@ export function useShareBien(propertyId: string) {
       try {
         const res = await fetch(`/api/properties/${propertyId}/share-link`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${DEMO_API_KEY}` },
         })
         const body = (await res.json().catch(() => null)) as
           | { url?: string; title?: string; text?: string; error?: string }
