@@ -13,7 +13,8 @@
     "geo:addresses": "node --experimental-strip-types scripts/backfill-addresses.ts",
     "geo:backfill": "node --experimental-strip-types scripts/backfill-geo.ts",
     "postinstall": "prisma generate",
-    "test": "node --experimental-strip-types --no-warnings --import ./test/enregistrer.mjs test/banc-mcp.ts"
+    "test": "node --experimental-strip-types --no-warnings --import ./test/enregistrer.mjs test/banc-mcp.ts",
+    "cle:revoquer": "node --experimental-strip-types --no-warnings scripts/revoquer-cle.ts"
   },
   "prisma": {
     "seed": "node --experimental-strip-types prisma/seed.ts"

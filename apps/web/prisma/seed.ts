@@ -8,6 +8,7 @@
  */
 
 import 'dotenv/config'
+import { randomBytes } from 'node:crypto'
 import { PrismaClient, AgencyPlan, MandatType, PropertyStatus, DpeRating, PropertyBadge, UserRole } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
@@ -47,10 +48,14 @@ async function main() {
   })
 
   // ── API key (LLM import) ────────────────────────────────────────────────
+  // Clé TIRÉE AU SORT, plus jamais une valeur écrite dans le dépôt : l'ancienne
+  // (`shomee_test_kr3tz_0001`) a fini en dur dans du code client, donc publiée
+  // dans le bundle de tous les navigateurs. Un secret présent dans un fichier
+  // versionné est un secret public. Elle est affichée en fin de seed.
   const apiKey = await prisma.agentApiKey.create({
     data: {
       agentId: agent.id,
-      key: 'shomee_test_kr3tz_0001',
+      key: `shomee_${randomBytes(24).toString('base64url')}`,
       label: 'Token de test',
     },
   })
