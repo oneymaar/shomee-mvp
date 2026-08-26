@@ -1,4 +1,5 @@
 import AgentBottomNav from '@/components/AgentBottomNav'
+import NouvelleVersion from '@/components/agent/NouvelleVersion'
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
         {children}
       </div>
       <AgentBottomNav />
+      <NouvelleVersion />
     </div>
   )
 }
