@@ -23,6 +23,7 @@ import { colors, fonts, radii, serifSizes } from '@/lib/theme'
 const LIKE_RED = '#EF4444'
 import { PropertyMediaTabs } from '@/components/property/PropertyMediaTabs'
 import { DropCapText } from '@/components/property/DropCapText'
+import { requestVisit } from '@/lib/chat'
 import {
   MapZone,
   MOBILE_MAP_AVAILABLE,
@@ -300,9 +301,20 @@ export const PropertyDetailSheet = forwardRef<BottomSheetModal, Props>(
                 mais ils ne rivalisent pas. Like et Partage ont quitté la barre :
                 ils vivent en haut de la fiche, près de l'identité du bien. */}
             <View style={styles.footer}>
-              <Pressable onPress={() => {}} style={styles.mainCta} hitSlop={6}>
+              {/* « Demander une visite » — pas « réserver » : dans ce marché
+                  l'agent qualifie avant d'accorder. Poste la demande + le brief
+                  dans le fil (sans doubler une demande en cours) puis y mène. */}
+              <Pressable
+                onPress={() => {
+                  if (!property) return
+                  void requestVisit(property)
+                  handleMessage()
+                }}
+                style={styles.mainCta}
+                hitSlop={6}
+              >
                 <CalendarPlus size={19} strokeWidth={2} color={colors.creamOnDark} />
-                <Text style={styles.mainCtaTxt}>Planifier une visite</Text>
+                <Text style={styles.mainCtaTxt}>Demander une visite</Text>
               </Pressable>
               <Pressable onPress={handleMessage} style={styles.roundCta} hitSlop={6}>
                 <MessageCircle size={20} strokeWidth={1.9} color={colors.ink} />

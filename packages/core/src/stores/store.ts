@@ -21,6 +21,9 @@ interface ShomeeState {
   /** True si le bien est déjà en favori. */
   isFavorite: (id: string) => boolean
   addMessage: (propertyId: string, msg: ChatMessage) => void
+  /** Synchro serveur : remplace l'ensemble des conversations (vérité serveur),
+   *  en préservant le lastSeenAt local quand il est plus récent. */
+  setConversations: (convs: Conversation[]) => void
   markUserMessagesRead: (propertyId: string) => void
   markConversationSeen: (propertyId: string) => void
 }
@@ -62,6 +65,15 @@ export function createShomeeStore(getStorage: () => StateStorage) {
       },
 
       isFavorite: (id: string) => get().favorites.some((f) => f.id === id),
+
+  setConversations: (convs) => {
+    set(state => ({
+      conversations: convs.map(c => {
+        const prev = state.conversations.find(p => p.propertyId === c.propertyId)
+        return prev && prev.lastSeenAt > c.lastSeenAt ? { ...c, lastSeenAt: prev.lastSeenAt } : c
+      }),
+    }))
+  },
 
   addMessage: (propertyId, msg) => {
     set(state => {

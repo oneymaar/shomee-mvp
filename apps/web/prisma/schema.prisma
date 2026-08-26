@@ -90,6 +90,92 @@ model User {
 
   buyerProfile BuyerProfile?
   devices      UserDevice[]
+  conversations Conversation[]
+  visits        Visit[]
+}
+
+// ─── Messagerie & visites ───────────────────────────────────────────────────
+// La conversation est UNIQUE par (acquéreur, bien) : côté mobile, le fil est
+// adressé par propertyId — le serveur résout ou crée. L'agent du fil est celui
+// qui a créé le bien (source de vérité : Property.createdByAgentId).
+
+enum MessageSender {
+  BUYER
+  AGENT
+}
+
+enum MessageKind {
+  TEXT
+  VISIT_REQUEST // demande de visite — payload = brief qualifié + score
+  AVAILABILITIES // disponibilités de l'acquéreur — payload = créneaux cochés
+  VISIT_CONFIRMED // visite calée par l'agent — payload = {visitId, scheduledAt…}
+  SYSTEM // événements neutres (annulation…) — rendu discret des deux côtés
+}
+
+enum VisitStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Conversation {
+  id              String    @id @default(cuid())
+  propertyId      String
+  buyerUserId     String
+  agentId         String
+  createdAt       DateTime  @default(now())
+  lastMessageAt   DateTime  @default(now())
+  // Curseurs de lecture — un par côté. « Non lu » = messages de l'AUTRE côté
+  // postérieurs à mon curseur.
+  buyerLastReadAt DateTime?
+  agentLastReadAt DateTime?
+
+  property Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buyer    User      @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+  agent    Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  messages Message[]
+  visits   Visit[]
+
+  @@unique([buyerUserId, propertyId])
+  @@index([agentId, lastMessageAt])
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  sender         MessageSender
+  kind           MessageKind   @default(TEXT)
+  text           String
+  // Charge structurée selon kind (brief de la demande, créneaux, visite…).
+  payload        Json?
+  createdAt      DateTime      @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Visit {
+  id             String      @id @default(cuid())
+  conversationId String
+  propertyId     String
+  buyerUserId    String
+  agentId        String
+  scheduledAt    DateTime
+  durationMin    Int         @default(30)
+  status         VisitStatus @default(CONFIRMED)
+  // Capability token du fichier .ics : les apps d'agenda ne savent pas envoyer
+  // d'en-têtes — le lien EST l'authentification. Non devinable, révocable en
+  // annulant la visite.
+  icsToken       String      @unique @default(cuid())
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  property     Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buyer        User         @relation(fields: [buyerUserId], references: [id], onDelete: Cascade)
+  agent        Agent        @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([agentId, scheduledAt])
+  @@index([buyerUserId, scheduledAt])
 }
 
 // Pont deviceId anonyme (tracker.ts) -> User. Les grosses tables
@@ -138,9 +224,20 @@ model Agent {
   agencyId   String
   createdAt  DateTime   @default(now())
 
+  // ── Connexion (back-office web) ──
+  // Nullable : un compte est créé par l'admin SANS mot de passe, puis activé
+  // par l'agent via son lien d'activation (setupToken). Les clés d'API
+  // (AgentApiKey) restent le schéma d'auth des intégrations machine
+  // (connecteurs Claude/ChatGPT) — les deux portes mènent à la même identité.
+  passwordHash      String?
+  setupToken        String?   @unique
+  setupTokenExpires DateTime?
+
   agency     Agency     @relation(fields: [agencyId], references: [id], onDelete: Restrict)
   properties Property[] @relation("PropertyCreatedBy")
   apiKeys    AgentApiKey[]
+  conversations Conversation[]
+  visits        Visit[]
 
   @@index([agencyId])
 }
@@ -316,6 +413,8 @@ model Property {
   videoAnalysis         VideoAnalysis?
   documents             Document[]
   shareViews            ShareView[]
+  conversations         Conversation[]
+  visits                Visit[]
 
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt

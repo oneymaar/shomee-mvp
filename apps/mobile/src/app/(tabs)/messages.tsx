@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -8,6 +8,7 @@ import { formatLocation } from '@shomee/core/utils/format'
 import type { Conversation, Property } from '@shomee/core/types/domain'
 import { hasUnread, useShomeeStore } from '@/lib/stores'
 import { usePropertyResolver } from '@/lib/useResolveProperty'
+import { syncConversations } from '@/lib/chat'
 import { colors, fonts } from '@/lib/theme'
 
 const BG = '#FAF3EE'
@@ -33,13 +34,18 @@ function Header() {
 
 interface RowData {
   conv: Conversation
-  property: Property
+  /** Bien du feed local s'il y est encore — sinon le résumé serveur fait foi. */
+  property: Property | null
 }
 
 function ConversationRow({ conv, property, onPress }: RowData & { onPress: () => void }) {
-  // Identité de marque = agence (logo + nom), fallback sur l'agent.
-  const brandName = property.agencyName ?? property.agentName
-  const brandLogo = property.agencyLogo ?? property.agentAvatar
+  // Identité de marque = agence (logo + nom), fallback agent, fallback résumé
+  // serveur (fil dont le bien n'est plus dans le feed local).
+  const summary = conv.propertySummary
+  const brandName = property
+    ? property.agencyName ?? property.agentName
+    : summary?.agencyName ?? 'Agence'
+  const brandLogo = property ? property.agencyLogo ?? property.agentAvatar : summary?.agencyLogo ?? null
   const initial = (brandName.trim().charAt(0) || '?').toUpperCase()
 
   const lastMsg = conv.messages[conv.messages.length - 1]
@@ -73,8 +79,16 @@ function ConversationRow({ conv, property, onPress }: RowData & { onPress: () =>
           )}
         </View>
         <Text style={styles.sub} numberOfLines={1}>
-          {formatLocation(property.arrondissement, property.district)} · {property.surface}m² ·{' '}
-          {formatPrice(property.price)}
+          {property
+            ? `${formatLocation(property.arrondissement, property.district)} · ${property.surface}m² · ${formatPrice(property.price)}`
+            : [
+                summary?.arrondissement
+                  ? formatLocation(summary.arrondissement, summary.district ?? '')
+                  : summary?.title,
+                summary?.price != null ? formatPrice(summary.price) : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
         </Text>
         {preview ? (
           <Text style={[styles.preview, unread && styles.previewUnread]} numberOfLines={1}>
@@ -100,9 +114,19 @@ export default function MessagesScreen() {
   const conversations = useShomeeStore((s) => s.conversations)
   const resolve = usePropertyResolver()
 
+  // Synchro : à l'arrivée sur l'onglet, puis toutes les 12 s tant qu'il vit.
+  useEffect(() => {
+    void syncConversations()
+    const t = setInterval(() => {
+      void syncConversations()
+    }, 12000)
+    return () => clearInterval(t)
+  }, [])
+
   const rows: RowData[] = [...conversations]
-    .map((conv) => ({ conv, property: resolve(conv.propertyId) }))
-    .filter((r): r is RowData => r.property != null)
+    .map((conv) => ({ conv, property: resolve(conv.propertyId) ?? null }))
+    // Un fil reste listé tant qu'on sait l'AFFICHER : bien local OU résumé serveur.
+    .filter((r) => r.property != null || r.conv.propertySummary != null)
     .sort((a, b) => {
       const ta = a.conv.messages[a.conv.messages.length - 1]?.timestamp ?? 0
       const tb = b.conv.messages[b.conv.messages.length - 1]?.timestamp ?? 0

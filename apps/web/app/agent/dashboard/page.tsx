@@ -4,6 +4,7 @@ import DashboardListClient from '@/components/agent/DashboardListClient'
 import type { DashboardFilter } from '@/components/agent/DashboardFilterPills'
 import { Eye, FileText, CheckCircle2, Crown } from 'lucide-react'
 import Link from 'next/link'
+import { requireAgentOrRedirect } from '@/lib/auth/agentGuard'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,16 +22,9 @@ export default async function AgentDashboardPage({
   const { filter: filterParam } = await searchParams
   const initialFilter = parseFilter(filterParam)
 
-  const agent = await prisma.agent.findFirst({ include: { agency: true } })
-
-  if (!agent) {
-    return (
-      <main className="px-5 pt-6">
-        <h1 className="text-xl font-bold mb-2">Aucun agent en base</h1>
-        <p className="text-gray-500 text-sm">Lance <code className="px-1 py-0.5 bg-gray-100 rounded text-[12px]">npx prisma db seed</code> pour créer l&apos;agent de démo.</p>
-      </main>
-    )
-  }
+  // Identité = la SESSION (cookie), plus jamais « le premier agent de la
+  // base » : chacun ne voit que ses biens et ses fils.
+  const agent = await requireAgentOrRedirect()
 
   const properties = await prisma.property.findMany({
     where: {
@@ -105,8 +99,16 @@ export default async function AgentDashboardPage({
               {agent.agency.plan}
             </span>
           </div>
-          <p className="text-[11px] text-gray-500 mt-0.5">Espace agent</p>
+          <p className="text-[11px] text-gray-500 mt-0.5">{agent.name} · Espace agent</p>
         </div>
+        <nav className="flex items-center gap-3 flex-none">
+          <Link href="/agent/messages" className="text-[12.5px] font-semibold underline" style={{ color: '#A6512B' }}>
+            Messages
+          </Link>
+          <Link href="/agent/reglages" className="text-[12.5px] font-semibold underline" style={{ color: '#A6512B' }}>
+            Réglages
+          </Link>
+        </nav>
       </header>
 
       {/* Quick stats */}

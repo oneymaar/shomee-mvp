@@ -16,12 +16,28 @@ export interface ChatMessage {
   from: 'user' | 'agent'
   timestamp: number  // Date.now()
   read: boolean
+  /** Message structuré (demande de visite, disponibilités…) — TEXT si absent. */
+  kind?: 'text' | 'visit_request' | 'availabilities' | 'visit_confirmed' | 'system'
+  /** Charge structurée selon kind (brief, créneaux, visite…). */
+  payload?: Record<string, unknown>
 }
 
 export interface Conversation {
   propertyId: string
   messages: ChatMessage[]
   lastSeenAt: number  // timestamp of last user view; agent msgs after this are "unread"
+  /** Id serveur du fil (présent après synchronisation). */
+  serverId?: string
+  /** Résumé du bien fourni par le serveur — sert quand le bien n'est pas (plus)
+   *  dans le feed local. Le résolveur local reste prioritaire. */
+  propertySummary?: {
+    title?: string
+    arrondissement?: string
+    district?: string
+    price?: number
+    agencyName?: string
+    agencyLogo?: string | null
+  }
 }
 
 export interface MatchCriterionRef {

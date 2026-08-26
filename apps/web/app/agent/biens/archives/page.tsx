@@ -1,20 +1,14 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { requireAgentOrRedirect } from '@/lib/auth/agentGuard'
 import { PropertyStatus } from '@prisma/client'
 import ArchivesListClient from '@/components/agent/ArchivesListClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AgentArchivesPage() {
-  const agent = await prisma.agent.findFirst()
-  if (!agent) {
-    return (
-      <main className="px-5 pt-6">
-        <h1 className="text-xl font-bold mb-2">Aucun agent en base</h1>
-      </main>
-    )
-  }
+  const agent = await requireAgentOrRedirect()
 
   const properties = await prisma.property.findMany({
     where: { createdByAgentId: agent.id, statut: PropertyStatus.ARCHIVED },

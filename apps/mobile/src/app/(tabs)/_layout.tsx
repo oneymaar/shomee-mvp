@@ -1,10 +1,12 @@
 // `Tabs` importé depuis `expo-router/js-tabs` : `import { Tabs } from 'expo-router'`
 // est déprécié en SDK 56 (même implémentation, entrée non-dépréciée).
+import { useEffect } from 'react'
 import { Tabs } from 'expo-router/js-tabs'
 import { Home, MessageCircle, User } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useShomeeStore, hasUnread } from '@/lib/stores'
 import { FavoritesTabIcon } from '@/components/flyHeart/FavoritesTabIcon'
+import { syncConversations } from '@/lib/chat'
 import { colors } from '@/lib/theme'
 
 const BAR_HEIGHT = 60
@@ -35,6 +37,16 @@ export default function TabsLayout() {
   // Vraie valeur du store. `conversations` n'est PAS persisté → 0 au lancement
   // tant qu'il n'y a pas de messages (badge masqué). Pas de valeur simulée.
   const unreadCount = useShomeeStore((s) => s.conversations.filter(hasUnread).length)
+
+  // Le badge Messages vit sur les données SERVEUR : une synchro de fond douce
+  // (60 s) le tient à jour même si l'onglet Messages n'est jamais ouvert.
+  useEffect(() => {
+    void syncConversations()
+    const t = setInterval(() => {
+      void syncConversations()
+    }, 60000)
+    return () => clearInterval(t)
+  }, [])
 
   // Hauteur fixe + inset bas pour que la barre ne colle pas au bord
   // (home indicator iPhone). Identique sur les deux thèmes : seule la peinture

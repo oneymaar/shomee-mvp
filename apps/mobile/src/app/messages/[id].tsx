@@ -14,31 +14,30 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { Image } from 'expo-image'
 import { ChevronLeft, Send } from 'lucide-react-native'
-import Animated, {
-  FadeInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 import type { ChatMessage } from '@shomee/core/types/domain'
+import type { AvailabilitiesPayload } from '@shomee/core/visits'
 import { DEFAULT_FALLBACK_IMAGE } from '@shomee/core/constants'
 import { useShomeeStore } from '@/lib/stores'
 import { usePropertyResolver } from '@/lib/useResolveProperty'
+import {
+  markThreadRead,
+  needsAvailabilities,
+  sendAvailabilities,
+  sendChatMessage,
+  syncConversations,
+} from '@/lib/chat'
+import { AvailabilityModal } from '@/components/chat/AvailabilityModal'
+import {
+  AvailabilitiesBubble,
+  AvailabilityPromptCard,
+  SystemLine,
+  VisitConfirmedCard,
+  VisitRequestBubble,
+} from '@/components/chat/VisitMessageCards'
 
 const ACCENT = '#A6512B'
 const BG = '#FAF3EE'
-
-// Réponses agence simulées — identiques au web (ConversationView). Le 1er message
-// déclenche l'accueil, les suivants avancent dans la liste (bornés au dernier).
-const AGENT_REPLIES: ((name: string) => string)[] = [
-  (name) => `Bonjour ! Je suis ${name}. Comment puis-je vous aider concernant ce bien ?`,
-  () => 'Avec plaisir ! Quand souhaitez-vous organiser une visite ?',
-  () => 'Bien sûr, je peux vous donner plus de détails. Avez-vous des questions spécifiques ?',
-  () => 'Je reviens vers vous très rapidement avec toutes les informations.',
-  () => "N'hésitez pas si vous avez d'autres questions !",
-]
 
 function formatPrice(n: number): string {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €'
@@ -46,15 +45,6 @@ function formatPrice(n: number): string {
 function formatTime(ts: number): string {
   const d = new Date(ts)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
-
-function TypingDot({ delay }: { delay: number }) {
-  const opacity = useSharedValue(0.3)
-  useEffect(() => {
-    opacity.value = withDelay(delay, withRepeat(withTiming(1, { duration: 550 }), -1, true))
-  }, [delay, opacity])
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }))
-  return <Animated.View style={[styles.dot, style]} />
 }
 
 /**
@@ -72,41 +62,51 @@ export default function ConversationScreen() {
   const property = resolve(id)
 
   const conversations = useShomeeStore((s) => s.conversations)
-  const addMessage = useShomeeStore((s) => s.addMessage)
-  const markUserMessagesRead = useShomeeStore((s) => s.markUserMessagesRead)
-  const markConversationSeen = useShomeeStore((s) => s.markConversationSeen)
 
   const conv = conversations.find((c) => c.propertyId === id)
   const messages: ChatMessage[] = conv?.messages ?? []
 
-  const brandName = property ? property.agencyName ?? property.agentName : ''
-  const brandLogo = property ? property.agencyLogo ?? property.agentAvatar : null
+  // Le bien peut ne plus être dans le feed local : le résumé serveur prend le
+  // relais pour l'identité du fil (jamais d'écran mort sur un fil réel).
+  const summary = conv?.propertySummary
+  const brandName = property
+    ? property.agencyName ?? property.agentName
+    : summary?.agencyName ?? 'Agence'
+  const brandLogo = property ? property.agencyLogo ?? property.agentAvatar : summary?.agencyLogo ?? null
   const brandInitial = (brandName.trim().charAt(0) || '?').toUpperCase()
+  const threadTitle = property?.title ?? summary?.title ?? ''
+  const [availOpen, setAvailOpen] = useState(false)
 
   const [text, setText] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
   const [keyboardOpen, setKeyboardOpen] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
   const inputRef = useRef<TextInput>(null)
-  const replyIdxRef = useRef(messages.length > 0 ? AGENT_REPLIES.length - 1 : 0)
 
   const goToList = useCallback(() => router.navigate('/messages'), [router])
 
-  // Bien introuvable (session sans le feed du bien) → retour à la liste.
+  // Ni bien local NI résumé serveur → fil inconnu, retour à la liste.
   useEffect(() => {
-    if (!property) goToList()
-  }, [property, goToList])
+    if (!property && !summary) goToList()
+  }, [property, summary, goToList])
 
-  // Marque la conversation vue (retire le badge non-lu) à l'ouverture + à chaque
-  // nouveau message.
+  // Fil ouvert = synchro serrée (4 s) : la réponse de l'agent arrive sans geste.
   useEffect(() => {
-    if (property) markConversationSeen(property.id)
-  }, [property, messages.length, markConversationSeen])
+    void syncConversations()
+    const t = setInterval(() => {
+      void syncConversations()
+    }, 4000)
+    return () => clearInterval(t)
+  }, [])
+
+  // Marque la conversation vue (badge local + curseur serveur).
+  useEffect(() => {
+    if (id) markThreadRead(id)
+  }, [id, messages.length])
 
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }))
   }, [])
-  useEffect(scrollToEnd, [messages.length, isTyping, scrollToEnd])
+  useEffect(scrollToEnd, [messages.length, scrollToEnd])
 
   // Clavier ouvert dès l'arrivée : focus une fois l'animation de push posée
   // (autoFocus part pendant la transition et le clavier ne monte pas de façon
@@ -130,40 +130,22 @@ export default function ConversationScreen() {
     }
   }, [])
 
-  // Fonction simple (pas de useCallback) : le React Compiler la mémoïse, et la
-  // mémoïsation manuelle ne « tenait » pas ici (dep `text` réassignée via setText).
+  // Envoi RÉEL — l'optimisme (bulle immédiate, retrait en échec) vit dans
+  // lib/chat. Plus aucune réponse simulée : l'agent répond depuis son
+  // back-office, le fil se met à jour par la synchro (4 s).
   const sendMessage = () => {
     const trimmed = text.trim()
-    if (!trimmed || !property) return
-
-    const userMsg: ChatMessage = {
-      id: `u-${Date.now()}`,
-      text: trimmed,
-      from: 'user',
-      timestamp: Date.now(),
-      read: false,
-    }
-    addMessage(property.id, userMsg)
+    if (!trimmed || !id) return
     setText('')
-
-    const delay = 900 + Math.random() * 600
-    setTimeout(() => setIsTyping(true), delay)
-    setTimeout(() => {
-      setIsTyping(false)
-      const idx = Math.min(replyIdxRef.current, AGENT_REPLIES.length - 1)
-      replyIdxRef.current = Math.min(replyIdxRef.current + 1, AGENT_REPLIES.length - 1)
-      addMessage(property.id, {
-        id: `a-${Date.now()}`,
-        text: AGENT_REPLIES[idx](property.agentName),
-        from: 'agent',
-        timestamp: Date.now(),
-        read: false,
-      })
-      markUserMessagesRead(property.id)
-    }, delay + 2000)
+    void sendChatMessage(id, { text: trimmed })
   }
 
-  if (!property) return <View style={styles.root} />
+  const submitAvailabilities = (payload: AvailabilitiesPayload) => {
+    setAvailOpen(false)
+    if (id) void sendAvailabilities(id, payload)
+  }
+
+  if (!property && !summary) return <View style={styles.root} />
 
   // Indice « Lu » : sous le dernier message user lu, tant que l'agent n'a pas
   // répondu par-dessus (parité web).
@@ -193,7 +175,7 @@ export default function ConversationScreen() {
             {brandName}
           </Text>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {property.title}
+            {threadTitle}
           </Text>
         </View>
       </View>
@@ -223,21 +205,23 @@ export default function ConversationScreen() {
                 <Text style={styles.emptyBrand}>{brandName}</Text>
                 <Text style={styles.emptyBrandSub}>Agence immobilière · Paris</Text>
               </View>
-              <View style={styles.propertyCard}>
-                <Image
-                  source={{ uri: property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE }}
-                  style={styles.propertyThumb}
-                  contentFit="cover"
-                />
-                <View style={styles.propertyCardBody}>
-                  <Text style={styles.propertyCardTitle} numberOfLines={1}>
-                    {property.title}
-                  </Text>
-                  <Text style={styles.propertyCardSub}>
-                    {property.surface} m² · {formatPrice(property.price)}
-                  </Text>
+              {property && (
+                <View style={styles.propertyCard}>
+                  <Image
+                    source={{ uri: property.imageUrlFallback || DEFAULT_FALLBACK_IMAGE }}
+                    style={styles.propertyThumb}
+                    contentFit="cover"
+                  />
+                  <View style={styles.propertyCardBody}>
+                    <Text style={styles.propertyCardTitle} numberOfLines={1}>
+                      {property.title}
+                    </Text>
+                    <Text style={styles.propertyCardSub}>
+                      {property.surface} m² · {formatPrice(property.price)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              )}
               <Text style={styles.emptyHint}>
                 Envoyez un message pour démarrer{'\n'}votre échange avec {brandName}.
               </Text>
@@ -245,6 +229,11 @@ export default function ConversationScreen() {
           )}
 
           {messages.map((msg, i) => {
+            // Messages structurés → cartes dédiées (la bulle ne sait pas tout dire).
+            if (msg.kind === 'visit_request') return <VisitRequestBubble key={msg.id} />
+            if (msg.kind === 'availabilities') return <AvailabilitiesBubble key={msg.id} msg={msg} />
+            if (msg.kind === 'visit_confirmed') return <VisitConfirmedCard key={msg.id} msg={msg} />
+            if (msg.kind === 'system') return <SystemLine key={msg.id} msg={msg} />
             const isUser = msg.from === 'user'
             return (
               <Animated.View
@@ -263,14 +252,8 @@ export default function ConversationScreen() {
             )
           })}
 
-          {isTyping && (
-            <Animated.View entering={FadeInDown.duration(140)} style={styles.bubbleRowAgent}>
-              <View style={[styles.bubble, styles.bubbleAgent, styles.typingBubble]}>
-                <TypingDot delay={0} />
-                <TypingDot delay={180} />
-                <TypingDot delay={360} />
-              </View>
-            </Animated.View>
+          {needsAvailabilities(conv) && (
+            <AvailabilityPromptCard onOpen={() => setAvailOpen(true)} />
           )}
         </ScrollView>
 
@@ -296,6 +279,12 @@ export default function ConversationScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      <AvailabilityModal
+        visible={availOpen}
+        onClose={() => setAvailOpen(false)}
+        onSubmit={submitAvailabilities}
+      />
     </View>
   )
 }
@@ -354,8 +343,6 @@ const styles = StyleSheet.create({
   bubbleTimeAgent: { color: '#B7A99D' },
   readMark: { fontSize: 11, color: '#B7A99D', paddingHorizontal: 4 },
 
-  typingBubble: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 13 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#B7A99D' },
 
   emptyWrap: { alignItems: 'center', gap: 18, paddingTop: 12, paddingBottom: 8 },
   emptyAvatar: {
