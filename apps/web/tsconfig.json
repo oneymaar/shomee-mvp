@@ -6,6 +6,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Le banc d'essai s'exécute avec Node seul : ses imports relatifs portent
+    // l'extension .ts, ce que TypeScript n'accepte qu'explicitement.
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

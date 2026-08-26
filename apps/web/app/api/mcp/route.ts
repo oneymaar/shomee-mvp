@@ -82,6 +82,8 @@ import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { AIOnboardingBriefSchema, zodErrorMessage } from '@/lib/handoff/briefSchema'
+import { INSTRUCTIONS_AGENT, outilsAgent } from '@/lib/mcp/agentTools'
+import type { Agent, Agency } from '@prisma/client'
 import {
   generateShortCode,
   formatShortCode,
@@ -531,25 +533,39 @@ const RelireShape = {
 
 // ─── Construction du serveur MCP ───────────────────────────────────────────
 
-type Profil = 'acquereur' | 'admin'
 type Client = 'chatgpt' | 'claude' | 'web'
+type AgentConnecte = Agent & { agency: Agency }
 
-function creerServeur(profil: Profil, client: Client, origine: string): McpServer {
+/**
+ * Trois profils, trois publics. Le profil est déduit de la CLÉ présentée, pas
+ * d'un paramètre choisi par l'appelant : une clé d'agent ouvre le profil agent
+ * et rien d'autre, quoi que dise l'URL.
+ */
+type Contexte =
+  | { profil: 'acquereur' | 'admin'; client: Client; origine: string; agent: null }
+  | { profil: 'agent'; client: Client; origine: string; agent: AgentConnecte }
+
+function creerServeur(ctx: Contexte): McpServer {
   const server = new McpServer(
-    { name: 'shomee', version: '0.3.0' },
+    { name: 'shomee', version: '0.4.0' },
     {
-      instructions: profil === 'admin' ? INSTRUCTIONS_ADMIN : INSTRUCTIONS_ACQUEREUR,
+      instructions:
+        ctx.profil === 'admin'
+          ? INSTRUCTIONS_ADMIN
+          : ctx.profil === 'agent'
+            ? INSTRUCTIONS_AGENT
+            : INSTRUCTIONS_ACQUEREUR,
       capabilities: { tools: {} },
     },
   )
 
-  // ── Diagnostic, présent dans les deux profils ──────────────────────────
+  // ── Diagnostic, présent dans tous les profils ──────────────────────────
   server.registerTool(
     'shomee_ping',
     {
       title: 'État du serveur SHOMEE',
       description:
-        "Vérifie que le serveur SHOMEE répond et que sa base de données est joignable. À utiliser en premier si un autre outil échoue.",
+        "Vérifie que le serveur SHOMEE répond, que sa base de données est joignable, et sous quelle identité le connecteur est branché. À utiliser en premier si un autre outil échoue.",
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async () => {
@@ -557,9 +573,12 @@ function creerServeur(profil: Profil, client: Client, origine: string): McpServe
         await prisma.$queryRaw`SELECT 1`
         return resultatTexte({
           serveur: 'shomee-mcp-distant',
-          version: '0.3.0',
-          profil,
-          client,
+          version: '0.4.0',
+          profil: ctx.profil,
+          client: ctx.client,
+          // L'agent doit pouvoir vérifier d'un coup d'œil qu'il est branché sur
+          // SON compte — c'est la première question quand un chiffre surprend.
+          connecte_en_tant_que: ctx.agent ? `${ctx.agent.name} — ${ctx.agent.agency.name}` : null,
           environnement: process.env.VERCEL_ENV ?? 'local',
           base_de_donnees: 'joignable',
           genere_le: new Date().toISOString(),
@@ -577,12 +596,17 @@ function creerServeur(profil: Profil, client: Client, origine: string): McpServe
     },
   )
 
-  if (profil === 'admin') {
+  if (ctx.profil === 'admin') {
     outilsAdmin(server)
     return server
   }
 
-  outilsAcquereur(server, client, origine)
+  if (ctx.profil === 'agent') {
+    outilsAgent(server, ctx.agent, ctx.client, ctx.origine)
+    return server
+  }
+
+  outilsAcquereur(server, ctx.client, ctx.origine)
   return server
 }
 
@@ -883,29 +907,72 @@ const EN_TETES_CORS = {
   'Access-Control-Expose-Headers': 'mcp-session-id, mcp-protocol-version',
 }
 
-type Contexte = { profil: Profil; client: Client; origine: string }
+/**
+ * LA GARDE D'ACCÈS — deux clés très différentes sur le même paramètre `k`.
+ *
+ * 1. Le SECRET PARTAGÉ (MCP_PRIVATE_KEY) ouvre les connecteurs d'Olivier :
+ *    profil acquéreur (le brief) et profil admin (les chiffres internes). Il
+ *    n'identifie personne et ne permet aucun cloisonnement : il reste réservé
+ *    à un usage privé.
+ *
+ * 2. Une CLÉ D'AGENT (table AgentApiKey) ouvre le profil agent et identifie
+ *    son porteur. C'est elle qui rend le connecteur distribuable : chaque
+ *    agent a son URL, chaque URL ne voit que les biens et les fils de son
+ *    agent, et la révoquer depuis les réglages coupe le connecteur net.
+ *    Elle ne peut jamais ouvrir le profil admin, quoi que dise `?profil=`.
+ *
+ * Le secret est comparé EN PREMIER, en temps constant : il ne peut donc pas
+ * être confondu avec une clé d'agent, ni servir à sonder la table des clés.
+ * Toute autre valeur → 404, sans dire laquelle des deux portes a été tentée.
+ *
+ * Ce n'est pas OAuth. Une clé dans une URL vit en clair dans la configuration
+ * du client : acceptable en bêta fermée avec des agents identifiés, à
+ * remplacer par OAuth 2.0 avant toute diffusion large — et de toute façon
+ * obligatoire pour figurer dans les annuaires Claude et ChatGPT.
+ */
+const FRAICHEUR_LAST_USED_MS = 60 * 60 * 1000
 
-function lireContexte(req: Request): Contexte | null {
-  const attendu = process.env.MCP_PRIVATE_KEY
-  if (!attendu || attendu.length < 16) return null // fail closed
-
+async function lireContexte(req: Request): Promise<Contexte | null> {
   const url = new URL(req.url)
   const fourni = url.searchParams.get('k')
-  if (typeof fourni !== 'string' || !egalConstant(fourni, attendu)) return null
+  if (typeof fourni !== 'string' || fourni.length === 0) return null
 
   const clientBrut = url.searchParams.get('client')
   const client: Client =
     clientBrut === 'chatgpt' || clientBrut === 'claude' || clientBrut === 'web' ? clientBrut : 'web'
 
-  const profil: Profil = url.searchParams.get('profil') === 'admin' ? 'admin' : 'acquereur'
+  // 1. Le secret partagé — profils acquéreur et admin.
+  const attendu = process.env.MCP_PRIVATE_KEY
+  if (attendu && attendu.length >= 16 && egalConstant(fourni, attendu)) {
+    const profil = url.searchParams.get('profil') === 'admin' ? 'admin' : 'acquereur'
+    return { profil, client, origine: url.origin, agent: null }
+  }
 
-  return { profil, client, origine: url.origin }
+  // 2. Une clé d'agent — profil agent, cloisonné à son porteur.
+  const cle = await prisma.agentApiKey.findUnique({
+    where: { key: fourni },
+    include: { agent: { include: { agency: true } } },
+  })
+  if (!cle) return null
+
+  // Trace de vie : c'est la seule preuve, dans les réglages de l'agent, que son
+  // connecteur est bien branché. Rafraîchie au plus une fois par heure — un
+  // échange MCP fait plusieurs requêtes, écrire à chacune serait du bruit.
+  if (!cle.lastUsed || Date.now() - cle.lastUsed.getTime() > FRAICHEUR_LAST_USED_MS) {
+    try {
+      await prisma.agentApiKey.update({ where: { id: cle.id }, data: { lastUsed: new Date() } })
+    } catch {
+      // Une trace manquée ne doit jamais casser un appel d'outil.
+    }
+  }
+
+  return { profil: 'agent', client, origine: url.origin, agent: cle.agent }
 }
 
 // ─── Route handlers ────────────────────────────────────────────────────────
 
 export async function POST(req: Request): Promise<Response> {
-  const ctx = lireContexte(req)
+  const ctx = await lireContexte(req)
   if (!ctx) return introuvable()
 
   // Sans état : un serveur et un transport neufs à chaque requête, puisque la
@@ -914,7 +981,7 @@ export async function POST(req: Request): Promise<Response> {
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   })
-  const server = creerServeur(ctx.profil, ctx.client, ctx.origine)
+  const server = creerServeur(ctx)
   await server.connect(transport)
 
   const reponse = await transport.handleRequest(req)
@@ -928,7 +995,7 @@ export async function POST(req: Request): Promise<Response> {
  * fonction serverless suspendue jusqu'à son timeout.
  */
 export async function GET(req: Request): Promise<Response> {
-  if (!lireContexte(req)) return introuvable()
+  if (!(await lireContexte(req))) return introuvable()
   return new Response(
     JSON.stringify({
       jsonrpc: '2.0',
@@ -941,7 +1008,7 @@ export async function GET(req: Request): Promise<Response> {
 
 /** Pas de session à fermer en mode sans état. */
 export async function DELETE(req: Request): Promise<Response> {
-  if (!lireContexte(req)) return introuvable()
+  if (!(await lireContexte(req))) return introuvable()
   return new Response(null, { status: 405, headers: { Allow: 'POST', ...EN_TETES_CORS } })
 }
 

@@ -12,7 +12,8 @@
     "feed:seed": "node --experimental-strip-types scripts/gen-feed-seed.ts",
     "geo:addresses": "node --experimental-strip-types scripts/backfill-addresses.ts",
     "geo:backfill": "node --experimental-strip-types scripts/backfill-geo.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test": "node --experimental-strip-types --no-warnings --import ./test/enregistrer.mjs test/banc-mcp.ts"
   },
   "prisma": {
     "seed": "node --experimental-strip-types prisma/seed.ts"
