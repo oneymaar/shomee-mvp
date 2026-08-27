@@ -53,15 +53,13 @@ export default function AgentMessagesPage() {
   }, [])
 
   return (
-    <main className="min-h-dvh px-5 pb-8 pt-safe-page max-w-3xl mx-auto" style={{ backgroundColor: '#FAF3EE' }}>
-      <div className="flex items-baseline justify-between mb-6">
-        <h1 className="text-[26px]" style={{ fontFamily: 'var(--font-serif), Georgia, serif', color: '#201A16' }}>
-          Messages
-        </h1>
-        <Link href="/agent/dashboard" className="text-[13px] font-semibold underline" style={{ color: '#A6512B' }}>
-          ← Tableau de bord
-        </Link>
-      </div>
+    <main className="px-5 pb-8 pt-safe-page max-w-3xl mx-auto">
+      {/* Plus de lien « ← Tableau de bord » : la barre d'onglets du bas est le
+          seul chemin de retour, et deux chemins pour la même destination
+          étranglaient la hauteur des en-têtes. */}
+      <h1 className="text-[27px] mb-6" style={{ fontFamily: 'var(--font-serif), Georgia, serif', color: '#201A16' }}>
+        Messages
+      </h1>
 
       {rows === null && <p className="text-[14px]" style={{ color: '#8A7A6E' }}>Chargement…</p>}
       {rows?.length === 0 && (
@@ -75,7 +73,7 @@ export default function AgentMessagesPage() {
           <Link
             key={r.id}
             href={`/agent/messages/${r.id}`}
-            className="rounded-2xl bg-white px-4.5 py-3.5 px-5 block"
+            className="rounded-2xl bg-white px-5 py-4 block"
             style={{ border: '1px solid #E8D9CB' }}
           >
             <div className="flex items-center gap-2.5">

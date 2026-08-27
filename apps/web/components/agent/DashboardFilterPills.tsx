@@ -1,7 +1,7 @@
 'use client'
 
-import clsx from 'clsx'
 import { motion } from 'framer-motion'
+import { couleurs } from '@/lib/theme'
 
 export type DashboardFilter = 'all' | 'draft' | 'published' | 'unpublished'
 
@@ -28,26 +28,29 @@ export default function DashboardFilterPills({
             key={pill.value}
             type="button"
             onClick={() => onChange(pill.value)}
-            className={clsx(
-              'relative flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium border transition-colors',
+            className="relative flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12.5px] font-medium transition-colors"
+            style={
               isActive
-                ? 'text-white border-[#0a0a0a]'
-                : 'bg-white text-[#0a0a0a] border-gray-200 active:bg-gray-50',
-            )}
+                ? { color: couleurs.cremeSurSombre, border: `1px solid ${couleurs.encre}` }
+                : { backgroundColor: couleurs.carte, color: couleurs.doux, border: `1px solid ${couleurs.ligne}` }
+            }
           >
             {isActive && (
               <motion.span
                 layoutId="dashboard-filter-active"
-                className="absolute inset-0 rounded-full bg-[#0a0a0a]"
+                className="absolute inset-0 rounded-full"
+                style={{ backgroundColor: couleurs.encre }}
                 transition={{ type: 'spring', stiffness: 380, damping: 32 }}
               />
             )}
             <span className="relative z-10">{pill.label}</span>
             <span
-              className={clsx(
-                'relative z-10 inline-flex items-center justify-center text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] px-1',
-                isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600',
-              )}
+              className="relative z-10 inline-flex items-center justify-center text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] px-1"
+              style={
+                isActive
+                  ? { backgroundColor: 'rgba(246,237,230,.22)', color: couleurs.cremeSurSombre }
+                  : { backgroundColor: couleurs.sable, color: couleurs.doux }
+              }
             >
               {counts[pill.value]}
             </span>

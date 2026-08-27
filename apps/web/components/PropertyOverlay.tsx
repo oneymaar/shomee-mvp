@@ -3,16 +3,28 @@
 /**
  * Surcouche du feed — posée en absolu par-dessus la VideoCard.
  *
- * Jumelle web de `apps/mobile/src/components/PropertyOverlay.tsx` : mêmes
- * tailles, mêmes icônes, même jauge de match terracotta. C'est l'un des deux
- * seuls écrans que voit un visiteur venu d'un lien LLM (parcours teaser S9),
- * il doit donc être au pixel près celui de l'app.
+ * Jumelle web de `apps/mobile/src/components/PropertyOverlay.tsx`. Elle avait
+ * pris deux mois de retard sur le natif : c'est ce décalage que la
+ * prévisualisation agent donnait à voir (« l'ancien design du feed »). Elle
+ * reprend maintenant la hiérarchie de la REFONTE (direction A, 21/08) :
+ *
+ *   1. la LOCALISATION passe en tête, en petites capitales — l'info n°1 ;
+ *   2. le PRIX descend en serif 23 px, avec le €/m² en retrait : « on vend du
+ *      luxe, le prix ne doit pas sauter aux yeux » ;
+ *   3. les caractéristiques essentielles sur une ligne ;
+ *   4. les critères satisfaits à coche verte, fondus au bord droit ;
+ *   5. « Voir l'annonce » devient un bouton FANTÔME (pilule bordée), chevron
+ *      vers le BAS — la fiche s'ouvre en descendant.
+ *
+ * Le dégradé de lisibilité, lui, reste porté par la VideoCard — un seul
+ * calque, en noir CHAUD (#140F0C) : un noir pur jure avec la palette.
  */
 
 import { useState, useEffect } from 'react'
-import { Check, ChevronDown, CirclePlus, Home, MapPin } from 'lucide-react'
+import { Check, ChevronDown, MapPin } from 'lucide-react'
 import type { Property } from '@/lib/types'
 import { formatLocation } from '@shomee/core/utils/format'
+import { couleurs, SERIF, taillesSerif } from '@/lib/theme'
 
 interface PropertyOverlayProps {
   property: Property
@@ -21,27 +33,28 @@ interface PropertyOverlayProps {
   /** Score de match en pourcentage (0..100). Absent → pas de jauge. */
   matchScore?: number
   isActive?: boolean
+  /** Le bloc du haut gère lui-même l'encoche. Faux quand un bandeau est déjà
+   *  posé au-dessus (prévisualisation agent) et a consommé la marge. */
+  safeTop?: boolean
 }
 
-const TERRACOTTA = '#A64B27'
-const TRACK = 'rgba(166,75,39,0.18)'
-const CREAM = '#FDF5F2'
+const TERRACOTTA = couleurs.terracotta
+const TRACK = 'rgba(166,81,43,0.18)'
+const OMBRE = '0 1px 8px rgba(0,0,0,0.45)'
 
 const BADGE_STYLES = {
-  'avant-premiere': {
-    label: 'Avant-première',
-    className: 'bg-amber-400/15 border border-amber-300/35 text-amber-200',
-  },
-  'exclusivite': {
-    label: 'Exclusivité',
-    className: 'bg-violet-400/15 border border-violet-300/35 text-violet-200',
-  },
+  'avant-premiere': { label: 'Avant-première' },
+  'exclusivite': { label: 'Exclusivité' },
 } as const
+
+/** Prix formaté « 1 350 000 € ». */
+function formatPrice(n: number): string {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' €'
+}
 
 /* ── Jauge de match ───────────────────────────────────────────────────────
    Anneau terracotta sur piste terracotta pâle, disque crème au centre.
-   Géométrie et rythme repris tels quels du natif (MatchBadge.tsx) :
-   58 px, trait de 5, départ en haut, remplissage en 1,4 s (ease-out cubic). */
+   Géométrie et rythme repris tels quels du natif (MatchBadge.tsx). */
 const SIZE = 58
 const STROKE = 5
 const R = (SIZE - STROKE) / 2
@@ -65,7 +78,6 @@ function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
       setDisplayScore(eased * score)
       if (t < 1) raf = requestAnimationFrame(tick)
     }
-    // Remise à zéro + départ hors du corps de l'effet (react-hooks).
     queueMicrotask(() => {
       if (cancelled) return
       setDisplayScore(0)
@@ -86,9 +98,7 @@ function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
       style={{ width: SIZE, height: SIZE }}
     >
       <svg width={SIZE} height={SIZE} className="absolute inset-0" fill="none">
-        {/* Piste */}
         <circle cx={SIZE / 2} cy={SIZE / 2} r={R} stroke={TRACK} strokeWidth={STROKE} fill="none" />
-        {/* Jauge — départ en haut */}
         <circle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -103,18 +113,15 @@ function MatchBadge({ score, isActive }: { score: number; isActive: boolean }) {
         />
       </svg>
 
-      {/* Disque crème */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           className="rounded-full flex flex-col items-center justify-center"
-          style={{ width: DISC, height: DISC, backgroundColor: CREAM }}
+          style={{ width: DISC, height: DISC, backgroundColor: couleurs.creme }}
         >
-          <span style={{ color: TERRACOTTA, fontWeight: 900, fontSize: 15, lineHeight: '16px' }}>
-            {Math.round(clamped)}%
+          <span style={{ color: TERRACOTTA, fontFamily: SERIF, fontSize: taillesSerif.score, lineHeight: '21px' }}>
+            {Math.round(clamped)}
           </span>
-          <span
-            style={{ color: TERRACOTTA, fontWeight: 700, fontSize: 7, letterSpacing: '0.5px' }}
-          >
+          <span style={{ color: TERRACOTTA, fontWeight: 700, fontSize: 7, letterSpacing: '0.5px' }}>
             MATCH
           </span>
         </div>
@@ -129,107 +136,161 @@ export default function PropertyOverlay({
   agencyTopOffset = 0,
   matchScore,
   isActive = false,
+  safeTop = true,
 }: PropertyOverlayProps) {
   const brandName = property.agencyName ?? property.agentName
   const brandLogo = property.agencyLogo ?? property.agentAvatar
   const initial = (brandName?.trim().charAt(0) ?? '?').toUpperCase()
-  const features = (property.features ?? []).filter((f) => f !== 'Cave')
+
+  // Coches vertes = critères RÉELLEMENT satisfaits quand le moteur les fournit,
+  // sinon les caractéristiques du bien — comportement du natif.
+  const matched = property.matchedCriteria ?? []
+  const tags = (matched.length > 0 ? matched : (property.features ?? [])).filter((f) => f !== 'Cave')
+
+  // €/m² : fourni par l'API quand il existe, sinon déduit. Jamais affiché sans
+  // surface (division impossible).
+  const perSqm =
+    property.pricePerSqm ?? (property.surface > 0 ? property.price / property.surface : null)
+
+  const specs = [
+    `T${property.rooms}`,
+    property.bedrooms != null && property.bedrooms > 0
+      ? `${property.bedrooms} chambre${property.bedrooms > 1 ? 's' : ''}`
+      : null,
+    `${property.surface} m²`,
+    property.floor != null && property.floor > 0 ? `${property.floor}ᵉ étage` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
+  const hautMarge = safeTop
+    ? `calc(env(safe-area-inset-top, 0px) + ${12 + agencyTopOffset}px)`
+    : `${12 + agencyTopOffset}px`
 
   return (
     <>
-      {/* ── Haut — agence ── */}
-      <div
-        className="absolute top-0 left-0 right-0 z-20 px-3"
-        style={{ paddingTop: `calc(env(safe-area-inset-top, 0px) + ${12 + agencyTopOffset}px)` }}
-      >
+      {/* ── Haut — agence. Le logo reste ROND (consigne du 20/08). ── */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-4" style={{ paddingTop: hautMarge }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-neutral-900 border border-white/25 flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: couleurs.cremeSurSombre }}
+          >
             {brandLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={brandLogo} alt={brandName} className="w-full h-full object-contain" />
             ) : (
-              <span className="text-white text-[13px] font-bold">{initial}</span>
+              <span style={{ fontFamily: SERIF, fontSize: taillesSerif.avatar, color: couleurs.encre }}>
+                {initial}
+              </span>
             )}
           </div>
-          <p className="text-white font-semibold text-[15px] drop-shadow">{brandName}</p>
+          <p className="text-white font-semibold text-[15px] truncate" style={{ textShadow: OMBRE }}>
+            {brandName}
+          </p>
         </div>
       </div>
 
       {/* ── Bas — infos bien + jauge ── */}
-      <div
-        className="absolute left-0 right-0 z-20 px-3"
-        style={{ bottom: 'calc(var(--nav-h) + 24px)' }}
-      >
+      <div className="absolute left-4 right-4 z-20" style={{ bottom: 'calc(var(--nav-h) + 24px)' }}>
         <div className="flex items-end gap-3">
-          {/* Colonne gauche */}
-          <div className="flex-1 min-w-0 flex flex-col gap-[3px]">
-            {/* Badges — donnée propre au web, absente du seed. */}
+          <div className="flex-1 min-w-0">
+            {/* Badges — donnée propre au web. */}
             {property.badges && property.badges.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-0.5">
-                {property.badges.map((badge) => {
-                  const { label, className } = BADGE_STYLES[badge]
-                  return (
-                    <span
-                      key={badge}
-                      className={`backdrop-blur-sm text-[11px] font-semibold px-2.5 py-1 rounded-full tracking-wide ${className}`}
-                    >
-                      {label}
-                    </span>
-                  )
-                })}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {property.badges.map((badge) => (
+                  <span
+                    key={badge}
+                    className="text-[10.5px] font-semibold px-2.5 py-1 rounded-full tracking-wide"
+                    style={{
+                      backgroundColor: couleurs.fumeeLegere,
+                      border: `1px solid ${couleurs.bordFantome}`,
+                      color: couleurs.cremeSurSombre,
+                      backdropFilter: 'blur(4px)',
+                    }}
+                  >
+                    {BADGE_STYLES[badge].label}
+                  </span>
+                ))}
               </div>
             )}
 
-            {/* Adresse */}
-            <div className="flex items-center gap-1.5">
-              <MapPin size={14} className="text-white shrink-0" />
-              <p className="text-white font-bold text-[15px] leading-[19px] drop-shadow truncate">
-                {formatLocation(property.arrondissement, property.district)}
+            {/* 1. La localisation — l'info n°1 */}
+            <div className="flex items-center gap-[5px] max-w-full">
+              <MapPin size={11} strokeWidth={2.2} className="shrink-0" color={couleurs.cremeSurSombre} />
+              <p
+                className="truncate text-[10.5px] font-semibold"
+                style={{ color: couleurs.cremeSurSombre, letterSpacing: '1.5px', textShadow: OMBRE }}
+              >
+                {formatLocation(property.arrondissement, property.district).toUpperCase()}
               </p>
             </div>
 
-            {/* Type · pièces · surface · prix */}
-            <div className="flex items-center gap-1.5">
-              <Home size={14} strokeWidth={1.8} className="text-white shrink-0" />
-              <p className="text-white text-[15px] leading-[19px] drop-shadow truncate">
-                Appartement · T{property.rooms} · {property.surface} m² ·{' '}
-                {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(property.price)}{' '}
-                €
-              </p>
+            {/* 2. Le prix, en serif discrète, €/m² en retrait */}
+            <div className="flex items-baseline gap-2 mt-2 mb-px">
+              <span
+                className="text-white"
+                style={{ fontFamily: SERIF, fontSize: taillesSerif.prixFeed, textShadow: OMBRE }}
+              >
+                {formatPrice(property.price)}
+              </span>
+              {perSqm != null && (
+                <span className="text-[12.5px] font-medium" style={{ color: 'rgba(246,237,230,0.7)' }}>
+                  {formatPrice(perSqm).replace(' €', ' €/m²')}
+                </span>
+              )}
             </div>
 
-            {/* Critères — une seule ligne, fondue vers la transparence sur les
-                30 px de droite (même valeur que le masque natif). */}
-            {features.length > 0 && (
+            {/* 3. Les caractéristiques essentielles */}
+            <p
+              className="truncate text-[13px] font-medium mb-1.5"
+              style={{ color: 'rgba(246,237,230,0.88)', textShadow: OMBRE }}
+            >
+              {specs}
+            </p>
+
+            {/* 4. Les critères satisfaits — coche verte, fondu au bord droit.
+                Le fondu DIT qu'il reste quelque chose de ce côté-là. */}
+            {tags.length > 0 && (
               <div
-                className="flex items-center gap-x-3 overflow-hidden"
+                className="flex items-center gap-x-3 overflow-x-auto scrollbar-hide mb-2.5"
                 style={{
-                  height: 20,
-                  marginTop: 1,
-                  maskImage:
-                    'linear-gradient(to right, black calc(100% - 30px), transparent 100%)',
-                  WebkitMaskImage:
-                    'linear-gradient(to right, black calc(100% - 30px), transparent 100%)',
+                  height: 18,
+                  maskImage: 'linear-gradient(to right, black calc(100% - 30px), transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 30px), transparent 100%)',
                 }}
               >
-                {features.map((f) => (
+                {tags.map((f) => (
                   <div key={f} className="flex items-center gap-1 shrink-0">
-                    <Check size={11} className="text-emerald-400 shrink-0" />
-                    <span className="text-white text-[13px] drop-shadow">{f}</span>
+                    <Check size={12} strokeWidth={2.4} color={couleurs.vertSurSombre} className="shrink-0" />
+                    <span className="text-[11.5px] font-medium whitespace-nowrap" style={{ color: 'rgba(246,237,230,0.85)' }}>
+                      {f}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* L'icône en tête annonce la destination : c'est ici qu'on ouvre
-                l'annonce détaillée. */}
+            {/* 5. Le bouton fantôme — chevron vers le BAS. */}
             {onMore && (
-              <button onClick={onMore} className="flex items-center gap-[5px] mt-[5px] self-start">
-                <CirclePlus size={15} strokeWidth={1.8} className="text-white shrink-0" />
-                <span className="text-white text-[14px] font-semibold underline underline-offset-2">
+              <button
+                type="button"
+                onClick={onMore}
+                className="inline-flex items-center justify-center gap-[5px] active:opacity-75 transition-opacity"
+                style={{
+                  height: 34,
+                  paddingLeft: 14,
+                  paddingRight: 14,
+                  borderRadius: 17,
+                  border: `1px solid ${couleurs.bordFantome}`,
+                  backgroundColor: couleurs.fumeeLegere,
+                  backdropFilter: 'blur(4px)',
+                }}
+              >
+                <span className="text-[12.5px] font-semibold" style={{ color: couleurs.cremeSurSombre }}>
                   Voir l’annonce
                 </span>
-                <ChevronDown size={14} className="text-white" />
+                <ChevronDown size={15} strokeWidth={2.2} color={couleurs.cremeSurSombre} />
               </button>
             )}
           </div>

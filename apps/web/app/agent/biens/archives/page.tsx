@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAgentOrRedirect } from '@/lib/auth/agentGuard'
 import { PropertyStatus } from '@prisma/client'
 import ArchivesListClient from '@/components/agent/ArchivesListClient'
+import { couleurs, SERIF } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,8 +41,8 @@ export default async function AgentArchivesPage() {
           <ArrowLeft size={22} />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-[15px] font-semibold text-[#0a0a0a]">Biens archivés</h1>
-          <p className="text-[11px] text-gray-500 mt-0.5">
+          <h1 style={{ fontFamily: SERIF, fontSize: 22, color: couleurs.encre }}>Biens archivés</h1>
+          <p className="text-[11.5px] mt-0.5" style={{ color: couleurs.doux }}>
             {properties.length} {properties.length > 1 ? 'biens archivés' : 'bien archivé'}
           </p>
         </div>

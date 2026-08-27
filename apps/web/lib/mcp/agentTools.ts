@@ -38,6 +38,7 @@ import { prisma } from '@/lib/prisma'
 import { PropertyStatus, type Agent, type Agency, type Message } from '@prisma/client'
 import { formatVisitDateParis, parisLocalToUtc, repereParis } from '@/lib/chat/parisTime'
 import { newSetupToken } from '@/lib/auth/agentPassword'
+import { statsPortefeuille } from '@/lib/agent/stats'
 import { formatAvailabilities, type AvailabilitiesPayload } from '@shomee/core/visits'
 import {
   ImportLLMSchema,
@@ -981,67 +982,44 @@ export function outilsAgent(
     async ({ jours }) => {
       try {
         const fenetre = jours ?? 30
-        const depuis = new Date(Date.now() - fenetre * 86400_000)
-
-        const biens = await prisma.property.findMany({
-          where: { createdByAgentId: agent.id, statut: { not: PropertyStatus.ARCHIVED } },
-          select: { id: true, title: true, arrondissement: true, price: true, statut: true, videoUrl: true },
-        })
-        if (biens.length === 0) {
+        // Même agrégation que l'écran Stats du back-office (`lib/agent/stats`) :
+        // un agent qui pose la question à Claude et un agent qui ouvre l'onglet
+        // Stats doivent lire le même chiffre, à la virgule près.
+        const stats = await statsPortefeuille(agent.id, fenetre)
+        if (stats.biensActifs === 0) {
           return resultatTexte({ ...repereParis(), message: 'Aucun bien actif sur ce compte.' })
         }
-        const ids = biens.map((b) => b.id)
 
-        const [parBien, conversations, visites] = await Promise.all([
-          evenementsParBien(ids, depuis),
-          prisma.conversation.groupBy({ by: ['propertyId'], where: { agentId: agent.id }, _count: { _all: true } }),
-          prisma.visit.groupBy({
-            by: ['propertyId'],
-            where: { agentId: agent.id, status: 'CONFIRMED', scheduledAt: { gte: depuis } },
-            _count: { _all: true },
-          }),
-        ])
-        const convParBien = new Map(conversations.map((l) => [l.propertyId, l._count._all]))
-        const visParBien = new Map(visites.map((l) => [l.propertyId, l._count._all]))
-
-        const lignes = biens
-          .map((b) => {
-            const c = parBien.get(b.id)
-            const vues = compte(c, 'video_start')
-            const fiches = compte(c, 'detail_open')
-            return {
-              bien_id: b.id,
-              bien: `${b.title} — ${b.arrondissement}`,
-              prix: euros(b.price),
-              statut: b.statut,
-              video: b.videoUrl ? 'oui' : 'MANQUANTE',
-              vues,
-              fiches_ouvertes: fiches,
-              taux_ouverture_fiche: pourcent(fiches, vues),
-              favoris_nets: Math.max(0, compte(c, 'fav') - compte(c, 'unfav')),
-              conversations: convParBien.get(b.id) ?? 0,
-              visites: visParBien.get(b.id) ?? 0,
-            }
-          })
-          .sort((a, b) => b.vues - a.vues)
-
-        const somme = (cle: 'vues' | 'fiches_ouvertes' | 'favoris_nets' | 'conversations' | 'visites') =>
-          lignes.reduce((t, l) => t + l[cle], 0)
+        const lignes = stats.classement.map((l) => ({
+          bien_id: l.id,
+          bien: `${l.titre} — ${l.arrondissement}`,
+          prix: euros(l.prix),
+          statut: l.statut,
+          video: l.video ? 'oui' : 'MANQUANTE',
+          vues: l.vues,
+          fiches_ouvertes: l.fiches,
+          taux_ouverture_fiche: pourcent(l.fiches, l.vues),
+          favoris_nets: l.favoris,
+          partages: l.partages,
+          conversations: l.conversations,
+          visites: l.visites,
+        }))
 
         return resultatTexte({
           ...repereParis(),
-          periode_jours: fenetre,
-          biens_actifs: lignes.length,
+          periode_jours: stats.jours,
+          biens_actifs: stats.biensActifs,
           totaux: {
-            vues: somme('vues'),
-            fiches_ouvertes: somme('fiches_ouvertes'),
-            taux_ouverture_fiche: pourcent(somme('fiches_ouvertes'), somme('vues')),
-            favoris_nets: somme('favoris_nets'),
-            conversations: somme('conversations'),
-            visites_confirmees: somme('visites'),
+            vues: stats.totaux.vues,
+            fiches_ouvertes: stats.totaux.fiches,
+            taux_ouverture_fiche: pourcent(stats.totaux.fiches, stats.totaux.vues),
+            favoris_nets: stats.totaux.favoris,
+            partages: stats.totaux.partages,
+            conversations: stats.totaux.conversations,
+            visites_confirmees: stats.totaux.visites,
           },
-          mediane_vues_par_bien: mediane(lignes.map((l) => l.vues)),
-          biens_sans_aucune_vue: lignes.filter((l) => l.vues === 0).map((l) => l.bien),
+          mediane_vues_par_bien: stats.medianeVues,
+          biens_sans_aucune_vue: stats.sansVue.map((l) => `${l.titre} — ${l.arrondissement}`),
           classement: lignes,
         })
       } catch (e) {

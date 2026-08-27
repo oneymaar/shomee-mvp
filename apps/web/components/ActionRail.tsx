@@ -6,6 +6,7 @@ import { MessageCircle, Phone, CalendarPlus, Heart, Send, X } from 'lucide-react
 import clsx from 'clsx'
 import type { Property } from '@/lib/types'
 import { shareProperty } from '@/lib/share'
+import { couleurs } from '@/lib/theme'
 
 interface ActionRailProps {
   property: Property
@@ -21,12 +22,37 @@ interface RailButtonProps {
   onClick?: () => void
 }
 
+/**
+ * REFONTE (direction A) : chaque glyphe est posé dans un cercle de VERRE FUMÉ
+ * de 46 px. Les icônes nues se perdaient sur les vidéos claires — un plan de
+ * cuisine blanche avalait tout le rail.
+ */
+const VERRE: React.CSSProperties = {
+  width: 46,
+  height: 46,
+  borderRadius: 23,
+  backgroundColor: couleurs.fumee,
+  border: `1px solid ${couleurs.filetSurSombre}`,
+  backdropFilter: 'blur(6px)',
+  WebkitBackdropFilter: 'blur(6px)',
+}
+
+function Verre({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex items-center justify-center" style={VERRE}>
+      {children}
+    </span>
+  )
+}
+
 function RailButton({ icon, label, onClick }: RailButtonProps) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1">
-      {icon}
+    <button onClick={onClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform">
+      <Verre>{icon}</Verre>
       {label !== undefined && (
-        <span className="text-white text-[11px] font-semibold drop-shadow">{label}</span>
+        <span className="text-[11px] font-semibold" style={{ color: couleurs.cremeSurSombre, textShadow: '0 1px 6px rgba(0,0,0,.5)' }}>
+          {label}
+        </span>
       )}
     </button>
   )
@@ -48,36 +74,41 @@ export default function ActionRail({ property, isFavorite, onToggleFavorite, onM
     <>
     <div
       className={clsx(
-        'absolute right-3 z-20 flex flex-col items-center gap-6',
+        'absolute right-4 z-20 flex flex-col items-center gap-3.5',
         previewMode && 'pointer-events-none grayscale brightness-75',
       )}
-      style={{ bottom: 'calc(var(--nav-h) + 112px)' }}
+      style={{ bottom: 'calc(var(--nav-h) + 156px)' }}
     >
       <RailButton
-        icon={<MessageCircle size={28} strokeWidth={1.5} className="text-white" />}
+        icon={<MessageCircle size={22} strokeWidth={1.7} className="text-white" />}
         onClick={onMessage}
       />
-      <RailButton icon={<Phone size={25} strokeWidth={1.5} className="text-white" />} onClick={() => setCallOpen(true)} />
-      <RailButton icon={<CalendarPlus size={25} strokeWidth={1.5} className="text-white" />} />
+      <RailButton icon={<Phone size={21} strokeWidth={1.7} className="text-white" />} onClick={() => setCallOpen(true)} />
+      <RailButton icon={<CalendarPlus size={21} strokeWidth={1.7} className="text-white" />} />
 
-      <button ref={heartRef} onClick={handleHeartClick} className="flex flex-col items-center gap-1">
-        <motion.div
-          animate={isFavorite ? { scale: [1, 1.4, 0.9, 1.1, 1] } : { scale: 1 }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
-        >
-          <Heart
-            size={28}
-            strokeWidth={1.5}
-            className={clsx('transition-colors duration-200', isFavorite ? 'fill-red-500 text-red-500' : 'text-white')}
-          />
-        </motion.div>
-        <span className="text-white text-[11px] font-semibold drop-shadow">
+      <button ref={heartRef} onClick={handleHeartClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform">
+        <Verre>
+          <motion.span
+            className="flex"
+            animate={isFavorite ? { scale: [1, 1.4, 0.9, 1.1, 1] } : { scale: 1 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+          >
+            {/* Rouge du like : exception assumée à la palette terracotta —
+                c'est la convention universelle du « j'aime » (22/08). */}
+            <Heart
+              size={22}
+              strokeWidth={1.7}
+              className={clsx('transition-colors duration-200', isFavorite ? 'fill-red-500 text-red-500' : 'text-white')}
+            />
+          </motion.span>
+        </Verre>
+        <span className="text-[11px] font-semibold" style={{ color: couleurs.cremeSurSombre, textShadow: '0 1px 6px rgba(0,0,0,.5)' }}>
           {isFavorite ? (property.likeCount ?? 0) + 1 : property.likeCount}
         </span>
       </button>
 
       <RailButton
-        icon={<Send size={25} strokeWidth={1.5} className="text-white" />}
+        icon={<Send size={21} strokeWidth={1.7} className="text-white" />}
         label={property.shareCount}
         onClick={() => shareProperty(property)}
       />

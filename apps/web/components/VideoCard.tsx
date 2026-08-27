@@ -218,12 +218,14 @@ export default function VideoCard({ property, isActive, muted }: VideoCardProps)
 
   return (
     <div className="absolute inset-0">
-      {/* Gradient overlay */}
+      {/* Dégradé de lisibilité — NOIR CHAUD (#140F0C), pas noir pur : sur une
+          palette crème/terracotta, le noir pur fait un trou bleuté. Profil
+          repris du natif (haut ~150 px à 0,55 ; bas ~280 px jusqu'à 0,82). */}
       <div
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(0,0,0,0.60) 0%, transparent 28%, transparent 50%, rgba(0,0,0,0.82) 100%)',
+            'linear-gradient(to bottom, rgba(20,15,12,0.55) 0%, transparent 18%, transparent 67%, rgba(20,15,12,0.38) 82%, rgba(20,15,12,0.82) 97%)',
         }}
       />
 

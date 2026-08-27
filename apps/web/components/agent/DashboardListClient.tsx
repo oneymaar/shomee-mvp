@@ -8,6 +8,7 @@ import type { PropertyStatus, MandatType } from '@prisma/client'
 
 import PropertyCardAgent from './PropertyCardAgent'
 import DashboardFilterPills, { type DashboardFilter } from './DashboardFilterPills'
+import { couleurs, SERIF } from '@/lib/theme'
 
 export type PropertyCardData = {
   id: string
@@ -61,8 +62,8 @@ export default function DashboardListClient({
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-semibold text-[#0a0a0a]">Mes biens</h3>
-        <span className="text-[11px] text-gray-500">
+        <h3 style={{ fontFamily: SERIF, fontSize: 19, color: couleurs.encre }}>Mes biens</h3>
+        <span className="text-[11.5px]" style={{ color: couleurs.doux }}>
           {properties.length} {properties.length > 1 ? 'biens' : 'bien'}
         </span>
       </div>
@@ -74,15 +75,16 @@ export default function DashboardListClient({
           key="empty"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-white border border-dashed border-gray-300 rounded-2xl p-6 text-center"
+          className="rounded-2xl p-7 text-center"
+          style={{ backgroundColor: couleurs.carte, border: `1px dashed ${couleurs.ligne}` }}
         >
-          <p className="text-sm text-gray-500">
+          <p className="text-[14px]" style={{ color: couleurs.doux }}>
             {filter === 'all'
               ? "Aucun bien pour l'instant."
               : 'Aucun bien dans cette catégorie.'}
           </p>
           {filter === 'all' && (
-            <p className="text-[11px] text-gray-400 mt-1">
+            <p className="text-[12px] mt-1.5" style={{ color: couleurs.estompe }}>
               Appuyez sur le bouton « + » pour créer votre premier bien.
             </p>
           )}
@@ -109,7 +111,8 @@ export default function DashboardListClient({
       {archivedCount > 0 && (
         <Link
           href="/agent/biens/archives"
-          className="mt-5 flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-gray-300 text-[13px] font-medium text-gray-600 active:bg-gray-50"
+          className="mt-5 flex items-center justify-center gap-2 py-3 rounded-2xl text-[13px] font-medium active:opacity-70"
+          style={{ border: `1px dashed ${couleurs.ligne}`, color: couleurs.doux }}
         >
           <Archive size={14} />
           Voir les biens archivés ({archivedCount})

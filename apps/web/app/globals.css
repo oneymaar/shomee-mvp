@@ -31,7 +31,16 @@
   padding-top: max(env(safe-area-inset-top, 0px), 16px);
 }
 @utility pt-safe-page {
-  padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem);
+  /* 44 px = l'îlot dynamique d'un iPhone récent. C'est le PLANCHER, pas un
+     ajout : quand l'encoche est déclarée (59 px), c'est elle qui gagne. Sans
+     ce plancher, un écran ouvert hors PWA commençait à 24 px du bord et son
+     en-tête passait derrière l'îlot — le défaut vu sur le tableau de bord. */
+  padding-top: calc(max(env(safe-area-inset-top, 0px), 44px) + 1rem);
+}
+@utility pt-safe-bar {
+  /* Bandeau collé tout en haut d'un écran plein cadre (prévisualisation) :
+     l'encoche REMPLACE la marge, avec le même plancher de 44 px. */
+  padding-top: max(env(safe-area-inset-top, 0px), 44px);
 }
 @utility pb-safe-nav {
   /* Barre de navigation : l'indicateur d'accueil de l'iPhone mange le bas de
