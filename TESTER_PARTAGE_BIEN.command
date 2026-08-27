@@ -83,13 +83,13 @@ else
     echo
   fi
   echo "  ② J'ouvre ton back-office :"
-  echo "       $BASE/agent/dashboard"
+  echo "       $BASE/agent/biens"
   echo "     → clique « Modifier » sur un bien publié"
   echo "     → descends tout en bas : nouveau bloc « Partage »"
   echo "     → « Partager le bien » copie le lien (message « Lien copié »)"
   echo "     → l'interrupteur « Partage public » coupe le lien à distance"
   echo
-  open "$BASE/agent/dashboard"
+  open "$BASE/agent/biens"
   echo "  Quand tu as fini : ferme simplement cette fenêtre."
   echo "  Rien n'est publié en ligne — tout se passe sur ton Mac."
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

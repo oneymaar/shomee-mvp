@@ -42,7 +42,7 @@ export default function DashboardListClient({
 
   // Sync URL with active filter (no Next-router re-render — pure URL update).
   useEffect(() => {
-    const url = filter === 'all' ? '/agent/dashboard' : `/agent/dashboard?filter=${filter}`
+    const url = filter === 'all' ? '/agent/biens' : `/agent/biens?filter=${filter}`
     window.history.replaceState(null, '', url)
   }, [filter])
 

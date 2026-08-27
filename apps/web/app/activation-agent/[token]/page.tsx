@@ -39,7 +39,7 @@ export default function ActivationAgentPage({ params }: { params: Promise<{ toke
         setError(j?.error ?? 'Activation impossible')
         return
       }
-      router.replace('/agent/dashboard')
+      router.replace('/agent/biens')
     } catch {
       setError('Erreur réseau — réessayez')
     } finally {

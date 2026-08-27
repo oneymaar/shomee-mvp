@@ -2,7 +2,7 @@
   "name": "Shomee Agent",
   "short_name": "SHOMEE",
   "description": "Découvrez votre prochain appartement, en vidéo.",
-  "start_url": "/agent/dashboard",
+  "start_url": "/agent/biens",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",

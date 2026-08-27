@@ -16,7 +16,9 @@ type Tab = {
 }
 
 const tabs: Tab[] = [
-  { label: 'Biens',       href: '/agent/biens',      icon: Home,          match: ['/agent/dashboard', '/agent/biens'] },
+  // `match` garde /agent/dashboard : l'ancienne adresse redirige, mais un
+  // raccourci d'écran d'accueil peut encore l'ouvrir le temps d'un instant.
+  { label: 'Biens',       href: '/agent/biens',      icon: Home,          match: ['/agent/biens', '/agent/dashboard'] },
   { label: 'Messages',    href: '/agent/messages',   icon: MessageCircle, match: ['/agent/messages'] },
   { label: 'Stats',       href: '/agent/stats',      icon: BarChart3,     match: ['/agent/stats'] },
   { label: 'Paramètres',  href: '/agent/parametres', icon: Settings,      match: ['/agent/parametres'] },

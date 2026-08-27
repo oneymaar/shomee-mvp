@@ -34,8 +34,8 @@ export default async function AgentArchivesPage() {
     <main className="px-5 pt-safe-page pb-32">
       <header className="flex items-center gap-2 mb-5">
         <Link
-          href="/agent/dashboard"
-          aria-label="Retour au dashboard"
+          href="/agent/biens"
+          aria-label="Retour à mes biens"
           className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center active:bg-black/5"
         >
           <ArrowLeft size={22} />

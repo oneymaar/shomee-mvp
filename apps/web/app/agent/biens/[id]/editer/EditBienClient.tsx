@@ -636,7 +636,7 @@ export default function EditBienClient({
         <header className="flex items-center gap-2 px-3 py-3">
           <button
             type="button"
-            onClick={() => router.push('/agent/dashboard')}
+            onClick={() => router.push('/agent/biens')}
             aria-label="Retour"
             className="w-9 h-9 rounded-full flex items-center justify-center active:bg-black/5"
           >

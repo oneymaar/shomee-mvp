@@ -29,7 +29,7 @@ export default function ConnexionAgentPage() {
         setError(j?.error ?? 'Connexion impossible')
         return
       }
-      router.replace('/agent/dashboard')
+      router.replace('/agent/biens')
     } catch {
       setError('Erreur réseau — réessayez')
     } finally {
