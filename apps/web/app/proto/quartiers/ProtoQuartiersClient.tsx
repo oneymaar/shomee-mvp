@@ -94,6 +94,7 @@ function boundsOfFeatures(features: GeoZone[]): Bounds | null {
 interface Sel { arr: string[]; q: string[]; iris: string[]; com: string[] }
 const EMPTY_SEL: Sel = { arr: [], q: [], iris: [], com: [] }
 const noopZone = () => {}
+const NO_OUTLINES: [number, number][][] = []
 
 type MapMode = 'select' | 'draw'
 type DrawnZone = { latlngs: [number, number][]; irisIds: string[] }
@@ -140,12 +141,17 @@ function LassoIcon({ size = 16 }: { size?: number }) {
     </svg>
   )
 }
-/** Picto carte (sélection par toucher) — currentColor. */
-function MapIcon({ size = 16 }: { size?: number }) {
+/** Picto polygone (un quartier, sélection par toucher) — currentColor. */
+function PolygonIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
-      <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z" />
-      <path d="M9 4v13.5M15 6.5V20" />
+      <path d="M5 8.5 11.5 4 19.5 7.5 18 16.5 9 20 4 14.5Z" fill="currentColor" fillOpacity=".16" />
+      <circle cx="5" cy="8.5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="11.5" cy="4" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="19.5" cy="7.5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="16.5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="20" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="14.5" r="1.4" fill="currentColor" stroke="none" />
     </svg>
   )
 }
@@ -841,7 +847,7 @@ export default function ProtoQuartiersClient() {
             onZoomChange={setZoom}
             attributionOffsetTop={150}
             drawing={phase === 'map' && mapMode === 'draw' && drawing}
-            drawnZones={drawnOutlines}
+            drawnZones={mapMode === 'draw' ? drawnOutlines : NO_OUTLINES}
             onDrawComplete={handleDrawComplete}
           />
         ) : (
@@ -930,15 +936,15 @@ export default function ProtoQuartiersClient() {
               </span>
             </button>
 
-            {/* Interrupteur Quartiers / Dessiner — même sélection, geste différent. */}
+            {/* Interrupteur Sélectionner / Dessiner — même sélection, geste différent. */}
             <div className="mt-2 flex p-[3px] rounded-[14px] shadow-sm" style={{ background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(0,0,0,0.06)' }}>
-              {([['select', 'Quartiers'], ['draw', 'Dessiner']] as const).map(([m, label]) => {
+              {([['select', 'Sélectionner'], ['draw', 'Dessiner']] as const).map(([m, label]) => {
                 const on = mapMode === m
                 return (
                   <button key={m} onClick={() => switchMode(m)}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-[11px] text-[12.5px] font-semibold transition-colors"
                     style={{ background: on ? TERRA : 'transparent', color: on ? '#fff' : MUTED }}>
-                    {m === 'draw' ? <LassoIcon size={15} /> : <MapIcon size={15} />}
+                    {m === 'draw' ? <LassoIcon size={15} /> : <PolygonIcon size={15} />}
                     {label}
                   </button>
                 )
@@ -1189,7 +1195,7 @@ export default function ProtoQuartiersClient() {
                 <button onClick={() => startOnMap('select')} disabled={irisLoading}
                   className="flex-1 flex flex-col items-center gap-1 rounded-2xl bg-white border px-2 py-2.5 active:opacity-80"
                   style={{ borderColor: LINE, opacity: irisLoading ? 0.6 : 1 }}>
-                  <span style={{ color: TERRA }}><MapIcon size={22} /></span>
+                  <span style={{ color: TERRA }}><PolygonIcon size={22} /></span>
                   <span className="text-[12.5px] font-semibold" style={{ color: INK }}>Choisir des quartiers</span>
                   <span className="text-[10.5px]" style={{ color: MUTED }}>en touchant la carte</span>
                 </button>

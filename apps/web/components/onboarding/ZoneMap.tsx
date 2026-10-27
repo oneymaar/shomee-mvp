@@ -133,7 +133,9 @@ function quartierStyleLowZoom(state: ZoneState): L.PathOptions {
 function irisStyle(selected: boolean): L.PathOptions {
   return selected
     ? { color: '#A64B27', fillColor: '#A64B27', fillOpacity: 0.28, weight: 1.5, opacity: 0.9 }
-    : { color: '#777', fillColor: 'transparent', fillOpacity: 0, weight: 0.6, opacity: 0.3 }
+    // Non sélectionné : contour LISIBLE (27/10) — à 0.6 px / 30 % il disparaissait
+    // sur le fond CARTO, et rien n'indiquait qu'on peut toucher un îlot.
+    : { color: '#6B4A3A', fillColor: 'transparent', fillOpacity: 0, weight: 1.3, opacity: 0.6 }
 }
 
 // At zoom < 15 (not the natural IRIS zoom), show selected IRIS as a solid merged area:
