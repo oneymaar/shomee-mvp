@@ -18,7 +18,8 @@
         "SHOMEE_SESSION_SECRET",
         "SHOMEE_VERCEL_BYPASS",
         "GOOGLE_CLIENT_IDS",
-        "MCP_PRIVATE_KEY"
+        "MCP_PRIVATE_KEY",
+        "NEXT_PUBLIC_CARTO_KEY"
       ]
     },
     "dev": {

@@ -21,6 +21,7 @@ import { useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Polygon, Marker, CircleMarker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { POI_COLORS, type Poi, type PoiCat } from '@/lib/useNearbyPois'
+import { BASEMAP_FULL } from '@/lib/basemap'
 
 export interface MapTransport {
   name: string
@@ -187,8 +188,10 @@ export default function MapZone({
         keyboard={I}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
+          url={BASEMAP_FULL.url}
+          subdomains={BASEMAP_FULL.subdomains ?? 'abc'}
+          className={BASEMAP_FULL.className}
+          maxNativeZoom={BASEMAP_FULL.maxNativeZoom}
           maxZoom={19}
         />
 

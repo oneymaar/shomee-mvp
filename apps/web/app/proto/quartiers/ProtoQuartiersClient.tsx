@@ -440,8 +440,15 @@ export default function ProtoQuartiersClient() {
     })
   }, [])
 
-  const toggleCommune = useCallback((id: string) => {
-    setSel((s) => ({ ...s, com: s.com.includes(id) ? s.com.filter((c) => c !== id) : [...s.com, id] }))
+  // Commune prise EN ENTIER, avec cascade sur ses IRIS (comme toggleArr). Sans
+  // la cascade, le clic n'écrivait que `sel.com`, alors que l'affichage (plein /
+  // pastille) est dérivé des IRIS : le clic sur une commune limitrophe était
+  // donc INVISIBLE à l'onboarding (bug 27/10 — même cause que celle corrigée le
+  // 27/07 dans l'embed, jamais reportée ici).
+  const toggleCommune = useCallback((id: string, childI: string[]) => {
+    setSel((s) => s.com.includes(id)
+      ? { ...s, com: s.com.filter((c) => c !== id), iris: s.iris.filter((x) => !childI.includes(x)) }
+      : { ...s, com: [...s.com, id], iris: [...new Set([...s.iris, ...childI])] })
   }, [])
 
   const toggleCommuneIris = useCallback((id: string, parentCom: string, allSiblings: string[]) => {
@@ -478,7 +485,10 @@ export default function ProtoQuartiersClient() {
     const allArrQ = getChildQuartiers(parentArrId, quartiers).map((q) => q.id)
     toggleIris(zone.id, zone.parentId, parentArrId, allQSiblings, allArrQ)
   }, [iris, quartiers, toggleIris])
-  const handleClickCommune = useCallback((zone: GeoZone) => toggleCommune(zone.id), [toggleCommune])
+  const handleClickCommune = useCallback((zone: GeoZone) => {
+    const childI = iris.filter((i) => i.parentId === zone.id).map((i) => i.id)
+    toggleCommune(zone.id, childI)
+  }, [iris, toggleCommune])
   const handleClickCommuneIris = useCallback((zone: GeoZone) => {
     if (!zone.parentId) return
     const allSiblings = iris.filter((i) => i.parentId === zone.parentId).map((i) => i.id)
@@ -523,7 +533,18 @@ export default function ProtoQuartiersClient() {
 
   const displayArrIds = useMemo(() => [...coverage.fullArrIds], [coverage])
   const displayQuartierIds = useMemo(() => [...coverage.fullQuartierIds], [coverage])
-  const displayCommuneIds = useMemo(() => [...coverage.fullCommuneIds], [coverage])
+  // + les communes cochées qui n'ont AUCUN IRIS dans le jeu de données : sans
+  // ça, elles resteraient invisibles quoi qu'on fasse.
+  const communesWithIris = useMemo(() => {
+    const out = new Set<string>()
+    for (const i of iris) if (i.parentId?.startsWith('com-')) out.add(i.parentId)
+    return out
+  }, [iris])
+  const displayCommuneIds = useMemo(() => {
+    const out = new Set(coverage.fullCommuneIds)
+    for (const c of sel.com) if (!communesWithIris.has(c)) out.add(c)
+    return [...out]
+  }, [coverage, sel.com, communesWithIris])
   const { partialArrIds, partialCommuneIds } = coverage
 
   const removePartialArr = useCallback((arrId: string) => {
@@ -566,18 +587,19 @@ export default function ProtoQuartiersClient() {
   // ── fitBounds : priorité aux polygones des IRIS sélectionnés (copie embed) ─
   const fitBounds = useMemo<Bounds | null>(() => {
     const byId = (list: GeoZone[], ids: string[]) => list.filter((z) => ids.includes(z.id))
+    // Cadrage calé sur la sélection INITIALE uniquement, jamais sur la
+    // sélection vivante : quand la recherche ne donnait rien (initialIris vide),
+    // le repli lisait sel.q / sel.com / sel.arr → CHAQUE clic recadrait la
+    // carte, qui glissait sous le doigt (bug 27/10). Sans sélection initiale :
+    // pas de cadrage, la carte reste où l'acquéreur l'a mise.
     const base = (() => {
       const selIris = byId(iris, initialIris)
-      if (selIris.length > 0) return boundsOfFeatures(selIris)
-      const fine = [...byId(quartiers, sel.q), ...byId(communes, sel.com)]
-      if (fine.length > 0) return boundsOfFeatures(fine)
-      const arrs = byId(arrondissements, sel.arr)
-      return arrs.length > 0 ? boundsOfFeatures(arrs) : null
+      return selIris.length > 0 ? boundsOfFeatures(selIris) : null
     })()
     if (!base) return base
     const eps = (fitNonce % 2) * 0.00003 // ~3 m : invisible, mais change la clé
     return [[base[0][0], base[0][1]], [base[1][0] + eps, base[1][1]]] as Bounds
-  }, [iris, quartiers, communes, arrondissements, initialIris, sel.q, sel.com, sel.arr, fitNonce])
+  }, [iris, initialIris, fitNonce])
 
   const center = useMemo<[number, number]>(() => {
     if (fitBounds) return [(fitBounds[0][0] + fitBounds[1][0]) / 2, (fitBounds[0][1] + fitBounds[1][1]) / 2]
@@ -622,6 +644,7 @@ export default function ProtoQuartiersClient() {
             onClickCommune={handleClickCommune}
             onClickCommuneIris={handleClickCommuneIris}
             onZoomChange={setZoom}
+            attributionOffsetTop={104}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -725,7 +748,7 @@ export default function ProtoQuartiersClient() {
                       {z?.shortName || z?.name || id}<span className="opacity-40 ml-0.5 text-[11px]">×</span>
                     </button> ) })}
                   {displayCommuneIds.map((id) => { const z = communeById.get(id); return (
-                    <button key={`com-${id}`} onClick={() => toggleCommune(id)}
+                    <button key={`com-${id}`} onClick={() => removePartialCommune(id)}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
                       style={{ backgroundColor: 'rgba(166,75,39,0.14)', color: TERRA, borderColor: TERRA }}>
                       {z?.shortName || z?.name || id}<span className="opacity-40 ml-0.5 text-[11px]">×</span>

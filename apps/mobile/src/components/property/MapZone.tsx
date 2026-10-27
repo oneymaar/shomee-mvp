@@ -163,6 +163,7 @@ html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#FAF3EE}
 .stPill em{font-style:normal;font-weight:600;color:#B7A99D;margin-left:4px}
 .leaflet-popup-content{margin:8px 12px;font-size:12.5px;font-weight:600;color:#201A16}
 .leaflet-popup-content-wrapper{border-radius:10px}
+.ignBase{filter:saturate(0.3) sepia(0.18) brightness(1.05) contrast(0.88)}
 </style>
 </head><body>
 <div id="map"></div>
@@ -175,7 +176,8 @@ var map = L.map('map', {
   dragging: I, touchZoom: I, doubleClickZoom: I, scrollWheelZoom: I,
   boxZoom: I, keyboard: I, tap: I
 }).setView([D.lat, D.lng], 15);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+// Plan IGN (sans cle) : CARTO exige desormais une cle API (27/10/2026).
+L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', { maxNativeZoom: 19, maxZoom: 19, className: 'ignBase' }).addTo(map);
 
 /* ── Zone IRIS ─────────────────────────────────────────────────────────── */
 var bounds = null;

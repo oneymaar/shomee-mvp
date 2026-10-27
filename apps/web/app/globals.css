@@ -272,3 +272,17 @@ body {
 .shomee-feasibility-map .leaflet-overlay-pane path {
   transition: fill 150ms ease-out, stroke 150ms ease-out;
 }
+
+/* Fond Plan IGN (repli sans clé CARTO, cf. lib/basemap.ts) : couleurs IGN
+   adoucies pour rester dans la charte crème/terracotta. */
+.shomee-basemap-ign {
+  filter: saturate(0.3) sepia(0.18) brightness(1.05) contrast(0.88);
+}
+/* Mention de source du fond de carte — obligatoire (IGN / CARTO), discrète. */
+.leaflet-container .leaflet-control-attribution {
+  background: rgba(250, 243, 238, 0.7);
+  color: #8A7A6E;
+  font-size: 9px;
+  line-height: 1.4;
+  padding: 0 5px;
+}

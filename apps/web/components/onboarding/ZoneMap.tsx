@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import type { GeoZone } from '@shomee/core/geo/geoDataService'
+import { BASEMAP_NO_LABELS, BASEMAP_LABELS_ONLY } from '@/lib/basemap'
 import rawStations from '@shomee/core/data/transportStations.json'
 
 type RawStation = { label: string; type: string; lines: string[]; coordinates: { lat: number; lng: number } }
@@ -276,6 +277,14 @@ function useGeoLayer(map: L.Map, cfg: GeoLayerConfig) {
         },
       }
     )
+    // COUCHES FANTÔMES (bug du 27/10) : Leaflet recrée les <path> SVG à chaque
+    // fois qu'une couche est (ré)ajoutée à la carte, et les recrée CLIQUABLES
+    // par défaut. Une couche « non cliquable » (IRIS ou quartiers affichés hors
+    // de leur zoom naturel) qui apparaissait après coup — typiquement au
+    // premier clic, quand la sélection en cascade rend les IRIS « collants » —
+    // se posait donc PAR-DESSUS les arrondissements et les communes, invisible,
+    // et avalait tous les clics suivants. On réimpose l'état à chaque ajout.
+    layer.on('add', () => applyInteractive(layer, cfgRef.current.clickable))
     if (cfg.visible) {
       layer.addTo(map)
       // Immediately enforce interactive state — Effect 4 won't re-run when
@@ -736,6 +745,42 @@ function GeoLayers(props: GeoLayersProps) {
   return null
 }
 
+// ─── Tolérance au tap ───────────────────────────────────────────────────────
+//
+// Leaflet considère qu'un doigt qui bouge de plus de 3 px entre l'appui et le
+// relâchement fait un GLISSER, et annule le clic. Sur un iPhone, un tap normal
+// bouge souvent de 4 à 8 px : le tap était silencieusement perdu, d'où le
+// « il faut cliquer plusieurs fois ». On remonte le seuil à 10 px (un vrai
+// glisser de carte dépasse largement ça dès le départ).
+const TAP_TOLERANCE_PX = 10
+
+function applyTapTolerance(map: L.Map, px: number) {
+  const drag = (map as unknown as { dragging?: { _draggable?: { options: { clickTolerance: number } } } }).dragging
+  if (drag?._draggable) drag._draggable.options.clickTolerance = px
+}
+
+function TapTolerance() {
+  const map = useMap()
+  useEffect(() => { applyTapTolerance(map, TAP_TOLERANCE_PX) }, [map])
+  return null
+}
+
+/** Mention de source du fond de carte (IGN / CARTO) — obligatoire, discrète.
+ *  En haut à droite, décalée sous l'en-tête de l'écran hôte (`offsetTop`) :
+ *  le bas de la carte est toujours recouvert par le panneau des pastilles. */
+function BasemapAttribution({ offsetTop }: { offsetTop: number }) {
+  const map = useMap()
+  useEffect(() => {
+    const ctrl = L.control.attribution({ prefix: false, position: 'topright' })
+    ctrl.addAttribution(BASEMAP_NO_LABELS.attribution)
+    ctrl.addTo(map)
+    const el = ctrl.getContainer()
+    if (el) el.style.marginTop = `${offsetTop}px`
+    return () => { ctrl.remove() }
+  }, [map, offsetTop])
+  return null
+}
+
 // ─── MapViewController — fitBounds prioritaire sur flyTo ──────────────────
 //
 // fitBounds est utilisé pour l'état initial (moteur sémantique → vue sur
@@ -802,9 +847,11 @@ export interface ZoneMapProps {
   onZoomChange: (z: number) => void
   /** Fires once when the Leaflet map instance is ready (tiles can paint). */
   whenMapReady?: () => void
+  /** Décalage (px) de la mention de source sous l'en-tête de l'écran hôte. */
+  attributionOffsetTop?: number
 }
 
-export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange, whenMapReady }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange, whenMapReady, attributionOffsetTop = 8 }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -828,15 +875,29 @@ export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quar
       maxBoundsViscosity={1}
       minZoom={10}
     >
-      {/* Base sans labels — nos labels custom restent les seuls au zoom large */}
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png" />
-      {/* Labels CartoDB (rues, POI, monuments) visibles seulement au zoom ≥ 15
-          où nos labels custom d'arrondissement / quartier ne sont plus affichés */}
+      {/* Base sans labels (CARTO avec clé) — nos labels custom restent les seuls
+          au zoom large. Sans clé : Plan IGN adouci (cf. lib/basemap.ts). */}
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-        minZoom={15}
-        opacity={0.85}
+        url={BASEMAP_NO_LABELS.url}
+        subdomains={BASEMAP_NO_LABELS.subdomains ?? 'abc'}
+        className={BASEMAP_NO_LABELS.className}
+        maxNativeZoom={BASEMAP_NO_LABELS.maxNativeZoom}
+        maxZoom={18}
       />
+      {/* Labels CARTO (rues, POI, monuments) visibles seulement au zoom ≥ 15
+          où nos labels custom d'arrondissement / quartier ne sont plus affichés */}
+      {BASEMAP_LABELS_ONLY && (
+        <TileLayer
+          url={BASEMAP_LABELS_ONLY.url}
+          subdomains={BASEMAP_LABELS_ONLY.subdomains ?? 'abc'}
+          maxNativeZoom={BASEMAP_LABELS_ONLY.maxNativeZoom}
+          maxZoom={18}
+          minZoom={15}
+          opacity={0.85}
+        />
+      )}
+      <TapTolerance />
+      <BasemapAttribution offsetTop={attributionOffsetTop} />
       <GeoLayers
         arrondissements={arrondissements}
         quartiers={quartiers}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { Loader2 } from 'lucide-react'
+import { BASEMAP_NO_LABELS } from '@/lib/basemap'
 import type { GeoZone } from '@shomee/core/geo/geoDataService'
 import { computeFeasibility, NO_DATA_FILL } from '@shomee/core/geo/budgetFeasibility'
 
@@ -268,7 +269,12 @@ export default function BudgetFeasibilityMapShell({
         keyboard={false}
         touchZoom={false}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png" />
+        <TileLayer
+          url={BASEMAP_NO_LABELS.url}
+          subdomains={BASEMAP_NO_LABELS.subdomains ?? 'abc'}
+          className={BASEMAP_NO_LABELS.className}
+          maxNativeZoom={BASEMAP_NO_LABELS.maxNativeZoom}
+        />
         <IrisFeasibilityLayer
           irisZones={irisZones}
           budgetMax={budgetMax}

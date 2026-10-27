@@ -586,6 +586,7 @@ export default function ZoneMapEmbedClient({
             onClickCommune={handleClickCommune}
             onClickCommuneIris={handleClickCommuneIris}
             onZoomChange={setZoom}
+            attributionOffsetTop={Math.max(initial.safeTop, 12) + 50}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
