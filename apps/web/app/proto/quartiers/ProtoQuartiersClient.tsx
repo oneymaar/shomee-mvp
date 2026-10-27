@@ -30,6 +30,7 @@ import {
   getChildQuartiers,
   type GeoZone,
 } from '@shomee/core/geo/geoDataService'
+import { lassoToIris } from '@/lib/geo/lassoToIris'
 
 const ZoneMap = dynamic(() => import('@/components/onboarding/ZoneMap'), { ssr: false })
 
@@ -92,6 +93,27 @@ function boundsOfFeatures(features: GeoZone[]): Bounds | null {
 
 interface Sel { arr: string[]; q: string[]; iris: string[]; com: string[] }
 const EMPTY_SEL: Sel = { arr: [], q: [], iris: [], com: [] }
+const noopZone = () => {}
+
+/** Picto lasso (dessin au doigt) — currentColor. */
+function LassoIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round">
+      <path d="M7 15c-3-2-3.5-6 0-8.5 3.6-2.6 10-2.2 12.3 1 2.3 3.2-.4 7.3-5.3 8.1-2.4.4-4.7.1-6.4-.6" />
+      <path d="M7.6 15c-.9 1.6-.6 3.6.7 4.6" strokeDasharray="2 2.2" />
+      <circle cx="8.6" cy="20" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}
+/** Picto carte (sélection par toucher) — currentColor. */
+function MapIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
+      <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z" />
+      <path d="M9 4v13.5M15 6.5V20" />
+    </svg>
+  )
+}
 
 type LiveChip = {
   label: string
@@ -339,13 +361,89 @@ export default function ProtoQuartiersClient() {
     requestAnimationFrame(() => requestAnimationFrame(() => postToNative({ action: 'ready' })))
   }, [phase, irisLoading, initialIris, postToNative])
 
+  // ══ MODE DE LA CARTE — « Quartiers » (toucher) / « Dessiner » (lasso) ══════
+  // Décision du 27/10 : les deux modes NE SE CUMULENT PAS. Passer de l'un à
+  // l'autre efface la sélection en cours (avec confirmation si elle existe).
+  // Dessin = option A : chaque zone dessinée est traduite en îlots IRIS
+  // (lassoToIris) ; la recherche ne reçoit que ces IRIS, comme d'habitude.
+  type MapMode = 'select' | 'draw'
+  type DrawnZone = { latlngs: [number, number][]; irisIds: string[] }
+  const [mapMode, setMapMode] = useState<MapMode>('select')
+  const [drawing, setDrawing] = useState(false)
+  const [drawnZones, setDrawnZones] = useState<DrawnZone[]>([])
+  const [pendingMode, setPendingMode] = useState<MapMode | null>(null)
+  const [drawMiss, setDrawMiss] = useState(false)
+  const mapModeRef = useRef<MapMode>('select')
+  useEffect(() => { mapModeRef.current = mapMode }, [mapMode])
+
+  const drawnOutlines = useMemo(() => drawnZones.map((z) => z.latlngs), [drawnZones])
+
+  const selectionFromZones = useCallback((zones: DrawnZone[]): Sel => {
+    const all = [...new Set(zones.flatMap((z) => z.irisIds))]
+    const parents = deriveParents(all)
+    return { iris: all, arr: parents.arr, q: parents.q, com: parents.com }
+  }, [deriveParents])
+
+  const applyMode = useCallback((mode: MapMode) => {
+    setSel(EMPTY_SEL)
+    setDrawnZones([])
+    setDrawMiss(false)
+    setMapMode(mode)
+    setDrawing(mode === 'draw')
+    // Une prochaine saisie texte, même identique, devra être re-résolue :
+    // la sélection qu'elle avait produite vient d'être effacée.
+    resolvedRef.current = null
+  }, [])
+
+  const hasAnySelection = sel.arr.length > 0 || sel.com.length > 0 || sel.q.length > 0 || sel.iris.length > 0
+  const requestMode = useCallback((mode: MapMode) => {
+    if (mode === mapMode) return
+    if (hasAnySelection) setPendingMode(mode) // confirmation avant d'effacer
+    else applyMode(mode)
+  }, [mapMode, hasAnySelection, applyMode])
+
+  const handleDrawComplete = useCallback((latlngs: [number, number][]) => {
+    const irisIds = lassoToIris(latlngs, iris)
+    if (irisIds.length === 0) { setDrawMiss(true); return } // hors de la zone couverte
+    setDrawMiss(false)
+    const next = [...drawnZones, { latlngs, irisIds }]
+    setDrawnZones(next)
+    setSel(selectionFromZones(next))
+    setDrawing(false)
+  }, [iris, drawnZones, selectionFromZones])
+
+  const removeDrawnZone = useCallback((idx: number) => {
+    const next = drawnZones.filter((_, i) => i !== idx)
+    setDrawnZones(next)
+    setSel(selectionFromZones(next))
+    if (next.length === 0) setDrawing(true)
+  }, [drawnZones, selectionFromZones])
+
+  const redraw = useCallback(() => {
+    setDrawnZones([])
+    setSel(EMPTY_SEL)
+    setDrawMiss(false)
+    setDrawing(true)
+  }, [])
+
+  // Entrées directes depuis l'écran de saisie (sans texte).
+  const startOnMap = useCallback((mode: MapMode) => {
+    inputRef.current?.blur()
+    setInitialIris([])
+    setEntityGroups([])
+    setMatchSummary([])
+    applyMode(mode)
+    setPhase('map')
+  }, [applyMode])
+
   const handleToMap = useCallback(() => {
     const q = query.trim()
     if (q.length < 2) return
     inputRef.current?.blur() // ferme le clavier
+    if (mapModeRef.current === 'draw') applyMode('select') // le texte mène aux quartiers
     setQueryToResolve(q)     // résolution instantanée si IRIS déjà chargés, sinon via l'effet
     setPhase('map')
-  }, [query])
+  }, [query, applyMode])
 
   const handleModifier = useCallback(() => {
     setPhase('typing')
@@ -368,6 +466,7 @@ export default function ProtoQuartiersClient() {
     const t = setTimeout(() => {
       hintDoneRef.current = true
       if (zoomLiveRef.current >= 15) return // déjà au niveau IRIS (poche serrée)
+      if (mapModeRef.current === 'draw') return // en dessin, c'est la consigne de tracé qui parle
       setHintMounted(true)
       requestAnimationFrame(() => setHintVisible(true))
     }, 1000) // laisse le fitBounds initial se poser avant d'évaluer le zoom
@@ -609,6 +708,16 @@ export default function ProtoQuartiersClient() {
   const hasSelection = sel.arr.length > 0 || sel.com.length > 0 || sel.q.length > 0 || sel.iris.length > 0
   const canContinue = query.trim().length >= 2
   const headerSummary = matchSummary.length > 0 ? matchSummary.join(' · ') : query.trim()
+  // Libellé du récap : texte saisi, sinon zone(s) dessinée(s), sinon les zones
+  // touchées (entrée directe « Choisir des quartiers », sans texte).
+  const validateLabel = mapMode === 'draw'
+    ? (drawnZones.length > 1 ? `${drawnZones.length} zones dessinées` : 'Zone dessinée')
+    : headerSummary || [
+        ...displayArrIds.map((id) => arrById.get(id)?.shortName ?? id),
+        ...displayCommuneIds.map((id) => communeById.get(id)?.shortName ?? id),
+        ...partialArrIds.map((id) => `${arrById.get(id)?.shortName ?? id} (en partie)`),
+        ...partialCommuneIds.map((id) => `${communeById.get(id)?.shortName ?? id} (en partie)`),
+      ].join(', ')
 
   // ══════════════════════════════════════════════════════════════════════════
   return (
@@ -638,13 +747,16 @@ export default function ProtoQuartiersClient() {
             selectedIrisIds={sel.iris}
             selectedCommuneIds={displayCommuneIds}
             irisLoading={irisLoading}
-            onClickArr={handleClickArr}
-            onClickQuartier={handleClickQuartier}
-            onClickIris={handleClickIris}
-            onClickCommune={handleClickCommune}
-            onClickCommuneIris={handleClickCommuneIris}
+            onClickArr={mapMode === 'draw' ? noopZone : handleClickArr}
+            onClickQuartier={mapMode === 'draw' ? noopZone : handleClickQuartier}
+            onClickIris={mapMode === 'draw' ? noopZone : handleClickIris}
+            onClickCommune={mapMode === 'draw' ? noopZone : handleClickCommune}
+            onClickCommuneIris={mapMode === 'draw' ? noopZone : handleClickCommuneIris}
             onZoomChange={setZoom}
-            attributionOffsetTop={104}
+            attributionOffsetTop={150}
+            drawing={phase === 'map' && mapMode === 'draw' && drawing}
+            drawnZones={drawnOutlines}
+            onDrawComplete={handleDrawComplete}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -655,7 +767,7 @@ export default function ProtoQuartiersClient() {
 
       {/* Indication de zoom — animation de pincement (deux doigts), persiste
           jusqu'à la première interaction avec la carte. Non interactive. */}
-      {phase === 'map' && hintMounted && (
+      {phase === 'map' && mapMode === 'select' && hintMounted && (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none"
           style={{ opacity: hintVisible ? 1 : 0, transition: 'opacity 320ms ease' }}
@@ -724,19 +836,85 @@ export default function ProtoQuartiersClient() {
             <button onClick={handleModifier}
                     className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
               <span className="flex-1 min-w-0 text-left text-[13.5px] font-semibold text-neutral-900 truncate">
-                {headerSummary || 'Votre zone'}
+                {mapMode === 'draw'
+                  ? (drawnZones.length > 0 ? 'Ma zone dessinée' : 'Dessiner ma zone')
+                  : (headerSummary || 'Votre zone')}
               </span>
               <span className="flex-none inline-flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: TERRA }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
                 Modifier
               </span>
             </button>
+
+            {/* Interrupteur Quartiers / Dessiner — modes exclusifs (27/10). */}
+            <div className="mt-2 flex p-[3px] rounded-[14px] shadow-sm" style={{ background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(0,0,0,0.06)' }}>
+              {([['select', 'Quartiers'], ['draw', 'Dessiner']] as const).map(([m, label]) => {
+                const on = mapMode === m
+                return (
+                  <button key={m} onClick={() => requestMode(m)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-[11px] text-[12.5px] font-semibold transition-colors"
+                    style={{ background: on ? TERRA : 'transparent', color: on ? '#fff' : MUTED }}>
+                    {m === 'draw' ? <LassoIcon size={15} /> : <MapIcon size={15} />}
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
+          {/* Consigne de tracé (mode dessin, en attente d'un tracé). */}
+          {mapMode === 'draw' && drawing && (
+            <div className="absolute left-0 right-0 z-20 flex justify-center pointer-events-none" style={{ top: 'max(calc(env(safe-area-inset-top) + 112px), 164px)' }}>
+              <div className="px-4 py-2 rounded-2xl text-[12.5px] font-medium text-white text-center" style={{ background: 'rgba(28,25,23,0.78)', backdropFilter: 'blur(4px)', maxWidth: 300 }}>
+                {drawMiss
+                  ? 'Cette zone est hors de notre carte — dessinez dans Paris ou la petite couronne'
+                  : 'Entourez la zone qui vous plaît, sans lever le doigt'}
+              </div>
+            </div>
+          )}
 
           <div className="absolute left-0 right-0 bottom-0 z-20">
             {/* Séparation NETTE carte / zone basse (le fade est abandonné). */}
             <div className="px-4 pt-3" style={{ background: '#FDF5F2', borderTop: '1px solid rgba(0,0,0,0.07)', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
-            {hasSelection && (
+            {mapMode === 'draw' && (
+              <div className="mb-3">
+                {drawnZones.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    {drawnZones.map((_, i) => (
+                      <button key={`draw-${i}`} onClick={() => removeDrawnZone(i)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
+                        style={{ backgroundColor: 'rgba(166,75,39,0.14)', color: TERRA, borderColor: TERRA }}>
+                        <LassoIcon size={13} />
+                        {drawnZones.length > 1 ? `Zone dessinée ${i + 1}` : 'Zone dessinée'}
+                        <span className="opacity-40 ml-0.5 text-[11px]">×</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {drawing ? (
+                  <div className="flex items-center justify-center gap-3 text-[12px]" style={{ color: MUTED }}>
+                    <span>Pour déplacer la carte : deux doigts</span>
+                    {drawnZones.length > 0 && (
+                      <button onClick={() => setDrawing(false)} className="font-semibold" style={{ color: TERRA }}>Annuler le tracé</button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button onClick={() => { setDrawMiss(false); setDrawing(true) }}
+                      className="flex-1 h-[38px] rounded-full bg-white border text-[12.5px] font-semibold active:opacity-80"
+                      style={{ borderColor: LINE, color: INK }}>
+                      ＋ Ajouter une zone
+                    </button>
+                    <button onClick={redraw}
+                      className="flex-1 h-[38px] rounded-full bg-white border text-[12.5px] font-semibold active:opacity-80"
+                      style={{ borderColor: LINE, color: INK }}>
+                      ↺ Redessiner
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {mapMode === 'select' && hasSelection && (
               <div className="mb-3 flex items-start gap-2">
               <div className="flex-1 min-w-0 max-h-[124px] overflow-y-auto">
                 {/* Ligne 1 — arrondissements / communes (aucun picto) */}
@@ -805,7 +983,7 @@ export default function ProtoQuartiersClient() {
               </div>
             )}
 
-            <button onClick={() => postToNative({ action: 'validate', selectedArrIds: sel.arr, selectedQuartierIds: sel.q, selectedIrisIds: sel.iris, selectedCommuneIds: sel.com, locationLabel: headerSummary, locationQuery: query })}
+            <button onClick={() => postToNative({ action: 'validate', selectedArrIds: sel.arr, selectedQuartierIds: sel.q, selectedIrisIds: sel.iris, selectedCommuneIds: sel.com, locationLabel: validateLabel, locationQuery: mapMode === 'draw' ? '' : query })}
               disabled={!hasSelection}
               className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white transition-opacity active:opacity-90"
               style={{ backgroundColor: hasSelection ? TERRA : '#DB947E' }}>
@@ -814,6 +992,33 @@ export default function ProtoQuartiersClient() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Confirmation avant de changer de mode (la sélection serait effacée). */}
+      {phase === 'map' && pendingMode && (
+        <div className="absolute inset-0 z-40 flex items-end" style={{ background: 'rgba(28,25,23,0.35)' }}
+             onClick={() => setPendingMode(null)}>
+          <div className="w-full rounded-t-[26px] px-5 pt-5" onClick={(e) => e.stopPropagation()}
+               style={{ background: '#FDF5F2', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
+            <p className="text-[19px] mb-1.5" style={{ fontFamily: SERIF, fontWeight: 500, color: INK }}>
+              {pendingMode === 'draw' ? 'Passer au dessin ?' : 'Passer aux quartiers ?'}
+            </p>
+            <p className="text-[13.5px] leading-relaxed mb-5" style={{ color: MUTED }}>
+              {pendingMode === 'draw'
+                ? 'Votre sélection de quartiers sera effacée, pour laisser place à votre dessin.'
+                : 'Vos zones dessinées seront effacées, pour laisser place à une sélection de quartiers.'}
+            </p>
+            <button onClick={() => { const m = pendingMode; setPendingMode(null); applyMode(m) }}
+              className="w-full py-3.5 rounded-full font-semibold text-[15px] text-white mb-2 active:opacity-90"
+              style={{ background: TERRA }}>
+              Continuer
+            </button>
+            <button onClick={() => setPendingMode(null)}
+              className="w-full py-3 rounded-full font-semibold text-[14px] active:opacity-80" style={{ color: MUTED }}>
+              Annuler
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ═══════════════ MOMENT 1 — saisie (overlay opaque) ═══════════════ */}
@@ -906,6 +1111,34 @@ export default function ProtoQuartiersClient() {
               autoComplete="off" autoCorrect="off" spellCheck={false}
             />
           </div>
+
+          {/* Alternatives au texte — directement sur la carte (27/10). Visibles
+              tant que rien n'est saisi : dès qu'on écrit, le CTA prend le relais. */}
+          {query.trim().length === 0 && (
+            <div>
+              <div className="flex items-center gap-2.5 mb-2.5 text-[11.5px] font-medium" style={{ color: MUTED }}>
+                <div className="flex-1 h-px" style={{ background: LINE }} />
+                ou directement sur la carte
+                <div className="flex-1 h-px" style={{ background: LINE }} />
+              </div>
+              <div className="flex gap-2.5">
+                <button onClick={() => startOnMap('draw')} disabled={irisLoading}
+                  className="flex-1 flex flex-col items-center gap-1 rounded-2xl bg-white border px-2 py-2.5 active:opacity-80"
+                  style={{ borderColor: LINE, opacity: irisLoading ? 0.6 : 1 }}>
+                  <span style={{ color: TERRA }}><LassoIcon size={22} /></span>
+                  <span className="text-[12.5px] font-semibold" style={{ color: INK }}>Dessiner ma zone</span>
+                  <span className="text-[10.5px]" style={{ color: MUTED }}>au doigt, librement</span>
+                </button>
+                <button onClick={() => startOnMap('select')} disabled={irisLoading}
+                  className="flex-1 flex flex-col items-center gap-1 rounded-2xl bg-white border px-2 py-2.5 active:opacity-80"
+                  style={{ borderColor: LINE, opacity: irisLoading ? 0.6 : 1 }}>
+                  <span style={{ color: TERRA }}><MapIcon size={22} /></span>
+                  <span className="text-[12.5px] font-semibold" style={{ color: INK }}>Choisir des quartiers</span>
+                  <span className="text-[10.5px]" style={{ color: MUTED }}>en touchant la carte</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <button onClick={handleToMap} disabled={!canContinue}
             className="w-full py-4 rounded-full font-semibold text-[15.5px] flex items-center justify-center gap-2 active:opacity-90"

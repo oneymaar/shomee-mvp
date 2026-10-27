@@ -781,6 +781,112 @@ function BasemapAttribution({ offsetTop }: { offsetTop: number }) {
   return null
 }
 
+// ─── Dessin au doigt (lasso) ────────────────────────────────────────────────
+//
+// `drawing` = la carte attend un tracé : UN doigt trace (la carte ne glisse
+// plus), DEUX doigts déplacent / zooment (Leaflet garde le pincement). Un
+// deuxième doigt posé en cours de tracé annule le tracé : c'était un pincement.
+// Au lever du doigt, le tracé est simplifié, fermé, et remonté en [lat, lng].
+// `drawnZones` = contours déjà dessinés, affichés en trait terracotta (la
+// surface réellement recherchée, en îlots, est affichée par les couches IRIS).
+const LASSO_COLOR = '#A64B27'
+const MIN_STROKE_PTS = 6
+const MIN_LASSO_PX = 24 // un tracé plus petit qu'une pastille = geste raté
+
+function LassoLayer({ drawing, drawnZones, onDrawComplete }: {
+  drawing: boolean
+  drawnZones: [number, number][][]
+  onDrawComplete?: (latlngs: [number, number][]) => void
+}) {
+  const map = useMap()
+  const cbRef = useRef(onDrawComplete)
+  useEffect(() => { cbRef.current = onDrawComplete }, [onDrawComplete])
+
+  // Contours déjà dessinés
+  useEffect(() => {
+    const layers = drawnZones.map((z) =>
+      L.polygon(z, { color: LASSO_COLOR, weight: 2.5, opacity: 0.95, fill: false, interactive: false }).addTo(map),
+    )
+    return () => { layers.forEach((l) => l.remove()) }
+  }, [map, drawnZones])
+
+  // Capture du tracé
+  useEffect(() => {
+    if (!drawing) return
+    const el = map.getContainer()
+    const savedTouchAction = el.style.touchAction
+    const savedCursor = el.style.cursor
+    map.dragging.disable()
+    el.style.touchAction = 'none' // le navigateur ne doit ni défiler ni zoomer la page
+    el.style.cursor = 'crosshair'
+
+    const pointers = new Set<number>()
+    let activeId: number | null = null
+    let pts: L.Point[] = []
+    let line: L.Polyline | null = null
+
+    const at = (e: PointerEvent) => map.mouseEventToContainerPoint(e as unknown as MouseEvent)
+    const reset = () => { line?.remove(); line = null; pts = []; activeId = null }
+
+    const onDown = (e: PointerEvent) => {
+      pointers.add(e.pointerId)
+      if (pointers.size > 1) { reset(); return } // 2e doigt → pincement, pas un tracé
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      activeId = e.pointerId
+      pts = [at(e)]
+      line = L.polyline([map.containerPointToLatLng(pts[0])], {
+        color: LASSO_COLOR, weight: 4, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false,
+      }).addTo(map)
+      try { el.setPointerCapture(e.pointerId) } catch { /* sans capture : on suit quand même */ }
+    }
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerId !== activeId || !line) return
+      const p = at(e)
+      if (p.distanceTo(pts[pts.length - 1]) < 3) return
+      pts.push(p)
+      line.addLatLng(map.containerPointToLatLng(p))
+    }
+    const onUp = (e: PointerEvent) => {
+      pointers.delete(e.pointerId)
+      if (e.pointerId !== activeId) return
+      const stroke = pts
+      reset()
+      if (stroke.length < MIN_STROKE_PTS) return
+      const xs = stroke.map((p) => p.x), ys = stroke.map((p) => p.y)
+      if (Math.max(...xs) - Math.min(...xs) < MIN_LASSO_PX && Math.max(...ys) - Math.min(...ys) < MIN_LASSO_PX) return
+      const simple = L.LineUtil.simplify(stroke, 2.5)
+      const latlngs = simple.map((p) => {
+        const ll = map.containerPointToLatLng(p)
+        return [ll.lat, ll.lng] as [number, number]
+      })
+      cbRef.current?.(latlngs)
+    }
+    const onCancel = (e: PointerEvent) => {
+      pointers.delete(e.pointerId)
+      if (e.pointerId === activeId) reset()
+    }
+
+    el.addEventListener('pointerdown', onDown)
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerup', onUp)
+    el.addEventListener('pointercancel', onCancel)
+    return () => {
+      el.removeEventListener('pointerdown', onDown)
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerup', onUp)
+      el.removeEventListener('pointercancel', onCancel)
+      reset()
+      map.dragging.enable()
+      el.style.touchAction = savedTouchAction
+      el.style.cursor = savedCursor
+    }
+  }, [map, drawing])
+
+  return null
+}
+
+const NO_ZONES: [number, number][][] = []
+
 // ─── MapViewController — fitBounds prioritaire sur flyTo ──────────────────
 //
 // fitBounds est utilisé pour l'état initial (moteur sémantique → vue sur
@@ -849,9 +955,15 @@ export interface ZoneMapProps {
   whenMapReady?: () => void
   /** Décalage (px) de la mention de source sous l'en-tête de l'écran hôte. */
   attributionOffsetTop?: number
+  /** Mode dessin : la carte attend un tracé au doigt (cf. LassoLayer). */
+  drawing?: boolean
+  /** Contours déjà dessinés, en [lat, lng]. */
+  drawnZones?: [number, number][][]
+  /** Tracé terminé (fermé, simplifié), en [lat, lng]. */
+  onDrawComplete?: (latlngs: [number, number][]) => void
 }
 
-export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange, whenMapReady, attributionOffsetTop = 8 }: ZoneMapProps) {
+export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quartiers, iris, communes, selectedArrIds, selectedQuartierIds, selectedIrisIds, selectedCommuneIds, irisLoading, showIrisNames, onClickArr, onClickQuartier, onClickIris, onClickCommune, onClickCommuneIris, onZoomChange, whenMapReady, attributionOffsetTop = 8, drawing = false, drawnZones = NO_ZONES, onDrawComplete }: ZoneMapProps) {
   return (
     <MapContainer
       center={center}
@@ -898,6 +1010,7 @@ export default function ZoneMap({ center, zoom, fitBounds, arrondissements, quar
       )}
       <TapTolerance />
       <BasemapAttribution offsetTop={attributionOffsetTop} />
+      <LassoLayer drawing={drawing} drawnZones={drawnZones} onDrawComplete={onDrawComplete} />
       <GeoLayers
         arrondissements={arrondissements}
         quartiers={quartiers}
