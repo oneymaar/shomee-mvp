@@ -95,6 +95,41 @@ interface Sel { arr: string[]; q: string[]; iris: string[]; com: string[] }
 const EMPTY_SEL: Sel = { arr: [], q: [], iris: [], com: [] }
 const noopZone = () => {}
 
+type MapMode = 'select' | 'draw'
+type DrawnZone = { latlngs: [number, number][]; irisIds: string[] }
+
+// ── Mémoire des zones VALIDÉES (retour depuis le récap) ─────────────────────
+// Quand l'acquéreur revient modifier ses zones, l'écran est rechargé à neuf :
+// sans mémoire, tout était perdu (zones dessinées comme retouches manuelles).
+// On garde donc la dernière sélection validée dans le stockage de la page —
+// il survit au rechargement, dans la WebView de l'app comme sur le web — et on
+// la restaure à l'ouverture. Sans modifier l'app native (pas de nouveau build).
+// Durée de vie limitée : une recherche validée il y a plus de 12 h ne revient pas.
+const SAVED_KEY = 'shomee.quartiers.derniere-zone'
+const SAVED_TTL_MS = 12 * 60 * 60 * 1000
+interface SavedZones {
+  v: 1
+  savedAt: number
+  irisIds: string[]
+  query: string
+  matchSummary: string[]
+  mode: MapMode
+  drawnZones: DrawnZone[]
+}
+function loadSavedZones(): SavedZones | null {
+  try {
+    const raw = window.localStorage.getItem(SAVED_KEY)
+    if (!raw) return null
+    const o = JSON.parse(raw) as SavedZones
+    if (o?.v !== 1 || !Array.isArray(o.irisIds) || o.irisIds.length === 0) return null
+    if (Date.now() - (o.savedAt ?? 0) > SAVED_TTL_MS) return null
+    return o
+  } catch { return null }
+}
+function storeSavedZones(z: Omit<SavedZones, 'v' | 'savedAt'>) {
+  try { window.localStorage.setItem(SAVED_KEY, JSON.stringify({ v: 1, savedAt: Date.now(), ...z })) } catch { /* stockage indisponible */ }
+}
+
 /** Picto lasso (dessin au doigt) — currentColor. */
 function LassoIcon({ size = 16 }: { size?: number }) {
   return (
@@ -301,9 +336,23 @@ export default function ProtoQuartiersClient() {
   // Lecture dans un effet (et pas en initialisation d'etat) : la page est
   // rendue cote serveur, ou window.location n'existe pas encore. Un seul
   // passage au montage, donc aucun risque de rendus en cascade.
+  const restoreRef = useRef<SavedZones | null>(null)
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search)
     const q = (sp.get('q') ?? '').trim()
+    // Retour sur l'étape après validation : on retrouve la sélection validée
+    // (prioritaire sur une nouvelle résolution du texte, qui écraserait les
+    // retouches). Si l'hôte web passe un texte DIFFÉRENT, c'est lui qui gagne.
+    const saved = loadSavedZones()
+    if (saved && (!q || q === saved.query.trim())) {
+      restoreRef.current = saved
+      startedOnMapRef.current = true
+      resolvedRef.current = saved.query.trim() || '__restauré__'
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- restauration, une seule fois au montage
+      setQuery(saved.query)
+      setPhase('map')
+      return
+    }
     if (!q) return
     // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill URL, une seule fois au montage
     setQuery(q)
@@ -362,88 +411,113 @@ export default function ProtoQuartiersClient() {
   }, [phase, irisLoading, initialIris, postToNative])
 
   // ══ MODE DE LA CARTE — « Quartiers » (toucher) / « Dessiner » (lasso) ══════
-  // Décision du 27/10 : les deux modes NE SE CUMULENT PAS. Passer de l'un à
-  // l'autre efface la sélection en cours (avec confirmation si elle existe).
+  // Décision révisée le 27/10 (après essai sur iPhone) : les deux modes
+  // TRAVAILLENT SUR LA MÊME SÉLECTION. Ce qu'on dessine sélectionne des îlots,
+  // qu'on retrouve et retouche en mode Quartiers ; ce qu'on touche reste
+  // sélectionné en mode Dessin. L'interrupteur ne change que le GESTE.
   // Dessin = option A : chaque zone dessinée est traduite en îlots IRIS
-  // (lassoToIris) ; la recherche ne reçoit que ces IRIS, comme d'habitude.
-  type MapMode = 'select' | 'draw'
-  type DrawnZone = { latlngs: [number, number][]; irisIds: string[] }
+  // (lassoToIris) ; la recherche ne reçoit que des IRIS, comme d'habitude.
   const [mapMode, setMapMode] = useState<MapMode>('select')
   const [drawing, setDrawing] = useState(false)
   const [drawnZones, setDrawnZones] = useState<DrawnZone[]>([])
-  const [pendingMode, setPendingMode] = useState<MapMode | null>(null)
   const [drawMiss, setDrawMiss] = useState(false)
   const mapModeRef = useRef<MapMode>('select')
   useEffect(() => { mapModeRef.current = mapMode }, [mapMode])
 
-  const drawnOutlines = useMemo(() => drawnZones.map((z) => z.latlngs), [drawnZones])
+  // Un tracé dont plus aucun îlot n'est sélectionné (tous retirés en mode
+  // Quartiers) n'a plus de sens : il disparaît.
+  const liveZones = useMemo(() => {
+    const cur = new Set(sel.iris)
+    return drawnZones.filter((z) => z.irisIds.some((id) => cur.has(id)))
+  }, [drawnZones, sel.iris])
+  const drawnOutlines = useMemo(() => liveZones.map((z) => z.latlngs), [liveZones])
 
-  const selectionFromZones = useCallback((zones: DrawnZone[]): Sel => {
-    const all = [...new Set(zones.flatMap((z) => z.irisIds))]
-    const parents = deriveParents(all)
-    return { iris: all, arr: parents.arr, q: parents.q, com: parents.com }
+  const selFromIris = useCallback((ids: string[]): Sel => {
+    const parents = deriveParents(ids)
+    return { iris: ids, arr: parents.arr, q: parents.q, com: parents.com }
   }, [deriveParents])
 
-  const applyMode = useCallback((mode: MapMode) => {
-    setSel(EMPTY_SEL)
-    setDrawnZones([])
+  const switchMode = useCallback((mode: MapMode) => {
+    if (mode === mapModeRef.current) return
     setDrawMiss(false)
     setMapMode(mode)
-    setDrawing(mode === 'draw')
-    // Une prochaine saisie texte, même identique, devra être re-résolue :
-    // la sélection qu'elle avait produite vient d'être effacée.
-    resolvedRef.current = null
-  }, [])
+    // En arrivant en dessin sans aucune sélection, on attend directement un
+    // tracé ; sinon on montre d'abord ce qui est sélectionné.
+    const empty = sel.iris.length === 0 && sel.arr.length === 0 && sel.com.length === 0
+    setDrawing(mode === 'draw' && empty)
+  }, [sel])
 
-  const hasAnySelection = sel.arr.length > 0 || sel.com.length > 0 || sel.q.length > 0 || sel.iris.length > 0
-  const requestMode = useCallback((mode: MapMode) => {
-    if (mode === mapMode) return
-    if (hasAnySelection) setPendingMode(mode) // confirmation avant d'effacer
-    else applyMode(mode)
-  }, [mapMode, hasAnySelection, applyMode])
+  // Retrait des îlots d'une ou plusieurs zones dessinées — sauf ceux couverts
+  // par une autre zone dessinée qui reste.
+  const withoutZones = useCallback((removed: DrawnZone[], kept: DrawnZone[]) => {
+    const keep = new Set(kept.flatMap((z) => z.irisIds))
+    const drop = new Set(removed.flatMap((z) => z.irisIds).filter((id) => !keep.has(id)))
+    return sel.iris.filter((id) => !drop.has(id))
+  }, [sel.iris])
 
   const handleDrawComplete = useCallback((latlngs: [number, number][]) => {
     const irisIds = lassoToIris(latlngs, iris)
     if (irisIds.length === 0) { setDrawMiss(true); return } // hors de la zone couverte
     setDrawMiss(false)
-    const next = [...drawnZones, { latlngs, irisIds }]
-    setDrawnZones(next)
-    setSel(selectionFromZones(next))
+    setDrawnZones([...liveZones, { latlngs, irisIds }])
+    setSel(selFromIris([...new Set([...sel.iris, ...irisIds])]))
     setDrawing(false)
-  }, [iris, drawnZones, selectionFromZones])
+  }, [iris, liveZones, sel.iris, selFromIris])
 
   const removeDrawnZone = useCallback((idx: number) => {
-    const next = drawnZones.filter((_, i) => i !== idx)
-    setDrawnZones(next)
-    setSel(selectionFromZones(next))
-    if (next.length === 0) setDrawing(true)
-  }, [drawnZones, selectionFromZones])
+    const kept = liveZones.filter((_, i) => i !== idx)
+    const nextIris = withoutZones([liveZones[idx]], kept)
+    setDrawnZones(kept)
+    setSel(selFromIris(nextIris))
+    if (nextIris.length === 0) setDrawing(true)
+  }, [liveZones, withoutZones, selFromIris])
 
   const redraw = useCallback(() => {
+    const nextIris = withoutZones(liveZones, [])
     setDrawnZones([])
-    setSel(EMPTY_SEL)
+    setSel(selFromIris(nextIris))
     setDrawMiss(false)
     setDrawing(true)
-  }, [])
+  }, [liveZones, withoutZones, selFromIris])
 
-  // Entrées directes depuis l'écran de saisie (sans texte).
+  // Restauration (retour depuis le récap) — dès que les îlots sont chargés.
+  useEffect(() => {
+    const r = restoreRef.current
+    if (!r || iris.length === 0) return
+    restoreRef.current = null
+    const known = new Set(iris.map((i) => i.id))
+    const ids = r.irisIds.filter((id) => known.has(id))
+    setSel(selFromIris(ids))
+    setInitialIris(ids) // cadrage sur la zone retrouvée + « Réinitialiser » y revient
+    setMatchSummary(r.matchSummary ?? [])
+    setDrawnZones((r.drawnZones ?? []).filter((z) => Array.isArray(z.latlngs) && z.latlngs.length > 2))
+    setMapMode(r.mode === 'draw' ? 'draw' : 'select')
+    setDrawing(false)
+  }, [iris, selFromIris])
+
+  // Entrées directes depuis l'écran de saisie (sans texte) : la sélection en
+  // cours, s'il y en a une, est conservée.
   const startOnMap = useCallback((mode: MapMode) => {
     inputRef.current?.blur()
-    setInitialIris([])
-    setEntityGroups([])
-    setMatchSummary([])
-    applyMode(mode)
+    setMapMode(mode)
+    setDrawMiss(false)
+    setDrawing(mode === 'draw' && sel.iris.length === 0 && sel.arr.length === 0 && sel.com.length === 0)
     setPhase('map')
-  }, [applyMode])
+  }, [sel])
 
   const handleToMap = useCallback(() => {
     const q = query.trim()
     if (q.length < 2) return
     inputRef.current?.blur() // ferme le clavier
-    if (mapModeRef.current === 'draw') applyMode('select') // le texte mène aux quartiers
+    if (resolvedRef.current !== q) {
+      // Nouveau texte → nouvelle sélection : les anciens tracés n'ont plus cours.
+      setDrawnZones([])
+      setMapMode('select')
+      setDrawing(false)
+    }
     setQueryToResolve(q)     // résolution instantanée si IRIS déjà chargés, sinon via l'effet
     setPhase('map')
-  }, [query, applyMode])
+  }, [query])
 
   const handleModifier = useCallback(() => {
     setPhase('typing')
@@ -490,6 +564,7 @@ export default function ProtoQuartiersClient() {
   const resetSelection = useCallback(() => {
     const parents = deriveParents(initialIris)
     setSel({ iris: initialIris, arr: parents.arr, q: parents.q, com: parents.com })
+    setDrawnZones([])
     setFitNonce((n) => n + 1)
   }, [initialIris, deriveParents])
 
@@ -710,14 +785,25 @@ export default function ProtoQuartiersClient() {
   const headerSummary = matchSummary.length > 0 ? matchSummary.join(' · ') : query.trim()
   // Libellé du récap : texte saisi, sinon zone(s) dessinée(s), sinon les zones
   // touchées (entrée directe « Choisir des quartiers », sans texte).
-  const validateLabel = mapMode === 'draw'
-    ? (drawnZones.length > 1 ? `${drawnZones.length} zones dessinées` : 'Zone dessinée')
-    : headerSummary || [
+  const zonesLabel = [
         ...displayArrIds.map((id) => arrById.get(id)?.shortName ?? id),
         ...displayCommuneIds.map((id) => communeById.get(id)?.shortName ?? id),
         ...partialArrIds.map((id) => `${arrById.get(id)?.shortName ?? id} (en partie)`),
         ...partialCommuneIds.map((id) => `${communeById.get(id)?.shortName ?? id} (en partie)`),
       ].join(', ')
+  // Texte seul → la phrase saisie ; dès qu'un dessin entre en jeu (ou sans
+  // texte), la liste des zones réellement couvertes.
+  const validateLabel = (query.trim() && liveZones.length === 0 && headerSummary) || zonesLabel || 'Zone dessinée'
+
+  const handleValidate = () => {
+    storeSavedZones({ irisIds: sel.iris, query: query.trim(), matchSummary, mode: mapMode, drawnZones: liveZones })
+    postToNative({
+      action: 'validate',
+      selectedArrIds: sel.arr, selectedQuartierIds: sel.q, selectedIrisIds: sel.iris, selectedCommuneIds: sel.com,
+      locationLabel: validateLabel,
+      locationQuery: liveZones.length > 0 ? '' : query,
+    })
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   return (
@@ -836,9 +922,7 @@ export default function ProtoQuartiersClient() {
             <button onClick={handleModifier}
                     className="w-full flex items-center gap-2.5 bg-white border border-black/8 rounded-2xl px-3.5 py-2.5 shadow-sm active:bg-black/[0.02]">
               <span className="flex-1 min-w-0 text-left text-[13.5px] font-semibold text-neutral-900 truncate">
-                {mapMode === 'draw'
-                  ? (drawnZones.length > 0 ? 'Ma zone dessinée' : 'Dessiner ma zone')
-                  : (headerSummary || 'Votre zone')}
+                {headerSummary || (mapMode === 'draw' ? 'Dessiner ma zone' : 'Votre zone')}
               </span>
               <span className="flex-none inline-flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: TERRA }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
@@ -846,12 +930,12 @@ export default function ProtoQuartiersClient() {
               </span>
             </button>
 
-            {/* Interrupteur Quartiers / Dessiner — modes exclusifs (27/10). */}
+            {/* Interrupteur Quartiers / Dessiner — même sélection, geste différent. */}
             <div className="mt-2 flex p-[3px] rounded-[14px] shadow-sm" style={{ background: 'rgba(255,255,255,0.94)', border: '1px solid rgba(0,0,0,0.06)' }}>
               {([['select', 'Quartiers'], ['draw', 'Dessiner']] as const).map(([m, label]) => {
                 const on = mapMode === m
                 return (
-                  <button key={m} onClick={() => requestMode(m)}
+                  <button key={m} onClick={() => switchMode(m)}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-[11px] text-[12.5px] font-semibold transition-colors"
                     style={{ background: on ? TERRA : 'transparent', color: on ? '#fff' : MUTED }}>
                     {m === 'draw' ? <LassoIcon size={15} /> : <MapIcon size={15} />}
@@ -878,14 +962,14 @@ export default function ProtoQuartiersClient() {
             <div className="px-4 pt-3" style={{ background: '#FDF5F2', borderTop: '1px solid rgba(0,0,0,0.07)', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
             {mapMode === 'draw' && (
               <div className="mb-3">
-                {drawnZones.length > 0 && (
+                {liveZones.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-2.5">
-                    {drawnZones.map((_, i) => (
+                    {liveZones.map((_, i) => (
                       <button key={`draw-${i}`} onClick={() => removeDrawnZone(i)}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold border"
                         style={{ backgroundColor: 'rgba(166,75,39,0.14)', color: TERRA, borderColor: TERRA }}>
                         <LassoIcon size={13} />
-                        {drawnZones.length > 1 ? `Zone dessinée ${i + 1}` : 'Zone dessinée'}
+                        {liveZones.length > 1 ? `Tracé ${i + 1}` : 'Mon tracé'}
                         <span className="opacity-40 ml-0.5 text-[11px]">×</span>
                       </button>
                     ))}
@@ -894,7 +978,7 @@ export default function ProtoQuartiersClient() {
                 {drawing ? (
                   <div className="flex items-center justify-center gap-3 text-[12px]" style={{ color: MUTED }}>
                     <span>Pour déplacer la carte : deux doigts</span>
-                    {drawnZones.length > 0 && (
+                    {hasSelection && (
                       <button onClick={() => setDrawing(false)} className="font-semibold" style={{ color: TERRA }}>Annuler le tracé</button>
                     )}
                   </div>
@@ -903,18 +987,18 @@ export default function ProtoQuartiersClient() {
                     <button onClick={() => { setDrawMiss(false); setDrawing(true) }}
                       className="flex-1 h-[38px] rounded-full bg-white border text-[12.5px] font-semibold active:opacity-80"
                       style={{ borderColor: LINE, color: INK }}>
-                      ＋ Ajouter une zone
+                      ＋ {liveZones.length > 0 || hasSelection ? 'Ajouter une zone' : 'Dessiner une zone'}
                     </button>
-                    <button onClick={redraw}
+                    {liveZones.length > 0 && <button onClick={redraw}
                       className="flex-1 h-[38px] rounded-full bg-white border text-[12.5px] font-semibold active:opacity-80"
                       style={{ borderColor: LINE, color: INK }}>
                       ↺ Redessiner
-                    </button>
+                    </button>}
                   </div>
                 )}
               </div>
             )}
-            {mapMode === 'select' && hasSelection && (
+            {hasSelection && (
               <div className="mb-3 flex items-start gap-2">
               <div className="flex-1 min-w-0 max-h-[124px] overflow-y-auto">
                 {/* Ligne 1 — arrondissements / communes (aucun picto) */}
@@ -983,7 +1067,7 @@ export default function ProtoQuartiersClient() {
               </div>
             )}
 
-            <button onClick={() => postToNative({ action: 'validate', selectedArrIds: sel.arr, selectedQuartierIds: sel.q, selectedIrisIds: sel.iris, selectedCommuneIds: sel.com, locationLabel: validateLabel, locationQuery: mapMode === 'draw' ? '' : query })}
+            <button onClick={handleValidate}
               disabled={!hasSelection}
               className="w-full py-3.5 rounded-2xl font-semibold text-[15px] text-white transition-opacity active:opacity-90"
               style={{ backgroundColor: hasSelection ? TERRA : '#DB947E' }}>
@@ -992,33 +1076,6 @@ export default function ProtoQuartiersClient() {
             </div>
           </div>
         </>
-      )}
-
-      {/* Confirmation avant de changer de mode (la sélection serait effacée). */}
-      {phase === 'map' && pendingMode && (
-        <div className="absolute inset-0 z-40 flex items-end" style={{ background: 'rgba(28,25,23,0.35)' }}
-             onClick={() => setPendingMode(null)}>
-          <div className="w-full rounded-t-[26px] px-5 pt-5" onClick={(e) => e.stopPropagation()}
-               style={{ background: '#FDF5F2', paddingBottom: 'max(env(safe-area-inset-bottom), 24px)' }}>
-            <p className="text-[19px] mb-1.5" style={{ fontFamily: SERIF, fontWeight: 500, color: INK }}>
-              {pendingMode === 'draw' ? 'Passer au dessin ?' : 'Passer aux quartiers ?'}
-            </p>
-            <p className="text-[13.5px] leading-relaxed mb-5" style={{ color: MUTED }}>
-              {pendingMode === 'draw'
-                ? 'Votre sélection de quartiers sera effacée, pour laisser place à votre dessin.'
-                : 'Vos zones dessinées seront effacées, pour laisser place à une sélection de quartiers.'}
-            </p>
-            <button onClick={() => { const m = pendingMode; setPendingMode(null); applyMode(m) }}
-              className="w-full py-3.5 rounded-full font-semibold text-[15px] text-white mb-2 active:opacity-90"
-              style={{ background: TERRA }}>
-              Continuer
-            </button>
-            <button onClick={() => setPendingMode(null)}
-              className="w-full py-3 rounded-full font-semibold text-[14px] active:opacity-80" style={{ color: MUTED }}>
-              Annuler
-            </button>
-          </div>
-        </div>
       )}
 
       {/* ═══════════════ MOMENT 1 — saisie (overlay opaque) ═══════════════ */}
